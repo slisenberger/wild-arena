@@ -600,6 +600,7 @@ function chooseTarget(w, u){
       u.state = u.target ? 'engage' : 'rest';
       return;
     }
+    if (w.cfg.policy){ policyChoose(w, u); return; } // learned target selection (policy/), opt-in: off unless cfg.policy is given
     const h = predatorTarget(w, u);
     if (w.mode === 'wild' && u.hunger > .3){
       const c = bestCarcass(w, u);
@@ -1379,6 +1380,27 @@ function randomDraft(R, budget){
   return team;
 }
 
-const API = { RULES, dealBoard, defaultMount, mapVariant, baseVariant, ESCORT_R, POST_R, zoneAt, ZONE_T0, ZONE_T1, HAZARD_NAME, zoneFor, homeFor, placeOK, clampPlace, defaultPost, snowFactor, heatLoad, QUIET_T, STYLE, ANIMALS, HUMAN, BY_ID, TERRAINS, W, H, DT, MATCH_T, setup, step, simulate, snapshot, summarize, randomDraft, defaultPlacement, rng, hpOf, radiusOf };
+// ---------- learned-policy hooks (policy/) ----------
+// With cfg.policy set, an enemy predator's retarget (feed / a target / roam) is decided by policy/policy.js, which
+// registers itself as INTERNALS.choose. predCandidates = the targets predatorTarget would consider: keep its filters in
+// sync with predatorTarget's (hostile, seen or the human within 70 m, the waterbound rule, reachable height).
+function predCandidates(w, u){
+  const out = [];
+  for (const t of w.units){
+    if (!hostile(w, u, t)) continue;
+    if (!canSee(w, u, t) && !(t.side === 'H' && dist(u, t) < 70)) continue;
+    if (has(u,'waterbound') && w.wet && distWater(w, t) > 5) continue;
+    if (!reachable(u, t)) continue;
+    out.push(t);
+  }
+  return out;
+}
+const INTERNALS = { choose: null, predCandidates, predatorTarget, bestCarcass, guardsAround, packStrength, packMates, packMate, strength, hostile, canSee, reachable, distWater, inWater, busy, yieldsTo, wound, heightOf, pressure, active, has, dist, sp, social };
+function policyChoose(w, u){
+  if (!INTERNALS.choose) throw new Error('cfg.policy is set but no policy is loaded: require policy/policy.js');
+  INTERNALS.choose(w, u, w.cfg.policy);
+}
+
+const API = { _internals: INTERNALS, RULES, dealBoard, defaultMount, mapVariant, baseVariant, ESCORT_R, POST_R, zoneAt, ZONE_T0, ZONE_T1, HAZARD_NAME, zoneFor, homeFor, placeOK, clampPlace, defaultPost, snowFactor, heatLoad, QUIET_T, STYLE, ANIMALS, HUMAN, BY_ID, TERRAINS, W, H, DT, MATCH_T, setup, step, simulate, snapshot, summarize, randomDraft, defaultPlacement, rng, hpOf, radiusOf };
 if (typeof module !== 'undefined' && module.exports) module.exports = API; else root.Arena = API;
 })(typeof window !== 'undefined' ? window : globalThis);
