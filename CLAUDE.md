@@ -22,6 +22,11 @@ count as 5:00). Live site: GitHub Pages serves `index.html` from `main`.
     25 per scheme get 100 runs per map. Team results don't depend on prices (the other side is always
     "everything not picked"), so screens are shared across schemes.
   - `idle.js` — measures time-to-first-hit, longest idle stretch and early "gave up" endings per map.
+  - `camp.js [teams] [seeds] [gridSeeds]` — camping/anti-pattern probe (4 workers, ~3 min at 200 4 12):
+    how fights end, how long the other side presses, tree/ride time, enemies loitering without a target;
+    then an exploit search over your start position, with the best spot re-checked on 40 fresh seeds.
+- `BACKLOG.md` — every idea captured so far (realism, anti-camping, pricing, herds, maps, animals,
+  mechanics, replayability) with status and suggested order. Add new ideas there.
 
 ## Methodology rule
 Don't rank teams on a few runs each. **Screen cheaply, then simulate contenders many times** (100+ per
@@ -64,7 +69,14 @@ round. Report ± standard errors.
   - B: $1,200, elephant $600: identical to $1,000 for elephant teams.
   - C: $1,200, elephant $700, rhino $500: best 65%, median 42%, **different champion on every map**.
 
-## Open threads
+## Camping probe (post-audit engine, Oct 2026, `camp.js 200 4 12`)
+- No player-side camping exploit: corner/back-wall starts help weak teams slightly (+4 to +18 s) and strong
+  teams not at all; >10 s in a tree always ended in death.
+- The "they gave up" ending is honest: with it switched off, 97%+ of would-be quiet wins still reach 5:00.
+- The real issue is the other side stalling: 67% of 5:00 results are "gave up"; strong teams settle the
+  fight in ~1.5–2 min, then ~6 enemies loiter targetless. Fix ideas in BACKLOG.md §2 (before pricing).
+
+## Open threads (full list in BACKLOG.md)
 1. Test $1,300 with scheme C prices (aim: top teams 75–85% wins, per-map champions preserved).
 2. Add the chosen budget/price scheme as a rules option on the arena screen.
 3. Possibly lower white-rhino aggression (they're placid grazers) if it still feels too strong.
