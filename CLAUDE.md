@@ -156,6 +156,12 @@ round. Report ± standard errors.
   croc 46, lion coalition 44, tiger/grizzly 42, giraffe 36, … leopard/cougar 10, honey badger 8, lone wolf 2.
 - Owner rule: the elephant must stay affordable (strictly proportional pricing would put it at ~$1,900), so
   giants are capped (`price_scheme.js`).
+- **Adopted scheme (in sim.js):** 20 s of swing per $100, giants capped (elephant $700, triceratops $800), herds $700
+  (buffalo herd 188 s, bison herd 198 s), $1,000 budget, every board dealt to $2,800 (±$100). Validation, 16
+  fixed-total boards, top 3 per board re-run on 24 fresh seeds: median board's best team $900 → 50%, **$1,000 → 75%**
+  (min 50, p25 63), $1,100 → 92%; boards with/without the elephant both 75%; 14 distinct best teams over 16 boards;
+  typical full-spend team ~84 s. Runner-up: 25 s per $100 at $800 / board $2,400 → also 75% but coarser, a
+  29% board, and not the meme's $1,000.
 - Guards no longer attack enemies that are minding their own business far from you (they used to rank a
   peaceful elephant as a top threat and provoke it).
 
