@@ -141,6 +141,11 @@ Pick for new roles. Top three for design value: **honey badger, moose, Komodo dr
   for mass, bite force and speed (T. rex ~8 t, ~5–7 m/s; raptors small and pack-hunting).
 
 ## 7. Mechanics
+- [ ] **Collateral damage to you (measured Oct 2026):** with full $1,200 teams ~40% of your damage is collateral, mostly
+  the enemy elephant's sweep while it fights your escort (~33 HP/fight), then buffalo herd charges (~11). Tried: you
+  keep out of locked melees (9 m, 12 m for sweepers) and step out of charge lines: collateral −5%, survival −2 ± 2 s
+  (no gain; reverted). The escort sits next to you by design, so the fix probably belongs in escort spacing or the
+  sweep arc (front only), not in your movement.
 - [ ] **Your own actions:** 1–2 cooldown abilities (flare scares off the timid, whistle rallies guards,
   climb a tree, mount/dismount). Biggest lever for making it *feel* like a game.
 - [x] **done (v2), basic:** on foot you kick/punch whatever is on you. Weapons/flare still open.
