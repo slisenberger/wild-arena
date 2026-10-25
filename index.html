@@ -2039,7 +2039,9 @@ function clampI(v, a, b){ return v < a ? a : v > b ? b : v; }
 function clamp01(v){ return v < 0 ? 0 : v > 1 ? 1 : v; }
 
 const REDUCED = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
-const BURST = {kill:'#ef6b4b', death:'#ef6b4b', maul:'#ef6b4b', crash:'#ec7a2c', sweep:'#ec7a2c', charge:'#ec7a2c', latch:'#d8473b', flank:'#ef6b4b', ambush:'#f0b429', pounce:'#f0b429', lunge:'#f0b429'};
+// visual effects: kept deliberately calm for now; flip one on to bring it back
+const FX = {fades: true, bursts: true, flash: false, stretch: false, breath: false, dust: false, shake: false};
+const BURST = {kill:'#ef6b4b', death:'#ef6b4b', maul:'#ef6b4b', crash:'#ec7a2c', sweep:'#ec7a2c'}; // big moments only
 function drawUnits(g, sc, w, fr, events, t, opts){
   opts = opts || {};
   // carcasses
@@ -2075,7 +2077,7 @@ function drawUnits(g, sc, w, fr, events, t, opts){
   const prevOf = (i, back) => F && kf - back >= 0 ? F[kf - back].u[i] : null;
   const speedOf = i => { const a = prevOf(i, 0), b = prevOf(i, 1); return a && b && a[7] === 1 && b[7] === 1 ? Math.hypot(a[0] - b[0], a[1] - b[1]) / 0.2 : 0; };
   const DUST = {savanna:'217,190,140', river:'120,100,70', forest:'90,80,55', tundra:'240,244,250'}[w.T.id] || '200,190,160';
-  if (F && !REDUCED) fr.u.forEach((u, i) => { // dust kicked up behind running heavyweights and chargers
+  if (F && FX.dust && !REDUCED) fr.u.forEach((u, i) => { // dust kicked up behind running heavyweights and chargers
     if (u[7] !== 1 || U[i].side === 'H' || u[9] > 0) return;
     const v = speedOf(i); if (!(v > 4 && (U[i].s.mass > 250 || u[15] === 'charge'))) return;
     for (let j = 1; j <= 3; j++){ const p = prevOf(i, j); if (!p || p[7] !== 1) break;
@@ -2083,7 +2085,7 @@ function drawUnits(g, sc, w, fr, events, t, opts){
       g.beginPath(); g.arc(p[0] * sc, p[1] * sc + U[i].r * sc * .4, r, 0, 7); g.fill(); }
   });
   // animals that just died shrink and fade where they fell
-  if (F) fr.u.forEach((u, i) => {
+  if (F && FX.fades) fr.u.forEach((u, i) => {
     const d = U[i].deathT; if (u[7] !== 0 || d == null || t < d || t - d > .8) return;
     const a = 1 - (t - d) / .8, rr = Math.max(10, U[i].r * sc * 1.1) * (.6 + .4 * a), im = FACEIMG[U[i].s.species || U[i].s.id];
     g.save(); g.globalAlpha = a * .8; g.beginPath(); g.arc(u[0] * sc, u[1] * sc, rr, 0, 7); g.clip();
@@ -2100,10 +2102,10 @@ function drawUnits(g, sc, w, fr, events, t, opts){
     let flash = 0, stretch = 0, ang = 0, breath = 1;
     if (F && kf > 0){
       const dHp = F[kf - 1].u[i][2] - F[kf].u[i][2], since = t - F[kf].t;
-      if (dHp > .005 && since < .35) flash = (1 - since / .35) * Math.min(1, .35 + dHp * 8);
+      if (FX.flash && dHp > .005 && since < .35) flash = (1 - since / .35) * Math.min(1, .35 + dHp * 8);
       const a = prevOf(i, 0), b = prevOf(i, 1), v = speedOf(i);
-      if (['charge','pounce','lunge','dart'].includes(u[15]) && v > 1){ stretch = Math.min(.24, v / Math.max(4, s.spd) * .24); ang = Math.atan2(a[1] - b[1], a[0] - b[0]); }
-      else if (v < 1) breath = 1 + .03 * Math.sin(t * 2.4 + i * 1.7);
+      if (FX.stretch && ['charge','pounce','lunge','dart'].includes(u[15]) && v > 1){ stretch = Math.min(.24, v / Math.max(4, s.spd) * .24); ang = Math.atan2(a[1] - b[1], a[0] - b[0]); }
+      else if (FX.breath && v < 1) breath = 1 + .03 * Math.sin(t * 2.4 + i * 1.7);
     }
     if (REDUCED){ stretch = 0; breath = 1; }
     if (flash && !REDUCED){ const j = rr0 * .16 * flash; x += Math.sin(t * 90 + i) * j; y += Math.cos(t * 77 + i * 3) * j; }
@@ -2161,7 +2163,7 @@ function drawUnits(g, sc, w, fr, events, t, opts){
       const e = events[k]; const age = t - e.t; if (age > 1.8) break; if (age < 0 || e.x == null || e.kind === 'info') continue;
       let slot = 0; while (slot < 2 && placed.some(p => Math.abs(p.x - e.x) < 7 && p.slot === slot && Math.abs(p.y - e.y) < 6)) slot++;
       if (slot >= 2) continue; placed.push({x:e.x, y:e.y, slot});
-      if (age < .55 && BURST[e.kind] && !REDUCED){ // impact burst: expanding ring + debris
+      if (FX.bursts && age < .55 && BURST[e.kind] && !REDUCED){ // impact burst: expanding ring + debris
         const q = 1 - age / .55, bx = e.x * sc, by = e.y * sc, R0 = (1.2 + age * 9) * sc;
         g.strokeStyle = BURST[e.kind]; g.globalAlpha = q * .8; g.lineWidth = Math.max(1.5, sc * .35 * q); g.beginPath(); g.arc(bx, by, R0, 0, 7); g.stroke();
         g.fillStyle = BURST[e.kind]; for (let d = 0; d < 7; d++){ const an = (k * 2.39 + d * 0.9) % 6.283, rd = R0 * (1.1 + ((k * 7 + d * 13) % 5) * .12); g.beginPath(); g.arc(bx + Math.cos(an) * rd, by + Math.sin(an) * rd, Math.max(1, sc * .28 * q), 0, 7); g.fill(); }
@@ -2182,7 +2184,7 @@ function drawFight(){
   const cv = $('fightCanvas'); const g = cv.getContext('2d'); const sc = cv._scale;
   // camera shake for a moment after a big impact (a crash, a heavy knockback, a kill)
   let shake = 0;
-  if (!REDUCED) for (let k = w.events.length - 1; k >= 0; k--){ const e = w.events[k], age = S.playT - e.t; if (age < 0) continue; if (age > .3) break; if (e.kind === 'crash' || e.kind === 'kill' || (e.kind === 'charge' && /knocking/.test(e.text))) shake = Math.max(shake, (1 - age / .3) * sc * .5); }
+  if (FX.shake && !REDUCED) for (let k = w.events.length - 1; k >= 0; k--){ const e = w.events[k], age = S.playT - e.t; if (age < 0) continue; if (age > .3) break; if (e.kind === 'crash' || e.kind === 'kill' || (e.kind === 'charge' && /knocking/.test(e.text))) shake = Math.max(shake, (1 - age / .3) * sc * .5); }
   g.setTransform(1, 0, 0, 1, 0, 0); g.fillStyle = '#0d110e'; g.fillRect(0, 0, cv.width, cv.height);
   g.setTransform(1, 0, 0, 1, shake ? Math.sin(S.playT * 97) * shake : 0, shake ? Math.cos(S.playT * 83) * shake : 0);
   const standing = w.fallen ? w.trees.concat(w.fallen.filter(f => f.t > S.playT)) : w.trees; // trees an elephant shoved over stay up until they fall
