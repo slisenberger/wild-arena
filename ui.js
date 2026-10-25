@@ -135,6 +135,12 @@ function renderDetail(){
 $('toDeployD').addEventListener('click', () => go('deploy'));
 $('clearTeam').addEventListener('click', () => { S.team.clear(); S.world = null; S.pos = {}; renderAll(); });
 $('newBoard').addEventListener('click', () => { dealNewBoard(); renderAll(); });
+// image credits panel (rows built from CREDITS.md at build time)
+$('creditsBtn').addEventListener('click', () => {
+  $('creditsTbl').tBodies[0].innerHTML = CREDITS.map(c => `<tr><td>${esc(c.animal)}</td><td><a href="${esc(c.url)}" target="_blank" rel="noopener">${esc(c.file)}</a></td><td>${esc(c.author)}</td><td>${esc(c.license)}</td></tr>`).join('');
+  $('creditsDlg').showModal();
+});
+$('creditsClose').addEventListener('click', () => $('creditsDlg').close());
 // start over: fresh board and fight seed, empty team, default formation, back to the map screen
 $('startOver').addEventListener('click', () => { S.seed = newBoardSeed(); $('seedLbl').textContent = S.seed; dealNewBoard(); S.playing = false; renderAll(); go('arena'); });
 

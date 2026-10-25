@@ -66,6 +66,13 @@ h3{font-family:var(--display);font-weight:800;font-size:18px;letter-spacing:.05e
 .stat .k{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
 .traits{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:5px}
 .teamline{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+footer.credits{margin:28px 0 12px;padding-top:12px;border-top:1px solid var(--line);color:var(--muted);font-size:12.5px}
+.linkbtn{background:none;border:0;padding:0;color:var(--fg);text-decoration:underline;cursor:pointer;font:inherit}
+#creditsDlg{max-width:860px;width:calc(100% - 32px);background:var(--panel);color:var(--fg);border:1px solid var(--line);border-radius:12px;padding:16px}
+#creditsDlg::backdrop{background:rgba(0,0,0,.6)}
+#creditsDlg .dlghd{display:flex;justify-content:space-between;align-items:center;gap:12px}
+#creditsDlg a{color:var(--fg)}
+#creditsTbl td{font-size:12.5px;vertical-align:top}
 .steps .startOver{margin-left:auto;border-style:dashed;opacity:.85}
 .chip{display:inline-flex;align-items:center;gap:6px;padding:4px 10px 4px 4px;border-radius:999px;background:var(--panel2);border:1px solid var(--line);font-size:13px}
 .chip .tok{width:26px;height:26px;font-size:9px}
@@ -258,10 +265,13 @@ th.n{text-align:right}
   </div>
 </section>
 </main>
+<footer class="credits">Wild Arena · Animal portraits from Wikimedia Commons (public domain and CC0), credited individually. <button class="linkbtn" id="creditsBtn">Image credits</button></footer>
+<dialog id="creditsDlg" aria-label="Image credits"><div class="dlghd"><h3>Image credits</h3><button class="btn" id="creditsClose">Close</button></div><p class="notes">Every portrait is a crop of a public-domain or CC0 image from Wikimedia Commons. Authors are as stated on each file page.</p><div class="tblwrap"><table id="creditsTbl"><thead><tr><th>Animal</th><th>Source</th><th>Author</th><th>License</th></tr></thead><tbody></tbody></table></div></dialog>
 </div>
 
 <script>
 const FACES = /*FACES*/;
+const CREDITS = /*CREDITS*/;
 </script>
 <script>
 /*SIM*/
