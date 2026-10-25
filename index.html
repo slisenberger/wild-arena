@@ -202,7 +202,7 @@ th.n{text-align:right}
   <div class="opts" id="terrainOpts"></div>
   <div id="modeOpts" hidden></div>
   <p class="notes">The other side is one team, and the pressure builds over time. Predators hunt you and your guards; herbivores charge intruders. Break their morale and animals bolt out of the arena. After 30 seconds a fire, flood or blizzard closes in from the edges and pushes everyone together. You score by how long you stay alive, up to five minutes.</p>
-  <div class="btnrow"><button class="btn primary" id="toDraft">Draft your team</button></div>
+  <div class="btnrow"><button class="btn primary" id="toDraft">Draft your team</button><button class="btn" id="daily" title="Same board, map and fight seed for everyone today">Daily challenge</button></div>
 </section>
 
 <!-- DEPLOY -->
@@ -1887,6 +1887,7 @@ const groupOf = a => a.group || 1;
 const itemName = a => groupOf(a) > 1 ? `${a.groupName} (${groupOf(a)})` : a.name;
 const boardTotal = () => S.board.reduce((t, id) => t + A.BY_ID[id].price, 0);
 function dealNewBoard(seed){
+  S.daily = null; // a fresh board (or a different map) is no longer today's challenge
   S.boardSeed = seed || newBoardSeed(); S.board = A.dealBoard(S.boardSeed, {terrain: S.terrain});
   S.team.clear(); S.pos = {}; S.youPos = null; S.mount = ''; S.world = null; S.focus = S.board[0];
 }
@@ -1918,7 +1919,7 @@ function renderDraft(){
   const tiers = $('tiers'); tiers.innerHTML = '';
   const left = BUDGET - spent();
   const onBoard = S.board.map(id => A.BY_ID[id]);
-  $('boardLede').textContent = `This game's board: ${onBoard.length} animals worth $${boardTotal().toLocaleString()}. Spend up to $${BUDGET.toLocaleString()}; every board animal you don't pick ends up on the other side. Tap a card to draft it; the panel below shows the full stat line.`;
+  $('boardLede').textContent = (S.daily ? `Daily challenge ${S.daily} (${A.TERRAINS[S.terrain].name}): the same board, map and fight seed for everyone today. ` : '') + `This game's board: ${onBoard.length} animals worth $${boardTotal().toLocaleString()}. Spend up to $${BUDGET.toLocaleString()}; every board animal you don't pick ends up on the other side. Tap a card to draft it; the panel below shows the full stat line.`;
   for (const p of [...new Set(onBoard.map(a => a.price))].sort((x, y) => y - x)){
     const row = document.createElement('div'); row.className = 'tier';
     const tag = document.createElement('div'); tag.className = 'tierTag'; tag.style.background = tierHex(p); tag.textContent = '$' + p; row.appendChild(tag);
@@ -2010,6 +2011,15 @@ function renderArenaOpts(){
   }
 }
 $('toDraft').addEventListener('click', () => go('draft'));
+// daily challenge: today's date (UTC) picks the map, the board and the fight seed, so everyone plays the same game
+const todayUTC = () => new Date().toISOString().slice(0, 10);
+function dateSeed(s){ let h = 2166136261; for (const c of s){ h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); } return (h >>> 0) % 1e6 + 1; }
+function startDaily(){
+  const d = todayUTC(), h = dateSeed('wild-arena:' + d), terr = Object.keys(A.TERRAINS);
+  S.daily = d; S.terrain = terr[h % terr.length]; S.seed = h; $('seedLbl').textContent = S.seed;
+  dealNewBoard(h); S.daily = d; renderAll(); go('draft');
+}
+$('daily').addEventListener('click', startDaily);
 
 // ---------- mount picker ----------
 function bestMount(team){ return A.defaultMount(team || [...S.team]) || ''; } // ride a giant if you have one; otherwise on foot
@@ -2203,7 +2213,7 @@ function startBattle(){
   renderReport(false);
   S.lastTs = 0;
 }
-$('rematch').addEventListener('click', () => { S.seed = (Math.random()*1e6|0) + 1; $('seedLbl').textContent = S.seed; startBattle(); });
+$('rematch').addEventListener('click', () => { if (!S.daily){ S.seed = (Math.random()*1e6|0) + 1; $('seedLbl').textContent = S.seed; } startBattle(); });
 $('replaySame').addEventListener('click', () => { S.playT = 0; S.playing = true; $('report').hidden = true; $('banner').innerHTML = ''; });
 $('playBtn').addEventListener('click', () => { if (S.playT >= S.dur) { S.playT = 0; $('report').hidden = true; $('banner').innerHTML = ''; } S.playing = !S.playing; });
 document.querySelectorAll('#speedSeg button').forEach(b => b.addEventListener('click', () => { S.speed = +b.dataset.v; syncSpeed(); }));
@@ -2438,13 +2448,20 @@ function renderReport(show){
   const b = $('banner');
   const score = res.score, prev = readBest(), isBest = score > prev + .05;
   if (isBest) writeBest(score);
+  let dailyLine = '';
+  if (S.daily && S.seed === dateSeed('wild-arena:' + S.daily)){
+    const k = 'wa-daily:' + S.daily; let db = 0; try { db = +localStorage.getItem(k) || 0; } catch(e){}
+    if (score > db + .05){ try { localStorage.setItem(k, String(score)); } catch(e){} }
+    const team = [...S.team].map(id => A.BY_ID[id].abbr).join('+') || 'no animals';
+    dailyLine = ` Daily ${S.daily}: ${score > db + .05 ? 'your best today' : 'best today ' + fmtT(db)} · share: “Wild Arena daily ${S.daily}: ${fmtT(score)}${res.survived && res.why === 'cleared' ? ', cleared the board at ' + fmtT(res.t) : ''} with ${team} ($${spent().toLocaleString()})”.`;
+  }
   const bestLine = isBest ? (prev ? `New best for this draft here (was ${fmtT(prev)}).` : 'First run of this draft here.') : `Best for this draft here: ${fmtT(prev)}.`;
   if (res.survived){
     const why = res.why === 'cleared' ? `The other side was dead, routed or full by ${fmtT(res.t)}.` : res.why === 'quiet' ? `Nothing came at you for ${A.QUIET_T} s, so the other side gave up at ${fmtT(res.t)}.` : `You held out the full ${fmtT(HZ)}.`;
-    b.innerHTML = `<div class="banner win"><span class="big">Survived · ${fmtT(HZ)}</span><span>${why} Full score. ${bestLine}</span></div>`;
+    b.innerHTML = `<div class="banner win"><span class="big">Survived · ${fmtT(HZ)}</span><span>${why} Full score. ${bestLine}${dailyLine}</span></div>`;
   } else {
     const k = A.BY_ID[res.killer];
-    b.innerHTML = `<div class="banner lose"><span class="big">You lasted ${fmtT(score)}</span><span>Killed by the ${esc(k ? k.name : 'unknown')}. ${bestLine}</span></div>`;
+    b.innerHTML = `<div class="banner lose"><span class="big">You lasted ${fmtT(score)}</span><span>Killed by the ${esc(k ? k.name : 'unknown')}. ${bestLine}${dailyLine}</span></div>`;
   }
   const mine = sum.units.filter(u => u.side === 'P');
   const mvp = mine.slice().sort((a, b) => (b.protect*1.5 + b.dealt) - (a.protect*1.5 + a.dealt))[0];

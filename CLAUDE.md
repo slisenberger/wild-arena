@@ -230,4 +230,6 @@ round. Report ± standard errors.
 3. Movement policy pilot for pack harriers (wolves/hyenas) with an idle penalty.
 4. Identity: keep strengthening the light picks (ROSTER.md). (Done: counters 'lookout spots a threat' ~3/fight,
    'chases movement' (bull) ~2, 'charges blind at a sound' (black rhino) ~3 — telemetry only.)
-5. Replayability: daily challenge (shared seed) + verified leaderboard, fixed-animal-count mode, rotating rosters, new animals.
+5. Replayability: verified leaderboard, fixed-animal-count mode, rotating rosters, new animals. (Done: daily challenge —
+   `Daily challenge` button; the UTC date hashes to the map, board and fight seed; rematch keeps the seed; today's best in
+   localStorage `wa-daily:<date>`; a share line in the result banner.)
