@@ -2,14 +2,16 @@
 'use strict';
 const A = window.Arena;
 const $ = id => document.getElementById(id);
-const TIER = {400:'var(--gold)', 300:'var(--orange)', 200:'var(--red)', 100:'var(--slate)'};
-const TIERHEX = {400:'#f0b429', 300:'#ec7a2c', 200:'#d8473b', 100:'#8297aa'};
+// price-tier colors: $100 slate, $200 red, $300 orange, $400 gold, $500+ violet
+const tierHex = p => p >= 500 ? '#b48cf2' : p >= 400 ? '#f0b429' : p >= 300 ? '#ec7a2c' : p >= 200 ? '#d8473b' : '#8297aa';
 const C = {you:'#4fd1bd', foe:'#ef6b4b', bone:'#d9cfb4', fg:'#ece6d3', muted:'#949d8c', gold:'#f0b429', orange:'#ec7a2c', red:'#d8473b', slate:'#8297aa'};
-const BUDGET = 1000;
+const BUDGET = A.RULES.budget;
+const newBoardSeed = () => (Math.random() * 1e6 | 0) + 1;
 const maxStr = Math.max(...A.ANIMALS.map(a => Math.sqrt(A.hpOf(a) * a.dmg / a.cd)));
+const MAXV = {mine: Math.max(1, ...Object.values(A.MEASURED).map(m => m.mine)), threat: Math.max(1, ...Object.values(A.MEASURED).map(m => -m.theirs))};
 
 const S = window.__wa = {
-  team: new Set(), focus:'elephant', terrain:'savanna', mode:'wild', mount:'', pos:{}, youPos:null, seed: (Math.random()*1e6|0) + 1,
+  team: new Set(), boardSeed: newBoardSeed(), board: [], focus:'elephant', terrain:'savanna', mode:'wild', mount:'', pos:{}, youPos:null, seed: (Math.random()*1e6|0) + 1,
   screen:'draft', world:null, playT:0, playing:true, speed:2, sel:0, lastTs:0, dur:120
 };
 
@@ -18,9 +20,10 @@ const spent = () => [...S.team].reduce((s, id) => s + A.BY_ID[id].price, 0);
 const fmtT = t => { t = Math.max(0, t); const m = Math.floor(t/60), s = Math.floor(t%60); return m + ':' + String(s).padStart(2,'0'); };
 const kmh = v => Math.round(v * 3.6);
 function strengthOf(a){ return Math.sqrt(A.hpOf(a) * a.dmg / a.cd); }
-function tok(a, size){ const d = document.createElement('span'); d.className = 'tok'; d.style.cssText = tokStyle(a); d.title = a.name; if (size) { d.style.width = d.style.height = size + 'px'; } if (!FACES[a.id]) d.textContent = a.abbr; return d; }
-function tokStyle(a){ return FACES[a.id] ? `background:#222 url(${FACES[a.id]}) center/cover;border:2px solid ${TIERHEX[a.price]}` : `background:${TIER[a.price] || '#f5f2ea'}`; }
-function tokHTML(a, px){ return `<span class="tok" title="${esc(a.name)}" style="${tokStyle(a)};width:${px}px;height:${px}px;font-size:${Math.round(px*.4)}px">${FACES[a.id] ? '' : a.abbr}</span>`; }
+function tok(a, size){ const d = document.createElement('span'); d.className = 'tok'; d.style.cssText = tokStyle(a); d.title = a.name; if (size) { d.style.width = d.style.height = size + 'px'; } if (!faceOf(a)) d.textContent = a.abbr; return d; }
+const faceOf = a => FACES[a.species || a.id]; // pack items share their species' portrait
+function tokStyle(a){ return faceOf(a) ? `background:#222 url(${faceOf(a)}) center/cover;border:2px solid ${tierHex(a.price)}` : `background:${tierHex(a.price)};color:#14130f;font-weight:700`; }
+function tokHTML(a, px){ return `<span class="tok" title="${esc(a.name)}" style="${tokStyle(a)};width:${px}px;height:${px}px;font-size:${Math.round(px*.4)}px">${faceOf(a) ? '' : a.abbr}</span>`; }
 const FACEIMG = {}; for (const id in FACES){ const im = new Image(); im.src = FACES[id]; FACEIMG[id] = im; }
 function esc(s){ return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 
@@ -28,24 +31,33 @@ function terrainFit(a, tid){
   const out = [], load = A.heatLoad(a), snow = A.snowFactor(a), charger = a.gait === 'charge';
   if (tid === 'savanna'){ if (load >= 2.5) out.push(['bad', 'Cooks in the heat']); else if (load < 1) out.push(['good', 'Built for heat']); }
   if (tid === 'river'){ if (a.water >= .8) out.push(['good', 'Rules the river']); else if (load >= 6) out.push(['bad', 'Runs hot']); if (charger && a.water < .8) out.push(['bad', 'Charge founders in water']); }
-  if (tid !== 'river' && a.tags.includes('waterbound')) out.push(['bad', 'No water: weak']);
+  if (tid !== 'river' && a.tags.includes('waterbound')) out.push(['bad', 'No water: slow on land']);
   if (tid === 'forest'){ if (a.tags.includes('ambush')) out.push(['good', 'Ambush ×2']); if (charger) out.push(['bad', 'Crashes into trees']); else if (a.mass > 800) out.push(['bad', 'Slowed by trees']); }
   if (tid === 'tundra'){ if (snow >= .92) out.push(['good', 'At home in snow']); else if (snow < .7) out.push(['bad', `Bogged down (${Math.round(snow*100)}% speed)`]); if (a.cold < .5) out.push(['bad', 'Stiff in the cold']); }
   return out;
 }
 function badgesHTML(a){ return terrainFit(a, S.terrain).map(([k, t]) => `<span class="bdg ${k}">${t}</span>`).join(''); }
+// ---------- board ----------
+// a pick of a pack animal brings its whole group when the rules use groups
+const groupOf = a => a.group || 1;
+const itemName = a => groupOf(a) > 1 ? `${a.groupName} (${groupOf(a)})` : a.name;
+const boardTotal = () => S.board.reduce((t, id) => t + A.BY_ID[id].price, 0);
+function dealNewBoard(seed){
+  S.boardSeed = seed || newBoardSeed(); S.board = A.dealBoard(S.boardSeed, {terrain: S.terrain});
+  S.team.clear(); S.pos = {}; S.youPos = null; S.mount = ''; S.world = null; S.focus = S.board[0];
+}
 // ---------- navigation ----------
 function go(screen){
   S.screen = screen;
   for (const id of ['arena','draft','deploy','fight','lab']) $('s-' + id).hidden = id !== screen;
-  document.querySelectorAll('#steps button').forEach(b => b.setAttribute('aria-current', b.dataset.s === screen ? 'true' : 'false'));
+  document.querySelectorAll('#steps button[data-s]').forEach(b => b.setAttribute('aria-current', b.dataset.s === screen ? 'true' : 'false'));
   if (screen === 'deploy') { renderMounts(); sizeCanvas($('deployCanvas')); drawDeploy(); }
   if (screen === 'draft') renderDraft();
   if (screen === 'fight') { sizeCanvas($('fightCanvas')); }
   if (screen === 'lab') renderLabDesc();
   window.scrollTo({top:0});
 }
-document.querySelectorAll('#steps button').forEach(b => b.addEventListener('click', () => {
+document.querySelectorAll('#steps button[data-s]').forEach(b => b.addEventListener('click', () => {
   if (b.dataset.s === 'fight' && !S.world) { startBattle(); return; }
   go(b.dataset.s);
 }));
@@ -55,28 +67,33 @@ function renderBudget(){
   const sp = spent();
   $('spent').textContent = '$' + sp.toLocaleString();
   const m = $('meter'); m.innerHTML = '';
-  for (let i = 0; i < 10; i++){ const x = document.createElement('i'); if (i < sp/100) x.className = sp > BUDGET ? 'over' : 'on'; m.appendChild(x); }
+  for (let i = 0; i < BUDGET / 100; i++){ const x = document.createElement('i'); if (i < sp/100) x.className = sp > BUDGET ? 'over' : 'on'; m.appendChild(x); }
+  $('budgetMax').textContent = '/ $' + BUDGET.toLocaleString();
 }
 function renderDraft(){
   const tiers = $('tiers'); tiers.innerHTML = '';
   const left = BUDGET - spent();
-  for (const p of [400,300,200,100]){
+  const onBoard = S.board.map(id => A.BY_ID[id]);
+  $('boardLede').textContent = `This game's board: ${onBoard.length} animals worth $${boardTotal().toLocaleString()}. Spend up to $${BUDGET.toLocaleString()}; every board animal you don't pick ends up on the other side. Tap a card to draft it; the panel below shows the full stat line.`;
+  for (const p of [...new Set(onBoard.map(a => a.price))].sort((x, y) => y - x)){
     const row = document.createElement('div'); row.className = 'tier';
-    const tag = document.createElement('div'); tag.className = 'tierTag'; tag.style.background = TIER[p]; tag.textContent = '$' + p; row.appendChild(tag);
+    const tag = document.createElement('div'); tag.className = 'tierTag'; tag.style.background = tierHex(p); tag.textContent = '$' + p; row.appendChild(tag);
     const cards = document.createElement('div'); cards.className = 'cards';
-    for (const a of A.ANIMALS.filter(x => x.price === p)){
+    for (const a of onBoard.filter(x => x.price === p)){
       const picked = S.team.has(a.id);
       const c = document.createElement('button'); c.className = 'card' + (picked ? ' picked' : '') + (!picked && a.price > left ? ' cant' : '');
       c.setAttribute('aria-pressed', picked);
       const r1 = document.createElement('div'); r1.className = 'row1'; r1.appendChild(tok(a, 46));
-      const nm = document.createElement('div'); nm.className = 'nm'; nm.textContent = a.name; r1.appendChild(nm);
+      const nm = document.createElement('div'); nm.className = 'nm'; nm.textContent = itemName(a); r1.appendChild(nm);
       c.appendChild(r1);
       const st = document.createElement('div'); st.className = 'styleTag'; st.textContent = a.style; c.appendChild(st);
-      const fit = badgesHTML(a); if (fit){ const bd = document.createElement('div'); bd.className = 'badges'; bd.innerHTML = fit; c.appendChild(bd); }
+      const fit = (a.rare ? '<span class="bdg good">Rare</span>' : '') + (groupOf(a) > 1 ? `<span class="bdg good">×${groupOf(a)}, hunt together</span>` : '') + badgesHTML(a); if (fit){ const bd = document.createElement('div'); bd.className = 'badges'; bd.innerHTML = fit; c.appendChild(bd); }
       const meta = document.createElement('div'); meta.className = 'meta'; meta.textContent = `${a.mass.toLocaleString()} kg · ${kmh(a.spd)} km/h`; c.appendChild(meta);
       const bars = document.createElement('div'); bars.className = 'bars';
       const rows = [['Power', strengthOf(a)/maxStr], ['Armor', a.armor/.6], ['Speed', a.spd/20], ['Stamina', Math.min(1, a.stam/60)]];
-      for (const [k,v] of rows){ const l = document.createElement('span'); l.textContent = k; const b = document.createElement('div'); b.className = 'bar'; const f = document.createElement('b'); f.style.width = Math.round(Math.min(1,v)*100) + '%'; b.appendChild(f); bars.append(l, b); }
+      // measured: how much it helps on your side, and how dangerous it is if you leave it to the other side
+      const mv = A.MEASURED[a.id]; if (mv){ rows.push(['Helps', Math.max(0, mv.mine) / MAXV.mine, C.you], ['Threat', Math.max(0, -mv.theirs) / MAXV.threat, C.foe]); } // full wording in the detail panel
+      for (const [k,v,col] of rows){ const l = document.createElement('span'); l.textContent = k; const b = document.createElement('div'); b.className = 'bar'; const f = document.createElement('b'); f.style.width = Math.round(Math.min(1,v)*100) + '%'; if (col) f.style.background = col; b.appendChild(f); bars.append(l, b); }
       c.appendChild(bars);
       const ck = document.createElement('span'); ck.className = 'check'; ck.textContent = '✓'; c.appendChild(ck);
       c.addEventListener('click', () => {
@@ -95,25 +112,37 @@ function renderDraft(){
   // team line
   const tl = $('teamline'); tl.innerHTML = '';
   if (!S.team.size){ const s = document.createElement('span'); s.className = 'label'; s.textContent = 'No animals drafted yet. You can fight alone, but you will not like it.'; tl.appendChild(s); }
-  for (const id of S.team){ const a = A.BY_ID[id]; const ch = document.createElement('span'); ch.className = 'chip'; ch.appendChild(tok(a)); ch.append(a.name + ' $' + a.price); tl.appendChild(ch); }
+  for (const id of S.team){ const a = A.BY_ID[id]; const ch = document.createElement('span'); ch.className = 'chip'; ch.appendChild(tok(a)); ch.append(itemName(a) + ' $' + a.price); tl.appendChild(ch); }
+  const foes = S.board.filter(id => !S.team.has(id));
+  const fl = document.createElement('span'); fl.className = 'label'; fl.style.marginLeft = '6px';
+  fl.textContent = `Against you: ${foes.length} animals, $${foes.reduce((t, id) => t + A.BY_ID[id].price, 0).toLocaleString()}`; tl.appendChild(fl);
   renderDetail();
 }
 function renderDetail(){
   const a = A.BY_ID[S.focus]; const d = $('detail');
   const hp = A.hpOf(a);
   const stats = [
-    ['Price', '$' + a.price], ['Mass', a.mass.toLocaleString() + ' kg'], ['Top speed', kmh(a.spd) + ' km/h'],
+    ['Price', '$' + a.price], ...(A.MEASURED[a.id] ? [['Helps you', '+' + Math.max(0, Math.round(A.MEASURED[a.id].mine)) + ' s'], ['Threat if left', Math.max(0, Math.round(-A.MEASURED[a.id].theirs)) + ' s']] : []), ['Mass', a.mass.toLocaleString() + ' kg'], ['Top speed', kmh(a.spd) + ' km/h'],
     ['Durability', hp.toLocaleString() + ' hp'], ['Strike', a.dmg + ' / ' + a.cd + ' s'], ['Armor', Math.round(a.armor*100) + '%'],
     ['Reach', a.reach + ' m'], ['Sprint', a.stam + ' s'], ['Breaks at', Math.round(a.flee*100) + '% morale'],
     ['Heat tolerance', a.heat.toFixed(2)], ['Cold tolerance', a.cold.toFixed(2)], ['Strikes up to', a.strikeH + ' m'], ['Carries you at', a.mountH ? a.mountH + ' m' : 'too small'],
   ];
-  d.innerHTML = `<div><div style="display:flex;gap:10px;align-items:center;margin-bottom:10px">${tokHTML(a, 64)}<h3 style="font-size:22px">${esc(a.name)}</h3></div>
+  d.innerHTML = `<div><div style="display:flex;gap:10px;align-items:center;margin-bottom:10px">${tokHTML(a, 64)}<h3 style="font-size:22px">${esc(itemName(a))}</h3></div>${groupOf(a) > 1 ? `<p class="notes" style="margin:-4px 0 8px">One pick brings ${groupOf(a)} of them; they keep each other's nerve and go for the same target. Left on the board, all ${groupOf(a)} come at you.</p>` : ''}
     <div class="stats">${stats.map(([k,v]) => `<div class="stat"><div class="v">${esc(v)}</div><div class="k">${k}</div></div>`).join('')}</div></div>
     <div><div class="styleTag" style="font-size:15px">${esc(a.style)}</div><p style="margin:4px 0 10px">${esc(a.how)}</p>${badgesHTML(a) ? `<div class="badges" style="margin-bottom:10px">${badgesHTML(a)} <span class="notes" style="font-size:12px">in the ${esc(A.TERRAINS[S.terrain].name.toLowerCase())}</span></div>` : ''}<div class="label" style="margin-bottom:6px">Traits</div><ul class="traits">${a.traits.map(t => `<li>${esc(t)}</li>`).join('')}</ul>
     <p class="notes" style="margin-top:10px">${a.pred ? 'Predator: hunts by weighing meat against risk, and gets hungrier as the fight goes on.' : 'Herbivore: fights intruders, predators and anything that wounds it.'}</p></div>`;
 }
 $('toDeployD').addEventListener('click', () => go('deploy'));
 $('clearTeam').addEventListener('click', () => { S.team.clear(); S.world = null; S.pos = {}; renderAll(); });
+$('newBoard').addEventListener('click', () => { dealNewBoard(); renderAll(); });
+// image credits panel (rows built from CREDITS.md at build time)
+$('creditsBtn').addEventListener('click', () => {
+  $('creditsTbl').tBodies[0].innerHTML = CREDITS.map(c => `<tr><td>${esc(c.animal)}</td><td><a href="${esc(c.url)}" target="_blank" rel="noopener">${esc(c.file)}</a></td><td>${esc(c.author)}</td><td>${esc(c.license)}</td></tr>`).join('');
+  $('creditsDlg').showModal();
+});
+$('creditsClose').addEventListener('click', () => $('creditsDlg').close());
+// start over: fresh board and fight seed, empty team, default formation, back to the map screen
+$('startOver').addEventListener('click', () => { S.seed = newBoardSeed(); $('seedLbl').textContent = S.seed; dealNewBoard(); S.playing = false; renderAll(); go('arena'); });
 
 // ---------- arena setup ----------
 const TCOL = {savanna:'radial-gradient(circle at 70% 35%,#3d4a1f 0 14%,transparent 15%),linear-gradient(135deg,#5a4a1d,#2c2614)', river:'linear-gradient(90deg,#26341f 0 44%,#1f5165 44% 56%,#26341f 56%)', forest:'radial-gradient(circle at 30% 40%,#244a2c 0 18%,transparent 19%),radial-gradient(circle at 70% 60%,#244a2c 0 22%,transparent 23%),#17241a', tundra:'linear-gradient(135deg,#55606a,#2f363d)'};
@@ -122,7 +151,7 @@ function renderArenaOpts(){
   for (const T of Object.values(A.TERRAINS)){
     const b = document.createElement('button'); b.className = 'opt'; b.setAttribute('aria-pressed', S.terrain === T.id);
     b.innerHTML = `<div class="sw" style="background:${TCOL[T.id]}"></div><h3>${T.name}</h3><p>${esc(T.desc)}</p>`;
-    b.addEventListener('click', () => { S.terrain = T.id; S.world = null; S.pos = {}; S.youPos = null; renderArenaOpts(); renderDraft(); });
+    b.addEventListener('click', () => { if (S.terrain !== T.id){ S.terrain = T.id; dealNewBoard(S.boardSeed); } S.world = null; S.pos = {}; S.youPos = null; renderArenaOpts(); renderDraft(); renderBudget(); }); // water-only animals depend on the map
     to.appendChild(b);
   }
   const mo = $('modeOpts'); mo.innerHTML = '';
@@ -139,8 +168,8 @@ function renderArenaOpts(){
 $('toDraft').addEventListener('click', () => go('draft'));
 
 // ---------- mount picker ----------
-function bestMount(team){ team = team || [...S.team]; let b = '', h = 0; for (const id of team){ const m = A.BY_ID[id].mountH; if (m > h){ h = m; b = id; } } return b; }
-function reachersOf(h, team){ return A.ANIMALS.filter(a => !team.includes(a.id) && a.strikeH >= h).map(a => a.name); }
+function bestMount(team){ return A.defaultMount(team || [...S.team]) || ''; } // ride a giant if you have one; otherwise on foot
+function reachersOf(h, team){ return S.board.map(id => A.BY_ID[id]).filter(a => !team.includes(a.id) && a.strikeH >= h).map(a => a.name); }
 function renderMounts(){
   const box = $('mountOpts'); box.innerHTML = '';
   const team = [...S.team];
@@ -160,7 +189,7 @@ function renderMounts(){
   else {
     const a = A.BY_ID[S.mount], r = reachersOf(a.mountH, team);
     note = `You sit ${a.mountH} m up. ${r.length ? 'Still able to reach you there: ' + r.join(', ') + '.' : 'Nothing on the other side can reach you there.'} ` +
-      (a.mass < 700 || a.id === 'giraffe' ? `A ${a.mass < 700 ? 'small' : 'skittish'} mount doesn't fight while carrying you: it runs from threats at ${Math.round(a.spd * Math.max(.6, 1 - .6 * 75 / a.mass) * 3.6)} km/h and only bites back if grabbed.` : 'A heavy mount holds its ground near you and fights anything within 9 m.') +
+      (a.mass < 700 || a.gait === 'keepaway' ? `A ${a.mass < 700 ? 'small' : 'skittish'} mount doesn't fight while carrying you: it runs from threats at ${Math.round(a.spd * Math.max(.6, 1 - .6 * 75 / a.mass) * 3.6)} km/h and only bites back if grabbed.` : 'A heavy mount holds its ground near you and fights anything within 9 m.') +
       ` Hard rams by anything heavy relative to your mount can throw you off; you climb back on when it's close.`;
   }
   if (small.length) note += ` Too small to ride: ${small.join(', ')}.`;
@@ -176,9 +205,10 @@ function sizeCanvas(cv){
   cv.style.height = Math.round(w * A.H / A.W) + 'px';
   cv._dpr = dpr; cv._scale = cv.width / A.W;
 }
-function groundFor(terrain, trees, w, h, shade){
+function groundFor(terrain, trees, w, h, shade, variant){
   shade = shade || [];
-  const key = terrain + w + 'x' + h + ':' + trees.map(t => t.x.toFixed(1)).join(',') + ':' + shade.map(t => t.x.toFixed(1)).join(',');
+  const V = variant || A.baseVariant(terrain);
+  const key = terrain + w + 'x' + h + ':' + V.key + ':' + trees.map(t => t.x.toFixed(1)).join(',') + ':' + shade.map(t => t.x.toFixed(1)).join(',');
   if (groundCache[key]) return groundCache[key];
   const c = document.createElement('canvas'); c.width = w; c.height = h; const g = c.getContext('2d');
   const sc = w / A.W;
@@ -189,21 +219,37 @@ function groundFor(terrain, trees, w, h, shade){
   for (let i = 0; i < 2600; i++){ g.fillStyle = speck[i % 3]; const x = R()*w, y = R()*h, s = (R()*2 + .6) * sc * .25; g.fillRect(x, y, s, s); }
   if (terrain === 'savanna'){ g.strokeStyle = 'rgba(120,100,50,.25)'; g.lineWidth = sc*.12; for (let i = 0; i < 140; i++){ const x = R()*w, y = R()*h; g.beginPath(); g.moveTo(x, y); g.lineTo(x + (R()-.5)*sc*.8, y - sc*(.6+R()*.6)); g.stroke(); } }
   if (terrain === 'tundra'){ g.fillStyle = 'rgba(230,238,245,.05)'; for (let i = 0; i < 40; i++){ g.beginPath(); g.ellipse(R()*w, R()*h, sc*(4+R()*8), sc*(1.5+R()*3), R()*3, 0, 7); g.fill(); } }
-  const T = A.TERRAINS[terrain];
-  if (T.water){
-    const x0 = T.water.x0 * sc, x1 = T.water.x1 * sc;
+  // a forest clearing: lighter, grassy ground
+  if (V.clearing){ const c = V.clearing, grd = g.createRadialGradient(c.x*sc, c.y*sc, 0, c.x*sc, c.y*sc, c.r*sc); grd.addColorStop(0, 'rgba(92,110,58,.45)'); grd.addColorStop(.75, 'rgba(80,98,52,.3)'); grd.addColorStop(1, 'rgba(80,98,52,0)'); g.fillStyle = grd; g.beginPath(); g.arc(c.x*sc, c.y*sc, c.r*sc, 0, 7); g.fill(); }
+  // ponds: waterhole (muddy rim), forest pool, half-frozen lake (ice rim)
+  for (const p of V.ponds){
+    const X = p.x*sc, Y = p.y*sc, RX = p.rx*sc, RY = p.ry*sc;
+    if (p.cold){ g.fillStyle = 'rgba(214,232,242,.55)'; g.beginPath(); g.ellipse(X, Y, RX + sc*2.2, RY + sc*1.8, 0, 0, 7); g.fill(); g.fillStyle = 'rgba(236,244,250,.5)'; g.beginPath(); g.ellipse(X, Y, RX + sc*1, RY + sc*.8, 0, 0, 7); g.fill(); }
+    else { g.fillStyle = p.kind === 'waterhole' ? '#5c5034' : '#3a3a26'; g.beginPath(); g.ellipse(X, Y, RX + sc*1, RY + sc*.9, 0, 0, 7); g.fill(); }
+    const grd = g.createRadialGradient(X, Y, 0, X, Y, Math.max(RX, RY));
+    if (p.cold){ grd.addColorStop(0, '#163a4f'); grd.addColorStop(1, '#2a6a82'); } else { grd.addColorStop(0, '#173f52'); grd.addColorStop(1, '#22596e'); }
+    g.fillStyle = grd; g.beginPath(); g.ellipse(X, Y, RX, RY, 0, 0, 7); g.fill();
+    g.strokeStyle = p.cold ? 'rgba(230,242,250,.3)' : 'rgba(160,210,225,.18)'; g.lineWidth = sc*.15;
+    for (let i = 0; i < 6; i++){ const a = R()*7, k = R()*.6, x = X + Math.cos(a)*RX*k - sc, y = Y + Math.sin(a)*RY*k; g.beginPath(); g.moveTo(x, y); g.quadraticCurveTo(x + sc, y - sc*.4, x + sc*2, y); g.stroke(); }
+    if (p.cold){ g.fillStyle = 'rgba(240,248,252,.7)'; for (let i = 0; i < 5; i++){ const a = R()*7; g.beginPath(); g.ellipse(X + Math.cos(a)*RX*.85, Y + Math.sin(a)*RY*.85, sc*(.8+R()*1.2), sc*(.4+R()*.6), a, 0, 7); g.fill(); } }
+    g.fillStyle = 'rgba(236,230,211,.6)'; g.font = `700 ${Math.max(8, sc*1.1)}px "Big Shoulders Display", sans-serif`; g.textAlign = 'center';
+    g.fillText({waterhole:'WATERHOLE', pool:'POOL', lake:'ICY WATER'}[p.kind] || 'WATER', X, Y + RY + (p.cold ? sc*3.4 : sc*2.4)); g.textAlign = 'left';
+  }
+  const T = A.TERRAINS[terrain], B = V.band;
+  if (B){
+    const x0 = B.x0 * sc, x1 = B.x1 * sc;
     g.fillStyle = '#5c5034'; g.fillRect(x0 - sc*.8, 0, sc*.9, h); g.fillRect(x1 - sc*.1, 0, sc*.9, h);
     const grd = g.createLinearGradient(x0, 0, x1, 0); grd.addColorStop(0, '#22596e'); grd.addColorStop(.5, '#173f52'); grd.addColorStop(1, '#22596e');
     g.fillStyle = grd; g.fillRect(x0, 0, x1 - x0, h);
-    for (const [a, b] of T.water.fords){
+    for (const [a, b] of B.fords){
       g.fillStyle = '#6f6a4a'; g.fillRect(x0, a*sc, x1 - x0, (b - a)*sc);
       g.fillStyle = 'rgba(90,150,170,.35)'; g.fillRect(x0, a*sc, x1 - x0, (b - a)*sc);
       g.fillStyle = 'rgba(236,230,211,.75)'; g.font = `800 ${Math.max(9, sc*1.4)}px "Big Shoulders Display", sans-serif`; g.textAlign = 'center'; g.fillText('FORD', (x0 + x1) / 2, (a + b) / 2 * sc + sc*.5); g.textAlign = 'left';
     }
     g.strokeStyle = 'rgba(160,210,225,.18)'; g.lineWidth = sc*.15;
-    for (let i = 0; i < 40; i++){ const x = x0 + R()*(x1 - x0 - sc*3), y = R()*h; if (T.water.fords.some(([a, b]) => y >= a*sc && y <= b*sc)) continue; g.beginPath(); g.moveTo(x, y); g.quadraticCurveTo(x + sc*1.5, y - sc*.5, x + sc*3, y); g.stroke(); }
+    for (let i = 0; i < 40; i++){ const x = x0 + R()*(x1 - x0 - sc*3), y = R()*h; if (B.fords.some(([a, b]) => y >= a*sc && y <= b*sc)) continue; g.beginPath(); g.moveTo(x, y); g.quadraticCurveTo(x + sc*1.5, y - sc*.5, x + sc*3, y); g.stroke(); }
   }
-  if (T.snow){ g.fillStyle = 'rgba(240,245,250,.09)'; for (let i = 0; i < 70; i++){ g.beginPath(); g.ellipse(R()*w, R()*h, sc*(3+R()*9), sc*(1+R()*2.5), R()*.6 - .3, 0, 7); g.fill(); } }
+  if (T.snow){ g.fillStyle = 'rgba(240,245,250,' + (V.snow > 1 ? .14 : V.snow < 1 ? .05 : .09) + ')'; for (let i = 0; i < 70; i++){ const x = R()*w, y = R()*h, rx = sc*(3+R()*9), ry = sc*(1+R()*2.5), a = R()*.6 - .3; if (V.ponds.some(p => Math.hypot((x/sc - p.x) / (p.rx + 6), (y/sc - p.y) / (p.ry + 4)) < 1)) continue; g.beginPath(); g.ellipse(x, y, rx, ry, a, 0, 7); g.fill(); } }
   for (const t of shade){
     g.fillStyle = 'rgba(0,0,0,.28)'; g.beginPath(); g.arc(t.x*sc, t.y*sc, t.r*sc, 0, 7); g.fill();
     g.strokeStyle = 'rgba(120,150,70,.55)'; g.lineWidth = Math.max(1, sc*.25); g.setLineDash([sc*.5, sc*.4]); g.beginPath(); g.arc(t.x*sc, t.y*sc, t.r*sc, 0, 7); g.stroke(); g.setLineDash([]);
@@ -233,22 +279,26 @@ function groundFor(terrain, trees, w, h, shade){
 let deployWorld = null;
 // Positions are stored absolute on the map; the sim takes offsets from you.
 function youAt(){ return S.youPos || A.homeFor(S.terrain); }
+// this game's map variant (waterhole, fords, tree density...): it follows the terrain and the seed
+let varMemo = null;
+function curVar(){ if (!varMemo || varMemo.tid !== S.terrain || varMemo.seed !== S.seed) varMemo = {tid: S.terrain, seed: S.seed, v: A.mapVariant(S.terrain, S.seed)}; return varMemo.v; }
 function absPlacements(){
   const out = {}, team = [...S.team], h = A.homeFor(S.terrain);
   team.forEach((id, i) => {
     if (S.pos[id]) { out[id] = S.pos[id]; return; }
-    const dp = A.defaultPost(S.terrain, id); if (dp){ out[id] = dp; return; }
+    const dp = A.defaultPost(S.terrain, id, curVar()); if (dp){ out[id] = dp; return; }
     const p = A.defaultPlacement(team, id, i), y = youAt(); out[id] = {x: y.x + p.dx, y: y.y + p.dy};
   });
   return out;
 }
 function currentPlacements(){ const y = youAt(), abs = absPlacements(), out = {}; for (const id in abs) out[id] = {dx: abs[id].x - y.x, dy: abs[id].y - y.y}; return out; }
-function makeCfg(){ return { team:[...S.team], placements:currentPlacements(), human:youAt(), terrain:S.terrain, mode:S.mode, mount:(S.mount && S.team.has(S.mount)) ? S.mount : null, seed:S.seed }; }
+function makeCfg(){ return { board:S.board.slice(), team:[...S.team], placements:currentPlacements(), human:youAt(), terrain:S.terrain, mode:S.mode, mount:(S.mount && S.team.has(S.mount)) ? S.mount : null, seed:S.seed }; }
 function drawDeploy(){
   deployWorld = A.setup(makeCfg());
   const cv = $('deployCanvas'); const g = cv.getContext('2d'); const sc = cv._scale;
-  g.drawImage(groundFor(S.terrain, deployWorld.trees, cv.width, cv.height, deployWorld.shade), 0, 0);
-  const H = deployWorld.human, z = A.zoneFor(S.terrain);
+  g.drawImage(groundFor(S.terrain, deployWorld.trees, cv.width, cv.height, deployWorld.shade, deployWorld.variant), 0, 0);
+  const H = deployWorld.human, z = A.zoneFor(S.terrain, curVar());
+  const mn = $('mapNote'), note = curVar().note; mn.hidden = !note; mn.textContent = note || '';
   // your side of the map
   g.fillStyle = 'rgba(79,209,189,.07)'; g.fillRect(z.x0*sc, 0, (z.x1 - z.x0)*sc, cv.height);
   g.strokeStyle = 'rgba(79,209,189,.7)'; g.lineWidth = Math.max(1.5, sc*.2); g.setLineDash([sc*1.2, sc*.8]);
@@ -282,13 +332,13 @@ function drawDeploy(){
     if (!drag) return; const p = pos(e);
     if (drag === 'you'){
       const abs = absPlacements(), old = youAt();
-      const nu = A.clampPlace(S.terrain, A.HUMAN, p.x, p.y), dx = nu.x - old.x, dy = nu.y - old.y;
+      const nu = A.clampPlace(S.terrain, A.HUMAN, p.x, p.y, curVar()), dx = nu.x - old.x, dy = nu.y - old.y;
       // escorts come with you; guards on a post stay where they are
-      for (const id in abs){ const q = abs[id]; if (Math.hypot(q.x - old.x, q.y - old.y) <= A.ESCORT_R) abs[id] = A.clampPlace(S.terrain, A.BY_ID[id], q.x + dx, q.y + dy); }
+      for (const id in abs){ const q = abs[id]; if (Math.hypot(q.x - old.x, q.y - old.y) <= A.ESCORT_R) abs[id] = A.clampPlace(S.terrain, A.BY_ID[id], q.x + dx, q.y + dy, curVar()); }
       S.pos = abs; S.youPos = nu;
       if (S.mount && S.team.has(S.mount)) S.pos[S.mount] = Object.assign({}, S.youPos);
     } else {
-      S.pos = absPlacements(); S.pos[drag] = A.clampPlace(S.terrain, A.BY_ID[drag], p.x, p.y);
+      S.pos = absPlacements(); S.pos[drag] = A.clampPlace(S.terrain, A.BY_ID[drag], p.x, p.y, curVar());
     }
     drawDeploy();
   });
@@ -341,6 +391,10 @@ function frameAt(t){
 function clampI(v, a, b){ return v < a ? a : v > b ? b : v; }
 function clamp01(v){ return v < 0 ? 0 : v > 1 ? 1 : v; }
 
+const REDUCED = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+// visual effects: kept deliberately calm for now; flip one on to bring it back
+const FX = {fades: true, bursts: true, flash: false, stretch: false, breath: false, dust: false, shake: false};
+const BURST = {kill:'#ef6b4b', death:'#ef6b4b', maul:'#ef6b4b', crash:'#ec7a2c', sweep:'#ec7a2c'}; // big moments only
 function drawUnits(g, sc, w, fr, events, t, opts){
   opts = opts || {};
   // carcasses
@@ -371,26 +425,61 @@ function drawUnits(g, sc, w, fr, events, t, opts){
       g.globalAlpha = .8; g.stroke(); g.globalAlpha = 1; g.lineCap = 'butt';
     });
   }
+  // "alive" effects read the recorded frames around t (render only; the fight itself is unchanged)
+  const F = (!opts.deploy && S.world && S.world.frames) ? S.world.frames : null, kf = F ? clampI(Math.floor(t / 0.2), 0, F.length - 1) : 0;
+  const prevOf = (i, back) => F && kf - back >= 0 ? F[kf - back].u[i] : null;
+  const speedOf = i => { const a = prevOf(i, 0), b = prevOf(i, 1); return a && b && a[7] === 1 && b[7] === 1 ? Math.hypot(a[0] - b[0], a[1] - b[1]) / 0.2 : 0; };
+  const DUST = {savanna:'217,190,140', river:'120,100,70', forest:'90,80,55', tundra:'240,244,250'}[w.T.id] || '200,190,160';
+  if (F && FX.dust && !REDUCED) fr.u.forEach((u, i) => { // dust kicked up behind running heavyweights and chargers
+    if (u[7] !== 1 || U[i].side === 'H' || u[9] > 0) return;
+    const v = speedOf(i); if (!(v > 4 && (U[i].s.mass > 250 || u[15] === 'charge'))) return;
+    for (let j = 1; j <= 3; j++){ const p = prevOf(i, j); if (!p || p[7] !== 1) break;
+      const age = t - F[kf - j].t, r = (U[i].r * .6 + age * 2.2) * sc; g.fillStyle = `rgba(${DUST},${Math.max(0, .22 - age * .2)})`;
+      g.beginPath(); g.arc(p[0] * sc, p[1] * sc + U[i].r * sc * .4, r, 0, 7); g.fill(); }
+  });
+  // animals that just died shrink and fade where they fell
+  if (F && FX.fades) fr.u.forEach((u, i) => {
+    const d = U[i].deathT; if (u[7] !== 0 || d == null || t < d || t - d > .8) return;
+    const a = 1 - (t - d) / .8, rr = Math.max(10, U[i].r * sc * 1.1) * (.6 + .4 * a), im = FACEIMG[U[i].s.species || U[i].s.id];
+    g.save(); g.globalAlpha = a * .8; g.beginPath(); g.arc(u[0] * sc, u[1] * sc, rr, 0, 7); g.clip();
+    if (im && im.complete && im.naturalWidth){ g.filter = 'grayscale(1)'; g.drawImage(im, u[0] * sc - rr, u[1] * sc - rr, rr * 2, rr * 2); g.filter = 'none'; } else { g.fillStyle = '#444'; g.fill(); }
+    g.restore();
+  });
   // draw order: big first, riders last
   const order = fr.u.map((u, i) => i).sort((a, b) => (fr.u[a][9] - fr.u[b][9]) || (U[b].s.mass - U[a].s.mass));
   for (const i of order){
     const u = fr.u[i]; if (u[7] !== 1) continue;
     const unit = U[i]; const s = unit.s; const isH = unit.side === 'H';
-    const x = u[0]*sc, y = u[1]*sc; const rr = Math.max(isH ? 8 : 10, unit.r * sc * 1.1) * (u[9] > 0 && isH ? .85 : 1);
+    let x = u[0]*sc, y = u[1]*sc; const rr0 = Math.max(isH ? 8 : 10, unit.r * sc * 1.1) * (u[9] > 0 && isH ? .85 : 1);
+    // hit flash and shake (health dropped at the last recorded frame), stretch along a charge/pounce, breathing at rest
+    let flash = 0, stretch = 0, ang = 0, breath = 1;
+    if (F && kf > 0){
+      const dHp = F[kf - 1].u[i][2] - F[kf].u[i][2], since = t - F[kf].t;
+      if (FX.flash && dHp > .005 && since < .35) flash = (1 - since / .35) * Math.min(1, .35 + dHp * 8);
+      const a = prevOf(i, 0), b = prevOf(i, 1), v = speedOf(i);
+      if (FX.stretch && ['charge','pounce','lunge','dart'].includes(u[15]) && v > 1){ stretch = Math.min(.24, v / Math.max(4, s.spd) * .24); ang = Math.atan2(a[1] - b[1], a[0] - b[0]); }
+      else if (FX.breath && v < 1) breath = 1 + .03 * Math.sin(t * 2.4 + i * 1.7);
+    }
+    if (REDUCED){ stretch = 0; breath = 1; }
+    if (flash && !REDUCED){ const j = rr0 * .16 * flash; x += Math.sin(t * 90 + i) * j; y += Math.cos(t * 77 + i * 3) * j; }
+    const rr = rr0 * breath;
     // heat glow
     if (u[3] > .35){ const a = Math.min(.85, (u[3]-.35) * 1.1); const grd = g.createRadialGradient(x, y, rr*.7, x, y, rr*1.9); grd.addColorStop(0, `rgba(236,122,44,${a})`); grd.addColorStop(1, 'rgba(236,122,44,0)'); g.fillStyle = grd; g.beginPath(); g.arc(x, y, rr*1.9, 0, 7); g.fill(); }
     if (u[12]){ g.strokeStyle = C.gold; g.lineWidth = 2; g.beginPath(); g.arc(x, y, rr + 4, 0, 7); g.stroke(); }
-    // body
-    g.fillStyle = 'rgba(0,0,0,.45)'; g.beginPath(); g.arc(x + sc*.25, y + sc*.35, rr, 0, 7); g.fill();
+    // body (squashed and stretched along the direction of a charge)
+    g.save(); g.translate(x, y); if (stretch){ g.rotate(ang); g.scale(1 + stretch, 1 - stretch * .55); g.rotate(-ang); }
+    g.fillStyle = 'rgba(0,0,0,.45)'; g.beginPath(); g.arc(sc*.25, sc*.35, rr, 0, 7); g.fill();
     g.fillStyle = isH ? '#f5f2ea' : unit.side === 'P' ? '#1e5c53' : '#6b2a1d';
-    g.beginPath(); g.arc(x, y, rr, 0, 7); g.fill();
-    const im = !isH && FACEIMG[s.id];
-    if (im && im.complete && im.naturalWidth){ g.save(); g.beginPath(); g.arc(x, y, rr, 0, 7); g.clip(); g.globalAlpha = u[4] === 'flee' ? .55 : u[15] === 'stalk' ? .6 : 1; g.drawImage(im, x - rr, y - rr, rr*2, rr*2); g.restore(); }
+    g.beginPath(); g.arc(0, 0, rr, 0, 7); g.fill();
+    const im = !isH && FACEIMG[s.species || s.id];
+    if (im && im.complete && im.naturalWidth){ g.save(); g.beginPath(); g.arc(0, 0, rr, 0, 7); g.clip(); g.globalAlpha = u[4] === 'flee' ? .55 : u[15] === 'stalk' ? .6 : 1; g.drawImage(im, -rr, -rr, rr*2, rr*2); g.restore(); }
+    if (flash){ g.fillStyle = `rgba(255,70,45,${.55 * flash})`; g.beginPath(); g.arc(0, 0, rr, 0, 7); g.fill(); }
     // tier ring
     g.lineWidth = Math.max(2.5, rr*.22);
     g.strokeStyle = isH ? '#ffffff' : unit.side === 'P' ? C.you : C.foe;
     if (u[4] === 'flee') g.setLineDash([3, 3]);
-    g.beginPath(); g.arc(x, y, rr, 0, 7); g.stroke(); g.setLineDash([]);
+    g.beginPath(); g.arc(0, 0, rr, 0, 7); g.stroke(); g.setLineDash([]);
+    g.restore();
     // hp arc
     if (!opts.deploy){ g.strokeStyle = u[2] > .5 ? '#d5f2cf' : u[2] > .25 ? C.gold : C.red; g.lineWidth = Math.max(1.5, rr*.16); g.beginPath(); g.arc(x, y, rr + Math.max(2.5, rr*.22), -Math.PI/2, -Math.PI/2 + Math.PI*2*u[2]); g.stroke(); }
     // label
@@ -427,6 +516,12 @@ function drawUnits(g, sc, w, fr, events, t, opts){
       const e = events[k]; const age = t - e.t; if (age > 1.8) break; if (age < 0 || e.x == null || e.kind === 'info') continue;
       let slot = 0; while (slot < 2 && placed.some(p => Math.abs(p.x - e.x) < 7 && p.slot === slot && Math.abs(p.y - e.y) < 6)) slot++;
       if (slot >= 2) continue; placed.push({x:e.x, y:e.y, slot});
+      if (FX.bursts && age < .55 && BURST[e.kind] && !REDUCED){ // impact burst: expanding ring + debris
+        const q = 1 - age / .55, bx = e.x * sc, by = e.y * sc, R0 = (1.2 + age * 9) * sc;
+        g.strokeStyle = BURST[e.kind]; g.globalAlpha = q * .8; g.lineWidth = Math.max(1.5, sc * .35 * q); g.beginPath(); g.arc(bx, by, R0, 0, 7); g.stroke();
+        g.fillStyle = BURST[e.kind]; for (let d = 0; d < 7; d++){ const an = (k * 2.39 + d * 0.9) % 6.283, rd = R0 * (1.1 + ((k * 7 + d * 13) % 5) * .12); g.beginPath(); g.arc(bx + Math.cos(an) * rd, by + Math.sin(an) * rd, Math.max(1, sc * .28 * q), 0, 7); g.fill(); }
+        g.globalAlpha = 1;
+      }
       if (e.kind === 'charge' || e.kind === 'pounce' || e.kind === 'lunge' || e.kind === 'ambush') continue;
       const short = ({kill:'DOWN', death:'KILLED', charge:'CHARGE', latch:'GRAB', flee:'BREAKS', heat:'OVERHEAT', feed:'FEEDING', corner:'CORNERED', ambush:'AMBUSH', pounce:'POUNCE', lunge:'LUNGE', maul:'MAUL', sweep:'SWEEP', gate:'GATE', crash:'CRASH', flank:'FLANK', feud:'RIVALRY', rout:'ROUTED', danger:'!', bluff:'BLUFF', win:''})[e.kind];
       if (!short) continue;
@@ -440,12 +535,18 @@ function drawUnits(g, sc, w, fr, events, t, opts){
 function drawFight(){
   const w = S.world; if (!w) return;
   const cv = $('fightCanvas'); const g = cv.getContext('2d'); const sc = cv._scale;
+  // camera shake for a moment after a big impact (a crash, a heavy knockback, a kill)
+  let shake = 0;
+  if (FX.shake && !REDUCED) for (let k = w.events.length - 1; k >= 0; k--){ const e = w.events[k], age = S.playT - e.t; if (age < 0) continue; if (age > .3) break; if (e.kind === 'crash' || e.kind === 'kill' || (e.kind === 'charge' && /knocking/.test(e.text))) shake = Math.max(shake, (1 - age / .3) * sc * .5); }
+  g.setTransform(1, 0, 0, 1, 0, 0); g.fillStyle = '#0d110e'; g.fillRect(0, 0, cv.width, cv.height);
+  g.setTransform(1, 0, 0, 1, shake ? Math.sin(S.playT * 97) * shake : 0, shake ? Math.cos(S.playT * 83) * shake : 0);
   const standing = w.fallen ? w.trees.concat(w.fallen.filter(f => f.t > S.playT)) : w.trees; // trees an elephant shoved over stay up until they fall
-  g.drawImage(groundFor(S.terrain_used || w.T.id, standing, cv.width, cv.height, w.shade), 0, 0);
+  g.drawImage(groundFor(S.terrain_used || w.T.id, standing, cv.width, cv.height, w.shade, w.variant), 0, 0);
   if (w.mode === 'allout'){ g.fillStyle = C.foe; for (let i = 0; i < 6; i++) g.fillRect((A.W-1.2)*sc, (6 + i*10.8 - 2)*sc, sc*1.2, sc*4); }
   drawHazard(g, sc, w, S.playT);
   const fr = frameAt(S.playT);
   drawUnits(g, sc, w, fr, w.events, S.playT, {});
+  g.setTransform(1, 0, 0, 1, 0, 0);
 }
 // closing arena: tint everything outside the safe box, with a bright edge
 const HAZCOL = {fire: ['rgba(214,84,30,.38)', '#ff8a3d'], flood: ['rgba(38,104,190,.42)', '#6fb4ff'], blizzard: ['rgba(236,242,250,.5)', '#ffffff']};
@@ -484,7 +585,7 @@ function renderSide(){
 $('log').addEventListener('click', e => { const d = e.target.closest('[data-t]'); if (d){ S.playT = Math.max(0, +d.dataset.t - 1.5); S.playing = false; } });
 
 const HZ = A.MATCH_T;
-function bestKey(){ return 'wa-best:' + [S.terrain, S.mode, [...S.team].sort().join('+'), S.mount || 'foot'].join('|'); }
+function bestKey(){ return 'wa-best:' + [S.terrain, S.mode, S.board.join('+'), [...S.team].sort().join('+'), S.mount || 'foot'].join('|'); }
 function readBest(){ try { return +localStorage.getItem(bestKey()) || 0; } catch(e){ return 0; } }
 function writeBest(v){ try { localStorage.setItem(bestKey(), String(v)); } catch(e){} }
 function renderReport(show){
@@ -583,15 +684,19 @@ $('runDraft').addEventListener('click', () => {
 $('runPrice').addEventListener('click', () => {
   const btn = $('runPrice'); btn.disabled = true;
   const N = 480, R = A.rng(S.seed), terr = Object.keys(A.TERRAINS);
-  const on = {}, off = {}; A.ANIMALS.forEach(a => { on[a.id] = []; off[a.id] = []; });
+  const onBoard = S.board.map(id => A.BY_ID[id]);
+  const on = {}, off = {}; onBoard.forEach(a => { on[a.id] = []; off[a.id] = []; });
   runBatched(N, i => {
-    const team = A.randomDraft(R); const terrain = terr[i % 4];
-    const w = A.simulate({team, terrain, mode:S.mode, mount:bestMount(team) || null, seed: 5000 + i});
+    // a random team from this board: shuffle it and take whatever still fits the budget
+    const order = S.board.slice(); for (let k = order.length - 1; k > 0; k--){ const j = Math.floor(R() * (k + 1)); [order[k], order[j]] = [order[j], order[k]]; }
+    const team = []; let left = BUDGET; for (const id of order) if (A.BY_ID[id].price <= left){ team.push(id); left -= A.BY_ID[id].price; }
+    const terrain = terr[i % 4];
+    const w = A.simulate({board:S.board, team, terrain, mode:S.mode, mount:bestMount(team) || null, seed: 5000 + i});
     const sc = w.result.score;
-    A.ANIMALS.forEach(a => (team.includes(a.id) ? on : off)[a.id].push(sc));
+    onBoard.forEach(a => (team.includes(a.id) ? on : off)[a.id].push(sc));
   }, p => $('pPrice').style.width = (p*100) + '%', () => {
     btn.disabled = false;
-    const rows = A.ANIMALS.map(a => {
+    const rows = onBoard.map(a => {
       const m = mean(on[a.id]) - mean(off[a.id]), se = Math.sqrt(sem(on[a.id]) ** 2 + sem(off[a.id]) ** 2);
       return {a, m, se, per: m / a.price * 100};
     }).sort((x, y) => y.per - x.per);
@@ -611,7 +716,7 @@ $('runPrice').addEventListener('click', () => {
 function renderAll(){ renderBudget(); renderDraft(); renderArenaOpts(); }
 window.addEventListener('resize', () => { if (S.screen === 'deploy'){ sizeCanvas($('deployCanvas')); drawDeploy(); } if (S.screen === 'fight') sizeCanvas($('fightCanvas')); });
 $('seedLbl').textContent = S.seed;
-syncSpeed(); renderAll(); go('arena');
+dealNewBoard(); syncSpeed(); renderAll(); go('arena');
 requestAnimationFrame(frame);
 if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { if (S.screen === 'deploy') drawDeploy(); });
 })();

@@ -81,6 +81,10 @@ that gives you one of each animal, they're weaker by design.
   and rally morale; a lone herbivore panics sooner. Cheap; do first.
 - [x] **done (v2)** **Pack bonding:** any `pack` animal (lion, wolf, hyena) is bolder beside another pack animal,
   converges on its packmate's target and doesn't spread out; rivals (lion–hyena) excluded.
+- [x] **done** **Buffalo and bison herds:** `buffaloherd`, `bisonherd` (×3) items; `herd` animals bond with their
+  own kind like packs (no lone penalty: a lone buffalo is grumpy, not nervous) and mob the same target.
+- [ ] Herd ideas next: ringing up around you (musk-ox style), stampede contagion, herd-class bonuses (e.g. any two
+  bovids together hold their nerve).
 - [ ] **Sell some animals as groups** (rules option, bends "one of each"): "Wolf pack (4) $300",
   "Hyena clan (3) $300", "Lion pride (2 lionesses + male) $500", "Buffalo herd (3) $600". The pack
   orbits, flanks and hamstrings as a unit; skip it and the other side gets the whole pack.
@@ -144,6 +148,27 @@ Pick for new roles. Top three for design value: **honey badger, moose, Komodo dr
 - [ ] **Wounds and limping:** crippling hits that read better than raw HP.
 - [ ] **Replays:** time scrubber, per-animal damage graphs, death reasons. Also a debugging tool.
 
+## 7a. Roster identity (owner: "a roster like Smash Bros.")
+- [ ] Work through ROSTER.md: every animal gets one visible signature it does better than anyone. First targets:
+  lone wolf, leopard, cougar, honey badger, black bear, ostrich (lowest measured value).
+- [ ] Identity check in audit.js: per-fight counts of each signature (sweeps, mock charges, stomps, tree drops,
+  death rolls, holds, grudge kills, lookout spots).
+- [x] Decided against: leopard dragging kills up a tree (it would leave the fight: a liability on your side).
+
+## 7b. Art and presentation
+- [ ] **Portraits for every animal** (in progress: public-domain/CC0 Commons images only, credited in CREDITS.md).
+- [ ] **Credits footer + panel** in the game listing each portrait's source, author and license.
+- [ ] **"Video-game" feel without new art:** animate the tokens — squash-and-stretch on charges, a lunge toward
+  the target on a strike, red flash and shake when hit, dust trails behind chargers, facing flips, a stylized
+  (posterized / cel-shaded) filter on portraits. PD/CC0 images may be modified freely (we still credit);
+  CC BY needs credit, CC BY-SA also needs derivatives shared alike — which is why we only take PD/CC0.
+- [ ] **Game-portrait look for real photos (owner's direction):** keep the photos, add a consistent game treatment
+  (bolder contrast, slight posterize/painted filter, tier-colored rim, soft vignette), applied in the build step
+  or at draw time. Fine for PD/CC0 sources.
+- [ ] Effects are behind `FX` switches in ui.js: death fades and big-impact bursts on; hit flash/shake, charge
+  stretch, breathing, dust and camera shake built but off (owner: "doesn't need to be too busy yet").
+- [ ] Real frame animation needs drawn sprites: an original art project (don't trace others' photos).
+
 ## 8. Replayability
 - [ ] **Daily challenge** (shared seed, shared map) + **verified leaderboard** (store the config,
   re-simulate to verify the score — cheap because the sim is deterministic).
@@ -176,6 +201,21 @@ Pick for new roles. Top three for design value: **honey badger, moose, Komodo dr
 ## 9. Learned AI (ambition)
 - [ ] **Policy nets.** The sim is pure, deterministic and fast (~40 fights/s on 4 cores in Node), so it can
   serve as an RL environment. Uses, roughly in order of payoff:
+  0. *Predator target selection (owner's pick, Oct 2026):* the cleanest first problem — one decision (whom to
+     hunt, or whether to wait), a clear reward (damage dealt / survival / killing you), and an easy realism check
+     (does it still look like a tiger?). Today it's hand-tuned scoring (`predatorTarget`, `waitForOpening`).
+  0a. *Result of milestone 2 (Oct 2026):* evolution strategies on target choice found nothing better than the
+     hand-tuned heuristic on fresh fights; even "always go for the human" barely helps predators. Target choice has
+     little leverage. Next: give the net the decisions that matter — when to commit vs wait for an opening, pack
+     timing — and then movement (0c).
+  0b. *Guard positioning / anti-idle:* the same setup can train where your guards stand and when they step out
+     (reward survival, small penalty for idle time) instead of hand-tuning it. Owner: "can help idle behavior too".
+  0c. *Movement policy per archetype (owner idea):* ~7 archetypes (chargers, stalkers, pack harriers, lumberers,
+     keep-away, water ambushers, your guards). Observation: own state, nearest allies/enemies (relative position,
+     velocity, strength, intent), target, hazard edge, nearby trees/water. Action: direction + speed, and when to
+     trigger the signature move; physics stays hand-coded (a rhino still can't turn like a cat). Train like
+     targeting: clone today's gaits, then ES with an idle penalty + realism penalty. Plan: finish targeting ES
+     first, then pilot on pack harriers (wolves/hyenas), then roll out if it reads better and idles less.
   1. *Learned exploit finder:* train a policy for your side's placement/commands to maximize survival;
      whatever it discovers is a camping/exploit report (stronger than grid search).
   2. *Learned enemy pressure:* train the other side to kill you, then keep the hand-written realistic

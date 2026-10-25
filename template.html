@@ -66,6 +66,14 @@ h3{font-family:var(--display);font-weight:800;font-size:18px;letter-spacing:.05e
 .stat .k{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
 .traits{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:5px}
 .teamline{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+footer.credits{margin:28px 0 12px;padding-top:12px;border-top:1px solid var(--line);color:var(--muted);font-size:12.5px}
+.linkbtn{background:none;border:0;padding:0;color:var(--fg);text-decoration:underline;cursor:pointer;font:inherit}
+#creditsDlg{max-width:860px;width:calc(100% - 32px);background:var(--panel);color:var(--fg);border:1px solid var(--line);border-radius:12px;padding:16px}
+#creditsDlg::backdrop{background:rgba(0,0,0,.6)}
+#creditsDlg .dlghd{display:flex;justify-content:space-between;align-items:center;gap:12px}
+#creditsDlg a{color:var(--fg)}
+#creditsTbl td{font-size:12.5px;vertical-align:top}
+.steps .startOver{margin-left:auto;border-style:dashed;opacity:.85}
 .chip{display:inline-flex;align-items:center;gap:6px;padding:4px 10px 4px 4px;border-radius:999px;background:var(--panel2);border:1px solid var(--line);font-size:13px}
 .chip .tok{width:26px;height:26px;font-size:9px}
 
@@ -158,7 +166,7 @@ th.n{text-align:right}
 <header class="top">
   <div class="brand">
     <h1>Wild <span>Arena</span></h1>
-    <div class="budget"><span id="spent">$0</span><span class="meter" id="meter"></span><span style="color:var(--muted)">/ $1,000</span></div>
+    <div class="budget"><span id="spent">$0</span><span class="meter" id="meter"></span><span style="color:var(--muted)" id="budgetMax"></span></div>
   </div>
   <nav class="steps" id="steps" aria-label="Steps">
     <button data-s="arena">1 Arena</button>
@@ -166,6 +174,7 @@ th.n{text-align:right}
     <button data-s="deploy">3 Deploy</button>
     <button data-s="fight">4 Fight</button>
     <button data-s="lab">Lab</button>
+    <button id="startOver" class="startOver" title="New board, empty team, back to the map">Start over</button>
   </nav>
 </header>
 
@@ -174,12 +183,12 @@ th.n{text-align:right}
 <section class="screen" id="s-draft">
   <div style="display:flex;flex-direction:column;gap:6px">
     <h2>Build a team to protect you from the rest</h2>
-    <p class="lede">Spend up to $1,000. Every animal you don't pick ends up on the other side. Tap a card to draft it; the panel below shows the full stat line.</p>
+    <p class="lede" id="boardLede"></p>
   </div>
   <div class="teamline" id="teamline"></div>
   <div id="tiers" style="display:flex;flex-direction:column;gap:12px"></div>
   <div class="detail" id="detail"></div>
-  <div class="btnrow"><button class="btn primary" id="toDeployD">Set formation</button><button class="btn" id="clearTeam">Clear team</button></div>
+  <div class="btnrow"><button class="btn primary" id="toDeployD">Set formation</button><button class="btn" id="clearTeam">Clear team</button><button class="btn" id="newBoard">Deal a new board</button></div>
 </section>
 
 <!-- ARENA -->
@@ -189,7 +198,7 @@ th.n{text-align:right}
   <div class="label">Terrain</div>
   <div class="opts" id="terrainOpts"></div>
   <div id="modeOpts" hidden></div>
-  <p class="notes">The other side is one team, and the pressure builds over time. Predators hunt you and your guards; herbivores charge intruders. Break their morale and animals bolt out of the arena. After a minute a fire, flood or blizzard closes in from the edges and pushes everyone together. You score by how long you stay alive, up to five minutes.</p>
+  <p class="notes">The other side is one team, and the pressure builds over time. Predators hunt you and your guards; herbivores charge intruders. Break their morale and animals bolt out of the arena. After 30 seconds a fire, flood or blizzard closes in from the edges and pushes everyone together. You score by how long you stay alive, up to five minutes.</p>
   <div class="btnrow"><button class="btn primary" id="toDraft">Draft your team</button></div>
 </section>
 
@@ -201,6 +210,7 @@ th.n{text-align:right}
   </div>
   <div class="panel" style="display:flex;flex-direction:column;gap:10px"><div class="label">Ride one of your animals</div><div class="mounts" id="mountOpts"></div><p class="notes" id="mountNote"></p></div>
   <div class="stage" id="deployStage"><canvas id="deployCanvas"></canvas></div>
+  <p class="notes" id="mapNote" hidden></p>
   <div class="btnrow"><button class="btn primary" id="startFight">Release the animals</button><button class="btn" id="autoForm">Auto formation</button><span class="mono" style="color:var(--muted);font-size:12px">seed <span id="seedLbl"></span></span><button class="btn" id="newSeed">New seed</button></div>
 </section>
 
@@ -255,10 +265,13 @@ th.n{text-align:right}
   </div>
 </section>
 </main>
+<footer class="credits">Wild Arena · Animal portraits from Wikimedia Commons (public domain and CC0), credited individually. <button class="linkbtn" id="creditsBtn">Image credits</button></footer>
+<dialog id="creditsDlg" aria-label="Image credits"><div class="dlghd"><h3>Image credits</h3><button class="btn" id="creditsClose">Close</button></div><p class="notes">Every portrait is a crop of a public-domain or CC0 image from Wikimedia Commons. Authors are as stated on each file page.</p><div class="tblwrap"><table id="creditsTbl"><thead><tr><th>Animal</th><th>Source</th><th>Author</th><th>License</th></tr></thead><tbody></tbody></table></div></dialog>
 </div>
 
 <script>
 const FACES = /*FACES*/;
+const CREDITS = /*CREDITS*/;
 </script>
 <script>
 /*SIM*/

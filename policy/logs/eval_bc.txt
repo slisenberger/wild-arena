@@ -1,0 +1,44 @@
+heuristic vs bc_weights.json: 400 board fights (100/map, player-like teams, seed base 3003), common seeds; 54s
+on-policy agreement with the heuristic (net's own decisions): 99.1% of 40893
+                                      heuristic           policy      paired diff
+your win %                           40.0 ± 2.5       40.5 ± 2.5       +0.5 ± 1.4
+mean score (s)                      156.2 ± 6.2      157.8 ± 6.1       +1.6 ± 3.6
+pred. damage to your side              513 ± 28         536 ± 31         +23 ± 14
+pred. killed you %                   10.0 ± 1.5        9.8 ± 1.5       -0.3 ± 1.3
+pred. deaths / fight                2.30 ± 0.09      2.35 ± 0.10     +0.04 ± 0.04
+ES reward (game)                 -1.289 ± 0.136   -1.322 ± 0.139   -0.032 ± 0.090
+enemy predators' time share (% of predator-seconds alive, per fight):
+  you                                40.5 ± 1.3       40.0 ± 1.3       -0.5 ± 0.3
+  animals                            21.9 ± 0.9       22.3 ± 0.9       +0.4 ± 0.3
+  feud                                0.0 ± 0.0        0.0 ± 0.0       -0.0 ± 0.0
+  feed                                8.7 ± 0.6        8.7 ± 0.6       +0.0 ± 0.2
+  rest                                0.0 ± 0.0        0.0 ± 0.0       +0.0 ± 0.0
+  flee                               11.5 ± 0.6       11.5 ± 0.6       +0.0 ± 0.3
+  none                               11.9 ± 0.8       11.9 ± 0.8       -0.0 ± 0.2
+
+per species, pooled predator-seconds: share heuristic -> policy (points) for you / animals / feud / feed / rest / flee / none; deaths per appearance; kills of you
+  croc           5100s  29->23 / 11->12 / 0->0 / 22->24 / 0->0 / 5->5 / 33->36  deaths 0.36->0.36  kills you 8->7
+  wolfpack       2919s  18->17 / 41->44 / 0->0 / 10->9 / 0->0 / 10->10 / 21->20  deaths 0.62->0.64  kills you 2->0
+  jaguar         2369s  28->28 / 20->19 / 0->0 / 23->25 / 0->0 / 10->9 / 19->18  deaths 0.63->0.62  kills you 2->5
+  polar          2343s  38->33 / 22->23 / 0->0 / 7->9 / 0->0 / 20->18 / 13->17  deaths 0.41->0.40  kills you 11->9
+  cougar         2288s  73->76 / 5->6 / 0->0 / 3->3 / 0->0 / 16->13 / 2->2  deaths 0.63->0.65  kills you 5->5
+  honeybadger    2250s  6->6 / 15->16 / 0->0 / 32->33 / 0->0 / 0->0 / 47->45  deaths 0.85->0.88  kills you 0->0
+  leopard        1967s  68->69 / 6->6 / 0->0 / 2->4 / 0->0 / 22->18 / 2->2  deaths 0.72->0.69  kills you 2->3
+  hyenapack      1740s  29->28 / 41->37 / 0->0 / 6->9 / 0->0 / 14->14 / 11->12  deaths 0.59->0.63  kills you 0->1
+  lionpack       1700s  18->19 / 20->19 / 0->0 / 20->17 / 0->0 / 11->12 / 31->33  deaths 0.57->0.60  kills you 1->1
+  grizzly        1681s  20->20 / 43->45 / 0->0 / 7->7 / 0->0 / 16->16 / 14->13  deaths 0.42->0.48  kills you 3->1
+  blackbear      1274s  30->29 / 17->17 / 0->0 / 14->13 / 0->0 / 17->23 / 21->17  deaths 0.71->0.67  kills you 0->1
+  tiger          1269s  64->66 / 18->18 / 0->0 / 1->1 / 0->0 / 14->11 / 3->3  deaths 0.64->0.68  kills you 6->6
+  wolfpack6       949s  7->8 / 30->36 / 0->0 / 16->15 / 0->0 / 13->12 / 34->29  deaths 0.52->0.52  kills you 0->0
+  lion            607s  32->33 / 15->21 / 1->1 / 13->6 / 0->0 / 19->23 / 19->16  deaths 0.56->0.46  kills you 0->0
+  hyena           522s  31->30 / 9->9 / 0->0 / 15->16 / 0->0 / 12->12 / 32->33  deaths 0.73->0.76  kills you 0->0
+  wolf            510s  16->21 / 16->20 / 0->0 / 26->21 / 0->0 / 15->16 / 28->22  deaths 0.61->0.61  kills you 0->0
+
+realism gates (±10 pts on you/animals/feed/none for species with ≥1500 s, appetite order, deaths): FAIL: appetite order croc (23.2%) <= jaguar (28.4%) on you; appetite order hyenapack (28.3%) <= jaguar (28.4%) on you
+
+per map (win %, heuristic -> policy, paired diff ± SE; damage to your side):
+  savanna  37.0 -> 43.0  (+6.0 ± 3.1; damage +7 ± 35; 10/100 fights changed outcome)
+  river    38.0 -> 39.0  (+1.0 ± 2.7; damage +24 ± 24; 7/100 fights changed outcome)
+  forest   48.0 -> 46.0  (-2.0 ± 3.2; damage +30 ± 27; 10/100 fights changed outcome)
+  tundra   37.0 -> 34.0  (-3.0 ± 2.2; damage +30 ± 25; 5/100 fights changed outcome)
+(note: the gate line above used the first version of gates.js, before the 5-pt appetite-order margin and the noise-aware profile rule; with the final gates.js the BC net passes)

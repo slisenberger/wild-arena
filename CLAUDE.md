@@ -1,7 +1,9 @@
 # Wild Arena
 
 An autobattler built from the "You have $1,000 — build a team of animals to protect you from the rest"
-meme. You draft animals on a budget; **every animal you don't pick is on the other side**. Score is
+meme. **Board model (Oct 2026):** each game deals a random board of animals from the roster; you draft from
+it on a fixed budget, and **every board animal you don't pick is on the other side** (`RULES`, `dealBoard`
+in sim.js; `cfg.board`). With `RULES.total` set, every board's prices add up to the same total. Score is
 **time alive, capped at 5:00** (surviving to 5:00, clearing the board, or the other side giving up all
 count as 5:00). Live site: GitHub Pages serves `index.html` from `main`.
 
@@ -10,7 +12,9 @@ count as 5:00). Live site: GitHub Pages serves `index.html` from `main`.
   Exports `window.Arena` in the browser and `module.exports` in Node.
 - `ui.js` — the game UI (arena → draft → deploy → fight → lab), canvas rendering, Lab batch runs.
 - `template.html` — page shell + CSS with placeholders `/*FACES*/`, `/*SIM*/`, `/*UI*/`.
-- `faces.json` — 16 base64 portrait crops (from the meme image) keyed by animal id.
+- `faces.json` — 26 base64 portraits (112×112) keyed by species id, all cropped from public-domain or CC0
+  Wikimedia Commons images (the original meme crops were replaced: unknown rights). `CREDITS.md` lists each
+  source; `build.js` turns its table into the in-game Image credits panel. Pack items reuse their species' face.
 - `build.js` — `node build.js` assembles everything into the single self-contained `index.html`.
   **Always rebuild and commit `index.html` after changing sim.js/ui.js/template.html** — Pages serves it.
 - Analysis tools (Node, use `worker_threads`, 2 workers):
@@ -25,9 +29,17 @@ count as 5:00). Live site: GitHub Pages serves `index.html` from `main`.
   - `camp.js [teams] [seeds] [gridSeeds]` — camping/anti-pattern probe (4 workers, ~3 min at 200 4 12):
     how fights end, how long the other side presses, tree/ride time, enemies loitering without a target;
     then an exploit search over your start position, with the best spot re-checked on 40 fresh seeds.
-- `board.js [boards] [screenSeeds] [verifySeeds] [sizes] [budget]` — random-board probe: deals random boards of K
-  animals (other side = board animals you don't pick, `cfg.board`), screens every affordable team, re-runs the
-  best 3 on fresh seeds, reports how winnable boards are by K.
+- `board.js [boards] [screenSeeds] [verifySeeds] [sizes] [budget] [total]` — board validation: deals boards with
+  the game's `dealBoard` (env `PRICES=` candidate prices, `RAREP=`), screens every full-spend team on each
+  board, re-runs the best 3 on fresh seeds, reports how winnable boards are.
+- `price_abs.js [N] [out.json] [ids]` — **the pricing measurement to use.** Controlled experiment per catalog
+  item: the same random base boards, 3-animal base teams and seeds with the item absent, on your side, on
+  theirs; swing = mine − theirs ± paired SE (~4 min for all items at N=240). `price_scheme.js <abs out> <s per
+  $100> <giant cap> <out>` turns it into prices ($100 steps, min $100, giants capped) and a board total.
+- `price_board.js <config.json> <out.json>` — (superseded: biased) board-mode regression pricing: random boards + player-like random teams, one
+  fight each; least-squares fit of each animal's swing value (seconds gained by moving it from their side to
+  yours), proposed prices ∝ swing ($100 steps, min $100). Note: the older whole-roster tools (`quick.js`,
+  `camp.js`, `budget.js`, `tourney.js`) predate the board model and now fight all 22 animals.
 - `BACKLOG.md` — every idea captured so far (realism, anti-camping, pricing, herds, maps, animals,
   mechanics, replayability) with status and suggested order. Add new ideas there.
 
@@ -62,11 +74,49 @@ round. Report ± standard errors.
 - **Opportunists:** predators value targets already locked in a fight (×1.5) or badly hurt; a guard that's
   busy fighting only deters half as much.
 - **You fight back:** on foot, you kick/punch whatever is on you (weak, but it can finish something).
-- **Closing arena** (wild mode, `cfg.hazard:false` disables): from 60 s to 240 s the safe box shrinks from the
+- **Closing arena** (wild mode, `cfg.hazard:false` disables): from 30 s to 180 s (was 60–240 s) the safe box shrinks from the
   whole field to 36 × 24 m around a point near mid-field (random per seed). Outside: fire (savanna, forest;
   2.5% max HP/s + heat), flood (river; slows non-swimmers, non-swimmers lose 1.5%/s), blizzard (tundra; slow,
   stamina drain, 1.2%/s). Everyone steers inside except routing animals. "They gave up" only counts after
   the arena has fully closed. `zoneAt(w, t)` gives the box for rendering.
+- **Morale from losses** is species- and proximity-based: a death shakes its own kind fully and anything within
+  15 m that saw it (0.4); it no longer demoralizes the whole side (that made weak animals and packs liabilities).
+- **Roster (26 species, 32 picks with packs/herds):** the original 16 plus black rhino (1.2 t, irritable blind charger — the white rhino is now
+  placid, no `blindCharger`), fighting bull (`bred`: always worked up), moose (snow-proof, strong swimmer,
+  front-hoof stomper), ostrich (lookout + kicker, fast evasive mount), honey badger (`fearless`: morale never
+  breaks, takes on anything), and the rare triceratops (`rare`, `giant`: 8 t charger, rideable at 3 m; only
+  on ~10% of boards). Hippo armor .5 (5–6 cm skin). Polar bear `snowCamo`: hard to see beyond 15 m on tundra.
+  Then (26): rare woolly mammoth (`sweep` like the elephant, cold-proof, heat-intolerant), black bear (timid,
+  climbs), leopard (ambush stalker, climbs), wild boar (cheap tusked charger, `standsGround`).
+- **Pack items:** `wolfpack` ×4 (dealt 3 in 4), rare `wolfpack6` ×6, `hyenapack` ×4, `lionpack` ×2 (coalition),
+  `buffaloherd` ×3, `bisonherd` ×3 are extra catalog entries (`species` points at the base animal, `group` = size,
+  `dealWeight`; `sp(s)` gives the species for rivals/yields/snow checks). A board deals each species once, solo or
+  as a group. One pick brings the whole group; left on the board, all of it is
+  against you. Whole-roster mode (no `cfg.board`) ignores pack items.
+- **Croc:** on a map with water it only takes prey within 5 m of the water and lurks submerged otherwise (it
+  used to walk out and spend 86% of the fight on land). Away from water it bites as hard as ever but moves at
+  70% and tires fast. Cold-blooded animals (cold < .3: the croc) are never dealt on the tundra.
+- **Realism audit (Oct 2026, two zoology reviews + `audit.js` behavior telemetry):**
+  - Other-side herbivores notice you by sight (`canSee`) or by sound/smell of movement within 30 m.
+  - Mock charges via `bluff` + `bluffP` (gorilla always; elephant/mammoth .6, black bear .7, grizzly .5,
+    black rhino/bison .3), never against a grudge or while guarding you.
+  - `vindictive` buffalo: 40 s grudge, steadier morale. Gorilla guardian: morale floor while you're targeted.
+  - `stomp` (moose), `submerges` (hippo hidden at 10 m), `chasesMovement` (bull), `looseSkin` (honey badger:
+    5× shake-off, half hold damage), per-species `latchMax` (tiger/cougar 4, jaguar 3.5, lion 3),
+    `yieldsTo` lists (cougar to bears and wolf packs; leopard to lion, tiger, hyena).
+  - Pack bonds are same-species only; `packStrength` (an animal + packmates within 15 m) drives a pack's
+    choice of prey and lets your packs engage big threats. Hyena clan ×4; two lions = "Lion coalition".
+  - `aggr` now matters for predators (commit threshold scaled by .4 + aggr). Stalkers break cover and run
+    when the prey flees or turns on them; stalkers have tall-grass cover on the savanna (12 m).
+  - **Waiting for an opening** (`waitForOpening`): an enemy predator facing a target ringed by stronger guards
+    circles ~16 m out until a guard is busy, the target is hurt or running, or its patience runs out.
+  - Croc drags held prey lighter than itself into the water. White rhino placid and yields to elephants.
+  - **Default mount = a giant (`defaultMount`: mountH ≥ 3) else on foot**: riding a rhino/hippo/bison/moose/
+    giraffe measured worse than running on foot; riding a giant is much better (ELE team 84% vs 63%).
+- **Map variety** (`mapVariant(tid, seed)`, `cfg.mapSeed` / `cfg.seed`; `cfg.variant:false` = exact old map):
+  savanna waterhole ~44%, river width/ford jitter + a third ford ~36%, forest 22–38 trees, clearing ~39%,
+  pool ~29%, tundra deep/light snow ~25%/27% and a half-frozen lake ~44% (cold water slows and drains
+  stamina by cold tolerance). World water is `w.band` (river) + `w.ponds`; `w.wet` if any.
 - **Trees:** animals steer around trunks and detour when wedged; an elephant pushing a trunk ~1 s knocks it
   over (`w.fallen` keeps the time, so replays show it standing until then).
 - **Maps:** savanna (sun climbs: heat ramps for everyone; acacia shade), river (vertical river x 47–57
@@ -101,8 +151,48 @@ round. Report ± standard errors.
 - The real issue is the other side stalling: 67% of 5:00 results are "gave up"; strong teams settle the
   fight in ~1.5–2 min, then ~6 enemies loiter targetless. Fix ideas in BACKLOG.md §2 (before pricing).
 
+## Learned predator targeting (policy/, milestone 1 done Oct 2026)
+- Opt-in hook: `cfg.policy = weights` (net picks enemy-predator targets) or `{teacher:true}` (heuristic through
+  the hook); without it the engine is byte-identical. Require `policy/policy.js` to load the chooser.
+- 61-feature options (none / feed / each candidate), shared MLP 61→32→1, argmax. Behavior-cloned from the heuristic:
+  99.0% held-out agreement; 400 paired fights match within noise. `policy/README.md` has the milestone-2 plan
+  (evolution strategies + realism penalty; needs ~200 fights per candidate; overnight-scale compute).
+- `predCandidates` in sim.js mirrors `predatorTarget`'s eligibility filters: change both together.
+- Milestone 2 (Oct 2026): BC retrained on the current engine (63 features, 98.9% held-out, paired eval within noise).
+  ES (full net and a 39-dim linear skip term), directed probes and a validation-gated walk found nothing that beats BC on
+  fresh fights within the realism gates (final 400 fresh fights: reward −0.000 ± 0.094); no `es_weights.json`. Target
+  choice alone has little leverage (even "always attack the human" gains only ~4 pts of kills while losing damage);
+  next: give the policy actions such as "wait for an opening". Details: `policy/README.md`, tools `es.js`, `probe.js`,
+  `gates.js`, `run.js`. sim.js has a stat-only `st.foe` (damage to your side).
+
+## Pricing findings (Oct 2026)
+- The regression in `price_board.js` is biased in board mode: with budget-fill teams, a cheap animal left on
+  their side mostly means you bought big animals, so cheap animals looked worth −10 to −43 s. Controlled
+  measurement (`price_abs.js`) shows every animal is worth something: elephant 190 s, triceratops 172,
+  mammoth/rhino/hippo ~108, black rhino/bison 83, moose/buffalo ~68, polar 59, bull 57, hyena clan 54,
+  croc 46, lion coalition 44, tiger/grizzly 42, giraffe 36, … leopard/cougar 10, honey badger 8, lone wolf 2.
+- Owner rule: the elephant must stay affordable (strictly proportional pricing would put it at ~$1,900), so
+  giants are capped (`price_scheme.js`).
+- **Adopted scheme (in sim.js):** 20 s of swing per $100, giants capped (elephant $700, triceratops $800), herds $700
+  (buffalo herd 188 s, bison herd 198 s), $1,000 budget, every board dealt to $2,800 (±$100). Validation, 16
+  fixed-total boards, top 3 per board re-run on 24 fresh seeds: median board's best team $900 → 50%, **$1,000 → 75%**
+  (min 50, p25 63), $1,100 → 92%; boards with/without the elephant both 75%; 14 distinct best teams over 16 boards;
+  typical full-spend team ~84 s. Runner-up: 25 s per $100 at $800 / board $2,400 → also 75% but coarser, a
+  29% board, and not the meme's $1,000.
+- **Budget raised to $1,200 (owner: $1,000 felt hard)** after the less-idle changes: median board's best team
+  92% (min 50, p25 83), typical full-spend team median 169 s (vs 84 s at $1,000), 56% of teams win at least one
+  screen run, 15 distinct best teams over 16 boards. $1,100: best 88%, typical 101 s.
+- **Current prices (after the species-based morale fix, `abs_r5`):** 24 s of swing per $100, giants/herds capped
+  at $700 (triceratops $800), board total $2,800, budget $1,200. Validation: median board's best team 88% (min 50,
+  p25 83; with/without elephant both 88%), typical full-spend team median 167 s, 51% of teams win at least one
+  screen run, 13 distinct best teams over 16 boards. Cards show measured "Helps you" / "Threat if left"
+  (`MEASURED`, written by `apply_values.js`).
+- Guards no longer attack enemies that are minding their own business far from you (they used to rank a
+  peaceful elephant as a top threat and provoke it).
+
 ## Open threads (full list in BACKLOG.md)
-1. Test $1,300 with scheme C prices (aim: top teams 75–85% wins, per-map champions preserved).
-2. Add the chosen budget/price scheme as a rules option on the arena screen.
-3. Possibly lower white-rhino aggression (they're placid grazers) if it still feels too strong.
-4. Daily challenge (shared seed) + verified leaderboard (store config, re-simulate to verify score).
+1. Realism: lions (coalitions) encircle prey instead of charging in a line; owner decision on a more fragile human.
+2. Policy: give the net timing decisions (wait for an opening vs commit, pack timing) — target choice alone has no leverage.
+3. Movement policy pilot for pack harriers (wolves/hyenas) with an idle penalty.
+4. Identity: signature counters for lookout, bull chases, rhino blind charges; keep strengthening the light picks (ROSTER.md).
+5. Replayability: daily challenge (shared seed) + verified leaderboard, fixed-animal-count mode, rotating rosters, new animals.

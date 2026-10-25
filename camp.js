@@ -7,7 +7,7 @@
 const { Worker, isMainThread, parentPort, workerData } = require('worker_threads');
 const SIM = process.env.SIM || './sim.js';
 const A = require(SIM);
-function tallest(t){ let b = null, h = 0; for (const id of t){ const m = A.BY_ID[id].mountH; if (m > h){ h = m; b = id; } } return b; }
+function tallest(t){ return A.defaultMount(t); } // ride a giant, else on foot
 
 function run(j){
   const w = A.setup({team: j.team, terrain: j.tr, mode: 'wild', mount: tallest(j.team), seed: j.seed, human: j.human});
