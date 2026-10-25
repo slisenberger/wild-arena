@@ -807,7 +807,7 @@ function herbivoreTarget(w, u){
       if (has(u,'hatesPredators') && t.s.pred && d < 20) sc = 1.5; else continue;
     }
     if (sc === 0){
-      if (t.s.pred) sc = 2;
+      if (t.s.pred) sc = d < 12 || t.target === u ? 2 : .6 + u.agit; // mob a predator that's close or coming for it; one across the field is just another intruder
       else if (t.side === 'P') sc = .6 + u.agit;           // intruders: your team
       else if (t.side === 'H') sc = .35 + u.agit * .6 + .6 * dr; // you: a nuisance more than a target, until it has been kept waiting
       else sc = 1.5;                                        // an active feud
@@ -829,6 +829,8 @@ function nearestPlayer(w,u){ let b=null,bd=1e9; for(const t of w.units) if(t.sid
 // battle drive (owner: every animal is here to win the fight): time spent with nothing to do builds up, and the
 // longer an animal has been idle the farther it looks for a fight and the readier it is to start one
 function drive(u){ return clamp(((u.idleT || 0) - 3) / 12, 0, 1); }
+// an enemy busy fighting one of ours (or you), close enough to be trading blows
+function locked(e){ const t = e.target; return !!(t && t.side !== 'E' && active(t) && dist(e, t) < e.r + t.r + e.s.reach + 2); }
 function allyTarget(w, u){
   const H = w.human;
   const anchor = u.post || H;
@@ -853,13 +855,14 @@ function allyTarget(w, u){
     if (e.state !== 'flee' && !e.heatstroke) intent = Math.max(intent, .3 * dr); // bored guards go looking for trouble
     let threat = intent * strength(e) / (1 + dh / 10);
     const rawRatio = packStrength(w, u) / strength(e);
-    if (rawRatio < .35 && dh > 6 && u.grudge !== e && !has(u,'guardian') && !has(u,'fearless')) continue; // small guards don't pick fights with giants (a pack counts as one)
+    if (rawRatio < .35 && dh > 6 && u.grudge !== e && !has(u,'guardian') && !has(u,'fearless') && !(u.s.pred && u.s.latch && locked(e) && e.s.mass < 3000)) continue; // small guards don't pick fights with giants (a pack counts as one)
     const ratio = clamp(rawRatio, .25, 2.5);
     let sc = threat * Math.sqrt(ratio) / (1 + dm / 15);
     if (has(u,'guardian') && e.target === H) sc *= 2;
     // a big cat on guard picks fights it can win: other predators, and things its size or smaller, above all
     // whatever is coming for you; a healthy tonne-plus herbivore is someone else's job
-    if (u.s.pred && u.s.latch){ sc *= clamp(my / strength(e), .35, 2); if (e.s.pred) sc *= 1.5; if (e.target === H) sc *= 1.3; }
+    if (u.s.pred && u.s.latch){ sc *= clamp(my / strength(e), .35, 2); if (e.s.pred) sc *= 1.5; if (e.target === H) sc *= 1.3;
+      if (!e.s.pred && locked(e)) sc *= 2.5; } // a big herbivore locked in a fight with one of ours (or you): hit it from behind, the way lions take buffalo
     if (u.s.rivals && u.s.rivals[sp(e.s)]) sc *= Math.sqrt(u.s.rivals[sp(e.s)]);
     if (yieldsTo(w, u, e)) sc *= .3;
     if (has(u,'kicker') && !has(u,'boxer') && !(dm < 6 || u.grudge === e)) sc *= .1; // a kangaroo on guard boxes whatever it's set on; it just doesn't hunt you on the other side
