@@ -866,7 +866,13 @@ function step(w){
     }
     let tgt = 1 - .85 * (1 - u.hp / u.maxhp) - .3 * Math.max(0, fear / my - 1);
     if (social(u)){ const m = packMates(w, u); tgt += m ? Math.min(.2, .1 * m) : has(u,'pack') ? -.12 : 0; } // a lone pack hunter is nervous (a lone buffalo is just grumpy); together they're bold
-    let fallen = 0; for (const o of units) if (o.side === u.side && o !== u && (o.state === 'dead' || o.escaped)) fallen++;
+    // a loss shakes its own kind (packmates, herdmates) and anything that saw it fall close by; a rhino doesn't
+    // lose its nerve because a wolf died across the field
+    let fallen = 0;
+    for (const o of units){
+      if (o.side !== u.side || o === u || !(o.state === 'dead' || o.escaped)) continue;
+      if (sp(o.s) === sp(u.s)) fallen += 1; else if (o.state === 'dead' && dist(o, u) < 15) fallen += .4;
+    }
     tgt -= (u.side === 'E' ? .05 : .03) * fallen;
     if (u.side === 'E' && u.state !== 'flee') tgt += .25 * pressure(w);
     if (u.side === 'P') tgt += Math.min(.25, friends * .06);
