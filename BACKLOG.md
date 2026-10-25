@@ -155,6 +155,11 @@ Pick for new roles. Top three for design value: **honey badger, moose, Komodo dr
   the target on a strike, red flash and shake when hit, dust trails behind chargers, facing flips, a stylized
   (posterized / cel-shaded) filter on portraits. PD/CC0 images may be modified freely (we still credit);
   CC BY needs credit, CC BY-SA also needs derivatives shared alike — which is why we only take PD/CC0.
+- [ ] **Game-portrait look for real photos (owner's direction):** keep the photos, add a consistent game treatment
+  (bolder contrast, slight posterize/painted filter, tier-colored rim, soft vignette), applied in the build step
+  or at draw time. Fine for PD/CC0 sources.
+- [ ] Effects are behind `FX` switches in ui.js: death fades and big-impact bursts on; hit flash/shake, charge
+  stretch, breathing, dust and camera shake built but off (owner: "doesn't need to be too busy yet").
 - [ ] Real frame animation needs drawn sprites: an original art project (don't trace others' photos).
 
 ## 8. Replayability
