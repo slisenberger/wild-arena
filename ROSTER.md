@@ -36,7 +36,7 @@ Status: **strong** = distinct and worth picking; **thin** = real but blurs with 
 | Jaguar | $100 | 22 | Skull-crusher | Bite ignores half of armor; swims | Armor-piercing | Short reach | thin |
 | Cougar | $100 | 10 | Leaper | 12 m pounce, leaps 5 m onto riders and into trees | Reaches riders | Slinks off when faced down | weak |
 | Gray wolf (solo) | $100 | 2 | — | Hamstring bites | Stamina | Nervous alone; near-worthless | weak |
-| Wolf pack ×3 | $100 | 22 | Attrition hunters | Circle, dart in, hamstring, back out | Tireless, slows prey | Low damage per bite | thin |
+| Wolf pack ×4 | $100 | 22 (×3) | Attrition hunters | Circle, dart in, hamstring, back out | Tireless, slows prey | Low damage per bite | thin |
 | Spotted hyena | $100 | 27 | Bone-cruncher | Bite ignores 30% armor; very tough | Durable, tireless | Lions kill it on sight | thin |
 | Hyena clan ×4 | $300 | 54 | Mob | Four hyenas mobbing | Numbers + durability | Lions | strong |
 | Saltwater croc | $200 | 46 | Water ambusher | Invisible until 7 m in water; lunge, **death roll**, drags prey under | Strongest bite | Slow on land; never on the tundra | strong (water) |

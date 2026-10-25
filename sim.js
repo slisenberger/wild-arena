@@ -96,8 +96,8 @@ const STYLE = {
 };
 ANIMALS.forEach(a => Object.assign(a, STYLE[a.id]));
 // Pack items: the same species, but one pick brings several. A board deals a species solo or as a pack, never both.
-for (const [id, n, groupName, price, suffix] of [['wolf', 3, 'Wolf pack', 100], ['hyena', 4, 'Hyena clan', 300], ['lion', 2, 'Lion coalition', 200], ['buffalo', 3, 'Buffalo herd', 700, 'herd'], ['bison', 3, 'Bison herd', 700, 'herd']])
-  ANIMALS.push(Object.assign({}, ANIMALS.find(a => a.id === id), {id: id + (suffix || 'pack'), species: id, group: n, groupName, price}));
+for (const [id, n, groupName, price, suffix, dealWeight] of [['wolf', 4, 'Wolf pack', 100, null, 3], ['hyena', 4, 'Hyena clan', 300], ['lion', 2, 'Lion coalition', 200], ['buffalo', 3, 'Buffalo herd', 700, 'herd'], ['bison', 3, 'Bison herd', 700, 'herd']])
+  ANIMALS.push(Object.assign({}, ANIMALS.find(a => a.id === id), {id: id + (suffix || 'pack'), species: id, group: n, groupName, price, dealWeight: dealWeight || 1}));
 const HUMAN = {id:'human', name:'You', abbr:'YOU', price:0, mass:75, spd:6.5, dmg:6, cd:1, armor:0, reach:1.2, stam:8, heat:1, cold:.6, water:-.5, aggr:0, flee:0, corner:1, pred:false, charge:false, vision:35, swim:1, strikeH:1.8, mountH:0, gait:'human', climb:true, tags:[]};
 const BY_ID = {}; ANIMALS.forEach(a => BY_ID[a.id] = a); BY_ID.human = HUMAN;
 
@@ -1380,7 +1380,8 @@ function dealBoard(seed, rules, prices){
   const cold = rules.terrain && (TERRAINS[rules.terrain] || {}).cold, ok = a => !(cold && a.cold < .3);
   const forms = {}; for (const a of ANIMALS) if (ok(a)) (forms[sp(a)] = forms[sp(a)] || []).push(a.id);
   const common = Object.keys(forms).filter(k => !BY_ID[k].rare), rare = Object.keys(forms).filter(k => BY_ID[k].rare);
-  const form = k => forms[k][Math.floor(R() * forms[k].length)];
+  // pick solo or pack by dealWeight (wolves come as a pack 3 times in 4: that's how real wolves hunt)
+  const form = k => { const f = forms[k], tw = f.reduce((s, id) => s + (BY_ID[id].dealWeight || 1), 0); let r = R() * tw; for (const id of f){ r -= BY_ID[id].dealWeight || 1; if (r <= 0) return id; } return f[f.length - 1]; };
   let b = [];
   for (let tries = 0; tries < 20000; tries++){
     const pool = common.slice(); b = [];
