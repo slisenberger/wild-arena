@@ -197,7 +197,18 @@ round. Report ± standard errors.
   p25 83; with/without elephant both 88%), typical full-spend team median 167 s, 51% of teams win at least one
   screen run, 13 distinct best teams over 16 boards. Cards show measured "Helps you" / "Threat if left"
   (`MEASURED`, written by `apply_values.js`).
-- **Current prices (Oct 2026, `abs_r6` after the cat pass, giant kangaroo, sabre-toothed cat; rares on 30% of boards):**
+- **Battle drive + contextual targets (Oct 2026, owner: every animal is there to win the fight):** `drive(u)` builds
+  from 3 s of idleness over 12 s (`u.idleT` drains, doesn't reset; the other side starts at 6). It widens herbivores'
+  notice radius (+60 m, hearing the fight) and their interest in you, lowers predators' commit threshold (a sated one
+  hunts again), and lets your guards range +30 m. Kickers on the other side now fight. Herbivores mob a predator only
+  when it's within 12 m or coming for them. Guard cats jump on big herbivores `locked(e)` in a fight with your side.
+  Idle (audit, $1,200): yours 53.5% → ~40%, theirs 33.8% → ~23%. Cost: cats' value on your side fell (~+5–15 s).
+  Ridden-mount experiments: evading with a non-giant mount made riding worse (reverted); giraffe/ostrich getaway ride
+  (rarely throws you unless grabbed, kicks while carrying) is neutral within noise.
+- **Current prices (`abs_r9`, after the battle drive):** 22 s of swing per $100, board total $2,600, budget $1,200,
+  rares 30%. Validation: median board's best team 96% (min 46, p25 83), typical full-spend team 184 s, 15 distinct best
+  teams over 16 boards. (24 s/$100 → $2,500: 100%, 210 s; 20 s/$100 before targets: 79%, 109 s.)
+- *Previous* prices (`abs_r6` after the cat pass, giant kangaroo, sabre-toothed cat; rares on 30% of boards):
   20 s of swing per $100, giants/herds capped at $700 (triceratops $800), board total $2,700, budget $1,200. Validation
   (16 boards, `RAREP=.3`): median board's best team 92% (min 54, p25 88), typical full-spend team median 170 s, 60% of
   teams win at least one screen run, 15 distinct best teams over 16 boards. At 24 s/$100 (total $2,500) it was far too
