@@ -1061,10 +1061,7 @@ function step(w){
       else if (th && inWater(w, u) && u.target && !inWater(w, u.target)){ tx = u.x; ty = u.y; frac = 0; } // stay in: let it come
       else if (!th) u.wading = false;
     }
-    if (u.rider && u.state === 'guard'){
-      if (u.s.mountH >= 3){ tx = u.x; ty = u.y; frac = 0; } // a giant just stands over you: nothing much can reach you up there
-      else { const m = evadeMove(w, u); tx = m.tx; ty = m.ty; frac = m.frac; } // a smaller mount keeps you moving, away from trouble and back to your team
-    }
+    if (u.rider && u.state === 'guard'){ tx = u.x; ty = u.y; frac = 0; } // (tried: evading with a smaller mount made riding worse, Oct 2026)
     // keep out of the closing hazard: get back inside first, and never chase or wander into it (routing animals run through it)
     if (w.zb && w.zb.p > 0 && !u.routing){
       const z = w.zb, m = 2.5;
