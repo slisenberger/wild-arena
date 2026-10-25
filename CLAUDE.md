@@ -1,7 +1,9 @@
 # Wild Arena
 
 An autobattler built from the "You have $1,000 — build a team of animals to protect you from the rest"
-meme. You draft animals on a budget; **every animal you don't pick is on the other side**. Score is
+meme. **Board model (Oct 2026):** each game deals a random board of animals from the roster; you draft from
+it on a fixed budget, and **every board animal you don't pick is on the other side** (`RULES`, `dealBoard`
+in sim.js; `cfg.board`). With `RULES.total` set, every board's prices add up to the same total. Score is
 **time alive, capped at 5:00** (surviving to 5:00, clearing the board, or the other side giving up all
 count as 5:00). Live site: GitHub Pages serves `index.html` from `main`.
 
@@ -10,7 +12,9 @@ count as 5:00). Live site: GitHub Pages serves `index.html` from `main`.
   Exports `window.Arena` in the browser and `module.exports` in Node.
 - `ui.js` — the game UI (arena → draft → deploy → fight → lab), canvas rendering, Lab batch runs.
 - `template.html` — page shell + CSS with placeholders `/*FACES*/`, `/*SIM*/`, `/*UI*/`.
-- `faces.json` — 16 base64 portrait crops (from the meme image) keyed by animal id.
+- `faces.json` — 16 base64 portrait crops (from the meme image) keyed by animal id. Animals added later
+  (black rhino, fighting bull, moose, ostrich, honey badger, triceratops) have no portrait yet and show as
+  lettered tokens in their price-tier color.
 - `build.js` — `node build.js` assembles everything into the single self-contained `index.html`.
   **Always rebuild and commit `index.html` after changing sim.js/ui.js/template.html** — Pages serves it.
 - Analysis tools (Node, use `worker_threads`, 2 workers):
@@ -25,9 +29,13 @@ count as 5:00). Live site: GitHub Pages serves `index.html` from `main`.
   - `camp.js [teams] [seeds] [gridSeeds]` — camping/anti-pattern probe (4 workers, ~3 min at 200 4 12):
     how fights end, how long the other side presses, tree/ride time, enemies loitering without a target;
     then an exploit search over your start position, with the best spot re-checked on 40 fresh seeds.
-- `board.js [boards] [screenSeeds] [verifySeeds] [sizes] [budget]` — random-board probe: deals random boards of K
-  animals (other side = board animals you don't pick, `cfg.board`), screens every affordable team, re-runs the
-  best 3 on fresh seeds, reports how winnable boards are by K.
+- `board.js [boards] [screenSeeds] [verifySeeds] [sizes] [budget] [total]` — board validation: deals boards with
+  the game's `dealBoard` (env `PRICES=` candidate prices, `RAREP=`), screens every full-spend team on each
+  board, re-runs the best 3 on fresh seeds, reports how winnable boards are.
+- `price_board.js <config.json> <out.json>` — board-mode pricing: random boards + player-like random teams, one
+  fight each; least-squares fit of each animal's swing value (seconds gained by moving it from their side to
+  yours), proposed prices ∝ swing ($100 steps, min $100). Note: the older whole-roster tools (`quick.js`,
+  `camp.js`, `budget.js`, `tourney.js`) predate the board model and now fight all 22 animals.
 - `BACKLOG.md` — every idea captured so far (realism, anti-camping, pricing, herds, maps, animals,
   mechanics, replayability) with status and suggested order. Add new ideas there.
 
@@ -67,6 +75,11 @@ round. Report ± standard errors.
   2.5% max HP/s + heat), flood (river; slows non-swimmers, non-swimmers lose 1.5%/s), blizzard (tundra; slow,
   stamina drain, 1.2%/s). Everyone steers inside except routing animals. "They gave up" only counts after
   the arena has fully closed. `zoneAt(w, t)` gives the box for rendering.
+- **Roster (22):** the original 16 plus black rhino (1.2 t, irritable blind charger — the white rhino is now
+  placid, no `blindCharger`), fighting bull (`bred`: always worked up), moose (snow-proof, strong swimmer,
+  front-hoof stomper), ostrich (lookout + kicker, fast evasive mount), honey badger (`fearless`: morale never
+  breaks, takes on anything), and the rare triceratops (`rare`, `giant`: 8 t charger, rideable at 3 m; only
+  on ~10% of boards). Hippo armor .5 (5–6 cm skin). Polar bear `snowCamo`: hard to see beyond 15 m on tundra.
 - **Trees:** animals steer around trunks and detour when wedged; an elephant pushing a trunk ~1 s knocks it
   over (`w.fallen` keeps the time, so replays show it standing until then).
 - **Maps:** savanna (sun climbs: heat ramps for everyone; acacia shade), river (vertical river x 47–57

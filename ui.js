@@ -2,14 +2,15 @@
 'use strict';
 const A = window.Arena;
 const $ = id => document.getElementById(id);
-const TIER = {400:'var(--gold)', 300:'var(--orange)', 200:'var(--red)', 100:'var(--slate)'};
-const TIERHEX = {400:'#f0b429', 300:'#ec7a2c', 200:'#d8473b', 100:'#8297aa'};
+// price-tier colors: $100 slate, $200 red, $300 orange, $400 gold, $500+ violet
+const tierHex = p => p >= 500 ? '#b48cf2' : p >= 400 ? '#f0b429' : p >= 300 ? '#ec7a2c' : p >= 200 ? '#d8473b' : '#8297aa';
 const C = {you:'#4fd1bd', foe:'#ef6b4b', bone:'#d9cfb4', fg:'#ece6d3', muted:'#949d8c', gold:'#f0b429', orange:'#ec7a2c', red:'#d8473b', slate:'#8297aa'};
-const BUDGET = 1000;
+const BUDGET = A.RULES.budget;
+const newBoardSeed = () => (Math.random() * 1e6 | 0) + 1;
 const maxStr = Math.max(...A.ANIMALS.map(a => Math.sqrt(A.hpOf(a) * a.dmg / a.cd)));
 
 const S = window.__wa = {
-  team: new Set(), focus:'elephant', terrain:'savanna', mode:'wild', mount:'', pos:{}, youPos:null, seed: (Math.random()*1e6|0) + 1,
+  team: new Set(), boardSeed: newBoardSeed(), board: [], focus:'elephant', terrain:'savanna', mode:'wild', mount:'', pos:{}, youPos:null, seed: (Math.random()*1e6|0) + 1,
   screen:'draft', world:null, playT:0, playing:true, speed:2, sel:0, lastTs:0, dur:120
 };
 
@@ -19,7 +20,7 @@ const fmtT = t => { t = Math.max(0, t); const m = Math.floor(t/60), s = Math.flo
 const kmh = v => Math.round(v * 3.6);
 function strengthOf(a){ return Math.sqrt(A.hpOf(a) * a.dmg / a.cd); }
 function tok(a, size){ const d = document.createElement('span'); d.className = 'tok'; d.style.cssText = tokStyle(a); d.title = a.name; if (size) { d.style.width = d.style.height = size + 'px'; } if (!FACES[a.id]) d.textContent = a.abbr; return d; }
-function tokStyle(a){ return FACES[a.id] ? `background:#222 url(${FACES[a.id]}) center/cover;border:2px solid ${TIERHEX[a.price]}` : `background:${TIER[a.price] || '#f5f2ea'}`; }
+function tokStyle(a){ return FACES[a.id] ? `background:#222 url(${FACES[a.id]}) center/cover;border:2px solid ${tierHex(a.price)}` : `background:${tierHex(a.price)};color:#14130f;font-weight:700`; }
 function tokHTML(a, px){ return `<span class="tok" title="${esc(a.name)}" style="${tokStyle(a)};width:${px}px;height:${px}px;font-size:${Math.round(px*.4)}px">${FACES[a.id] ? '' : a.abbr}</span>`; }
 const FACEIMG = {}; for (const id in FACES){ const im = new Image(); im.src = FACES[id]; FACEIMG[id] = im; }
 function esc(s){ return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
@@ -34,6 +35,12 @@ function terrainFit(a, tid){
   return out;
 }
 function badgesHTML(a){ return terrainFit(a, S.terrain).map(([k, t]) => `<span class="bdg ${k}">${t}</span>`).join(''); }
+// ---------- board ----------
+const boardTotal = () => S.board.reduce((t, id) => t + A.BY_ID[id].price, 0);
+function dealNewBoard(seed){
+  S.boardSeed = seed || newBoardSeed(); S.board = A.dealBoard(S.boardSeed);
+  S.team.clear(); S.pos = {}; S.youPos = null; S.mount = ''; S.world = null; S.focus = S.board[0];
+}
 // ---------- navigation ----------
 function go(screen){
   S.screen = screen;
@@ -55,16 +62,19 @@ function renderBudget(){
   const sp = spent();
   $('spent').textContent = '$' + sp.toLocaleString();
   const m = $('meter'); m.innerHTML = '';
-  for (let i = 0; i < 10; i++){ const x = document.createElement('i'); if (i < sp/100) x.className = sp > BUDGET ? 'over' : 'on'; m.appendChild(x); }
+  for (let i = 0; i < BUDGET / 100; i++){ const x = document.createElement('i'); if (i < sp/100) x.className = sp > BUDGET ? 'over' : 'on'; m.appendChild(x); }
+  $('budgetMax').textContent = '/ $' + BUDGET.toLocaleString();
 }
 function renderDraft(){
   const tiers = $('tiers'); tiers.innerHTML = '';
   const left = BUDGET - spent();
-  for (const p of [400,300,200,100]){
+  const onBoard = S.board.map(id => A.BY_ID[id]);
+  $('boardLede').textContent = `This game's board: ${onBoard.length} animals worth $${boardTotal().toLocaleString()}. Spend up to $${BUDGET.toLocaleString()}; every board animal you don't pick ends up on the other side. Tap a card to draft it; the panel below shows the full stat line.`;
+  for (const p of [...new Set(onBoard.map(a => a.price))].sort((x, y) => y - x)){
     const row = document.createElement('div'); row.className = 'tier';
-    const tag = document.createElement('div'); tag.className = 'tierTag'; tag.style.background = TIER[p]; tag.textContent = '$' + p; row.appendChild(tag);
+    const tag = document.createElement('div'); tag.className = 'tierTag'; tag.style.background = tierHex(p); tag.textContent = '$' + p; row.appendChild(tag);
     const cards = document.createElement('div'); cards.className = 'cards';
-    for (const a of A.ANIMALS.filter(x => x.price === p)){
+    for (const a of onBoard.filter(x => x.price === p)){
       const picked = S.team.has(a.id);
       const c = document.createElement('button'); c.className = 'card' + (picked ? ' picked' : '') + (!picked && a.price > left ? ' cant' : '');
       c.setAttribute('aria-pressed', picked);
@@ -72,7 +82,7 @@ function renderDraft(){
       const nm = document.createElement('div'); nm.className = 'nm'; nm.textContent = a.name; r1.appendChild(nm);
       c.appendChild(r1);
       const st = document.createElement('div'); st.className = 'styleTag'; st.textContent = a.style; c.appendChild(st);
-      const fit = badgesHTML(a); if (fit){ const bd = document.createElement('div'); bd.className = 'badges'; bd.innerHTML = fit; c.appendChild(bd); }
+      const fit = (a.rare ? '<span class="bdg good">Rare</span>' : '') + badgesHTML(a); if (fit){ const bd = document.createElement('div'); bd.className = 'badges'; bd.innerHTML = fit; c.appendChild(bd); }
       const meta = document.createElement('div'); meta.className = 'meta'; meta.textContent = `${a.mass.toLocaleString()} kg · ${kmh(a.spd)} km/h`; c.appendChild(meta);
       const bars = document.createElement('div'); bars.className = 'bars';
       const rows = [['Power', strengthOf(a)/maxStr], ['Armor', a.armor/.6], ['Speed', a.spd/20], ['Stamina', Math.min(1, a.stam/60)]];
@@ -96,6 +106,9 @@ function renderDraft(){
   const tl = $('teamline'); tl.innerHTML = '';
   if (!S.team.size){ const s = document.createElement('span'); s.className = 'label'; s.textContent = 'No animals drafted yet. You can fight alone, but you will not like it.'; tl.appendChild(s); }
   for (const id of S.team){ const a = A.BY_ID[id]; const ch = document.createElement('span'); ch.className = 'chip'; ch.appendChild(tok(a)); ch.append(a.name + ' $' + a.price); tl.appendChild(ch); }
+  const foes = S.board.filter(id => !S.team.has(id));
+  const fl = document.createElement('span'); fl.className = 'label'; fl.style.marginLeft = '6px';
+  fl.textContent = `Against you: ${foes.length} animals, $${foes.reduce((t, id) => t + A.BY_ID[id].price, 0).toLocaleString()}`; tl.appendChild(fl);
   renderDetail();
 }
 function renderDetail(){
@@ -114,6 +127,7 @@ function renderDetail(){
 }
 $('toDeployD').addEventListener('click', () => go('deploy'));
 $('clearTeam').addEventListener('click', () => { S.team.clear(); S.world = null; S.pos = {}; renderAll(); });
+$('newBoard').addEventListener('click', () => { dealNewBoard(); renderAll(); });
 
 // ---------- arena setup ----------
 const TCOL = {savanna:'radial-gradient(circle at 70% 35%,#3d4a1f 0 14%,transparent 15%),linear-gradient(135deg,#5a4a1d,#2c2614)', river:'linear-gradient(90deg,#26341f 0 44%,#1f5165 44% 56%,#26341f 56%)', forest:'radial-gradient(circle at 30% 40%,#244a2c 0 18%,transparent 19%),radial-gradient(circle at 70% 60%,#244a2c 0 22%,transparent 23%),#17241a', tundra:'linear-gradient(135deg,#55606a,#2f363d)'};
@@ -140,7 +154,7 @@ $('toDraft').addEventListener('click', () => go('draft'));
 
 // ---------- mount picker ----------
 function bestMount(team){ team = team || [...S.team]; let b = '', h = 0; for (const id of team){ const m = A.BY_ID[id].mountH; if (m > h){ h = m; b = id; } } return b; }
-function reachersOf(h, team){ return A.ANIMALS.filter(a => !team.includes(a.id) && a.strikeH >= h).map(a => a.name); }
+function reachersOf(h, team){ return S.board.map(id => A.BY_ID[id]).filter(a => !team.includes(a.id) && a.strikeH >= h).map(a => a.name); }
 function renderMounts(){
   const box = $('mountOpts'); box.innerHTML = '';
   const team = [...S.team];
@@ -160,7 +174,7 @@ function renderMounts(){
   else {
     const a = A.BY_ID[S.mount], r = reachersOf(a.mountH, team);
     note = `You sit ${a.mountH} m up. ${r.length ? 'Still able to reach you there: ' + r.join(', ') + '.' : 'Nothing on the other side can reach you there.'} ` +
-      (a.mass < 700 || a.id === 'giraffe' ? `A ${a.mass < 700 ? 'small' : 'skittish'} mount doesn't fight while carrying you: it runs from threats at ${Math.round(a.spd * Math.max(.6, 1 - .6 * 75 / a.mass) * 3.6)} km/h and only bites back if grabbed.` : 'A heavy mount holds its ground near you and fights anything within 9 m.') +
+      (a.mass < 700 || a.gait === 'keepaway' ? `A ${a.mass < 700 ? 'small' : 'skittish'} mount doesn't fight while carrying you: it runs from threats at ${Math.round(a.spd * Math.max(.6, 1 - .6 * 75 / a.mass) * 3.6)} km/h and only bites back if grabbed.` : 'A heavy mount holds its ground near you and fights anything within 9 m.') +
       ` Hard rams by anything heavy relative to your mount can throw you off; you climb back on when it's close.`;
   }
   if (small.length) note += ` Too small to ride: ${small.join(', ')}.`;
@@ -243,7 +257,7 @@ function absPlacements(){
   return out;
 }
 function currentPlacements(){ const y = youAt(), abs = absPlacements(), out = {}; for (const id in abs) out[id] = {dx: abs[id].x - y.x, dy: abs[id].y - y.y}; return out; }
-function makeCfg(){ return { team:[...S.team], placements:currentPlacements(), human:youAt(), terrain:S.terrain, mode:S.mode, mount:(S.mount && S.team.has(S.mount)) ? S.mount : null, seed:S.seed }; }
+function makeCfg(){ return { board:S.board.slice(), team:[...S.team], placements:currentPlacements(), human:youAt(), terrain:S.terrain, mode:S.mode, mount:(S.mount && S.team.has(S.mount)) ? S.mount : null, seed:S.seed }; }
 function drawDeploy(){
   deployWorld = A.setup(makeCfg());
   const cv = $('deployCanvas'); const g = cv.getContext('2d'); const sc = cv._scale;
@@ -484,7 +498,7 @@ function renderSide(){
 $('log').addEventListener('click', e => { const d = e.target.closest('[data-t]'); if (d){ S.playT = Math.max(0, +d.dataset.t - 1.5); S.playing = false; } });
 
 const HZ = A.MATCH_T;
-function bestKey(){ return 'wa-best:' + [S.terrain, S.mode, [...S.team].sort().join('+'), S.mount || 'foot'].join('|'); }
+function bestKey(){ return 'wa-best:' + [S.terrain, S.mode, S.board.join('+'), [...S.team].sort().join('+'), S.mount || 'foot'].join('|'); }
 function readBest(){ try { return +localStorage.getItem(bestKey()) || 0; } catch(e){ return 0; } }
 function writeBest(v){ try { localStorage.setItem(bestKey(), String(v)); } catch(e){} }
 function renderReport(show){
@@ -583,15 +597,19 @@ $('runDraft').addEventListener('click', () => {
 $('runPrice').addEventListener('click', () => {
   const btn = $('runPrice'); btn.disabled = true;
   const N = 480, R = A.rng(S.seed), terr = Object.keys(A.TERRAINS);
-  const on = {}, off = {}; A.ANIMALS.forEach(a => { on[a.id] = []; off[a.id] = []; });
+  const onBoard = S.board.map(id => A.BY_ID[id]);
+  const on = {}, off = {}; onBoard.forEach(a => { on[a.id] = []; off[a.id] = []; });
   runBatched(N, i => {
-    const team = A.randomDraft(R); const terrain = terr[i % 4];
-    const w = A.simulate({team, terrain, mode:S.mode, mount:bestMount(team) || null, seed: 5000 + i});
+    // a random team from this board: shuffle it and take whatever still fits the budget
+    const order = S.board.slice(); for (let k = order.length - 1; k > 0; k--){ const j = Math.floor(R() * (k + 1)); [order[k], order[j]] = [order[j], order[k]]; }
+    const team = []; let left = BUDGET; for (const id of order) if (A.BY_ID[id].price <= left){ team.push(id); left -= A.BY_ID[id].price; }
+    const terrain = terr[i % 4];
+    const w = A.simulate({board:S.board, team, terrain, mode:S.mode, mount:bestMount(team) || null, seed: 5000 + i});
     const sc = w.result.score;
-    A.ANIMALS.forEach(a => (team.includes(a.id) ? on : off)[a.id].push(sc));
+    onBoard.forEach(a => (team.includes(a.id) ? on : off)[a.id].push(sc));
   }, p => $('pPrice').style.width = (p*100) + '%', () => {
     btn.disabled = false;
-    const rows = A.ANIMALS.map(a => {
+    const rows = onBoard.map(a => {
       const m = mean(on[a.id]) - mean(off[a.id]), se = Math.sqrt(sem(on[a.id]) ** 2 + sem(off[a.id]) ** 2);
       return {a, m, se, per: m / a.price * 100};
     }).sort((x, y) => y.per - x.per);
@@ -611,7 +629,7 @@ $('runPrice').addEventListener('click', () => {
 function renderAll(){ renderBudget(); renderDraft(); renderArenaOpts(); }
 window.addEventListener('resize', () => { if (S.screen === 'deploy'){ sizeCanvas($('deployCanvas')); drawDeploy(); } if (S.screen === 'fight') sizeCanvas($('fightCanvas')); });
 $('seedLbl').textContent = S.seed;
-syncSpeed(); renderAll(); go('arena');
+dealNewBoard(); syncSpeed(); renderAll(); go('arena');
 requestAnimationFrame(frame);
 if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { if (S.screen === 'deploy') drawDeploy(); });
 })();

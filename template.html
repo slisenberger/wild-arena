@@ -158,7 +158,7 @@ th.n{text-align:right}
 <header class="top">
   <div class="brand">
     <h1>Wild <span>Arena</span></h1>
-    <div class="budget"><span id="spent">$0</span><span class="meter" id="meter"></span><span style="color:var(--muted)">/ $1,000</span></div>
+    <div class="budget"><span id="spent">$0</span><span class="meter" id="meter"></span><span style="color:var(--muted)" id="budgetMax"></span></div>
   </div>
   <nav class="steps" id="steps" aria-label="Steps">
     <button data-s="arena">1 Arena</button>
@@ -174,12 +174,12 @@ th.n{text-align:right}
 <section class="screen" id="s-draft">
   <div style="display:flex;flex-direction:column;gap:6px">
     <h2>Build a team to protect you from the rest</h2>
-    <p class="lede">Spend up to $1,000. Every animal you don't pick ends up on the other side. Tap a card to draft it; the panel below shows the full stat line.</p>
+    <p class="lede" id="boardLede"></p>
   </div>
   <div class="teamline" id="teamline"></div>
   <div id="tiers" style="display:flex;flex-direction:column;gap:12px"></div>
   <div class="detail" id="detail"></div>
-  <div class="btnrow"><button class="btn primary" id="toDeployD">Set formation</button><button class="btn" id="clearTeam">Clear team</button></div>
+  <div class="btnrow"><button class="btn primary" id="toDeployD">Set formation</button><button class="btn" id="clearTeam">Clear team</button><button class="btn" id="newBoard">Deal a new board</button></div>
 </section>
 
 <!-- ARENA -->
