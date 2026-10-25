@@ -221,5 +221,6 @@ round. Report ± standard errors.
    the far side of a shared target, `sig 'encircles'` ~1.5/fight, value neutral.)
 2. Policy: give the net timing decisions (wait for an opening vs commit, pack timing) — target choice alone has no leverage.
 3. Movement policy pilot for pack harriers (wolves/hyenas) with an idle penalty.
-4. Identity: signature counters for lookout, bull chases, rhino blind charges; keep strengthening the light picks (ROSTER.md).
+4. Identity: keep strengthening the light picks (ROSTER.md). (Done: counters 'lookout spots a threat' ~3/fight,
+   'chases movement' (bull) ~2, 'charges blind at a sound' (black rhino) ~3 — telemetry only.)
 5. Replayability: daily challenge (shared seed) + verified leaderboard, fixed-animal-count mode, rotating rosters, new animals.

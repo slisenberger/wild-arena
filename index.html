@@ -731,7 +731,10 @@ function canSee(w, viewer, u){
   return dist(viewer, u) <= range;
 }
 function teamSees(w, u){
-  for (const a of w.units) if (a.side !== 'E' && active(a) && canSee(w, a, u)) return true;
+  for (const a of w.units) if (a.side !== 'E' && active(a) && canSee(w, a, u)){
+    if (w.lookout && !u.lookSpotted && dist(a, u) > a.s.vision * (w.T.vision || 1)){ u.lookSpotted = true; sig(w, w.units.find(o => o.side === 'P' && active(o) && has(o,'lookout')), 'lookout spots a threat'); } // only seen thanks to the lookout
+    return true;
+  }
   return false;
 }
 
@@ -822,7 +825,9 @@ function herbivoreTarget(w, u){
     sc /= (1 + d / 10);
     if (sc > bs){ bs = sc; best = t; }
   }
-  return bs > 0.08 ? best : null;
+  if (bs <= 0.08) return null;
+  if (best !== u.target && Math.hypot(best.vx, best.vy) > 2){ if (has(u,'chasesMovement')) sig(w, u, 'chases movement'); else if (has(u,'blindCharger') && !canSee(w, u, best)) sig(w, u, 'charges blind at a sound'); }
+  return best;
 }
 function nearestPlayer(w,u){ let b=null,bd=1e9; for(const t of w.units) if(t.side!=='E'&&active(t)){const d=dist(u,t); if(d<bd){bd=d;b=t;}} return b; }
 
