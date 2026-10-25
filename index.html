@@ -194,7 +194,7 @@ th.n{text-align:right}
   <div class="label">Terrain</div>
   <div class="opts" id="terrainOpts"></div>
   <div id="modeOpts" hidden></div>
-  <p class="notes">The other side is one team, and the pressure builds over time. Predators hunt you and your guards; herbivores charge intruders. Break their morale and animals bolt out of the arena. After a minute a fire, flood or blizzard closes in from the edges and pushes everyone together. You score by how long you stay alive, up to five minutes.</p>
+  <p class="notes">The other side is one team, and the pressure builds over time. Predators hunt you and your guards; herbivores charge intruders. Break their morale and animals bolt out of the arena. After 30 seconds a fire, flood or blizzard closes in from the edges and pushes everyone together. You score by how long you stay alive, up to five minutes.</p>
   <div class="btnrow"><button class="btn primary" id="toDraft">Draft your team</button></div>
 </section>
 
@@ -371,10 +371,10 @@ const HUMAN = {id:'human', name:'You', abbr:'YOU', price:0, mass:75, spd:6.5, dm
 const BY_ID = {}; ANIMALS.forEach(a => BY_ID[a.id] = a); BY_ID.human = HUMAN;
 
 const TERRAINS = {
- savanna:{id:'savanna', name:'Savanna', amb:1.0, heatRamp:true, shade:6, hazard:'fire', desc:'Open and baking. The sun climbs as the fight goes on, so heat builds for everyone; big bodies cook first. A few acacias give shade worth fighting over. After a minute a grass fire closes in from the edges.'},
- river:{id:'river', name:'River', amb:.75, water:{x0:47, x1:57, fords:[[9,18],[47,56]]}, hazard:'flood', desc:'A river splits the field and the other side starts across it. Crocs and hippos hold the water, and everyone else has to swim it slowly. Two shallow fords are the only fast crossings, and a charge founders in deep water. After a minute flood water closes in from the edges; swimmers shrug it off.'},
- forest:{id:'forest', name:'Forest', amb:.55, trees:30, vision:.55, hazard:'fire', desc:'Trees block sight and slow big bodies. Cats ambush for double damage, and a charger that hits a tree is stunned. You can climb a tree. After a minute a forest fire closes in from the edges.'},
- tundra:{id:'tundra', name:'Tundra', amb:.08, cold:true, snow:true, hazard:'blizzard', desc:'Deep snow and cold. Heavy animals flounder (an elephant moves at about half speed), and the cold drains stamina. Polar bear, wolf, bison and cougar move freely. After a minute a blizzard closes in from the edges.'},
+ savanna:{id:'savanna', name:'Savanna', amb:1.0, heatRamp:true, shade:6, hazard:'fire', desc:'Open and baking. The sun climbs as the fight goes on, so heat builds for everyone; big bodies cook first. A few acacias give shade worth fighting over. After 30 seconds a grass fire closes in from the edges.'},
+ river:{id:'river', name:'River', amb:.75, water:{x0:47, x1:57, fords:[[9,18],[47,56]]}, hazard:'flood', desc:'A river splits the field and the other side starts across it. Crocs and hippos hold the water, and everyone else has to swim it slowly. Two shallow fords are the only fast crossings, and a charge founders in deep water. After 30 seconds flood water closes in from the edges; swimmers shrug it off.'},
+ forest:{id:'forest', name:'Forest', amb:.55, trees:30, vision:.55, hazard:'fire', desc:'Trees block sight and slow big bodies. Cats ambush for double damage, and a charger that hits a tree is stunned. You can climb a tree. After 30 seconds a forest fire closes in from the edges.'},
+ tundra:{id:'tundra', name:'Tundra', amb:.08, cold:true, snow:true, hazard:'blizzard', desc:'Deep snow and cold. Heavy animals flounder (an elephant moves at about half speed), and the cold drains stamina. Polar bear, wolf, bison and cougar move freely. After 30 seconds a blizzard closes in from the edges.'},
 };
 
 // ---------- utils ----------
@@ -610,7 +610,7 @@ function defaultPlacement(team, aid, i){
 
 // ---------- closing arena ----------
 // The safe area shrinks from the whole field (t < ZONE_T0) to a ZONE_W x ZONE_H box (t >= ZONE_T1).
-const ZONE_T0 = 60, ZONE_T1 = 240, ZONE_W = 36, ZONE_H = 24;
+const ZONE_T0 = 30, ZONE_T1 = 180, ZONE_W = 36, ZONE_H = 24; // owner: close in earlier to cut idle time
 const HAZARD_NAME = {fire: 'fire', flood: 'flood water', blizzard: 'blizzard'};
 function zoneAt(w, t){
   const z = w.zone; if (!z) return null;

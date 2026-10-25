@@ -74,7 +74,7 @@ round. Report ± standard errors.
 - **Opportunists:** predators value targets already locked in a fight (×1.5) or badly hurt; a guard that's
   busy fighting only deters half as much.
 - **You fight back:** on foot, you kick/punch whatever is on you (weak, but it can finish something).
-- **Closing arena** (wild mode, `cfg.hazard:false` disables): from 60 s to 240 s the safe box shrinks from the
+- **Closing arena** (wild mode, `cfg.hazard:false` disables): from 30 s to 180 s (was 60–240 s) the safe box shrinks from the
   whole field to 36 × 24 m around a point near mid-field (random per seed). Outside: fire (savanna, forest;
   2.5% max HP/s + heat), flood (river; slows non-swimmers, non-swimmers lose 1.5%/s), blizzard (tundra; slow,
   stamina drain, 1.2%/s). Everyone steers inside except routing animals. "They gave up" only counts after
