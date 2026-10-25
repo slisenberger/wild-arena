@@ -382,6 +382,8 @@ function frameAt(t){
 function clampI(v, a, b){ return v < a ? a : v > b ? b : v; }
 function clamp01(v){ return v < 0 ? 0 : v > 1 ? 1 : v; }
 
+const REDUCED = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+const BURST = {kill:'#ef6b4b', death:'#ef6b4b', maul:'#ef6b4b', crash:'#ec7a2c', sweep:'#ec7a2c', charge:'#ec7a2c', latch:'#d8473b', flank:'#ef6b4b', ambush:'#f0b429', pounce:'#f0b429', lunge:'#f0b429'};
 function drawUnits(g, sc, w, fr, events, t, opts){
   opts = opts || {};
   // carcasses
@@ -412,26 +414,61 @@ function drawUnits(g, sc, w, fr, events, t, opts){
       g.globalAlpha = .8; g.stroke(); g.globalAlpha = 1; g.lineCap = 'butt';
     });
   }
+  // "alive" effects read the recorded frames around t (render only; the fight itself is unchanged)
+  const F = (!opts.deploy && S.world && S.world.frames) ? S.world.frames : null, kf = F ? clampI(Math.floor(t / 0.2), 0, F.length - 1) : 0;
+  const prevOf = (i, back) => F && kf - back >= 0 ? F[kf - back].u[i] : null;
+  const speedOf = i => { const a = prevOf(i, 0), b = prevOf(i, 1); return a && b && a[7] === 1 && b[7] === 1 ? Math.hypot(a[0] - b[0], a[1] - b[1]) / 0.2 : 0; };
+  const DUST = {savanna:'217,190,140', river:'120,100,70', forest:'90,80,55', tundra:'240,244,250'}[w.T.id] || '200,190,160';
+  if (F && !REDUCED) fr.u.forEach((u, i) => { // dust kicked up behind running heavyweights and chargers
+    if (u[7] !== 1 || U[i].side === 'H' || u[9] > 0) return;
+    const v = speedOf(i); if (!(v > 4 && (U[i].s.mass > 250 || u[15] === 'charge'))) return;
+    for (let j = 1; j <= 3; j++){ const p = prevOf(i, j); if (!p || p[7] !== 1) break;
+      const age = t - F[kf - j].t, r = (U[i].r * .6 + age * 2.2) * sc; g.fillStyle = `rgba(${DUST},${Math.max(0, .22 - age * .2)})`;
+      g.beginPath(); g.arc(p[0] * sc, p[1] * sc + U[i].r * sc * .4, r, 0, 7); g.fill(); }
+  });
+  // animals that just died shrink and fade where they fell
+  if (F) fr.u.forEach((u, i) => {
+    const d = U[i].deathT; if (u[7] !== 0 || d == null || t < d || t - d > .8) return;
+    const a = 1 - (t - d) / .8, rr = Math.max(10, U[i].r * sc * 1.1) * (.6 + .4 * a), im = FACEIMG[U[i].s.species || U[i].s.id];
+    g.save(); g.globalAlpha = a * .8; g.beginPath(); g.arc(u[0] * sc, u[1] * sc, rr, 0, 7); g.clip();
+    if (im && im.complete && im.naturalWidth){ g.filter = 'grayscale(1)'; g.drawImage(im, u[0] * sc - rr, u[1] * sc - rr, rr * 2, rr * 2); g.filter = 'none'; } else { g.fillStyle = '#444'; g.fill(); }
+    g.restore();
+  });
   // draw order: big first, riders last
   const order = fr.u.map((u, i) => i).sort((a, b) => (fr.u[a][9] - fr.u[b][9]) || (U[b].s.mass - U[a].s.mass));
   for (const i of order){
     const u = fr.u[i]; if (u[7] !== 1) continue;
     const unit = U[i]; const s = unit.s; const isH = unit.side === 'H';
-    const x = u[0]*sc, y = u[1]*sc; const rr = Math.max(isH ? 8 : 10, unit.r * sc * 1.1) * (u[9] > 0 && isH ? .85 : 1);
+    let x = u[0]*sc, y = u[1]*sc; const rr0 = Math.max(isH ? 8 : 10, unit.r * sc * 1.1) * (u[9] > 0 && isH ? .85 : 1);
+    // hit flash and shake (health dropped at the last recorded frame), stretch along a charge/pounce, breathing at rest
+    let flash = 0, stretch = 0, ang = 0, breath = 1;
+    if (F && kf > 0){
+      const dHp = F[kf - 1].u[i][2] - F[kf].u[i][2], since = t - F[kf].t;
+      if (dHp > .005 && since < .35) flash = (1 - since / .35) * Math.min(1, .35 + dHp * 8);
+      const a = prevOf(i, 0), b = prevOf(i, 1), v = speedOf(i);
+      if (['charge','pounce','lunge','dart'].includes(u[15]) && v > 1){ stretch = Math.min(.24, v / Math.max(4, s.spd) * .24); ang = Math.atan2(a[1] - b[1], a[0] - b[0]); }
+      else if (v < 1) breath = 1 + .03 * Math.sin(t * 2.4 + i * 1.7);
+    }
+    if (REDUCED){ stretch = 0; breath = 1; }
+    if (flash && !REDUCED){ const j = rr0 * .16 * flash; x += Math.sin(t * 90 + i) * j; y += Math.cos(t * 77 + i * 3) * j; }
+    const rr = rr0 * breath;
     // heat glow
     if (u[3] > .35){ const a = Math.min(.85, (u[3]-.35) * 1.1); const grd = g.createRadialGradient(x, y, rr*.7, x, y, rr*1.9); grd.addColorStop(0, `rgba(236,122,44,${a})`); grd.addColorStop(1, 'rgba(236,122,44,0)'); g.fillStyle = grd; g.beginPath(); g.arc(x, y, rr*1.9, 0, 7); g.fill(); }
     if (u[12]){ g.strokeStyle = C.gold; g.lineWidth = 2; g.beginPath(); g.arc(x, y, rr + 4, 0, 7); g.stroke(); }
-    // body
-    g.fillStyle = 'rgba(0,0,0,.45)'; g.beginPath(); g.arc(x + sc*.25, y + sc*.35, rr, 0, 7); g.fill();
+    // body (squashed and stretched along the direction of a charge)
+    g.save(); g.translate(x, y); if (stretch){ g.rotate(ang); g.scale(1 + stretch, 1 - stretch * .55); g.rotate(-ang); }
+    g.fillStyle = 'rgba(0,0,0,.45)'; g.beginPath(); g.arc(sc*.25, sc*.35, rr, 0, 7); g.fill();
     g.fillStyle = isH ? '#f5f2ea' : unit.side === 'P' ? '#1e5c53' : '#6b2a1d';
-    g.beginPath(); g.arc(x, y, rr, 0, 7); g.fill();
+    g.beginPath(); g.arc(0, 0, rr, 0, 7); g.fill();
     const im = !isH && FACEIMG[s.species || s.id];
-    if (im && im.complete && im.naturalWidth){ g.save(); g.beginPath(); g.arc(x, y, rr, 0, 7); g.clip(); g.globalAlpha = u[4] === 'flee' ? .55 : u[15] === 'stalk' ? .6 : 1; g.drawImage(im, x - rr, y - rr, rr*2, rr*2); g.restore(); }
+    if (im && im.complete && im.naturalWidth){ g.save(); g.beginPath(); g.arc(0, 0, rr, 0, 7); g.clip(); g.globalAlpha = u[4] === 'flee' ? .55 : u[15] === 'stalk' ? .6 : 1; g.drawImage(im, -rr, -rr, rr*2, rr*2); g.restore(); }
+    if (flash){ g.fillStyle = `rgba(255,70,45,${.55 * flash})`; g.beginPath(); g.arc(0, 0, rr, 0, 7); g.fill(); }
     // tier ring
     g.lineWidth = Math.max(2.5, rr*.22);
     g.strokeStyle = isH ? '#ffffff' : unit.side === 'P' ? C.you : C.foe;
     if (u[4] === 'flee') g.setLineDash([3, 3]);
-    g.beginPath(); g.arc(x, y, rr, 0, 7); g.stroke(); g.setLineDash([]);
+    g.beginPath(); g.arc(0, 0, rr, 0, 7); g.stroke(); g.setLineDash([]);
+    g.restore();
     // hp arc
     if (!opts.deploy){ g.strokeStyle = u[2] > .5 ? '#d5f2cf' : u[2] > .25 ? C.gold : C.red; g.lineWidth = Math.max(1.5, rr*.16); g.beginPath(); g.arc(x, y, rr + Math.max(2.5, rr*.22), -Math.PI/2, -Math.PI/2 + Math.PI*2*u[2]); g.stroke(); }
     // label
@@ -468,6 +505,12 @@ function drawUnits(g, sc, w, fr, events, t, opts){
       const e = events[k]; const age = t - e.t; if (age > 1.8) break; if (age < 0 || e.x == null || e.kind === 'info') continue;
       let slot = 0; while (slot < 2 && placed.some(p => Math.abs(p.x - e.x) < 7 && p.slot === slot && Math.abs(p.y - e.y) < 6)) slot++;
       if (slot >= 2) continue; placed.push({x:e.x, y:e.y, slot});
+      if (age < .55 && BURST[e.kind] && !REDUCED){ // impact burst: expanding ring + debris
+        const q = 1 - age / .55, bx = e.x * sc, by = e.y * sc, R0 = (1.2 + age * 9) * sc;
+        g.strokeStyle = BURST[e.kind]; g.globalAlpha = q * .8; g.lineWidth = Math.max(1.5, sc * .35 * q); g.beginPath(); g.arc(bx, by, R0, 0, 7); g.stroke();
+        g.fillStyle = BURST[e.kind]; for (let d = 0; d < 7; d++){ const an = (k * 2.39 + d * 0.9) % 6.283, rd = R0 * (1.1 + ((k * 7 + d * 13) % 5) * .12); g.beginPath(); g.arc(bx + Math.cos(an) * rd, by + Math.sin(an) * rd, Math.max(1, sc * .28 * q), 0, 7); g.fill(); }
+        g.globalAlpha = 1;
+      }
       if (e.kind === 'charge' || e.kind === 'pounce' || e.kind === 'lunge' || e.kind === 'ambush') continue;
       const short = ({kill:'DOWN', death:'KILLED', charge:'CHARGE', latch:'GRAB', flee:'BREAKS', heat:'OVERHEAT', feed:'FEEDING', corner:'CORNERED', ambush:'AMBUSH', pounce:'POUNCE', lunge:'LUNGE', maul:'MAUL', sweep:'SWEEP', gate:'GATE', crash:'CRASH', flank:'FLANK', feud:'RIVALRY', rout:'ROUTED', danger:'!', bluff:'BLUFF', win:''})[e.kind];
       if (!short) continue;
@@ -481,12 +524,18 @@ function drawUnits(g, sc, w, fr, events, t, opts){
 function drawFight(){
   const w = S.world; if (!w) return;
   const cv = $('fightCanvas'); const g = cv.getContext('2d'); const sc = cv._scale;
+  // camera shake for a moment after a big impact (a crash, a heavy knockback, a kill)
+  let shake = 0;
+  if (!REDUCED) for (let k = w.events.length - 1; k >= 0; k--){ const e = w.events[k], age = S.playT - e.t; if (age < 0) continue; if (age > .3) break; if (e.kind === 'crash' || e.kind === 'kill' || (e.kind === 'charge' && /knocking/.test(e.text))) shake = Math.max(shake, (1 - age / .3) * sc * .5); }
+  g.setTransform(1, 0, 0, 1, 0, 0); g.fillStyle = '#0d110e'; g.fillRect(0, 0, cv.width, cv.height);
+  g.setTransform(1, 0, 0, 1, shake ? Math.sin(S.playT * 97) * shake : 0, shake ? Math.cos(S.playT * 83) * shake : 0);
   const standing = w.fallen ? w.trees.concat(w.fallen.filter(f => f.t > S.playT)) : w.trees; // trees an elephant shoved over stay up until they fall
   g.drawImage(groundFor(S.terrain_used || w.T.id, standing, cv.width, cv.height, w.shade, w.variant), 0, 0);
   if (w.mode === 'allout'){ g.fillStyle = C.foe; for (let i = 0; i < 6; i++) g.fillRect((A.W-1.2)*sc, (6 + i*10.8 - 2)*sc, sc*1.2, sc*4); }
   drawHazard(g, sc, w, S.playT);
   const fr = frameAt(S.playT);
   drawUnits(g, sc, w, fr, w.events, S.playT, {});
+  g.setTransform(1, 0, 0, 1, 0, 0);
 }
 // closing arena: tint everything outside the safe box, with a bright edge
 const HAZCOL = {fire: ['rgba(214,84,30,.38)', '#ff8a3d'], flood: ['rgba(38,104,190,.42)', '#6fb4ff'], blizzard: ['rgba(236,242,250,.5)', '#ffffff']};
