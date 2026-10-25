@@ -744,6 +744,7 @@ function sweep(w, a, main){
   let n = 0;
   for (const o of w.units){
     if (o === main || !hostile(w, a, o) || heightOf(o) > a.s.strikeH) continue;
+    if ((o.x - a.x) * (main.x - a.x) + (o.y - a.y) * (main.y - a.y) < 0) continue; // trunk and tusks swing across the front, not behind
     if (dist(a, o) <= a.r + o.r + a.s.reach){ strike(w, a, o, {sweep:true}); n++; }
   }
   if (n){ sig(w, a, 'sweep'); log(w, `${capName(a)} sweeps ${n + 1} attackers at once`, 'sweep', a); }
