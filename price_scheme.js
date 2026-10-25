@@ -13,7 +13,7 @@ const prices = {};
 for (const a of A.ANIMALS){
   const v = Math.max(0, m.swing[a.id] || 0);
   let p = Math.max(100, Math.round(v / SEC) * 100);
-  if (giants.includes(a.id)) p = Math.min(p, CAP + (a.id === 'triceratops' ? 100 : 0));
+  if (giants.includes(a.id) || (a.group || 1) >= 3) p = Math.min(p, CAP + (a.id === 'triceratops' ? 100 : 0)); // giants and big herds/packs share the cap
   else p = Math.min(p, CAP - 100); // nothing ordinary costs as much as a giant
   prices[a.id] = p;
 }

@@ -1372,6 +1372,9 @@ function evadeMove(w, u){
 // the sensible default mount: ride a giant (3 m+ up, out of most leaps) if you have one; otherwise you're safer on foot
 // (measured: riding a rhino, hippo, bison, moose or giraffe scores lower than running on foot)
 function defaultMount(team){ let b = null, h = 2.99; for (const id of team){ const m = BY_ID[id].mountH; if (m > h){ h = m; b = id; } } return b; }
+// Measured value of each pick (price_abs.js, seconds of survival): mine = with you vs left off the board,
+// theirs = against you vs off the board (negative = it hurts you). Written by apply_values.js; shown on the cards.
+const MEASURED = {/*MEASURED*/};
 // ---------- board rules ----------
 // Each game deals a board of RULES.board animals from the roster (a rare animal turns up with probability rareP).
 // You spend up to RULES.budget on the board; every board animal you don't pick is on the other side.
@@ -1450,6 +1453,6 @@ function policyChoose(w, u){
   INTERNALS.choose(w, u, w.cfg.policy);
 }
 
-const API = { _internals: INTERNALS, RULES, dealBoard, defaultMount, mapVariant, baseVariant, ESCORT_R, POST_R, zoneAt, ZONE_T0, ZONE_T1, HAZARD_NAME, zoneFor, homeFor, placeOK, clampPlace, defaultPost, snowFactor, heatLoad, QUIET_T, STYLE, ANIMALS, HUMAN, BY_ID, TERRAINS, W, H, DT, MATCH_T, setup, step, simulate, snapshot, summarize, randomDraft, defaultPlacement, rng, hpOf, radiusOf };
+const API = { _internals: INTERNALS, MEASURED, RULES, dealBoard, defaultMount, mapVariant, baseVariant, ESCORT_R, POST_R, zoneAt, ZONE_T0, ZONE_T1, HAZARD_NAME, zoneFor, homeFor, placeOK, clampPlace, defaultPost, snowFactor, heatLoad, QUIET_T, STYLE, ANIMALS, HUMAN, BY_ID, TERRAINS, W, H, DT, MATCH_T, setup, step, simulate, snapshot, summarize, randomDraft, defaultPlacement, rng, hpOf, radiusOf };
 if (typeof module !== 'undefined' && module.exports) module.exports = API; else root.Arena = API;
 })(typeof window !== 'undefined' ? window : globalThis);
