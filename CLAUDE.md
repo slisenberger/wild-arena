@@ -170,6 +170,9 @@ round. Report ± standard errors.
   (min 50, p25 63), $1,100 → 92%; boards with/without the elephant both 75%; 14 distinct best teams over 16 boards;
   typical full-spend team ~84 s. Runner-up: 25 s per $100 at $800 / board $2,400 → also 75% but coarser, a
   29% board, and not the meme's $1,000.
+- **Budget raised to $1,200 (owner: $1,000 felt hard)** after the less-idle changes: median board's best team
+  92% (min 50, p25 83), typical full-spend team median 169 s (vs 84 s at $1,000), 56% of teams win at least one
+  screen run, 15 distinct best teams over 16 boards. $1,100: best 88%, typical 101 s.
 - Guards no longer attack enemies that are minding their own business far from you (they used to rank a
   peaceful elephant as a top threat and provoke it).
 
