@@ -204,6 +204,10 @@ Pick for new roles. Top three for design value: **honey badger, moose, Komodo dr
   0. *Predator target selection (owner's pick, Oct 2026):* the cleanest first problem — one decision (whom to
      hunt, or whether to wait), a clear reward (damage dealt / survival / killing you), and an easy realism check
      (does it still look like a tiger?). Today it's hand-tuned scoring (`predatorTarget`, `waitForOpening`).
+  0a. *Result of milestone 2 (Oct 2026):* evolution strategies on target choice found nothing better than the
+     hand-tuned heuristic on fresh fights; even "always go for the human" barely helps predators. Target choice has
+     little leverage. Next: give the net the decisions that matter — when to commit vs wait for an opening, pack
+     timing — and then movement (0c).
   0b. *Guard positioning / anti-idle:* the same setup can train where your guards stand and when they step out
      (reward survival, small penalty for idle time) instead of hand-tuning it. Owner: "can help idle behavior too".
   0c. *Movement policy per archetype (owner idea):* ~7 archetypes (chargers, stalkers, pack harriers, lumberers,
