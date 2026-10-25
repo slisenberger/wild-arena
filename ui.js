@@ -128,7 +128,6 @@ function renderArenaOpts(){
   const mo = $('modeOpts'); mo.innerHTML = '';
   const modes = [
     ['wild','Wild', 'The other side is one team and the pressure builds over time. Predators hunt you and your guards; herbivores charge intruders. Their only infighting is a rare flare-up between natural rivals (lion and hyena, buffalo and lion). Break their morale and animals bolt out of the arena. You score by how long you stay alive, up to five minutes.'],
-    ['allout','Gauntlet', 'Hard mode. A gate opens every 9 seconds and releases one animal, and every one of them comes straight for you. No feeding, no infighting. Same scoring: how long you last.'],
   ];
   for (const [id, nm, desc] of modes){
     const b = document.createElement('button'); b.className = 'opt'; b.setAttribute('aria-pressed', S.mode === id);
@@ -515,7 +514,7 @@ function frame(ts){
 // ---------- lab ----------
 function renderLabDesc(){
   const names = [...S.team].map(id => A.BY_ID[id].name);
-  $('labDraftDesc').textContent = (names.length ? names.join(', ') : 'No animals (just you)') + ` · ${S.mode === 'wild' ? 'Wild' : 'Gauntlet'} rules · ${S.mount && S.team.has(S.mount) ? 'riding the ' + A.BY_ID[S.mount].name : 'on foot'} · 50 battles on each terrain, your current formation and mount. Score is time alive, capped at 5:00.`;
+  $('labDraftDesc').textContent = (names.length ? names.join(', ') : 'No animals (just you)') + ` · ${S.mount && S.team.has(S.mount) ? 'riding the ' + A.BY_ID[S.mount].name : 'on foot'} · 50 battles on each terrain, your current formation and mount. Score is time alive, capped at 5:00.`;
 }
 function runBatched(total, fn, onProgress, done){
   let i = 0;
