@@ -11,30 +11,30 @@ const W = 100, H = 66, DT = 0.1, MATCH_T = 300, QUIET_T = 30;
 // swim = speed in deep water, m/s (real swimming/bottom-walking speed, not a fraction of sprint speed).
 // tag aquaStalk = hides submerged like a croc, lunges out of the water, first strike from the water is an ambush.
 const ANIMALS = [
- {id:'elephant', name:'African Elephant', abbr:'ELE', price:400, mass:6000, spd:7, dmg:260, cd:1.6, armor:.35, reach:3.5, stam:20, heat:.8, cold:.6, water:.5, swim:1.5, aggr:.55, flee:.15, corner:1.3, pred:false, charge:true, smart:.95, vision:40, lift:0, tags:['hatesPredators','mount','sweep'],
-  traits:['Rideable: you sit 3.2 m up, out of reach of anything that cannot leap that high','Mobs predators on sight','Tusk, trunk and stomp: momentum hits scatter anything smaller']},
- {id:'rhino', name:'White Rhino', abbr:'RHI', price:400, mass:2300, spd:14, dmg:180, cd:1.4, armor:.55, reach:2.6, stam:15, heat:.8, cold:.55, water:0, swim:1, aggr:.4, flee:.12, corner:1.3, pred:false, charge:true, smart:.3, vision:18, lift:0, tags:[],
-  traits:['Thickest armor on the board','Placid grazer with poor eyesight: slow to anger, but a full charge is devastating','Fastest heavyweight charge (50 km/h)']},
- {id:'hippo', name:'Hippo', abbr:'HIP', price:400, mass:2000, spd:8, dmg:230, cd:1.3, armor:.5, reach:2.5, stam:8, heat:.5, cold:.4, water:.9, swim:2.5, aggr:.9, flee:.1, corner:1.3, pred:false, charge:true, smart:.4, vision:25, lift:0, tags:['territorial','sunburn'],
-  traits:['Bone-crushing bite, the most aggressive animal here','In water: faster, cooler, territorial','On dry land: sunburns and overheats']},
- {id:'giraffe', name:'Giraffe', abbr:'GIR', price:400, mass:1200, spd:15, dmg:120, cd:1.8, armor:.2, reach:3, stam:25, heat:1, cold:.5, water:-.6, swim:0.8, aggr:.2, flee:.5, corner:1.4, pred:false, charge:false, smart:.5, vision:60, lift:0, tags:['lookout','kicker'],
-  traits:['Lookout: your whole team spots threats 50% farther away','Lethal kick, but only in self-defense','Cannot cover ground-level threats around you']},
+ {id:'elephant', bluffP:0.6, name:'African Elephant', abbr:'ELE', price:400, mass:6000, spd:7, dmg:260, cd:1.6, armor:.35, reach:3.5, stam:20, heat:.8, cold:.6, water:.5, swim:1.5, aggr:.55, flee:.15, corner:1.3, pred:false, charge:true, smart:.95, vision:40, lift:0, tags:['hatesPredators','sweep','bluff'],
+  traits:['Rideable: you sit 3.2 m up, and its trunk reaches any rider','Matriarch: ears out and a mock charge first, then it tramples for real','Mobs predators on sight; momentum hits scatter anything smaller']},
+ {id:'rhino', name:'White Rhino', abbr:'RHI', price:400, mass:2300, spd:12.5, dmg:180, cd:1.4, armor:.55, reach:2.6, stam:15, heat:.8, cold:.55, water:0, swim:1, aggr:.3, flee:.25, corner:1.3, pred:false, charge:true, smart:.3, vision:18, lift:0, tags:[],
+  traits:['Placid two-tonne grazer: slow to anger, and it gives way to elephants','Armor-thick hide (only the croc is tougher) and a horn charge that cannot steer','Poor eyesight: it charges what it hears or smells as much as what it sees']},
+ {id:'hippo', name:'Hippo', abbr:'HIP', price:400, mass:2000, spd:8, dmg:230, cd:1.3, armor:.55, reach:2.5, stam:8, heat:.5, cold:.4, water:.9, swim:2.5, aggr:.9, flee:.1, corner:1.3, pred:false, charge:true, smart:.4, vision:25, lift:0, tags:['territorial','sunburn','submerges'],
+  traits:['Deadliest large animal in Africa: holds the river and charges out of it','In water: faster, cooler, territorial, and hard to spot until it surfaces','On dry land: sunburns and overheats']},
+ {id:'giraffe', name:'Giraffe', abbr:'GIR', price:400, mass:1200, spd:15, dmg:150, cd:1.8, armor:.2, reach:2.5, stam:25, heat:1, cold:.5, water:-.6, swim:0.8, aggr:.2, flee:.5, corner:1.4, pred:false, charge:false, smart:.5, vision:60, lift:0, tags:['lookout','kicker'],
+  traits:['Lookout: your whole team spots threats 50% farther away','Sees lions a kilometre off, and one kick can kill one','Only kicks what comes at it; never starts a fight']},
  {id:'polar', name:'Polar Bear', abbr:'PBR', price:300, mass:500, spd:11, dmg:145, cd:1.0, armor:.4, reach:2.1, stam:12, heat:.4, cold:1, water:.85, swim:3, aggr:.85, flee:.2, corner:1.3, pred:true, charge:false, smart:.6, vision:30, lift:3.0, tags:['scavenger','aquaStalk','snowCamo'], prey:{human:1.6},
   traits:['Largest land carnivore, actively hunts humans; 10 cm of fat under dense fur blunts bites and claws','Aquatic stalk: hidden under water until 7 m, then surges out for an ambush strike (x1.7)','Overheats fast anywhere warm, but swimming cools it; dominant in snow, and white on white it is hard to spot until 15 m']},
  {id:'croc', name:'Saltwater Crocodile', abbr:'CRO', price:300, mass:1000, spd:4.5, dmg:220, cd:1.2, armor:.6, reach:2.2, stam:5, heat:1.1, cold:.2, water:1, swim:5, aggr:.8, flee:.15, corner:1.2, pred:true, charge:false, smart:.3, vision:20, lift:0, tags:['deathroll','waterbound','ambush'], prey:{human:1.3},
   traits:['Strongest bite measured: grabs and death-rolls in water','At home in water: almost invisible until 7 m. On land it is slow and tires fast, but the bite is just as deadly','Cold-blooded: never dealt on the tundra']},
  {id:'buffalo', name:'Cape Buffalo', abbr:'BUF', price:300, mass:750, spd:15, dmg:150, cd:1.2, armor:.4, reach:2.3, stam:20, heat:.9, cold:.6, water:.2, swim:1.5, aggr:.7, flee:.25, corner:1.5, pred:false, charge:true, smart:.6, vision:28, lift:0, tags:['vindictive','lionKiller'], rivals:{lion:3, tiger:1.8, hyena:1.6},
-  traits:['Lion killer: +50% damage against big cats','Vindictive: hunts down whatever wounded it','Without a herd, it fights alone']},
- {id:'bison', name:'American Bison', abbr:'BIS', price:300, mass:900, spd:15, dmg:140, cd:1.3, armor:.35, reach:2.3, stam:40, heat:.75, cold:1, water:.2, swim:1.5, aggr:.5, flee:.42, corner:1.8, pred:false, charge:true, smart:.5, vision:28, lift:0, tags:['standsGround'],
-  traits:['Runs when it can, fights furiously when cornered (x1.8)','Turns and stands its ground once wounded','Huge stamina; at home in snow']},
+  traits:["'Black death': a wounded buffalo circles back for whoever hurt it, for a long time",'+50% damage against lions, tigers and hyenas','Without a herd, it fights alone']},
+ {id:'bison', bluffP:0.3, name:'American Bison', abbr:'BIS', price:300, mass:900, spd:15, dmg:140, cd:1.3, armor:.35, reach:2.3, stam:40, heat:.75, cold:1, water:.2, swim:1.5, aggr:.5, flee:.3, corner:1.8, pred:false, charge:true, smart:.5, vision:28, lift:0, tags:['standsGround','bluff'],
+  traits:['Injures more Yellowstone visitors than any other animal','Tail up, mock charge, then the real thing; spins on a dime','Huge stamina; at home in snow']},
  {id:'grizzly', name:'Grizzly Bear', abbr:'GRZ', price:200, mass:320, spd:15, dmg:125, cd:.9, armor:.35, reach:2, stam:15, heat:.65, cold:.95, water:.3, swim:1.8, aggr:.6, flee:.25, corner:1.3, pred:true, charge:false, smart:.7, vision:30, lift:2.8, hpMul:1.2, tags:['scavenger'], prey:{human:.8}, rivals:{polar:1.3, wolf:1.3, cougar:1.4},
   traits:['Very hard to kill (+20% durability)','Takes kills from cougars and wolves','Scavenges carcasses aggressively']},
  {id:'tiger', name:'Bengal Tiger', abbr:'TIG', price:200, mass:220, spd:17, dmg:125, cd:.9, armor:.1, reach:2, stam:6, heat:.75, cold:.65, water:.5, swim:2, aggr:.7, flee:.3, corner:1.3, pred:true, latch:true, charge:false, smart:.7, vision:30, lift:3.6, tags:['ambush'], prey:{human:1.4},
   traits:['Throat hold: latches onto prey up to 2.5x its mass','Ambush first strike (x1.7, x2 in forest)','Can leap onto an elephant (3.6 m)']},
  {id:'lion', name:'African Lion', abbr:'LIO', price:200, mass:190, spd:20, dmg:105, cd:.9, armor:.15, reach:2, stam:5, heat:.95, cold:.55, water:-.3, swim:1.2, aggr:.65, flee:.35, corner:1.3, pred:true, latch:true, charge:false, smart:.6, vision:32, lift:3.0, tags:['mane','pack'], prey:{human:1.1}, rivals:{hyena:2.2},
   traits:['Mane protects the neck: throat holds do 40% less','Pride animal: nervous alone, bolder beside another pack animal (not hyenas)','Kills hyenas on sight']},
- {id:'gorilla', name:'Silverback Gorilla', abbr:'GOR', price:200, mass:180, spd:11, dmg:90, cd:1.0, armor:.15, reach:2, stam:10, heat:.8, cold:.5, water:-.8, swim:0.5, aggr:.35, flee:.4, corner:1.4, pred:false, charge:false, smart:.9, vision:25, lift:0, climb:true, tags:['guardian','bluff'],
-  traits:['Guardian: sticks closest to you, +40% damage against anything targeting you','Bluff charge: first approach shakes the morale of smaller enemies','Climbs trees']},
+ {id:'gorilla', name:'Silverback Gorilla', abbr:'GOR', price:200, mass:180, spd:11, dmg:90, cd:1.0, armor:.15, reach:2, stam:10, heat:.8, cold:.65, water:-.8, swim:.3, aggr:.35, flee:.4, corner:1.4, pred:false, charge:false, smart:.9, vision:25, lift:0, climb:true, tags:['guardian','bluff'],
+  traits:['Guardian: sticks closest to you, +40% damage against anything targeting you','Bluffs first, but fights to the death for you once something comes for you','Too heavy to be much of a climber, and it cannot swim']},
  {id:'jaguar', name:'Jaguar', abbr:'JAG', price:100, mass:100, spd:16, dmg:85, cd:.9, armor:.05, reach:1.8, stam:6, heat:.9, cold:.5, water:.7, swim:2, aggr:.6, flee:.35, corner:1.3, pred:true, latch:true, charge:false, smart:.6, vision:28, lift:3.5, climb:true, pierce:.5, tags:['ambush'], prey:{human:.8},
   traits:['Skull bite ignores half of armor','Swims, climbs, ambushes','Small (100 kg)']},
  {id:'wolf', name:'Gray Wolf', abbr:'WLF', price:100, mass:45, spd:16, dmg:40, cd:.7, armor:.05, reach:1.6, stam:60, heat:.7, cold:1, water:.2, swim:1.5, aggr:.5, flee:.5, corner:1.3, pred:true, charge:false, smart:.8, vision:35, lift:0, tags:['hamstring','pack'], prey:{human:.6},
@@ -44,25 +44,25 @@ const ANIMALS = [
  {id:'hyena', name:'Spotted Hyena', abbr:'HYE', price:100, mass:60, spd:16, dmg:60, cd:.8, armor:.1, reach:1.6, stam:50, heat:.9, cold:.6, water:.1, swim:1.5, aggr:.55, flee:.45, corner:1.3, pred:true, charge:false, smart:.8, vision:35, lift:0, pierce:.3, hpMul:1.3, tags:['scavenger','hamstring','pack'], prey:{human:1.0}, rivals:{lion:1.3},
   traits:['Bone-crushing bite ignores 30% of armor','Tough (+30% durability) and tireless','Clan animal: bolder beside a wolf (never a lion); eats fast at carcasses']},
  // ---- added Oct 2026 (no portrait yet: shown as a lettered token) ----
- {id:'blackrhino', name:'Black Rhino', abbr:'BRH', price:300, mass:1200, spd:15, swim:1, dmg:160, cd:1.3, armor:.5, reach:2.3, stam:12, heat:.8, cold:.5, water:0, aggr:.8, flee:.1, corner:1.4, pred:false, charge:true, smart:.3, vision:15, lift:0, tags:['blindCharger'],
-  traits:['The irritable rhino: half the weight of a white rhino, twice the temper','Poor eyesight: charges anything that moves within 18 m','Hooked lip, sharp front horn, turns quickly for a rhino']},
- {id:'bull', name:'Fighting Bull', abbr:'TOR', price:200, mass:550, spd:15.5, swim:1.5, dmg:150, cd:1.2, armor:.35, reach:2.2, stam:14, heat:.8, cold:.7, water:.2, aggr:.95, flee:.1, corner:1.4, pred:false, charge:true, smart:.4, vision:25, lift:0, tags:['bred'],
-  traits:['Toro bravo: bred for centuries to charge, it never needs provoking','Turns fast for its size and keeps coming back','Tires in a long fight']},
- {id:'moose', name:'Moose', abbr:'MOO', price:300, mass:600, spd:15.5, swim:2.5, dmg:140, cd:1.0, armor:.3, reach:2.2, stam:30, heat:.5, cold:1, water:.6, aggr:.5, flee:.3, corner:1.5, pred:false, charge:true, smart:.5, vision:25, lift:0, tags:['standsGround'],
-  traits:['Rears and strikes with its front hooves; kills more people than bears do in Alaska','Long legs: at home in deep snow, and a strong swimmer','Suffers in heat']},
- {id:'ostrich', name:'Ostrich', abbr:'OST', price:100, mass:120, spd:19, swim:.8, dmg:70, cd:1.0, armor:.05, reach:2, stam:30, heat:1.1, cold:.4, water:-.3, aggr:.35, flee:.45, corner:1.4, pred:false, charge:false, smart:.2, vision:55, lift:0, tags:['lookout','kicker'],
+ {id:'blackrhino', bluffP:0.3, name:'Black Rhino', abbr:'BRH', price:300, mass:1200, spd:15, swim:1, dmg:160, cd:1.3, armor:.5, reach:2.3, stam:12, heat:.8, cold:.5, water:0, aggr:.8, flee:.1, corner:1.4, pred:false, charge:true, smart:.3, vision:15, lift:0, tags:['blindCharger','bluff'],
+  traits:['The irritable rhino: half the weight of a white rhino, twice the temper','Charges anything that moves within 18 m, though some charges veer off at the last moment','Hooked lip, sharp front horn, turns quickly for a rhino']},
+ {id:'bull', name:'Fighting Bull', abbr:'TOR', price:200, mass:550, spd:15.5, swim:1.5, dmg:150, cd:1.2, armor:.25, reach:2.2, stam:14, heat:.8, cold:.7, water:.2, aggr:.95, flee:.1, corner:1.4, pred:false, charge:true, smart:.4, vision:25, lift:0, tags:['bred','chasesMovement'],
+  traits:['Toro bravo: bred for centuries to charge, it never needs provoking','Charges whatever moves, then turns fast and comes back','Tires in a long fight']},
+ {id:'moose', name:'Moose', abbr:'MOO', price:300, mass:600, spd:15.5, swim:2.5, dmg:140, cd:1.0, armor:.15, reach:2.2, stam:30, heat:.5, cold:1, water:.6, aggr:.5, flee:.3, corner:1.5, pred:false, charge:true, smart:.5, vision:25, lift:0, tags:['standsGround','stomp'],
+  traits:['Injures more people than bears do in Alaska','Stands its ground and stomps: front hooves rain down on anything small or knocked down','Long legs: at home in deep snow, a strong swimmer; suffers in heat']},
+ {id:'ostrich', name:'Ostrich', abbr:'OST', price:100, mass:120, spd:19, swim:.8, dmg:70, cd:1.0, armor:.05, reach:1.5, stam:30, heat:1.1, cold:.6, water:-.3, aggr:.35, flee:.45, corner:1.4, pred:false, charge:false, smart:.2, vision:55, lift:0, tags:['lookout','kicker'],
   traits:['Fastest runner on two legs (70 km/h), and it can keep it up','Forward kick with a 10 cm claw, but only in self-defense','Huge eyes on a 2.7 m frame: a lookout, and a fast (if wobbly) mount']},
  {id:'honeybadger', name:'Honey Badger', abbr:'HBD', price:100, mass:11, spd:8.5, swim:1, dmg:22, cd:.6, armor:.35, reach:1.2, stam:40, heat:.9, cold:.5, water:-.2, aggr:.9, flee:.02, corner:1.3, pred:true, charge:false, smart:.8, vision:20, lift:0, hpMul:1.5, tags:['fearless','hamstring'], prey:{human:.5},
   traits:['Fearless: its morale never breaks, whatever it faces','Thick, loose skin shrugs off bites; very hard to kill for its size','Goes for the legs']},
  {id:'triceratops', name:'Triceratops', abbr:'TRI', price:500, mass:8000, spd:8, swim:1.2, dmg:300, cd:1.5, armor:.5, reach:3.2, stam:15, heat:.8, cold:.6, water:.3, aggr:.6, flee:.1, corner:1.3, pred:false, charge:true, smart:.3, vision:25, lift:0, rare:true, tags:['hatesPredators','giant'],
   traits:['Rare: only turns up on the odd board','Eight tonnes, a bony frill and two 1 m brow horns','Rideable 3 m up; charges like a rhino the size of an elephant']},
- {id:'mammoth', name:'Woolly Mammoth', abbr:'MAM', price:500, mass:6000, spd:7, swim:1.5, dmg:260, cd:1.6, armor:.4, reach:3.6, stam:20, heat:.4, cold:1, water:.5, aggr:.55, flee:.15, corner:1.3, pred:false, charge:true, smart:.95, vision:40, lift:0, rare:true, tags:['hatesPredators','giant','sweep'],
+ {id:'mammoth', bluffP:0.6, name:'Woolly Mammoth', abbr:'MAM', price:500, mass:6000, spd:7, swim:1.5, dmg:260, cd:1.6, armor:.4, reach:3.6, stam:20, heat:.4, cold:1, water:.5, aggr:.55, flee:.15, corner:1.3, pred:false, charge:true, smart:.95, vision:40, lift:0, rare:true, tags:['hatesPredators','giant','sweep','bluff'],
   traits:['Rare: only turns up on the odd board','An elephant in a fur coat: shrugs off the cold, wilts in the heat','Huge curved tusks sweep everything in reach; rideable 3.2 m up']},
  {id:'blackbear', name:'Black Bear', abbr:'BBR', price:100, mass:120, spd:13.5, swim:1.8, dmg:75, cd:.9, armor:.25, reach:1.8, stam:15, heat:.7, cold:.9, water:.4, aggr:.35, flee:.4, corner:1.3, pred:true, charge:false, smart:.7, vision:25, lift:2.5, climb:true, tags:['scavenger'], prey:{human:.4},
   traits:['Usually timid: more bluster than fight','Climbs trees as easily as you do','A real fighter when cornered']},
  {id:'leopard', name:'Leopard', abbr:'LEO', price:100, mass:70, spd:16, swim:1.5, dmg:70, cd:.9, armor:.05, reach:1.8, stam:6, heat:.95, cold:.6, water:.4, aggr:.6, flee:.4, corner:1.3, pred:true, latch:true, charge:false, smart:.7, vision:30, lift:3.5, climb:true, tags:['ambush'], prey:{human:.9},
   traits:['Pound for pound the strongest climber of the big cats','Ambush first strike (x1.7, x2 in forest)','Throat hold on prey up to 2.5x its mass']},
- {id:'boar', name:'Wild Boar', abbr:'BOA', price:100, mass:150, spd:13, swim:1.5, dmg:75, cd:.8, armor:.3, reach:1.6, stam:20, heat:.7, cold:.85, water:.4, aggr:.7, flee:.2, corner:1.6, pred:false, charge:true, smart:.6, vision:20, lift:0, tags:['standsGround'],
+ {id:'boar', name:'Wild Boar', abbr:'BOA', price:100, mass:150, spd:13, swim:1.5, dmg:75, cd:.8, armor:.3, reach:1.6, stam:20, heat:.6, cold:.85, water:.4, aggr:.7, flee:.2, corner:1.6, pred:false, charge:true, smart:.6, vision:20, lift:0, tags:['standsGround'],
   traits:['A big male: tusks that slash at thigh height','A shield of thick skin and gristle over the shoulders','Hard to put down, and fights hardest when cornered']},
 ];
 // Fighting styles: how each animal moves and attacks. strikeH = highest point it can hit (m); mountH = rider height if it can carry you (0 = can't).
@@ -70,7 +70,7 @@ const STYLE = {
  elephant:{gait:'lumber', strikeH:5, mountH:3.2, style:'Bulldozer', how:'Wades in steadily. Every strike is a trunk-and-tusk sweep that also hits everything else within reach.'},
  rhino:{gait:'charge', strikeH:1.6, mountH:1.9, overshoot:9, turn:.15, wheel:1.6, style:'Battering ram', how:'Locks onto a line and charges blind. Barely steers, overshoots by 9 m, then wheels around slowly.'},
  hippo:{gait:'charge', strikeH:1.6, mountH:1.7, overshoot:2, maxRun:12, turn:.6, wheel:1.8, style:'Burst charger', how:'Explosive 12 m rushes, then has to stop and blow before the next one.'},
- giraffe:{gait:'keepaway', strikeH:3, mountH:2.7, style:'Kicker', how:'Holds attackers at leg length and kicks. Never closes in.'},
+ giraffe:{gait:'keepaway', strikeH:2.2, mountH:2.7, style:'Kicker', how:'Holds attackers at leg length and kicks. Never closes in.'},
  polar:{gait:'lumber', strikeH:3, mountH:1.6, maul:true, style:'Heavy brawler', how:'Plods straight in and rears up; every third swipe is a full maul. In a river it swims submerged and surges out at prey on the bank.'},
  croc:{gait:'lunge', strikeH:1.2, mountH:0, style:'Ambush lunger', how:'Lies dead still, then lunges 6 m in half a second and clamps on.'},
  buffalo:{gait:'charge', strikeH:1.8, mountH:1.8, overshoot:4, turn:.9, wheel:.7, style:'Hooking charger', how:'Charges, drives through, and hooks straight back for another pass.'},
@@ -78,7 +78,7 @@ const STYLE = {
  grizzly:{gait:'lumber', strikeH:2.8, mountH:1.5, maul:true, style:'Brawler', how:'Bulls straight in; every third swipe is a full maul.'},
  tiger:{gait:'stalk', strikeH:3.6, mountH:1.2, pounce:9, style:'Stalker', how:'Creeps in low and slow, then pounces from 9 m.'},
  lion:{gait:'rush', strikeH:3, mountH:1.2, pounce:5, style:'Sprinter', how:'Fastest sprint here: rushes straight in and leaps the last 5 m.'},
- gorilla:{gait:'lumber', strikeH:2.4, mountH:1.5, style:'Bluffer', how:'Knuckle-walks in and bluff-charges first. Fights for real only if that fails.'},
+ gorilla:{gait:'lumber', strikeH:2.4, mountH:0, style:'Bluffer', how:'Knuckle-walks in and bluff-charges first. Fights for real only if that fails.'},
  jaguar:{gait:'stalk', strikeH:3.5, mountH:0, pounce:7, style:'Stalker', how:'Creeps in, then pounces from 7 m for a skull bite.'},
  wolf:{gait:'orbit', strikeH:1.4, mountH:0, dart:1.1, style:'Harrier', how:'Circles at a distance, darts in to bite the legs, then backs out.'},
  cougar:{gait:'stalk', strikeH:5, mountH:0, pounce:12, style:'Leaper', how:'Stalks, then leaps from 12 m: the longest pounce on the board.'},
@@ -86,7 +86,7 @@ const STYLE = {
  blackrhino:{gait:'charge', strikeH:1.5, mountH:1.6, overshoot:7, turn:.4, wheel:1.0, style:'Short-fused ram', how:'Snorts, charges at anything it hears or glimpses, wheels around faster than its big cousin.'},
  bull:{gait:'charge', strikeH:1.7, mountH:1.6, overshoot:5, turn:1.2, wheel:.6, style:'Relentless charger', how:'Charges, hooks, spins and charges again. Never stops coming until it tires.'},
  moose:{gait:'charge', strikeH:2.4, mountH:2.0, overshoot:3, turn:1.0, wheel:.8, style:'Stomper', how:'Short charge, then rears up and rains front-hoof strikes.'},
- ostrich:{gait:'keepaway', strikeH:2, mountH:1.4, style:'Kickboxer', how:'Outruns trouble; if cornered, kicks forward and down with a dagger claw.'},
+ ostrich:{gait:'keepaway', strikeH:1.3, mountH:1.4, style:'Kickboxer', how:'Outruns trouble; if cornered, kicks forward and down with a dagger claw.'},
  honeybadger:{gait:'lumber', strikeH:.8, mountH:0, style:'Pest', how:'Trundles straight at anything, latches onto ankles and will not quit.'},
  mammoth:{gait:'lumber', strikeH:5, mountH:3.2, style:'Ice-age bulldozer', how:'Wades in steadily; every strike is a tusk-and-trunk sweep that also hits everything else within reach.'},
  blackbear:{gait:'lumber', strikeH:2.2, mountH:0, style:'Bluffer', how:'Huffs, swats and bluff-charges; brawls for real only when it has to.'},
@@ -311,6 +311,7 @@ function canSee(w, viewer, u){
   if (has(u, 'ambush') && u.ambushReady && u.state !== 'flee' && w.T.id === 'forest') range = Math.min(range, 9);
   if ((has(u, 'waterbound') || has(u, 'aquaStalk')) && inWater(w, u) && u.state !== 'flee') range = Math.min(range, 7);
   if (has(u, 'snowCamo') && w.T.snow && u.state !== 'flee') range = Math.min(range, 15);
+  if (has(u, 'submerges') && inWater(w, u) && u.state !== 'flee') range = Math.min(range, 10);
   return dist(viewer, u) <= range;
 }
 function teamSees(w, u){
@@ -381,6 +382,7 @@ function herbivoreTarget(w, u){
     const d = dist(u, t);
     let sc = 0;
     if (u.grudge === t) sc = 5;
+    if (sc === 0 && !canSee(w, u, t) && !(d < 30 && Math.hypot(t.vx, t.vy) > 2)) continue; // poor-sighted grazers go by sound and smell
     if (d > R && sc === 0){
       if (has(u,'hatesPredators') && t.s.pred && d < 20) sc = 1.5; else continue;
     }
@@ -389,13 +391,13 @@ function herbivoreTarget(w, u){
       else if (t.side === 'P') sc = .6 + u.agit;           // intruders: your team
       else if (t.side === 'H') sc = .35 + u.agit * .6;     // you: a nuisance more than a target
       else sc = 1.5;                                        // an active feud
-      if (has(u,'blindCharger') && Math.hypot(t.vx, t.vy) > 2) sc += t.side === 'E' ? .4 : 1.5;
+      if ((has(u,'blindCharger') || has(u,'chasesMovement')) && Math.hypot(t.vx, t.vy) > 2) sc += t.side === 'E' ? .4 : 1.5;
       if (has(u,'kicker') && !(t.s.pred && d < 6)) sc = 0;
     }
     if (u.s.rivals && u.s.rivals[sp(t.s)]) sc *= u.s.rivals[sp(t.s)];
     if (has(u,'hatesPredators') && t.s.pred) sc *= 2;
     if (!reachable(u, t)) continue;
-    if ((t.s.id === 'elephant' || has(t,'giant')) && u.s.id !== 'rhino') sc *= 0.3;
+    if (t.s.id === 'elephant' || has(t,'giant')) sc *= 0.3;
     if (u.target === t) sc *= 1.3;
     sc /= (1 + d / 10);
     if (sc > bs){ bs = sc; best = t; }
@@ -508,6 +510,7 @@ function strike(w, a, t, opts){
   if (has(a,'deathroll') && opts.latch) dmg *= inWater(w, a) ? 2 : .5;
   if (opts.latch){ dmg *= .65; if (has(t,'mane')) dmg *= .6; }
   if (opts.pounce){ dmg *= 1.4; }
+  if (has(a,'stomp') && (t.stun > 0 || t.s.mass < 150)) dmg *= 1.5; // front hooves on something small or down
   if (opts.sweep){ dmg *= .35; }
   if (s.maul && !opts.latch && !opts.sweep){ a.strikes++; if (a.strikes % 3 === 0){ dmg *= 2; log(w, `${capName(a)} rears up and mauls ${nameOf(t)}`, 'maul', a); } }
   // surrounded: every extra attacker in contact makes each hit count more and armor less
@@ -567,7 +570,7 @@ function applyDamage(w, a, t, dmg){
 
   a.st.dealt += dmg; t.st.taken += dmg;
   if (a.side === 'P' && t.target === w.human) a.st.protect += dmg;
-  if (t.side !== 'H'){ t.grudge = a; t.grudgeT = 12; }
+  if (t.side !== 'H'){ t.grudge = a; t.grudgeT = has(t,'vindictive') ? 40 : 12; }
   t.agit = Math.min(1, t.agit + .25);
   for (const o of w.units) if (o.side === 'E' && active(o) && dist(o, t) < 15) o.agit = Math.min(1, o.agit + .04);
   if (t.hp <= 0) kill(w, t, a);
@@ -726,6 +729,8 @@ function step(w){
     if (has(u,'yields')) for (const o of units) if (active(o) && hostile(w,o,u) && ['grizzly','polar','wolf'].includes(sp(o.s)) && dist(o,u) < 10) tgt -= .25;
     if (has(u,'standsGround') && u.hp < u.maxhp * .95 && u.grudge) tgt += .25;
     if (has(u,'fearless')) tgt = Math.max(tgt, .8);
+    if (has(u,'vindictive') && u.grudge && active(u.grudge)) tgt += .3; // it does not give up on whoever hurt it
+    if (has(u,'guardian') && u.side === 'P' && units.some(e => e.side === 'E' && active(e) && e.target === w.human && dist(e, u) < 15)) tgt = Math.max(tgt, .8); // fights to the death for you
     u.morale += (tgt - u.morale) * Math.min(1, .6 * DT);
     if (u.state !== 'flee' && u.cornerT <= 0 && u.morale < u.s.flee && u.fleeT <= 0 && !u.withdrawn){
       u.state = 'flee'; u.fleeT = 4 + R() * 4; release(w, u); u.mv = null;
@@ -920,10 +925,11 @@ function step(w){
         } else { u.stun = .8; if (w.R() < .3) log(w, `${capName(u)} leaps for you and misses`, 'info', u); continue; }
       } else { u.atk = .5; continue; }
     }
-    // gorilla bluff
-    if (has(u,'bluff') && !u.bluffed[t.id] && !(u.side === 'P' && t.target === w.human)){
-      u.bluffed[t.id] = true; u.atk = u.s.cd * 1.5;
-      if (strength(t) < strength(u) * 1.5){ t.morale -= .35; log(w, `${capName(u)} bluff-charges ${nameOf(t)}, rattling it`, 'bluff', u); }
+    // bluff / mock charge (gorilla always; elephant, mammoth, black rhino, bison sometimes): stop short and rattle it first
+    if (has(u,'bluff') && u.bluffed[t.id] === undefined) u.bluffed[t.id] = w.R() < (u.s.bluffP || 1) && u.grudge !== t && !(u.side === 'P' && t.target === w.human);
+    if (u.bluffed[t.id] === true){
+      u.bluffed[t.id] = false; u.atk = u.s.cd * 1.5;
+      if (strength(t) < strength(u) * 1.5){ t.morale -= .35; log(w, `${capName(u)} ${u.s.id === 'gorilla' ? 'bluff-charges' : 'mock-charges'} ${nameOf(t)}, rattling it`, 'bluff', u); }
       continue;
     }
     // giraffe only kicks predators / attackers
