@@ -176,9 +176,10 @@ function sizeCanvas(cv){
   cv.style.height = Math.round(w * A.H / A.W) + 'px';
   cv._dpr = dpr; cv._scale = cv.width / A.W;
 }
-function groundFor(terrain, trees, w, h, shade){
+function groundFor(terrain, trees, w, h, shade, variant){
   shade = shade || [];
-  const key = terrain + w + 'x' + h + ':' + trees.map(t => t.x.toFixed(1)).join(',') + ':' + shade.map(t => t.x.toFixed(1)).join(',');
+  const V = variant || A.baseVariant(terrain);
+  const key = terrain + w + 'x' + h + ':' + V.key + ':' + trees.map(t => t.x.toFixed(1)).join(',') + ':' + shade.map(t => t.x.toFixed(1)).join(',');
   if (groundCache[key]) return groundCache[key];
   const c = document.createElement('canvas'); c.width = w; c.height = h; const g = c.getContext('2d');
   const sc = w / A.W;
@@ -189,21 +190,37 @@ function groundFor(terrain, trees, w, h, shade){
   for (let i = 0; i < 2600; i++){ g.fillStyle = speck[i % 3]; const x = R()*w, y = R()*h, s = (R()*2 + .6) * sc * .25; g.fillRect(x, y, s, s); }
   if (terrain === 'savanna'){ g.strokeStyle = 'rgba(120,100,50,.25)'; g.lineWidth = sc*.12; for (let i = 0; i < 140; i++){ const x = R()*w, y = R()*h; g.beginPath(); g.moveTo(x, y); g.lineTo(x + (R()-.5)*sc*.8, y - sc*(.6+R()*.6)); g.stroke(); } }
   if (terrain === 'tundra'){ g.fillStyle = 'rgba(230,238,245,.05)'; for (let i = 0; i < 40; i++){ g.beginPath(); g.ellipse(R()*w, R()*h, sc*(4+R()*8), sc*(1.5+R()*3), R()*3, 0, 7); g.fill(); } }
-  const T = A.TERRAINS[terrain];
-  if (T.water){
-    const x0 = T.water.x0 * sc, x1 = T.water.x1 * sc;
+  // a forest clearing: lighter, grassy ground
+  if (V.clearing){ const c = V.clearing, grd = g.createRadialGradient(c.x*sc, c.y*sc, 0, c.x*sc, c.y*sc, c.r*sc); grd.addColorStop(0, 'rgba(92,110,58,.45)'); grd.addColorStop(.75, 'rgba(80,98,52,.3)'); grd.addColorStop(1, 'rgba(80,98,52,0)'); g.fillStyle = grd; g.beginPath(); g.arc(c.x*sc, c.y*sc, c.r*sc, 0, 7); g.fill(); }
+  // ponds: waterhole (muddy rim), forest pool, half-frozen lake (ice rim)
+  for (const p of V.ponds){
+    const X = p.x*sc, Y = p.y*sc, RX = p.rx*sc, RY = p.ry*sc;
+    if (p.cold){ g.fillStyle = 'rgba(214,232,242,.55)'; g.beginPath(); g.ellipse(X, Y, RX + sc*2.2, RY + sc*1.8, 0, 0, 7); g.fill(); g.fillStyle = 'rgba(236,244,250,.5)'; g.beginPath(); g.ellipse(X, Y, RX + sc*1, RY + sc*.8, 0, 0, 7); g.fill(); }
+    else { g.fillStyle = p.kind === 'waterhole' ? '#5c5034' : '#3a3a26'; g.beginPath(); g.ellipse(X, Y, RX + sc*1, RY + sc*.9, 0, 0, 7); g.fill(); }
+    const grd = g.createRadialGradient(X, Y, 0, X, Y, Math.max(RX, RY));
+    if (p.cold){ grd.addColorStop(0, '#163a4f'); grd.addColorStop(1, '#2a6a82'); } else { grd.addColorStop(0, '#173f52'); grd.addColorStop(1, '#22596e'); }
+    g.fillStyle = grd; g.beginPath(); g.ellipse(X, Y, RX, RY, 0, 0, 7); g.fill();
+    g.strokeStyle = p.cold ? 'rgba(230,242,250,.3)' : 'rgba(160,210,225,.18)'; g.lineWidth = sc*.15;
+    for (let i = 0; i < 6; i++){ const a = R()*7, k = R()*.6, x = X + Math.cos(a)*RX*k - sc, y = Y + Math.sin(a)*RY*k; g.beginPath(); g.moveTo(x, y); g.quadraticCurveTo(x + sc, y - sc*.4, x + sc*2, y); g.stroke(); }
+    if (p.cold){ g.fillStyle = 'rgba(240,248,252,.7)'; for (let i = 0; i < 5; i++){ const a = R()*7; g.beginPath(); g.ellipse(X + Math.cos(a)*RX*.85, Y + Math.sin(a)*RY*.85, sc*(.8+R()*1.2), sc*(.4+R()*.6), a, 0, 7); g.fill(); } }
+    g.fillStyle = 'rgba(236,230,211,.6)'; g.font = `700 ${Math.max(8, sc*1.1)}px "Big Shoulders Display", sans-serif`; g.textAlign = 'center';
+    g.fillText({waterhole:'WATERHOLE', pool:'POOL', lake:'ICY WATER'}[p.kind] || 'WATER', X, Y + RY + (p.cold ? sc*3.4 : sc*2.4)); g.textAlign = 'left';
+  }
+  const T = A.TERRAINS[terrain], B = V.band;
+  if (B){
+    const x0 = B.x0 * sc, x1 = B.x1 * sc;
     g.fillStyle = '#5c5034'; g.fillRect(x0 - sc*.8, 0, sc*.9, h); g.fillRect(x1 - sc*.1, 0, sc*.9, h);
     const grd = g.createLinearGradient(x0, 0, x1, 0); grd.addColorStop(0, '#22596e'); grd.addColorStop(.5, '#173f52'); grd.addColorStop(1, '#22596e');
     g.fillStyle = grd; g.fillRect(x0, 0, x1 - x0, h);
-    for (const [a, b] of T.water.fords){
+    for (const [a, b] of B.fords){
       g.fillStyle = '#6f6a4a'; g.fillRect(x0, a*sc, x1 - x0, (b - a)*sc);
       g.fillStyle = 'rgba(90,150,170,.35)'; g.fillRect(x0, a*sc, x1 - x0, (b - a)*sc);
       g.fillStyle = 'rgba(236,230,211,.75)'; g.font = `800 ${Math.max(9, sc*1.4)}px "Big Shoulders Display", sans-serif`; g.textAlign = 'center'; g.fillText('FORD', (x0 + x1) / 2, (a + b) / 2 * sc + sc*.5); g.textAlign = 'left';
     }
     g.strokeStyle = 'rgba(160,210,225,.18)'; g.lineWidth = sc*.15;
-    for (let i = 0; i < 40; i++){ const x = x0 + R()*(x1 - x0 - sc*3), y = R()*h; if (T.water.fords.some(([a, b]) => y >= a*sc && y <= b*sc)) continue; g.beginPath(); g.moveTo(x, y); g.quadraticCurveTo(x + sc*1.5, y - sc*.5, x + sc*3, y); g.stroke(); }
+    for (let i = 0; i < 40; i++){ const x = x0 + R()*(x1 - x0 - sc*3), y = R()*h; if (B.fords.some(([a, b]) => y >= a*sc && y <= b*sc)) continue; g.beginPath(); g.moveTo(x, y); g.quadraticCurveTo(x + sc*1.5, y - sc*.5, x + sc*3, y); g.stroke(); }
   }
-  if (T.snow){ g.fillStyle = 'rgba(240,245,250,.09)'; for (let i = 0; i < 70; i++){ g.beginPath(); g.ellipse(R()*w, R()*h, sc*(3+R()*9), sc*(1+R()*2.5), R()*.6 - .3, 0, 7); g.fill(); } }
+  if (T.snow){ g.fillStyle = 'rgba(240,245,250,' + (V.snow > 1 ? .14 : V.snow < 1 ? .05 : .09) + ')'; for (let i = 0; i < 70; i++){ const x = R()*w, y = R()*h, rx = sc*(3+R()*9), ry = sc*(1+R()*2.5), a = R()*.6 - .3; if (V.ponds.some(p => Math.hypot((x/sc - p.x) / (p.rx + 6), (y/sc - p.y) / (p.ry + 4)) < 1)) continue; g.beginPath(); g.ellipse(x, y, rx, ry, a, 0, 7); g.fill(); } }
   for (const t of shade){
     g.fillStyle = 'rgba(0,0,0,.28)'; g.beginPath(); g.arc(t.x*sc, t.y*sc, t.r*sc, 0, 7); g.fill();
     g.strokeStyle = 'rgba(120,150,70,.55)'; g.lineWidth = Math.max(1, sc*.25); g.setLineDash([sc*.5, sc*.4]); g.beginPath(); g.arc(t.x*sc, t.y*sc, t.r*sc, 0, 7); g.stroke(); g.setLineDash([]);
@@ -233,11 +250,14 @@ function groundFor(terrain, trees, w, h, shade){
 let deployWorld = null;
 // Positions are stored absolute on the map; the sim takes offsets from you.
 function youAt(){ return S.youPos || A.homeFor(S.terrain); }
+// this game's map variant (waterhole, fords, tree density...): it follows the terrain and the seed
+let varMemo = null;
+function curVar(){ if (!varMemo || varMemo.tid !== S.terrain || varMemo.seed !== S.seed) varMemo = {tid: S.terrain, seed: S.seed, v: A.mapVariant(S.terrain, S.seed)}; return varMemo.v; }
 function absPlacements(){
   const out = {}, team = [...S.team], h = A.homeFor(S.terrain);
   team.forEach((id, i) => {
     if (S.pos[id]) { out[id] = S.pos[id]; return; }
-    const dp = A.defaultPost(S.terrain, id); if (dp){ out[id] = dp; return; }
+    const dp = A.defaultPost(S.terrain, id, curVar()); if (dp){ out[id] = dp; return; }
     const p = A.defaultPlacement(team, id, i), y = youAt(); out[id] = {x: y.x + p.dx, y: y.y + p.dy};
   });
   return out;
@@ -247,8 +267,9 @@ function makeCfg(){ return { team:[...S.team], placements:currentPlacements(), h
 function drawDeploy(){
   deployWorld = A.setup(makeCfg());
   const cv = $('deployCanvas'); const g = cv.getContext('2d'); const sc = cv._scale;
-  g.drawImage(groundFor(S.terrain, deployWorld.trees, cv.width, cv.height, deployWorld.shade), 0, 0);
-  const H = deployWorld.human, z = A.zoneFor(S.terrain);
+  g.drawImage(groundFor(S.terrain, deployWorld.trees, cv.width, cv.height, deployWorld.shade, deployWorld.variant), 0, 0);
+  const H = deployWorld.human, z = A.zoneFor(S.terrain, curVar());
+  const mn = $('mapNote'), note = curVar().note; mn.hidden = !note; mn.textContent = note || '';
   // your side of the map
   g.fillStyle = 'rgba(79,209,189,.07)'; g.fillRect(z.x0*sc, 0, (z.x1 - z.x0)*sc, cv.height);
   g.strokeStyle = 'rgba(79,209,189,.7)'; g.lineWidth = Math.max(1.5, sc*.2); g.setLineDash([sc*1.2, sc*.8]);
@@ -282,13 +303,13 @@ function drawDeploy(){
     if (!drag) return; const p = pos(e);
     if (drag === 'you'){
       const abs = absPlacements(), old = youAt();
-      const nu = A.clampPlace(S.terrain, A.HUMAN, p.x, p.y), dx = nu.x - old.x, dy = nu.y - old.y;
+      const nu = A.clampPlace(S.terrain, A.HUMAN, p.x, p.y, curVar()), dx = nu.x - old.x, dy = nu.y - old.y;
       // escorts come with you; guards on a post stay where they are
-      for (const id in abs){ const q = abs[id]; if (Math.hypot(q.x - old.x, q.y - old.y) <= A.ESCORT_R) abs[id] = A.clampPlace(S.terrain, A.BY_ID[id], q.x + dx, q.y + dy); }
+      for (const id in abs){ const q = abs[id]; if (Math.hypot(q.x - old.x, q.y - old.y) <= A.ESCORT_R) abs[id] = A.clampPlace(S.terrain, A.BY_ID[id], q.x + dx, q.y + dy, curVar()); }
       S.pos = abs; S.youPos = nu;
       if (S.mount && S.team.has(S.mount)) S.pos[S.mount] = Object.assign({}, S.youPos);
     } else {
-      S.pos = absPlacements(); S.pos[drag] = A.clampPlace(S.terrain, A.BY_ID[drag], p.x, p.y);
+      S.pos = absPlacements(); S.pos[drag] = A.clampPlace(S.terrain, A.BY_ID[drag], p.x, p.y, curVar());
     }
     drawDeploy();
   });
@@ -441,7 +462,7 @@ function drawFight(){
   const w = S.world; if (!w) return;
   const cv = $('fightCanvas'); const g = cv.getContext('2d'); const sc = cv._scale;
   const standing = w.fallen ? w.trees.concat(w.fallen.filter(f => f.t > S.playT)) : w.trees; // trees an elephant shoved over stay up until they fall
-  g.drawImage(groundFor(S.terrain_used || w.T.id, standing, cv.width, cv.height, w.shade), 0, 0);
+  g.drawImage(groundFor(S.terrain_used || w.T.id, standing, cv.width, cv.height, w.shade, w.variant), 0, 0);
   if (w.mode === 'allout'){ g.fillStyle = C.foe; for (let i = 0; i < 6; i++) g.fillRect((A.W-1.2)*sc, (6 + i*10.8 - 2)*sc, sc*1.2, sc*4); }
   drawHazard(g, sc, w, S.playT);
   const fr = frameAt(S.playT);
