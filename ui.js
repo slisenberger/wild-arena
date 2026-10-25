@@ -92,7 +92,7 @@ function renderDraft(){
       const bars = document.createElement('div'); bars.className = 'bars';
       const rows = [['Power', strengthOf(a)/maxStr], ['Armor', a.armor/.6], ['Speed', a.spd/20], ['Stamina', Math.min(1, a.stam/60)]];
       // measured: how much it helps on your side, and how dangerous it is if you leave it to the other side
-      const mv = A.MEASURED[a.id]; if (mv){ rows.push(['Helps you', Math.max(0, mv.mine) / MAXV.mine, C.you], ['Threat if left', Math.max(0, -mv.theirs) / MAXV.threat, C.foe]); }
+      const mv = A.MEASURED[a.id]; if (mv){ rows.push(['Helps', Math.max(0, mv.mine) / MAXV.mine, C.you], ['Threat', Math.max(0, -mv.theirs) / MAXV.threat, C.foe]); // full wording in the detail panel }
       for (const [k,v,col] of rows){ const l = document.createElement('span'); l.textContent = k; const b = document.createElement('div'); b.className = 'bar'; const f = document.createElement('b'); f.style.width = Math.round(Math.min(1,v)*100) + '%'; if (col) f.style.background = col; b.appendChild(f); bars.append(l, b); }
       c.appendChild(bars);
       const ck = document.createElement('span'); ck.className = 'check'; ck.textContent = '✓'; c.appendChild(ck);

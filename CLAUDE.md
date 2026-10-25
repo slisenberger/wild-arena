@@ -173,6 +173,11 @@ round. Report ± standard errors.
 - **Budget raised to $1,200 (owner: $1,000 felt hard)** after the less-idle changes: median board's best team
   92% (min 50, p25 83), typical full-spend team median 169 s (vs 84 s at $1,000), 56% of teams win at least one
   screen run, 15 distinct best teams over 16 boards. $1,100: best 88%, typical 101 s.
+- **Current prices (after the species-based morale fix, `abs_r5`):** 24 s of swing per $100, giants/herds capped
+  at $700 (triceratops $800), board total $2,800, budget $1,200. Validation: median board's best team 88% (min 50,
+  p25 83; with/without elephant both 88%), typical full-spend team median 167 s, 51% of teams win at least one
+  screen run, 13 distinct best teams over 16 boards. Cards show measured "Helps you" / "Threat if left"
+  (`MEASURED`, written by `apply_values.js`).
 - Guards no longer attack enemies that are minding their own business far from you (they used to rank a
   peaceful elephant as a top threat and provoke it).
 
