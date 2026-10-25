@@ -35,8 +35,8 @@ const ANIMALS = [
   traits:['Fastest sprint here (74 km/h in GPS-collar studies): rushes in and leaps the last 5 m','Pride animal: nervous alone; two males together hold their nerve and share the target','Kills hyenas on sight, and its mane is its best defense at the throat']},
  {id:'gorilla', name:'Silverback Gorilla', abbr:'GOR', price:100, mass:180, spd:11, dmg:110, cd:1.0, armor:.15, reach:2, stam:10, heat:.8, cold:.65, water:-.8, swim:.3, aggr:.35, flee:.4, corner:1.4, pred:false, charge:false, vision:25, climb:true, tags:['guardian','bluff'],
   traits:['Guardian: sticks closest to you, +40% damage against anything targeting you','Bluffs first, but fights to the death for you once something comes for you','Too heavy to be much of a climber, and it cannot swim']},
- {id:'jaguar', name:'Jaguar', abbr:'JAG', latchMax:3.5, price:100, mass:100, spd:16, dmg:85, cd:.9, armor:.05, reach:1.8, stam:6, heat:.9, cold:.5, water:.8, swim:2, aggr:.6, flee:.35, corner:1.3, pred:true, latch:true, charge:false, vision:28, climb:true, pierce:.5, tags:['catSense','ambush'], prey:{human:.3},
-  traits:['Skull-crushing bite that ignores half of armor','Swims well and hunts from the river','Stocky ambusher: power, not leaping; rarely attacks people']},
+ {id:'jaguar', name:'Jaguar', abbr:'JAG', latchMax:3.5, price:100, mass:100, spd:16, dmg:85, cd:.9, armor:.05, reach:1.8, stam:6, heat:.9, cold:.5, water:.8, swim:2, aggr:.6, flee:.35, corner:1.3, pred:true, latch:true, charge:false, vision:28, climb:true, pierce:.5, tags:['catSense','ambush','caimanHunter'], rivals:{croc:1.6}, prey:{human:.3},
+  traits:['Skull-crushing bite that ignores half of armor','Swims well and hunts crocodiles: a bite to the skull (×1.5 vs the croc)','Stocky ambusher: power, not leaping; rarely attacks people']},
  {id:'wolf', name:'Gray Wolf', abbr:'WLF', price:100, mass:45, spd:16, dmg:40, cd:.7, armor:.05, reach:1.6, stam:60, heat:.7, cold:1, water:.2, swim:1.5, aggr:.5, flee:.5, corner:1.3, pred:true, charge:false, vision:35, tags:['hamstring','pack'], prey:{human:.3},
   traits:['Hamstring bites slow the target','Endless stamina: circles, tests, and bleeds prey out',"A pack takes on prey ten times one wolf's size; alone it is nervous"]},
  {id:'cougar', name:'Cougar', abbr:'CGR', latchMax:4, yieldsTo:['grizzly','polar','blackbear','wolf','smilodon'], price:100, mass:60, spd:18, dmg:55, cd:.8, armor:.05, reach:1.8, stam:5, heat:.8, cold:.85, water:-.2, swim:1.2, aggr:.45, flee:.6, corner:1.3, pred:true, latch:true, charge:false, vision:30, climb:true, tags:['catSense','ambush','riderSnatcher'], prey:{human:.8},
@@ -669,6 +669,7 @@ function strike(w, a, t, opts){
   if (s.rivals && s.rivals[sp(t.s)] && has(a,'lionKiller')){ dmg *= 1.5; sig(w, a, 'lion killer'); }
   if (has(a,'vindictive') && a.grudge === t && a.grudgeT > 12) sig(w, a, 'grudge hit');
   if (s.pierce) sig(w, a, 'armor-piercing bite');
+  if (has(a,'caimanHunter') && sp(t.s) === 'croc'){ dmg *= 1.5; sig(w, a, 'skull bite on a croc'); } // jaguars kill caimans with a bite to the back of the skull
   if (has(a,'guardian') && a.side === 'P' && t.target === w.human){ dmg *= 1.4; sig(w, a, 'guarding you'); }
   if (has(a,'deathroll') && opts.latch) dmg *= inWater(w, a) ? 2 : .5;
   // a kangaroo grabs with its forearms first (the target can't dart out), then the kick lands harder
@@ -994,11 +995,12 @@ function step(w){
     const vmax = speedOf(w, u);
     if (u.mv){ commitMove(w, u, vmax); continue; }
     // a big cat doesn't trade blows with a charging buffalo or rhino: it sidesteps and gives ground, then comes back
+    u.dodge = null; // recomputed every tick: a stale sidestep must not steer a cat that is now fleeing, cornered or overheated
     if ((has(u,'catSense') || has(u,'boxer')) && u.state !== 'flee' && !u.latchOn && !u.latchedBy && u.cornerT <= 0){
       let th = null, td = 9; for (const o of units) if (active(o) && hostile(w, o, u) && o.target === u && !o.s.pred && o.s.mass > 3 * u.s.mass){ const d = dist(o, u); if (d < td){ td = d; th = o; } }
       if (th){ const ax = (u.x - th.x) / (td || 1), ay = (u.y - th.y) / (td || 1); u.dodge = {x: u.x + ax * 6 - ay * 4 * u.orbitDir, y: u.y + ay * 6 + ax * 4 * u.orbitDir}; if (!u.dodging){ u.dodging = true; sig(w, u, 'dodge'); } }
-      else { u.dodge = null; u.dodging = false; }
-    }
+      else u.dodging = false;
+    } else u.dodging = false;
     if (u.state === 'flee'){
       let ax = 0, ay = 0;
       for (const o of units) if (active(o) && hostile(w,o,u)){ const d = dist(o,u); const k = 1 / (d*d + 1); ax += (u.x-o.x)*k; ay += (u.y-o.y)*k; }

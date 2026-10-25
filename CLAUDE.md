@@ -216,6 +216,13 @@ round. Report ± standard errors.
 - Guards no longer attack enemies that are minding their own business far from you (they used to rank a
   peaceful elephant as a top threat and provoke it).
 
+- **Helps/Threat pass (subagent, Oct 2026):** the card bars depend on the base team. With 3-animal base teams (~63 s)
+  "theirs" can't go below ~−60 while "mine" has ~240 s of room, so giants and herds look harmless. Budget-fill bases
+  (`BASE=900`/`1200` env in `price_abs.js`) flip that: elephant +147/−32 (3 random) vs +53/−131 ($1,200 fill).
+  Robust under every base: giraffe and croc are harmless helpers (realistic), the tiger is slightly more threat than help.
+  With full teams, 38% of your damage is collateral (charges and sweeps aimed at your animals hit you). Of 11 ideas only
+  a stale-dodge bug fix survived on the current engine.
+
 ## Open threads (full list in BACKLOG.md)
 1. Realism: owner decision on a more fragile human. (Done Oct 2026: lion coalitions encircle — the second lion swings to
    the far side of a shared target, `sig 'encircles'` ~1.5/fight, value neutral.)
