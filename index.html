@@ -308,7 +308,7 @@ const ANIMALS = [
   traits:['Skull-crushing bite that ignores half of armor','Swims well and hunts from the river','Stocky ambusher: power, not leaping; rarely attacks people']},
  {id:'wolf', name:'Gray Wolf', abbr:'WLF', price:100, mass:45, spd:16, dmg:40, cd:.7, armor:.05, reach:1.6, stam:60, heat:.7, cold:1, water:.2, swim:1.5, aggr:.5, flee:.5, corner:1.3, pred:true, charge:false, vision:35, tags:['hamstring','pack'], prey:{human:.3},
   traits:['Hamstring bites slow the target','Endless stamina: circles, tests, and bleeds prey out',"A pack takes on prey ten times one wolf's size; alone it is nervous"]},
- {id:'cougar', name:'Cougar', abbr:'CGR', latchMax:4, yieldsTo:['grizzly','polar','blackbear','wolf'], price:100, mass:60, spd:18, dmg:55, cd:.8, armor:.05, reach:1.8, stam:5, heat:.8, cold:.85, water:-.2, swim:1.2, aggr:.45, flee:.6, corner:1.3, pred:true, latch:true, charge:false, vision:30, climb:true, tags:['ambush'], prey:{human:.8},
+ {id:'cougar', name:'Cougar', abbr:'CGR', latchMax:4, yieldsTo:['grizzly','polar','blackbear','wolf'], price:100, mass:60, spd:18, dmg:55, cd:.8, armor:.05, reach:1.8, stam:5, heat:.8, cold:.85, water:-.2, swim:1.2, aggr:.45, flee:.6, corner:1.3, pred:true, latch:true, charge:false, vision:30, climb:true, tags:['ambush','riderSnatcher'], prey:{human:.8},
   traits:['Huge leap (5 m): can reach a rider or a tree','Gives way to bears, and to wolves that come as a pack','Ambusher that slinks off if faced down']},
  {id:'hyena', name:'Spotted Hyena', abbr:'HYE', price:100, mass:60, spd:16, dmg:60, cd:.8, armor:.1, reach:1.6, stam:50, heat:.9, cold:.6, water:.1, swim:1.5, aggr:.55, flee:.45, corner:1.3, pred:true, charge:false, vision:35, pierce:.3, hpMul:1.3, tags:['scavenger','hamstring','pack'], prey:{human:1.0}, rivals:{lion:1.3},
   traits:['Bone-crushing bite ignores 30% of armor','Tough (+30% durability) and tireless: a clan runs prey down','Clan hunter, not a scavenger: kills most of its own food and eats fast']},
@@ -456,7 +456,7 @@ function setup(cfg){
   const R = rng(cfg.seed || 1);
   const T = TERRAINS[cfg.terrain] || TERRAINS.savanna;
   const V = variantFor(cfg);
-  const w = { t:0, lastPress:0, T, mode:cfg.mode || 'wild', units:[], carcasses:[], trees:[], events:[], R, over:false, result:null, cfg, nid:0, frames:null };
+  const w = { sig:{}, t:0, lastPress:0, T, mode:cfg.mode || 'wild', units:[], carcasses:[], trees:[], events:[], R, over:false, result:null, cfg, nid:0, frames:null };
   // the world's water bodies: the river band (river map) and any ponds this game's variant adds
   w.variant = V; w.band = V.band; w.ponds = V.ponds; w.wet = !!(V.band || V.ponds.length); w.coldWater = V.ponds.some(p => p.cold); w.snowDepth = V.snow;
   const human = mkUnit(HUMAN, 'H', 22, 36, w.nid++); human.atk = 0; w.units.push(human); w.human = human;
@@ -637,6 +637,8 @@ function packStrength(w, u){ let s = strength(u); if (social(u)) for (const o of
 // gives way to: the species in its yieldsTo list (a cougar to bears, and to wolves only when they come as a pack)
 function yieldsTo(w, u, o){ const l = u.s.yieldsTo; if (!l || !l.includes(sp(o.s))) return false; return sp(o.s) !== 'wolf' || packMates(w, o) > 0; }
 function packMates(w, u){ let n = 0; for (const o of w.units) if (packMate(u, o) && dist(u, o) < 15) n++; return n; }
+// signature-move counter (for the identity audit): w.sig['tiger:pounce'] = how many times it happened this fight
+function sig(w, u, name){ if (!u || !u.s || u.side === 'H') return; const k = u.s.id + ':' + name; w.sig[k] = (w.sig[k] || 0) + 1; }
 function strength(u){ return Math.sqrt(Math.max(1,u.hp) * (u.s.dmg / u.s.cd)); }
 function pressure(w){ return w.mode === 'wild' ? Math.min(1, w.t / 150) : 1; }
 // water: w.band is the river (vertical band x0..x1 with shallow fords), w.ponds are ellipses; w.wet = any water at all
@@ -740,6 +742,7 @@ function predatorTarget(w, u){
     if (ts > my * 2.5 && u.grudge !== t && !has(u,'fearless')) sc *= 0.05;
     if (t.s.id === 'elephant' || has(t,'giant')) sc *= 0.1;
     if (t.side === 'H') sc *= (u.s.prey && u.s.prey.human) || 1;
+    if (has(u,'riderSnatcher') && t.riding) sc *= 1.6; // a rider is just prey on a high perch to a cougar
     if (w.mode === 'allout' && t.side === 'H') sc *= 6;
     if (t.side === 'E') sc *= 1.5; // a live feud gets settled first
     if (u.s.rivals && u.s.rivals[sp(t.s)]) sc *= u.s.rivals[sp(t.s)];
@@ -902,16 +905,18 @@ function strike(w, a, t, opts){
   dmg *= chargeF;
   const ambushes = has(a,"ambush") || (has(a,"aquaStalk") && (inWater(w, a) || a.wetLunge));
   a.wetLunge = false;
-  if (ambushes && a.ambushReady && t.target !== a){ dmg *= w.T.id === "forest" ? 2 : 1.7; a.ambushReady = false; if (!opts.pounce) log(w, `${capName(a)} ambushes ${nameOf(t)}`, "ambush", a); }
+  if (ambushes && a.ambushReady && t.target !== a){ dmg *= w.T.id === "forest" ? 2 : 1.7; a.ambushReady = false; sig(w, a, 'ambush'); if (!opts.pounce) log(w, `${capName(a)} ambushes ${nameOf(t)}`, "ambush", a); }
   a.ambushReady = false;
-  if (s.rivals && s.rivals[sp(t.s)] && has(a,'lionKiller')) dmg *= 1.5;
-  if (has(a,'guardian') && a.side === 'P' && t.target === w.human) dmg *= 1.4;
+  if (s.rivals && s.rivals[sp(t.s)] && has(a,'lionKiller')){ dmg *= 1.5; sig(w, a, 'lion killer'); }
+  if (has(a,'vindictive') && a.grudge === t && a.grudgeT > 12) sig(w, a, 'grudge hit');
+  if (s.pierce) sig(w, a, 'armor-piercing bite');
+  if (has(a,'guardian') && a.side === 'P' && t.target === w.human){ dmg *= 1.4; sig(w, a, 'guarding you'); }
   if (has(a,'deathroll') && opts.latch) dmg *= inWater(w, a) ? 2 : .5;
   if (opts.latch){ dmg *= .65; if (has(t,'mane')) dmg *= .6; if (has(t,'looseSkin')) dmg *= .5; }
-  if (opts.pounce){ dmg *= 1.4; }
-  if (has(a,'stomp') && (t.stun > 0 || t.s.mass < 150)) dmg *= 1.5; // front hooves on something small or down
+  if (opts.pounce){ dmg *= 1.4; sig(w, a, a.fromTree ? 'tree drop' : 'pounce'); }
+  if (has(a,'stomp') && (t.stun > 0 || t.s.mass < 150)){ dmg *= 1.5; sig(w, a, 'stomp'); } // front hooves on something small or down
   if (opts.sweep){ dmg *= .35; }
-  if (s.maul && !opts.latch && !opts.sweep){ a.strikes++; if (a.strikes % 3 === 0){ dmg *= 2; log(w, `${capName(a)} rears up and mauls ${nameOf(t)}`, 'maul', a); } }
+  if (s.maul && !opts.latch && !opts.sweep){ a.strikes++; if (a.strikes % 3 === 0){ dmg *= 2; sig(w, a, 'maul'); log(w, `${capName(a)} rears up and mauls ${nameOf(t)}`, 'maul', a); } }
   // surrounded: every extra attacker in contact makes each hit count more and armor less
   let mob = 0;
   for (const o of w.units) if (o !== t && active(o) && hostile(w, o, t) && (o.target === t || o.latchOn === t) && dist(o, t) <= o.r + t.r + o.s.reach + .5) mob++;
@@ -923,7 +928,7 @@ function strike(w, a, t, opts){
     if (t.mv.k === 'wheel') flank = true;
     else { const hx = t.mv.nx, hy = t.mv.ny, ax = a.x - t.x, ay = a.y - t.y, m = Math.hypot(ax, ay) || 1; if ((hx * ax + hy * ay) / m < -.3) flank = true; }
   }
-  if (flank){ dmg *= 1.25; if (w.R() < .3) log(w, `${capName(a)} catches ${nameOf(t)} side-on`, 'flank', t); }
+  if (flank){ dmg *= 1.25; sig(w, a, 'flank'); if (w.R() < .3) log(w, `${capName(a)} catches ${nameOf(t)} side-on`, 'flank', t); }
   let armor = t.s.armor * (1 - (s.pierce || 0)) * (opts.latch ? .5 : 1) * Math.max(.4, 1 - .1 * (mob - 1)) * (flank ? .5 : 1);
   if (t.s.id === 'croc') armor = inWater(w,t) ? Math.min(.8, armor + .1) : armor - .2;
   dmg *= (1 - armor);
@@ -931,8 +936,8 @@ function strike(w, a, t, opts){
   dmg = Math.max(1, dmg);
   applyDamage(w, a, t, dmg);
   // secondary effects
-  if (has(a,'slash') && t.state !== 'dead'){ t.bleed = Math.max(t.bleed || 0, dmg * .12); t.bleedT = 5; t.bleedBy = a; } // tusk wounds keep bleeding
-  if (has(a,'hamstring') && t.s.mass < 2500){ t.slow = .35; t.slowT = 4; }
+  if (has(a,'slash') && t.state !== 'dead'){ sig(w, a, 'bleeding slash'); t.bleed = Math.max(t.bleed || 0, dmg * .12); t.bleedT = 5; t.bleedBy = a; } // tusk wounds keep bleeding
+  if (has(a,'hamstring') && t.s.mass < 2500){ t.slow = Math.max(t.slow * (t.slowT > 0 ? 1 : 0), t.s.mass > 3 * a.s.mass ? .5 : .4); t.slowT = 6; sig(w, a, 'hamstring'); } // leg bites cripple big prey
   // knockback & stun from momentum
   if (!opts.latch && speedFrac > .55 && t.state !== 'dead'){
     const ratio = a.s.mass / t.s.mass;
@@ -941,7 +946,7 @@ function strike(w, a, t, opts){
       const d = dist(a, t) || 1;
       t.x += (t.x - a.x) / d * kb; t.y += (t.y - a.y) / d * kb;
       if (ratio > 1.5){ t.stun = Math.max(t.stun, .5 + Math.min(1.2, ratio / 8)); }
-      if (kb > 2.5) log(w, `${capName(a)} charges ${nameOf(t)}, knocking it back ${kb.toFixed(1)} m`, 'charge', t);
+      if (kb > 2.5){ sig(w, a, 'knockback'); } if (kb > 2.5) log(w, `${capName(a)} charges ${nameOf(t)}, knocking it back ${kb.toFixed(1)} m`, 'charge', t);
       if (t.latchedBy && ratio > .8){ release(w, t.latchedBy, 'thrown off'); }
     }
   }
@@ -949,11 +954,11 @@ function strike(w, a, t, opts){
   if (t.rider && a.s.mass >= 150 && speedFrac > .6 && w.R() < .1 * Math.pow(clamp(a.s.mass / t.s.mass, 0, 2), 2) && t.state !== 'dead') throwRider(w, t, `${capName(a)} rammed it`, a);
   // latch attempt
   if (!opts.latch && !opts.sweep && s.latch && !a.latchOn && !t.latchedBy && t.state !== 'dead' && t.s.mass <= (s.latchMax || 2.5) * s.mass && heightOf(t) === 0 && w.R() < (opts.pounce ? .7 : .45)){
-    a.latchOn = t; t.latchedBy = a;
+    a.latchOn = t; t.latchedBy = a; sig(w, a, 'hold');
     log(w, `${capName(a)} gets a hold on ${nameOf(t)}`, 'latch', t);
   }
   if (!opts.latch && has(a,'deathroll') && !a.latchOn && !t.latchedBy && t.state !== 'dead' && heightOf(t) === 0 && t.s.mass < 2500 && w.R() < (inWater(w, a) || inWater(w, t) ? .7 : .12)){
-    a.latchOn = t; t.latchedBy = a;
+    a.latchOn = t; t.latchedBy = a; sig(w, a, inWater(w, a) ? 'death roll' : 'clamp');
     log(w, `${capName(a)} clamps its jaws on ${nameOf(t)}${inWater(w,a)?' and death-rolls':''}`, 'latch', t);
   }
 }
@@ -963,14 +968,14 @@ function sweep(w, a, main){
     if (o === main || !hostile(w, a, o) || heightOf(o) > a.s.strikeH) continue;
     if (dist(a, o) <= a.r + o.r + a.s.reach){ strike(w, a, o, {sweep:true}); n++; }
   }
-  if (n) log(w, `${capName(a)} sweeps ${n + 1} attackers at once`, 'sweep', a);
+  if (n){ sig(w, a, 'sweep'); log(w, `${capName(a)} sweeps ${n + 1} attackers at once`, 'sweep', a); }
 }
 function applyDamage(w, a, t, dmg){
   t.hp -= dmg; t.lastHitBy = a;
 
   a.st.dealt += dmg; t.st.taken += dmg;
   if (a.side === 'P' && t.target === w.human) a.st.protect += dmg;
-  if (t.side !== 'H'){ t.grudge = a; t.grudgeT = has(t,'vindictive') ? 40 : 12; }
+  if (t.side !== 'H'){ t.grudge = a; t.grudgeT = has(t,'vindictive') ? 40 : has(a,'fearless') ? 25 : 12; } // a honey badger's bites make it the thing you can't stop chasing
   t.agit = Math.min(1, t.agit + .25);
   for (const o of w.units) if (o.side === 'E' && active(o) && dist(o, t) < 15) o.agit = Math.min(1, o.agit + .04);
   if (t.hp <= 0) kill(w, t, a);
@@ -1160,7 +1165,7 @@ function step(w){
       }
       if (u.s.climb && w.trees.length && !u.routing && !u.latchedBy && !u.rider){
         let bt = null, bd = 3; for (const t of w.trees){ const d = Math.hypot(t.x - u.x, t.y - u.y) - t.r; if (d < bd && !outsideZone(w, t)){ bd = d; bt = t; } }
-        if (bt){ u.onTree = bt; u.treeSafeT = 0; u.x = bt.x; u.y = bt.y; u.vx = u.vy = 0; u.climbT = 1.2; release(w, u); log(w, `${capName(u)} scrambles up a tree`, 'info', u); continue; }
+        if (bt){ sig(w, u, 'tree escape'); u.onTree = bt; u.treeSafeT = 0; u.x = bt.x; u.y = bt.y; u.vx = u.vy = 0; u.climbT = 1.2; release(w, u); log(w, `${capName(u)} scrambles up a tree`, 'info', u); continue; }
       }
       u.fleeT -= DT;
       // cornered?
@@ -1188,7 +1193,7 @@ function step(w){
     if (u.latchOn){ // glued to prey
       const t = u.latchOn;
       if (has(u,'deathroll') && w.wet && t.s.mass < u.s.mass && !inWater(w, t) && distWater(w, t) < 8){ // drags it into the water
-        const p = waterPoint(w, t, t), dx = p.x - t.x, dy = p.y - t.y, m = Math.hypot(dx, dy) || 1; t.x += dx / m * 1.5 * DT; t.y += dy / m * 1.5 * DT; }
+        const p = waterPoint(w, t, t), dx = p.x - t.x, dy = p.y - t.y, m = Math.hypot(dx, dy) || 1; t.x += dx / m * 1.5 * DT; t.y += dy / m * 1.5 * DT; if (!u.dragging){ u.dragging = true; sig(w, u, 'drags into water'); } }
       const d = dist(u,t) || 1, want = u.r + t.r - .3;
       u.x = t.x + (u.x - t.x) / d * want; u.y = t.y + (u.y - t.y) / d * want; u.vx = t.vx; u.vy = t.vy; continue;
     }
@@ -1310,7 +1315,7 @@ function step(w){
     if (!active(u) || !u.latchOn) continue;
     const t = u.latchOn;
     const p = .15 * Math.sqrt(t.s.mass / u.s.mass) * (t.cornerT > 0 ? 1.5 : 1) * (t.side === 'H' ? .3 : 1) * (has(t,'looseSkin') ? 5 : 1); // loose skin: it twists free
-    if (w.R() < p * DT) release(w, u, 'shaken off');
+    if (w.R() < p * DT){ if (has(t,'looseSkin')) sig(w, t, 'twists free'); release(w, u, 'shaken off'); }
   }
   // attacks
   for (const u of units){
@@ -1347,14 +1352,14 @@ function step(w){
         u.atk = u.s.cd * 1.5;
         const leaper = u.s.pred && u.s.pounce;
         if (w.R() < .35){ log(w, `${capName(u)} ${leaper ? 'leaps up' : 'rears up'} ${t.riding ? 'at you on your ' + t.riding.s.name : 'into the tree'} and strikes you`, 'danger', u);
-          if (t.riding && w.R() < (leaper ? .5 : .3)) throwRider(w, t.riding, (leaper ? 'a leaping ' : 'a rearing ') + u.s.name, u);
+          if (t.riding && w.R() < (has(u,'riderSnatcher') ? .85 : leaper ? .5 : .3)){ throwRider(w, t.riding, (leaper ? 'a leaping ' : 'a rearing ') + u.s.name, u); sig(w, u, 'rider knocked off'); }
         } else { u.stun = .8; if (w.R() < .3) log(w, `${capName(u)} leaps for you and misses`, 'info', u); continue; }
       } else { u.atk = .5; continue; }
     }
     // bluff / mock charge (gorilla always; elephant, mammoth, black rhino, bison sometimes): stop short and rattle it first
     if (has(u,'bluff') && u.bluffed[t.id] === undefined) u.bluffed[t.id] = w.R() < (u.s.bluffP || 1) && u.grudge !== t && !(u.side === 'P' && t.target === w.human);
     if (u.bluffed[t.id] === true){
-      u.bluffed[t.id] = false; u.atk = u.s.cd * 1.5;
+      u.bluffed[t.id] = false; u.atk = u.s.cd * 1.5; sig(w, u, 'mock charge');
       if (strength(t) < strength(u) * 1.5){ t.morale -= .35; log(w, `${capName(u)} ${u.s.id === 'gorilla' ? 'bluff-charges' : 'mock-charges'} ${nameOf(t)}, rattling it`, 'bluff', u); }
       continue;
     }
@@ -1393,7 +1398,9 @@ function perchAmbush(w, u, t, d){
     if (u.perchT > 20 || outsideZone(w, u) || !active(t)){ u.onTree = null; u.perch = false; }
     return !!u.onTree;
   }
-  if (u.side !== 'E' || !u.s.climb || !has(u,'ambush') || !w.trees.length || !u.ambushReady || u.onTree || d < 9 || d > 30 || w.t < (u.nextPerch || 0)) return false;
+  if (!u.s.climb || !has(u,'ambush') || !w.trees.length || !u.ambushReady || u.onTree || d < 9 || d > 30 || w.t < (u.nextPerch || 0)) return false;
+  // your leopard only perches when its target is coming its way (it guards from the branches)
+  if (u.side === 'P'){ const v = Math.hypot(t.vx, t.vy); if (v < 1.5 || ((u.x - t.x) * t.vx + (u.y - t.y) * t.vy) / ((d || 1) * v) < .6) return false; }
   let bt = null, bd = 5; for (const tr of w.trees){ const q = Math.hypot(tr.x - u.x, tr.y - u.y) - tr.r; if (q < bd && !outsideZone(w, tr)){ bd = q; bt = tr; } }
   if (!bt) return false;
   u.onTree = bt; u.perch = true; u.perchT = 0; u.nextPerch = w.t + 30; u.x = bt.x; u.y = bt.y; u.vx = u.vy = 0; u.climbT = 1.2;

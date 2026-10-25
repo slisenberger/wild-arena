@@ -32,6 +32,7 @@ if (!isMainThread){
     w.units.forEach((u, i) => { if (u.side === 'H') return;
       out.push({id: u.s.id, side: u.side, tr: j.tr, dealt: u.st.dealt, hp: u.maxhp, kills: u.st.kills, alive: u.state !== 'dead' && !u.escaped ? 1 : 0, escaped: u.escaped ? 1 : 0,
         t: T[i], life: u.st.alive, toYou: toYou[i], killedYou: !w.result.survived && w.result.killer === u.s.id ? 1 : 0, fightT: w.result.t, won: w.result.survived ? 1 : 0}); });
+    out.push({fightSig: w.sig, present: [...new Set(w.units.filter(u => u.side !== 'H').map(u => u.s.id))]});
   }
   parentPort.postMessage(out); return;
 }
@@ -45,7 +46,7 @@ for (const tr of TERR) for (let i = 0; i < NPM; i++){
 }
 const t0 = Date.now();
 Promise.all([...Array(NW).keys()].map(wi => new Promise(res => { const w = new Worker(__filename, {workerData: {jobs: jobs.filter((_, i) => i % NW === wi)}}); w.on('message', res); }))).then(parts => {
-  const rows = parts.flat(), mean = a => a.length ? a.reduce((p, q) => p + q, 0) / a.length : 0, pct = v => (100 * v).toFixed(0).padStart(3) + '%';
+  const all = parts.flat(), rows = all.filter(r => r.id), fights = all.filter(r => r.fightSig), mean = a => a.length ? a.reduce((p, q) => p + q, 0) / a.length : 0, pct = v => (100 * v).toFixed(0).padStart(3) + '%';
   console.log(`behavior audit: ${jobs.length} board fights (${NPM}/map), budget $${BUD}, ${((Date.now() - t0) / 1000).toFixed(0)}s. Per animal-unit; time shares are of its own time alive.`);
   const flags = [];
   for (const side of ['P', 'E']){
@@ -66,6 +67,15 @@ Promise.all([...Array(NW).keys()].map(wi => new Promise(res => { const w = new W
   for (const side of ['P', 'E']){
     const r = rows.filter(x => x.side === side), tot = r.reduce((s, x) => s + x.life, 0), idle = r.reduce((s, x) => s + x.t.idle, 0), close = r.reduce((s, x) => s + x.t.close, 0), fight = r.reduce((s, x) => s + x.t.fight, 0);
     console.log(`IDLE ${side === 'P' ? 'yours ' : 'theirs'}: ${(100 * idle / tot).toFixed(1)}% of animal-time idle (closing in ${(100 * close / tot).toFixed(0)}%, fighting ${(100 * fight / tot).toFixed(0)}%)`);
+  }
+  // identity check: how often each animal's signature moves happen, per fight it's in (either side)
+  console.log('\nSIGNATURES (per fight the animal is in, either side):');
+  const ids2 = [...new Set(fights.flatMap(f => f.present))].sort();
+  for (const id of ids2){
+    const fs = fights.filter(f => f.present.includes(id)), tot = {};
+    for (const f of fs) for (const [k, v] of Object.entries(f.fightSig)) if (k.startsWith(id + ':')) tot[k.slice(id.length + 1)] = (tot[k.slice(id.length + 1)] || 0) + v;
+    const list = Object.entries(tot).sort((a, b) => b[1] - a[1]).map(([k, v]) => `${k} ${(v / fs.length).toFixed(2)}`);
+    console.log(`  ${id.padEnd(12)} ${list.length ? list.join(', ') : '(no signature recorded)'}`);
   }
   console.log('\nflags:\n  ' + (flags.length ? flags.join('\n  ') : 'none'));
 });
