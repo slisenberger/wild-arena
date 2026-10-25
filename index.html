@@ -457,7 +457,7 @@ function mkUnit(s, side, x, y, id){
     target:null, atk:0, stun:0, latchOn:null, latchedBy:null, slow:0, slowT:0, hunger:.45, sated:false,
     grudge:null, grudgeT:0, agit:s.aggr*.4, fleeT:0, cornerT:0, ambushReady:has({s},'ambush') || has({s},'aquaStalk'), bluffed:{}, riding:null, rider:null,
     feud:null, feudT:0, mv:null, pounceCd:0, chargeCd:0, dartT:0, strikes:0, orbitDir:1, onTree:null, climbT:0, carcass:null, feedT:0, heatstroke:false, retargetT:0, homeDx:0, homeDy:0, escaped:false,
-    st:{dealt:0, taken:0, kills:0, protect:0, alive:0}, killedBy:null, deathT:null, lastHitBy:null };
+    st:{dealt:0, foe:0, taken:0, kills:0, protect:0, alive:0}, killedBy:null, deathT:null, lastHitBy:null };
 }
 
 // ---------- world setup ----------
@@ -986,7 +986,7 @@ function sweep(w, a, main){
 function applyDamage(w, a, t, dmg){
   t.hp -= dmg; t.lastHitBy = a;
 
-  a.st.dealt += dmg; t.st.taken += dmg;
+  a.st.dealt += dmg; t.st.taken += dmg; if (t.side !== 'E') a.st.foe += dmg; // foe: damage to your side (stat only)
   if (a.side === 'P' && t.target === w.human) a.st.protect += dmg;
   if (t.side !== 'H'){ t.grudge = a; t.grudgeT = has(t,'vindictive') ? 40 : has(a,'fearless') ? 25 : 12; } // a honey badger's bites make it the thing you can't stop chasing
   t.agit = Math.min(1, t.agit + .25);
@@ -1067,7 +1067,7 @@ function step(w){
     u.atk -= DT; u.stun = Math.max(0, u.stun - DT); u.slowT = Math.max(0, u.slowT - DT);
     u.grudgeT -= DT; if (u.grudgeT <= 0) u.grudge = null; else if (u.grudge && !active(u.grudge)) u.grudge = null;
     u.cornerT = Math.max(0, u.cornerT - DT);
-    if (u.bleedT > 0){ u.bleedT -= DT; const b = u.bleed * DT; u.hp -= b; u.st.taken += b; if (u.bleedBy) u.bleedBy.st.dealt += b; if (u.hp <= 0){ kill(w, u, u.bleedBy); if (w.over) return; continue; } }
+    if (u.bleedT > 0){ u.bleedT -= DT; const b = u.bleed * DT; u.hp -= b; u.st.taken += b; if (u.bleedBy){ u.bleedBy.st.dealt += b; if (u.side !== 'E') u.bleedBy.st.foe += b; } if (u.hp <= 0){ kill(w, u, u.bleedBy); if (w.over) return; continue; } }
     u.pounceCd = Math.max(0, u.pounceCd - DT); u.chargeCd = Math.max(0, u.chargeCd - DT); u.dartT -= DT;
     if (u.mv && (u.state === 'flee' || u.heatstroke || u.latchedBy && u.mv.k !== 'wheel')) u.mv = null;
     u.agit = has(u,'bred') ? 1 : Math.max(u.s.aggr * .3, u.agit - .01 * DT); // a fighting bull is always worked up
