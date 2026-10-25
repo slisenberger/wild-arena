@@ -10,7 +10,7 @@ const A = require(SIM);
 function tallest(t){ return A.defaultMount(t); } // ride a giant, else on foot
 if (!isMainThread){ parentPort.postMessage(workerData.jobs.map(j => ({k: j.k, s: A.simulate({team: j.team, board: j.board, terrain: j.tr, mode: 'wild', mount: tallest(j.team), seed: j.seed}).result.score}))); return; }
 const NB = +process.argv[2] || 20, NS = +process.argv[3] || 2, NV = +process.argv[4] || 24, SIZES = (process.argv[5] || '8,10,12').split(',').map(Number), BUD = +process.argv[6] || 1000, TOT = +process.argv[7] || 0;
-const PJ = process.env.PRICES ? JSON.parse(require('fs').readFileSync(process.env.PRICES, 'utf8')) : {}, PR = Object.assign({}, ...A.ANIMALS.map(a => ({[a.id]: a.price})), PJ.proposed || PJ);
+const PJ = process.env.PRICES ? JSON.parse(require('fs').readFileSync(process.env.PRICES, 'utf8')) : {}, PR = Object.assign({}, ...A.ANIMALS.map(a => ({[a.id]: a.price})), PJ.proposed || PJ.prices || PJ);
 const RAREP = process.env.RAREP !== undefined ? +process.env.RAREP : 0.1;
 const TERR = Object.keys(A.TERRAINS), NW = 4, R = A.rng(2026);
 const par = jobs => Promise.all([...Array(NW).keys()].map(wi => new Promise(res => { const w = new Worker(__filename, {workerData: {jobs: jobs.filter((_, i) => i % NW === wi)}}); w.on('message', res); }))).then(p => p.flat());
