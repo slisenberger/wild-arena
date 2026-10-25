@@ -197,6 +197,11 @@ round. Report ± standard errors.
   p25 83; with/without elephant both 88%), typical full-spend team median 167 s, 51% of teams win at least one
   screen run, 13 distinct best teams over 16 boards. Cards show measured "Helps you" / "Threat if left"
   (`MEASURED`, written by `apply_values.js`).
+- **Current prices (Oct 2026, `abs_r6` after the cat pass, giant kangaroo, sabre-toothed cat; rares on 30% of boards):**
+  20 s of swing per $100, giants/herds capped at $700 (triceratops $800), board total $2,700, budget $1,200. Validation
+  (16 boards, `RAREP=.3`): median board's best team 92% (min 54, p25 88), typical full-spend team median 170 s, 60% of
+  teams win at least one screen run, 15 distinct best teams over 16 boards. At 24 s/$100 (total $2,500) it was far too
+  easy (median 100%, typical 300 s); at 17 s/$100 (total $2,900) too hard (79%, 81 s).
 - Guards no longer attack enemies that are minding their own business far from you (they used to rank a
   peaceful elephant as a top threat and provoke it).
 
