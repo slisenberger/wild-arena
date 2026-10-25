@@ -1731,7 +1731,7 @@ const MEASURED = {/*MEASURED*/elephant:{mine:165,theirs:-37}, rhino:{mine:73,the
 // With RULES.total set, every board's prices add up to total (± tol), so every board has the same total value
 // and you always buy the same share of it. rules.terrain (optional) keeps cold-blooded animals off cold maps.
 // Wolves, hyenas and lions are dealt either solo or as a pack item (one pick brings the whole group).
-const RULES = {board: 12, budget: 1200, total: 2800, tol: 100, rareP: .1}; // owner: $1,000 felt hard; see CLAUDE.md for validation
+const RULES = {board: 12, budget: 1200, total: 2800, tol: 100, rareP: .3}; // owner: $1,000 felt hard; see CLAUDE.md for validation
 function dealBoard(seed, rules, prices){
   rules = Object.assign({}, RULES, rules || {});
   const R = rng(seed), price = id => (prices && prices[id]) || BY_ID[id].price;
