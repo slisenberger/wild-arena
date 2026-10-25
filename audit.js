@@ -6,13 +6,13 @@
 const { Worker, isMainThread, parentPort, workerData } = require('worker_threads');
 const SIM = process.env.SIM || './sim.js';
 const A = require(SIM);
-function tallest(t){ let b = null, h = 0; for (const id of t){ const m = A.BY_ID[id].mountH; if (m > h){ h = m; b = id; } } return b; }
+function tallest(t){ return A.defaultMount(t); } // ride a giant, else on foot
 const STATES = ['fight', 'close', 'idle', 'flee', 'feed', 'heat', 'carry'];
 function stateOf(u){
   if (u.heatstroke || u.state === 'cool') return 'heat';
   if (u.state === 'flee' || u.state === 'withdraw') return 'flee';
   if (u.state === 'feed' || u.state === 'rest') return 'feed';
-  if (u.state === 'carry' || u.rider) return 'carry';
+  if (u.state === 'carry') return 'carry'; // evasive mount carrying you (a heavy mount that fights counts as fighting)
   if (u.latchOn || u.latchedBy) return 'fight';
   if (u.target && u.state === 'engage'){ const t = u.target, d = Math.hypot(u.x - t.x, u.y - t.y); return d < u.r + t.r + u.s.reach + 1.5 ? 'fight' : 'close'; }
   return 'idle';

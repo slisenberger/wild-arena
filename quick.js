@@ -3,7 +3,7 @@
 const { Worker, isMainThread, parentPort, workerData } = require('worker_threads');
 const SIM = process.env.SIM || './sim.js';
 const A = require(SIM);
-function tallest(t){ let b = null, h = 0; for (const id of t){ const m = A.BY_ID[id].mountH; if (m > h){ h = m; b = id; } } return b; }
+function tallest(t){ return A.defaultMount(t); } // ride a giant, else on foot
 if (!isMainThread){
   const out = workerData.jobs.map(j => { let s = 0; for (const seed of j.seeds) s += A.simulate({team: j.team, terrain: j.tr, mode: 'wild', mount: tallest(j.team), seed}).result.score; return {k: j.k, m: s / j.seeds.length}; });
   parentPort.postMessage(out); return;

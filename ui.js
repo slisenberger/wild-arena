@@ -159,7 +159,7 @@ function renderArenaOpts(){
 $('toDraft').addEventListener('click', () => go('draft'));
 
 // ---------- mount picker ----------
-function bestMount(team){ team = team || [...S.team]; let b = '', h = 0; for (const id of team){ const m = A.BY_ID[id].mountH; if (m > h){ h = m; b = id; } } return b; }
+function bestMount(team){ return A.defaultMount(team || [...S.team]) || ''; } // ride a giant if you have one; otherwise on foot
 function reachersOf(h, team){ return S.board.map(id => A.BY_ID[id]).filter(a => !team.includes(a.id) && a.strikeH >= h).map(a => a.name); }
 function renderMounts(){
   const box = $('mountOpts'); box.innerHTML = '';

@@ -89,6 +89,27 @@ round. Report ± standard errors.
 - **Croc:** on a map with water it only takes prey within 5 m of the water and lurks submerged otherwise (it
   used to walk out and spend 86% of the fight on land). Away from water it bites as hard as ever but moves at
   70% and tires fast. Cold-blooded animals (cold < .3: the croc) are never dealt on the tundra.
+- **Realism audit (Oct 2026, two zoology reviews + `audit.js` behavior telemetry):**
+  - Other-side herbivores notice you by sight (`canSee`) or by sound/smell of movement within 30 m.
+  - Mock charges via `bluff` + `bluffP` (gorilla always; elephant/mammoth .6, black bear .7, grizzly .5,
+    black rhino/bison .3), never against a grudge or while guarding you.
+  - `vindictive` buffalo: 40 s grudge, steadier morale. Gorilla guardian: morale floor while you're targeted.
+  - `stomp` (moose), `submerges` (hippo hidden at 10 m), `chasesMovement` (bull), `looseSkin` (honey badger:
+    5× shake-off, half hold damage), per-species `latchMax` (tiger/cougar 4, jaguar 3.5, lion 3),
+    `yieldsTo` lists (cougar to bears and wolf packs; leopard to lion, tiger, hyena).
+  - Pack bonds are same-species only; `packStrength` (an animal + packmates within 15 m) drives a pack's
+    choice of prey and lets your packs engage big threats. Hyena clan ×4; two lions = "Lion coalition".
+  - `aggr` now matters for predators (commit threshold scaled by .4 + aggr). Stalkers break cover and run
+    when the prey flees or turns on them; stalkers have tall-grass cover on the savanna (12 m).
+  - **Waiting for an opening** (`waitForOpening`): an enemy predator facing a target ringed by stronger guards
+    circles ~16 m out until a guard is busy, the target is hurt or running, or its patience runs out.
+  - Croc drags held prey lighter than itself into the water. White rhino placid and yields to elephants.
+  - **Default mount = a giant (`defaultMount`: mountH ≥ 3) else on foot**: riding a rhino/hippo/bison/moose/
+    giraffe measured worse than running on foot; riding a giant is much better (ELE team 84% vs 63%).
+- **Map variety** (`mapVariant(tid, seed)`, `cfg.mapSeed` / `cfg.seed`; `cfg.variant:false` = exact old map):
+  savanna waterhole ~44%, river width/ford jitter + a third ford ~36%, forest 22–38 trees, clearing ~39%,
+  pool ~29%, tundra deep/light snow ~25%/27% and a half-frozen lake ~44% (cold water slows and drains
+  stamina by cold tolerance). World water is `w.band` (river) + `w.ponds`; `w.wet` if any.
 - **Trees:** animals steer around trunks and detour when wedged; an elephant pushing a trunk ~1 s knocks it
   over (`w.fallen` keeps the time, so replays show it standing until then).
 - **Maps:** savanna (sun climbs: heat ramps for everyone; acacia shade), river (vertical river x 47–57
