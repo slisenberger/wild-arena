@@ -202,7 +202,7 @@ th.n{text-align:right}
   <div class="opts" id="terrainOpts"></div>
   <div id="modeOpts" hidden></div>
   <p class="notes">The other side is one team, and the pressure builds over time. Predators hunt you and your guards; herbivores charge intruders. Break their morale and animals bolt out of the arena. After 30 seconds a fire, flood or blizzard closes in from the edges and pushes everyone together. You score by how long you stay alive, up to five minutes.</p>
-  <div class="btnrow"><button class="btn primary" id="toDraft">Draft your team</button></div>
+  <div class="btnrow"><button class="btn primary" id="toDraft">Draft your team</button><button class="btn" id="daily" title="Same board, map and fight seed for everyone today">Daily challenge</button></div>
 </section>
 
 <!-- DEPLOY -->
@@ -1320,6 +1320,7 @@ function step(w){
         tx = u.x + vx / m * 5; ty = u.y + vy / m * 5; frac = .6;
         if (!u.circling){ u.circling = true; sig(w, u, 'lets it bleed'); }
       }
+      else if (w.cfg.movePolicy && intentMove(w, u, t, d, touch, vmax)){ const m = u.intentGo; if (!m) continue; tx = m.tx; ty = m.ty; frac = m.frac; } // learned movement intent (policy/), opt-in
       else if (waitForOpening(w, u, t, d)){ // shadow a well-guarded target from ~16 m instead of charging into its guards
         const rx = (u.x - t.x) / (d || 1), ry = (u.y - t.y) / (d || 1), vx = -ry * u.orbitDir + rx * (16 - d) * .25, vy = rx * u.orbitDir + ry * (16 - d) * .25, m = Math.hypot(vx, vy) || 1;
         tx = u.x + vx / m * 5; ty = u.y + vy / m * 5; frac = .45;
@@ -1830,7 +1831,44 @@ function predCandidates(w, u){
   }
   return out;
 }
+// With cfg.movePolicy = {<archetype>: weights}, units of that archetype pick a movement intent every ~0.5 s while
+// engaged (policy/move_policy.js registers INTERNALS.moveChoose); the engine still does the steering. Intent 0 = commit
+// returns false: the caller runs the usual waitForOpening / gaitMove chain, so a policy that always commits is the
+// heuristic. Any other intent returns true with its move in u.intentGo ({tx, ty, frac}, or null if a gait move took
+// over). Archetypes so far: 'harrier' = the other side's orbit-gait pack hunters (wolf, hyena and their packs).
+const INTENTS = ['commit', 'wait', 'flank', 'regroup', 'disengage'];
+function archetypeOf(u){ return u.side === 'E' && u.s.gait === 'orbit' ? 'harrier' : null; }
+function intentMove(w, u, t, d, touch, vmax){ const m = intentGo(w, u, t, d, touch, vmax); if (m === false) return false; u.intentGo = m; return true; }
+function intentGo(w, u, t, d, touch, vmax){
+  const arch = archetypeOf(u), P = arch && w.cfg.movePolicy[arch];
+  if (!P) return false;
+  if (!INTERNALS.moveChoose) throw new Error('cfg.movePolicy is set but no movement policy is loaded: require policy/move_policy.js');
+  if (u.intentFor !== t || !(u.intentT > DT / 2)){ u.intentFor = t; u.intentT = .5; u.intent = INTERNALS.moveChoose(w, u, t, d, P, arch); }
+  else u.intentT -= DT;
+  const k = u.intent, rx = (u.x - t.x) / (d || 1), ry = (u.y - t.y) / (d || 1), circle = (R0, g, f) => {
+    const vx = -ry * u.orbitDir + rx * (R0 - d) * g, vy = rx * u.orbitDir + ry * (R0 - d) * g, m = Math.hypot(vx, vy) || 1;
+    return {tx: u.x + vx / m * 5, ty: u.y + vy / m * 5, frac: f}; };
+  if (!k) return false; // commit: the heuristic
+  if (k === 1) return circle(16, .25, .45); // wait for an opening: shadow from ~16 m (as waitForOpening does)
+  if (k === 2){ // flank: get round behind the target (opposite the way it faces), then dart in from there
+    let hx = t.vx, hy = t.vy; if (Math.hypot(hx, hy) < .5 && t.target && active(t.target)){ hx = t.target.x - t.x; hy = t.target.y - t.y; }
+    const hm = Math.hypot(hx, hy); if (hm < 1e-6) return gaitMove(w, u, t, d, touch, vmax);
+    const ro = t.r + u.r + 3.2, px = t.x - hx / hm * ro, py = t.y - hy / hm * ro;
+    if (Math.hypot(px - u.x, py - u.y) < 2.5) return gaitMove(w, u, t, d, touch, vmax);
+    let vx = px - u.x, vy = py - u.y; const m = Math.hypot(vx, vy) || 1; vx /= m; vy /= m;
+    if (d < ro + 1){ vx += rx * (ro + 1 - d) * .6; vy += ry * (ro + 1 - d) * .6; } // swing wide instead of cutting through it
+    return {tx: u.x + vx * 5, ty: u.y + vy * 5, frac: .8};
+  }
+  if (k === 3){ // regroup: close on the packmates, then hang back with them
+    let cx = 0, cy = 0, n = 0; for (const o of w.units) if (packMate(u, o) && dist(u, o) < 40){ cx += o.x; cy += o.y; n++; }
+    if (!n) return circle(16, .25, .45);
+    cx /= n; cy /= n; const m = Math.hypot(cx - u.x, cy - u.y);
+    return m < 3 ? circle(Math.max(d, 10), .25, .3) : {tx: cx, ty: cy, frac: .7};
+  }
+  return {tx: t.x + rx * (touch + 10), ty: t.y + ry * (touch + 10), frac: .7}; // disengage: back off to ~10 m out of reach
+}
 const INTERNALS = { choose: null, predCandidates, predatorTarget, bestCarcass, guardsAround, packStrength, packMates, packMate, strength, hostile, canSee, reachable, distWater, inWater, busy, yieldsTo, wound, heightOf, pressure, active, has, dist, sp, social };
+Object.assign(INTERNALS, { moveChoose: null, INTENTS, archetypeOf, drive, locked });
 function policyChoose(w, u){
   if (!INTERNALS.choose) throw new Error('cfg.policy is set but no policy is loaded: require policy/policy.js');
   INTERNALS.choose(w, u, w.cfg.policy);
@@ -1887,6 +1925,7 @@ const groupOf = a => a.group || 1;
 const itemName = a => groupOf(a) > 1 ? `${a.groupName} (${groupOf(a)})` : a.name;
 const boardTotal = () => S.board.reduce((t, id) => t + A.BY_ID[id].price, 0);
 function dealNewBoard(seed){
+  S.daily = null; // a fresh board (or a different map) is no longer today's challenge
   S.boardSeed = seed || newBoardSeed(); S.board = A.dealBoard(S.boardSeed, {terrain: S.terrain});
   S.team.clear(); S.pos = {}; S.youPos = null; S.mount = ''; S.world = null; S.focus = S.board[0];
 }
@@ -1918,7 +1957,7 @@ function renderDraft(){
   const tiers = $('tiers'); tiers.innerHTML = '';
   const left = BUDGET - spent();
   const onBoard = S.board.map(id => A.BY_ID[id]);
-  $('boardLede').textContent = `This game's board: ${onBoard.length} animals worth $${boardTotal().toLocaleString()}. Spend up to $${BUDGET.toLocaleString()}; every board animal you don't pick ends up on the other side. Tap a card to draft it; the panel below shows the full stat line.`;
+  $('boardLede').textContent = (S.daily ? `Daily challenge ${S.daily} (${A.TERRAINS[S.terrain].name}): the same board, map and fight seed for everyone today. ` : '') + `This game's board: ${onBoard.length} animals worth $${boardTotal().toLocaleString()}. Spend up to $${BUDGET.toLocaleString()}; every board animal you don't pick ends up on the other side. Tap a card to draft it; the panel below shows the full stat line.`;
   for (const p of [...new Set(onBoard.map(a => a.price))].sort((x, y) => y - x)){
     const row = document.createElement('div'); row.className = 'tier';
     const tag = document.createElement('div'); tag.className = 'tierTag'; tag.style.background = tierHex(p); tag.textContent = '$' + p; row.appendChild(tag);
@@ -2010,6 +2049,15 @@ function renderArenaOpts(){
   }
 }
 $('toDraft').addEventListener('click', () => go('draft'));
+// daily challenge: today's date (UTC) picks the map, the board and the fight seed, so everyone plays the same game
+const todayUTC = () => new Date().toISOString().slice(0, 10);
+function dateSeed(s){ let h = 2166136261; for (const c of s){ h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); } return (h >>> 0) % 1e6 + 1; }
+function startDaily(){
+  const d = todayUTC(), h = dateSeed('wild-arena:' + d), terr = Object.keys(A.TERRAINS);
+  S.daily = d; S.terrain = terr[h % terr.length]; S.seed = h; $('seedLbl').textContent = S.seed;
+  dealNewBoard(h); S.daily = d; renderAll(); go('draft');
+}
+$('daily').addEventListener('click', startDaily);
 
 // ---------- mount picker ----------
 function bestMount(team){ return A.defaultMount(team || [...S.team]) || ''; } // ride a giant if you have one; otherwise on foot
@@ -2203,7 +2251,7 @@ function startBattle(){
   renderReport(false);
   S.lastTs = 0;
 }
-$('rematch').addEventListener('click', () => { S.seed = (Math.random()*1e6|0) + 1; $('seedLbl').textContent = S.seed; startBattle(); });
+$('rematch').addEventListener('click', () => { if (!S.daily){ S.seed = (Math.random()*1e6|0) + 1; $('seedLbl').textContent = S.seed; } startBattle(); });
 $('replaySame').addEventListener('click', () => { S.playT = 0; S.playing = true; $('report').hidden = true; $('banner').innerHTML = ''; });
 $('playBtn').addEventListener('click', () => { if (S.playT >= S.dur) { S.playT = 0; $('report').hidden = true; $('banner').innerHTML = ''; } S.playing = !S.playing; });
 document.querySelectorAll('#speedSeg button').forEach(b => b.addEventListener('click', () => { S.speed = +b.dataset.v; syncSpeed(); }));
@@ -2438,13 +2486,20 @@ function renderReport(show){
   const b = $('banner');
   const score = res.score, prev = readBest(), isBest = score > prev + .05;
   if (isBest) writeBest(score);
+  let dailyLine = '';
+  if (S.daily && S.seed === dateSeed('wild-arena:' + S.daily)){
+    const k = 'wa-daily:' + S.daily; let db = 0; try { db = +localStorage.getItem(k) || 0; } catch(e){}
+    if (score > db + .05){ try { localStorage.setItem(k, String(score)); } catch(e){} }
+    const team = [...S.team].map(id => A.BY_ID[id].abbr).join('+') || 'no animals';
+    dailyLine = ` Daily ${S.daily}: ${score > db + .05 ? 'your best today' : 'best today ' + fmtT(db)} · share: “Wild Arena daily ${S.daily}: ${fmtT(score)}${res.survived && res.why === 'cleared' ? ', cleared the board at ' + fmtT(res.t) : ''} with ${team} ($${spent().toLocaleString()})”.`;
+  }
   const bestLine = isBest ? (prev ? `New best for this draft here (was ${fmtT(prev)}).` : 'First run of this draft here.') : `Best for this draft here: ${fmtT(prev)}.`;
   if (res.survived){
     const why = res.why === 'cleared' ? `The other side was dead, routed or full by ${fmtT(res.t)}.` : res.why === 'quiet' ? `Nothing came at you for ${A.QUIET_T} s, so the other side gave up at ${fmtT(res.t)}.` : `You held out the full ${fmtT(HZ)}.`;
-    b.innerHTML = `<div class="banner win"><span class="big">Survived · ${fmtT(HZ)}</span><span>${why} Full score. ${bestLine}</span></div>`;
+    b.innerHTML = `<div class="banner win"><span class="big">Survived · ${fmtT(HZ)}</span><span>${why} Full score. ${bestLine}${dailyLine}</span></div>`;
   } else {
     const k = A.BY_ID[res.killer];
-    b.innerHTML = `<div class="banner lose"><span class="big">You lasted ${fmtT(score)}</span><span>Killed by the ${esc(k ? k.name : 'unknown')}. ${bestLine}</span></div>`;
+    b.innerHTML = `<div class="banner lose"><span class="big">You lasted ${fmtT(score)}</span><span>Killed by the ${esc(k ? k.name : 'unknown')}. ${bestLine}${dailyLine}</span></div>`;
   }
   const mine = sum.units.filter(u => u.side === 'P');
   const mvp = mine.slice().sort((a, b) => (b.protect*1.5 + b.dealt) - (a.protect*1.5 + a.dealt))[0];

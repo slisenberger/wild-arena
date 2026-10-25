@@ -1,0 +1,70 @@
+harness test: 160 probe fights (savanna/river/forest/tundra), tmp /tmp/m3test-MTcDSV
+
+1. Determinism and plumbing
+  PASS no movePolicy: 480 fights identical to the pre-hook engine (git 8f24f13); events, final positions/HP/states, end time
+  PASS zero weights (margin 1) = no policy, every fight (event log + final positions)
+  PASS zero weights with margin 0 (all-tie logits -> commit) = no policy
+  PASS always-commit probe = no policy
+  PASS random hidden layer with a zero output layer = no policy
+  (21.9 fights/s on 4 threads with features on)
+  PASS serial = 4 worker threads (full records)
+  PASS serial = 4 shards merged (full records)
+  PASS whole dry run: serial = 4 threads (final state incl. θ, λ, history, validation, test)
+  PASS whole dry run: CLI jobs -> 3 worker processes -> merge = local run
+  PASS resume from a mid-run checkpoint = uninterrupted run (same next generations and result)
+  PASS each validation check used a fresh validation draw
+
+2. Reward sanity
+  commit    goal -0.310  vs heuristic +0.000 ± 0.000  style 1.00 gates []  idle -0.008  noContact 16%  fruitless 49%  drift 0
+  wait      goal -0.482  vs heuristic -0.172 ± 0.047  style 0.64 gates [longIdle]  idle -0.028  noContact 38%  fruitless 81%  drift 7
+  flank     goal -0.461  vs heuristic -0.151 ± 0.051  style 0.91 gates []  idle -0.010  noContact 21%  fruitless 47%  drift 2
+  regroup   goal -0.448  vs heuristic -0.138 ± 0.057  style 0.35 gates [longIdle]  idle -0.148  noContact 72%  fruitless 84%  drift 10
+  disengage goal -0.586  vs heuristic -0.275 ± 0.049  style 0.47 gates [longIdle]  idle -0.062  noContact 57%  fruitless 79%  drift 7
+  PASS always commit = heuristic: goal diff 0, style 1
+  PASS always disengage: goal clearly worse (beyond 2 SE)
+  PASS always wait: idle penalty at least 2× the heuristic's (-0.008 -> -0.028 per fight)
+  PASS always wait: style 0.64 below the 0.9 threshold
+  PASS style and goal symmetric when the arms of a paired comparison are swapped
+  PASS telemetry and metrics identical for no-policy and zero-weight arms (style computed the same way per fight)
+  heuristic goal per fight -0.310 (sd 0.630); components:
+    human    mean 0.038 sd 0.157
+    kill     mean 0.037 sd 0.191
+    animals  mean 0.203 sd 0.245
+    deaths   mean -0.581 sd 0.459
+    idle     mean -0.008 sd 0.016
+  σ = 0.1 perturbations vs heuristic (goal diff ± SE, share of non-commit decisions, realistic = style >= threshold and gates pass):
+    +0.048 ± 0.044  non-commit 26%  realistic
+    -0.023 ± 0.027  non-commit 6%  realistic
+    -0.013 ± 0.032  non-commit 4%  realistic
+    -0.130 ± 0.055  non-commit 98%  realistic
+    -0.035 ± 0.059  non-commit 80%  unrealistic
+    +0.098 ± 0.037  non-commit 48%  unrealistic
+    +0.013 ± 0.045  non-commit 20%  realistic
+    -0.078 ± 0.033  non-commit 24%  realistic
+  paired per-fight sd: all 0.541, realistic only 0.511 (unpaired 0.630)
+    fights for a 2 SE detection of 0.01: 10444
+    fights for a 2 SE detection of 0.02: 2611
+    fights for a 2 SE detection of 0.05: 418
+    fights for a 2 SE detection of 0.1: 105
+  PASS pairing reduces per-fight noise for realistic perturbations (paired sd < unpaired sd)
+
+3. Anti-overfitting (seed pools)
+  PASS train / val / test / calib pools (and each generation's / check's draw) share no fight seeds or boards
+  PASS held-out map (holdMap) never in train/val, present in test
+  PASS every fight has harriers on the other side
+
+4. Reward-hacking checks
+  PASS every fixed-intent probe gets telemetry drift flags: wait 7, flank 2, regroup 10, disengage 7
+  PASS circling without contact counts as idle (no-contact share 16% -> 38% for always-wait)
+  PASS the heuristic itself is not flagged
+
+5. Engineering
+  PASS state records version, sim.js hash, harness hash, seed and config
+  PASS a state from a different sim.js is refused
+  PASS an unknown state version is refused
+  PASS a worker refuses jobs built for a different engine
+  PASS jobs record seed, config and every fight's board/fight seed
+  PASS dry run (init + calib + 1 gen + val + test) finished in 20.2 s
+  PASS per-generation log line written
+
+31 passed, 0 failed (307 s)
