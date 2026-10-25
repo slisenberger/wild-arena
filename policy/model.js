@@ -15,6 +15,7 @@ function score(P, x, hbuf){
     for (let i = 0; i < nin; i++) a += W1[o + i] * x[i];
     const h = Math.tanh(a); if (hbuf) hbuf[j] = h; s += W2[j] * h;
   }
+  if (P.Wl) for (let i = 0; i < nin; i++) s += P.Wl[i] * x[i]; // optional linear skip term (es.js MODE=linear)
   return s;
 }
 function argmax(P, X){ let b = 0, bs = -Infinity; for (let i = 0; i < X.length; i++){ const s = score(P, X[i]); if (s > bs){ bs = s; b = i; } } return b; }

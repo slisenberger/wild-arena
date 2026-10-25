@@ -1,0 +1,32 @@
+ES (linear) from bc_weights.json: 39 params, GENS 45, PAIRS 8, 160 fights/candidate/gen, σ 1, Adam lr 0.1, λ 4->1, validation 400 fights every 2 gens, accept > 1 SE, revert < -2 SE
+validation heuristic: game -1.455, dmg 555, killed you 10.0%, deaths 2.51, your wins 39.0%, disagree 0.0%
+validation BC:        game -1.460, dmg 535, killed you 10.0%, deaths 2.50, your wins 38.8%, disagree 1.2%; gates pass  (0.6 min)
+gen 1 (λ 4.00): centre game -1.301, dmg 424, killed you 9.4%, deaths 2.19, your wins 30.6%, disagree 1.3% | perturbations reward mean -1.550 best -1.144, disagree 7.8% | rms drift from BC 0.1000 (1.7 min)
+gen 2 (λ 3.91): centre game -1.431, dmg 475, killed you 8.8%, deaths 2.34, your wins 40.0%, disagree 1.1% | perturbations reward mean -1.710 best -1.462, disagree 7.3% | rms drift from BC 0.1434 (2.9 min)
+  VALIDATION gen 2: game -1.529, dmg 526, killed you 9.3%, deaths 2.52, your wins 39.0%, disagree 1.2%
+    vs best (gen 0) -0.069 ± 0.070, vs heuristic -0.074 ± 0.077; gates pass -> keep walking
+gen 3 (λ 3.82): centre game -1.652, dmg 530, killed you 9.4%, deaths 2.65, your wins 39.4%, disagree 1.0% | perturbations reward mean -1.830 best -1.529, disagree 6.3% | rms drift from BC 0.1735 (4.6 min)
+gen 4 (λ 3.73): centre game -1.478, dmg 490, killed you 10.0%, deaths 2.47, your wins 38.8%, disagree 1.6% | perturbations reward mean -1.805 best -1.434, disagree 7.7% | rms drift from BC 0.2077 (5.8 min)
+  VALIDATION gen 4: game -1.490, dmg 530, killed you 10.0%, deaths 2.52, your wins 39.0%, disagree 1.4%
+    vs best (gen 0) -0.030 ± 0.073, vs heuristic -0.035 ± 0.079; gates pass -> keep walking
+gen 5 (λ 3.64): centre game -1.249, dmg 588, killed you 12.5%, deaths 2.46, your wins 35.6%, disagree 1.6% | perturbations reward mean -1.477 best -1.241, disagree 6.4% | rms drift from BC 0.2349 (7.5 min)
+gen 6 (λ 3.56): centre game -0.914, dmg 605, killed you 16.9%, deaths 2.36, your wins 35.0%, disagree 1.6% | perturbations reward mean -1.341 best -1.040, disagree 6.6% | rms drift from BC 0.2602 (8.9 min)
+  VALIDATION gen 6: game -1.513, dmg 552, killed you 9.0%, deaths 2.52, your wins 38.8%, disagree 1.5%
+    vs best (gen 0) -0.053 ± 0.069, vs heuristic -0.058 ± 0.084; gates pass -> keep walking
+gen 7 (λ 3.47): centre game -1.383, dmg 498, killed you 10.0%, deaths 2.38, your wins 33.8%, disagree 1.6% | perturbations reward mean -1.668 best -1.325, disagree 7.3% | rms drift from BC 0.2846 (10.7 min)
+gen 8 (λ 3.38): centre game -1.513, dmg 493, killed you 5.6%, deaths 2.29, your wins 34.4%, disagree 1.5% | perturbations reward mean -1.620 best -1.467, disagree 6.5% | rms drift from BC 0.3077 (12.0 min)
+  VALIDATION gen 8: game -1.485, dmg 568, killed you 9.3%, deaths 2.52, your wins 38.0%, disagree 1.6%
+    vs best (gen 0) -0.025 ± 0.091, vs heuristic -0.030 ± 0.093; gates pass -> keep walking
+gen 9 (λ 3.29): centre game -1.236, dmg 546, killed you 10.6%, deaths 2.31, your wins 35.0%, disagree 1.9% | perturbations reward mean -1.572 best -1.240, disagree 6.9% | rms drift from BC 0.3297 (13.8 min)
+gen 10 (λ 3.20): centre game -1.278, dmg 553, killed you 10.0%, deaths 2.33, your wins 34.4%, disagree 2.2% | perturbations reward mean -1.569 best -1.227, disagree 7.7% | rms drift from BC 0.3496 (15.2 min)
+  VALIDATION gen 10: game -1.544, dmg 563, killed you 8.5%, deaths 2.53, your wins 38.8%, disagree 1.9%
+    vs best (gen 0) -0.085 ± 0.097, vs heuristic -0.089 ± 0.088; gates pass -> keep walking
+gen 11 (λ 3.11): centre game -1.835, dmg 490, killed you 6.3%, deaths 2.64, your wins 38.1%, disagree 2.0% | perturbations reward mean -2.140 best -1.801, disagree 8.2% | rms drift from BC 0.3714 (16.8 min)
+gen 12 (λ 3.02): centre game -1.198, dmg 595, killed you 15.0%, deaths 2.54, your wins 38.8%, disagree 2.2% | perturbations reward mean -1.633 best -1.423, disagree 6.8% | rms drift from BC 0.3905 (18.3 min)
+  VALIDATION gen 12: game -1.530, dmg 585, killed you 8.3%, deaths 2.53, your wins 39.5%, disagree 2.2%
+    vs best (gen 0) -0.071 ± 0.097, vs heuristic -0.075 ± 0.084; gates pass -> keep walking
+gen 13 (λ 2.93): centre game -1.090, dmg 579, killed you 8.1%, deaths 2.08, your wins 30.0%, disagree 2.4% | perturbations reward mean -1.241 best -0.921, disagree 6.6% | rms drift from BC 0.4097 (19.8 min)
+gen 14 (λ 2.84): centre game -1.388, dmg 531, killed you 10.6%, deaths 2.45, your wins 40.6%, disagree 2.2% | perturbations reward mean -1.446 best -1.061, disagree 6.5% | rms drift from BC 0.4254 (21.4 min)
+  VALIDATION gen 14: game -1.533, dmg 577, killed you 8.5%, deaths 2.54, your wins 38.5%, disagree 2.5%
+    vs best (gen 0) -0.073 ± 0.108, vs heuristic -0.078 ± 0.092; gates pass -> keep walking
+gen 15 (λ 2.76): centre game -1.328, dmg 534, killed you 11.3%, deaths 2.42, your wins 38.8%, disagree 2.6% | perturbations reward mean -1.567 best -1.258, disagree 7.5% | rms drift from BC 0.4410 (25.1 min)

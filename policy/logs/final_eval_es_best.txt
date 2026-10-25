@@ -1,0 +1,43 @@
+heuristic vs best.json: 400 board fights (100/map, player-like teams, seed base 7007), common seeds; 35s
+on-policy agreement with the heuristic (net's own decisions): 96.9% of 42341
+                                      heuristic           policy      paired diff
+your win %                           37.0 ± 2.4       38.5 ± 2.4       +1.5 ± 1.9
+mean score (s)                      146.8 ± 6.1      149.2 ± 6.2       +2.5 ± 4.5
+pred. damage to your side              473 ± 28         440 ± 26         -33 ± 17
+pred. killed you %                    9.0 ± 1.4       10.0 ± 1.5       +1.0 ± 1.2
+pred. deaths / fight                2.38 ± 0.10      2.40 ± 0.10     +0.02 ± 0.05
+ES reward (game)                 -1.457 ± 0.136   -1.458 ± 0.139   -0.000 ± 0.094
+enemy predators' time share (% of predator-seconds alive, per fight):
+  you                                40.4 ± 1.3       41.6 ± 1.3       +1.2 ± 0.6
+  animals                            21.3 ± 0.9       20.2 ± 0.8       -1.1 ± 0.5
+  feud                                0.0 ± 0.0        0.0 ± 0.0       -0.0 ± 0.0
+  feed                                9.6 ± 0.6        9.0 ± 0.6       -0.5 ± 0.3
+  rest                                0.0 ± 0.0        0.0 ± 0.0       +0.0 ± 0.0
+  flee                               11.6 ± 0.6       11.0 ± 0.6       -0.6 ± 0.5
+  none                               12.4 ± 0.8       13.4 ± 0.9       +1.0 ± 0.4
+
+per species, pooled predator-seconds: share heuristic -> policy (points) for you / animals / feud / feed / rest / flee / none; deaths per appearance; kills of you
+  croc           5870s  23->21 / 8->7 / 0->0 / 23->25 / 0->0 / 4->3 / 42->44  deaths 0.34->0.34  kills you 4->5
+  wolfpack       4016s  15->14 / 32->37 / 0->0 / 14->14 / 0->0 / 11->10 / 28->26  deaths 0.64->0.65  kills you 1->2
+  honeybadger    2878s  8->2 / 11->12 / 0->0 / 38->35 / 0->0 / 0->0 / 43->50  deaths 0.79->0.79  kills you 2->1
+  jaguar         2456s  22->21 / 20->22 / 0->0 / 34->29 / 0->0 / 8->12 / 16->16  deaths 0.60->0.59  kills you 3->2
+  hyenapack      2073s  37->41 / 36->26 / 0->0 / 4->6 / 0->0 / 13->11 / 10->16  deaths 0.62->0.68  kills you 0->0
+  cougar         2060s  67->75 / 4->4 / 0->0 / 8->2 / 0->0 / 18->15 / 3->4  deaths 0.69->0.65  kills you 1->1
+  polar          1892s  46->49 / 19->15 / 0->0 / 6->5 / 0->0 / 18->14 / 11->16  deaths 0.47->0.50  kills you 11->7
+  grizzly        1859s  18->17 / 40->39 / 0->0 / 10->10 / 0->0 / 15->17 / 17->17  deaths 0.41->0.32  kills you 1->1
+  blackbear      1784s  23->21 / 16->19 / 0->0 / 20->19 / 0->0 / 18->15 / 23->26  deaths 0.57->0.53  kills you 1->2
+  leopard        1739s  72->76 / 7->6 / 0->0 / 1->1 / 0->0 / 18->14 / 2->2  deaths 0.67->0.78  kills you 3->2
+  tiger          1256s  71->75 / 15->9 / 0->0 / 1->1 / 0->0 / 10->13 / 3->3  deaths 0.61->0.53  kills you 6->13
+  lionpack       1208s  27->31 / 29->19 / 1->0 / 7->8 / 0->0 / 18->20 / 19->22  deaths 0.56->0.59  kills you 1->3
+  wolfpack6       659s  15->18 / 49->45 / 0->0 / 9->8 / 0->0 / 8->11 / 19->19  deaths 0.65->0.74  kills you 1->0
+  hyena           483s  38->47 / 13->13 / 0->0 / 12->10 / 0->0 / 18->14 / 20->15  deaths 0.69->0.77  kills you 1->0
+  lion            424s  39->41 / 19->17 / 1->1 / 7->5 / 0->0 / 19->17 / 15->20  deaths 0.59->0.54  kills you 0->1
+  wolf            152s  30->24 / 21->26 / 0->0 / 11->10 / 0->0 / 23->23 / 16->16  deaths 0.73->0.67  kills you 0->0
+
+realism gates (±10 pts on you/animals/feed/none for species with ≥1500 s, appetite order, deaths): PASS
+
+per map (win %, heuristic -> policy, paired diff ± SE; damage to your side):
+  savanna  35.0 -> 38.0  (+3.0 ± 3.6; damage -37 ± 28; 13/100 fights changed outcome)
+  river    47.0 -> 47.0  (+0.0 ± 4.3; damage -36 ± 34; 18/100 fights changed outcome)
+  forest   33.0 -> 31.0  (-2.0 ± 3.2; damage -6 ± 37; 10/100 fights changed outcome)
+  tundra   33.0 -> 38.0  (+5.0 ± 3.9; damage -52 ± 39; 15/100 fights changed outcome)

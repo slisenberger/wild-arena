@@ -120,7 +120,8 @@ function train(tr, te){
   console.log(`\nheld-out top-1 agreement: ${(100 * r.acc).toFixed(2)}% ± ${(100 * Math.sqrt(r.acc * (1 - r.acc) / te.n)).toFixed(2)} (binomial SE; decisions within a fight are correlated, so the true SE is larger)`);
   console.log('  by heuristic choice: ' + Object.entries(r.perY).map(([k, v]) => `${k} ${(100 * v[0] / Math.max(1, v[1])).toFixed(1)}% of ${v[1]}`).join(', '));
   console.log('  by species: ' + Object.entries(r.perSp).sort((a, b) => b[1][1] - a[1][1]).map(([k, v]) => `${k} ${(100 * v[0] / v[1]).toFixed(1)}% (${v[1]})`).join(', '));
-  Q.names = F.NAMES; Q.norm = {mu: Array.from(s.mu), sd: Array.from(s.sd)}; // inference ignores norm (already folded into W1/b1); ES perturbs in standardized space Q.note = `behavior-cloned from the chooseTarget heuristic; held-out top-1 ${(100 * r.acc).toFixed(2)}%`;
+  Q.names = F.NAMES; Q.norm = {mu: Array.from(s.mu), sd: Array.from(s.sd)}; // inference ignores norm (already folded into W1/b1); ES perturbs in standardized space
+  Q.note = `behavior-cloned from the chooseTarget heuristic; held-out top-1 ${(100 * r.acc).toFixed(2)}%`;
   fs.writeFileSync(path.join(__dirname, 'bc_weights.json'), JSON.stringify(Q));
   console.log(`wrote policy/bc_weights.json; ${((Date.now() - t0) / 1000).toFixed(0)}s total`);
 })();
