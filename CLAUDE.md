@@ -50,6 +50,22 @@ round. Report ± standard errors.
   a radius that grows with agitation and time pressure; your guards rank threats by intent × strength.
   Morale breaks → flee; broken twice / <30% HP → enemies rout out of the arena, yours withdraw.
 - **Other side is one team.** No infighting except rare rival feuds (lion–hyena, buffalo–lion).
+- **Swimming:** each animal has `swim` = deep-water speed in m/s (hippo 2.5, polar 3, croc 5, big cats ~2,
+  elephant 1.5, gorilla .5, you 1), with the usual fatigue/heat/slow multipliers.
+- **Wounds:** below half health an animal loses up to 30% speed and 20% damage (on top of the morale hit).
+- **Packs:** `pack` animals (lion, wolf, hyena) are nervous alone (−.12 morale) but bolder with another pack
+  animal within 15 m (+.1 each, max +.2), converge on a packmate's target, and don't spread out as guards.
+  Natural rivals (lion–hyena) never count as packmates.
+- **Opportunists:** predators value targets already locked in a fight (×1.5) or badly hurt; a guard that's
+  busy fighting only deters half as much.
+- **You fight back:** on foot, you kick/punch whatever is on you (weak, but it can finish something).
+- **Closing arena** (wild mode, `cfg.hazard:false` disables): from 60 s to 240 s the safe box shrinks from the
+  whole field to 36 × 24 m around a point near mid-field (random per seed). Outside: fire (savanna, forest;
+  2.5% max HP/s + heat), flood (river; slows non-swimmers, non-swimmers lose 1.5%/s), blizzard (tundra; slow,
+  stamina drain, 1.2%/s). Everyone steers inside except routing animals. "They gave up" only counts after
+  the arena has fully closed. `zoneAt(w, t)` gives the box for rendering.
+- **Trees:** animals steer around trunks and detour when wedged; an elephant pushing a trunk ~1 s knocks it
+  over (`w.fallen` keeps the time, so replays show it standing until then).
 - **Maps:** savanna (sun climbs: heat ramps for everyone; acacia shade), river (vertical river x 47–57
   with two fords; swimmers start in it; land animals wade at 40%; charges founder in deep water;
   submerged croc nearly invisible until 7 m), forest (vision ×0.55, ambush ×2, chargers crash into
@@ -69,7 +85,13 @@ round. Report ± standard errors.
   - B: $1,200, elephant $600: identical to $1,000 for elephant teams.
   - C: $1,200, elephant $700, rhino $500: best 65%, median 42%, **different champion on every map**.
 
-## Camping probe (post-audit engine, Oct 2026, `camp.js 200 4 12`)
+## Engine v2 (Oct 2026): swim speeds, jaguar 16 / cougar 18 m/s, wounds, packs, opportunists, closing arena
+- Measured with `camp.js 200 4 12`: "gave up" share of 5:00 results 67% → 29%; no tree exploit; start-spot
+  advantage only for weak teams (+7 to +11 s, teams that die by ~30 s anyway).
+- Named teams (80 runs/map, old → new win%): ELE+RHI+TIG 84/95/98/79 → 78/73/89/74; ELE+RHI+HIP ~91 → 95/91/89/84;
+  ELE+BUF+GRZ+HYE ~67 → 53/53/78/51. Elephant still dominant (+74/+79/+139/+84 s value). Pricing is next.
+
+## Camping probe (post-audit engine before v2, Oct 2026, `camp.js 200 4 12`)
 - No player-side camping exploit: corner/back-wall starts help weak teams slightly (+4 to +18 s) and strong
   teams not at all; >10 s in a tree always ended in death.
 - The "they gave up" ending is honest: with it switched off, 97%+ of would-be quiet wins still reach 5:00.

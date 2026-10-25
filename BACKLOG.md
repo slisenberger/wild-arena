@@ -15,12 +15,12 @@ a herd, a mechanic) is also something the other side gets when you don't pick it
 
 ## 1. Realism (stats) — **next**
 Audit pass 1 is merged (polar bear, elephant, white rhino, swim-speed bug). Still open:
-- [ ] **Deep-water speed per animal in m/s.** Today swim speed = land speed × 1.25 (swimmers, or
+- [x] **done (v2)** **Deep-water speed per animal in m/s.** Today swim speed = land speed × 1.25 (swimmers, or
   `swimMul`), × .7 (water ≥ .4) or × .4. Results, engine vs real (m/s): hippo 10 vs ~2 (it can't swim,
   it bounds along the bottom), polar 8.8 vs 2.5–3, croc 5.6 vs 4–5 burst (fine), jaguar 12.6 vs ~2,
   tiger 11.9 vs ~2, lion 8 vs ~1.5, elephant 4.9 vs 1–2. Biggest open item; reshapes the river map.
-- [ ] Cougar 20 m/s → ~17–18. Jaguar 18 m/s is about as poorly supported → ~15–16.
-- [ ] Grizzly, buffalo and bison swim competently but have water .2–.3.
+- [x] **done (v2)** Cougar 20 → 18 m/s, jaguar 18 → 16 m/s.
+- [x] **done (v2)** Grizzly, buffalo and bison swim competently: covered by their swim speeds (1.5–1.8 m/s).
 - [ ] `blindCharger` fits a black rhino, not a white one (rename the animal, or change the behavior).
 - [ ] Hippo armor .4 vs rhino .55 is arguable (hippo skin is 5–6 cm).
 - [ ] Polar bear snow camouflage on the tundra is not modeled.
@@ -42,12 +42,16 @@ Findings (post-audit engine, Oct 2026; see "Camping probe" in CLAUDE.md):
   dull to watch.
 
 Ideas to fix the stall (each changes win rates, so before pricing):
-- [ ] **Closing arena** (classic anti-camping): a themed hazard shrinks the safe area over time —
+- [x] **done (v2)** **Closing arena** (classic anti-camping): a themed hazard shrinks the safe area over time —
   wildfire on the savanna, rising water on the river, a blizzard front on the tundra, a forest fire. It
   pushes both sides together and makes position matter.
+- [x] **done (v2), as opportunism:** predators value targets already locked in a fight or badly hurt; busy
+  guards deter half as much. (Loiter diagnosis: in quiet wins the leftovers were almost all the stranded
+  croc and the self-defense-only giraffe — realistic, so no forced aggression for them.)
 - [ ] **Hunger / desperation:** enemies that haven't fed or fought get bolder over time; after N s of
   loitering, the most aggressive one commits.
 - [ ] **Coordinated rushes:** loiterers regroup and attack together (a pack, a herd stampede).
+- [x] **done (v2)** "They gave up" only counts once the arena has fully closed (240 s).
 - [ ] **Shorter quiet window** or "they gave up" earlier once the remaining enemies are clearly outmatched
   (pure pacing fix; doesn't change outcomes since the rule is honest).
 - [ ] Keep tree height and the "cornered" rules under watch; re-run `camp.js` after any AI change.
@@ -75,6 +79,8 @@ Pack animals (lion, wolf, hyena) carry the `pack` tag, a morale penalty for bein
 that gives you one of each animal, they're weaker by design.
 - [ ] **Mixed-species herd bonus** (stays in the meme): herbivores near each other share spotting
   and rally morale; a lone herbivore panics sooner. Cheap; do first.
+- [x] **done (v2)** **Pack bonding:** any `pack` animal (lion, wolf, hyena) is bolder beside another pack animal,
+  converges on its packmate's target and doesn't spread out; rivals (lion–hyena) excluded.
 - [ ] **Sell some animals as groups** (rules option, bends "one of each"): "Wolf pack (4) $300",
   "Hyena clan (3) $300", "Lion pride (2 lionesses + male) $500", "Buffalo herd (3) $600". The pack
   orbits, flanks and hamstrings as a unit; skip it and the other side gets the whole pack.
@@ -105,16 +111,22 @@ Pick for new roles. Top three for design value: **honey badger, moose, Komodo dr
 - [ ] Golden / harpy eagle — attacks from the air; height matters in reverse.
 - [ ] Kangaroo — kickboxer, holds a fighter at arm's length.
 - [ ] Wolverine — the tundra's honey badger.
+- [ ] **Dinosaurs as a rare easter egg** (e.g. a T. rex or velociraptor pack showing up in a rare rotation
+  or a special daily seed). Same rules — if you don't pick it, it's against you — so it should be rare and
+  priced high. Ties into "rotating sets with rare choices" (§8). Realism stays: use paleontology estimates
+  for mass, bite force and speed (T. rex ~8 t, ~5–7 m/s; raptors small and pack-hunting).
 
 ## 7. Mechanics
 - [ ] **Your own actions:** 1–2 cooldown abilities (flare scares off the timid, whistle rallies guards,
   climb a tree, mount/dismount). Biggest lever for making it *feel* like a game.
-- [ ] **You can fight back.** Today you only struggle when something latches on (5 dmg/s × (1 − its
+- [x] **done (v2), basic:** on foot you kick/punch whatever is on you. Weapons/flare still open.
+- [ ] **You can fight back (more).** Today you only struggle when something latches on (5 dmg/s × (1 − its
   armor) against the latcher); otherwise you never attack (`HUMAN.dmg: 6` is unused). Options: punch/kick
   (realistically almost nothing against a lion, but it can finish a wounded hyena or break a latch),
   an improvised weapon (stick, rock, spear as a draft item that costs budget), or a flare/shout that
   scares rather than damages. Pairs with "your own actions" above.
-- [ ] **Wounds sap power directly.** Today it's indirect: lost HP lowers morale (`tgt = 1 − .85·(1 − hp/maxhp)`),
+- [x] **done (v2), basic:** below half health, up to −30% speed and −20% damage. Per-wound locations still open.
+- [ ] **Wounds sap power directly (more).** Today it's indirect: lost HP lowers morale (`tgt = 1 − .85·(1 − hp/maxhp)`),
   morale scales damage (`× (.65 + .35·morale)`, so up to −35%), and <30% HP routs. Make it explicit and
   visible: damage, speed and stamina fall with wounds (a limp), maybe per-wound location (a hamstrung
   leg slows, a bitten neck weakens).
@@ -140,9 +152,33 @@ Pick for new roles. Top three for design value: **honey badger, moose, Komodo dr
 - [ ] **Dynamic animal sets** (once the roster is big, ~25+): each game draws a subset of the roster
   (e.g. 16 of 30), by map theme or at random per seed. Unpicked animals in the set are the other side;
   animals outside the set sit out. Needs prices that hold up across sets (price by value, not by set).
+- [ ] **Fixed animal-count choices:** a rules option where you pick exactly N animals (e.g. 3 or 4)
+  instead of spending a budget — simpler, and a different puzzle. Can coexist with budget mode.
+- [ ] **Rotating sets with rare choices:** each day/week/seed offers a rotating roster; some animals are
+  rare (appear in few rotations), so a game with the honey badger or an orca-in-the-river is an event.
 - [ ] Per-map score-attack leaderboards; shareable seed + team links.
 
-## 9. Infrastructure
+## 9. Learned AI (ambition)
+- [ ] **Policy nets.** The sim is pure, deterministic and fast (~40 fights/s on 4 cores in Node), so it can
+  serve as an RL environment. Uses, roughly in order of payoff:
+  1. *Learned exploit finder:* train a policy for your side's placement/commands to maximize survival;
+     whatever it discovers is a camping/exploit report (stronger than grid search).
+  2. *Learned enemy pressure:* train the other side to kill you, then keep the hand-written realistic
+     AI but borrow the tactics it finds (flanking, coordinated rushes) where they're realistic.
+  3. *Draft model:* predict a team's value per map from its composition, to price instantly and to rate
+     rotating/dynamic animal sets without hours of simulation.
+  Caveat: learned behavior must stay recognizably like the real animal; realism beats optimality.
+  Practical path: port `step()` hot loops to typed arrays or run batched in Node workers; a small
+  per-unit MLP over local observations (nearby units, terrain, own state) trained with PPO.
+
+## 10. Engine notes found while building v2
+- [x] **done** Animals hugged the shrinking edge while fighting at range (elephant trunk reach ~9 m): now step inward.
+- [x] **done** No obstacle steering: animals pushed into trunks and got wedged in narrow gaps. Now they steer
+  around trees, detour when stuck, and elephants shove trees over.
+- [ ] The forest generates a ring of trees around your start spot (so you can climb); a mounted elephant can
+  start boxed in. Consider leaving a gap.
+
+## 11. Infrastructure
 - [ ] Turn the probes into a regression suite run after every engine change (`quick.js`, `camp.js`,
   `idle.js`), with thresholds (e.g. quiet-win share, loiter time, corner advantage).
 - [ ] Record per-run telemetry once and reuse it across analyses.

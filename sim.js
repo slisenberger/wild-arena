@@ -8,41 +8,41 @@ const W = 100, H = 66, DT = 0.1, MATCH_T = 300, QUIET_T = 30;
 // armor 0-1, reach m, stam = seconds of sprint, heat = heat tolerance (1 normal), cold = cold tolerance,
 // water = aquatic affinity (-1..1), aggr, flee = morale break point, corner = cornered damage mult,
 // lift = height it can strike up to (leap / rear), climb = can climb trees.
-// swimMul (optional, swimmers only) = deep-water speed multiplier in place of the default 1.25.
+// swim = speed in deep water, m/s (real swimming/bottom-walking speed, not a fraction of sprint speed).
 // tag aquaStalk = hides submerged like a croc, lunges out of the water, first strike from the water is an ambush.
 const ANIMALS = [
- {id:'elephant', name:'African Elephant', abbr:'ELE', price:400, mass:6000, spd:7, dmg:260, cd:1.6, armor:.35, reach:3.5, stam:20, heat:.8, cold:.6, water:.5, aggr:.55, flee:.15, corner:1.3, pred:false, charge:true, smart:.95, vision:40, lift:0, tags:['hatesPredators','mount'],
+ {id:'elephant', name:'African Elephant', abbr:'ELE', price:400, mass:6000, spd:7, dmg:260, cd:1.6, armor:.35, reach:3.5, stam:20, heat:.8, cold:.6, water:.5, swim:1.5, aggr:.55, flee:.15, corner:1.3, pred:false, charge:true, smart:.95, vision:40, lift:0, tags:['hatesPredators','mount'],
   traits:['Rideable: you sit 3.2 m up, out of reach of anything that cannot leap that high','Mobs predators on sight','Tusk, trunk and stomp: momentum hits scatter anything smaller']},
- {id:'rhino', name:'White Rhino', abbr:'RHI', price:400, mass:2300, spd:14, dmg:180, cd:1.4, armor:.55, reach:2.6, stam:15, heat:.8, cold:.55, water:0, aggr:.4, flee:.12, corner:1.3, pred:false, charge:true, smart:.3, vision:18, lift:0, tags:['blindCharger'],
+ {id:'rhino', name:'White Rhino', abbr:'RHI', price:400, mass:2300, spd:14, dmg:180, cd:1.4, armor:.55, reach:2.6, stam:15, heat:.8, cold:.55, water:0, swim:1, aggr:.4, flee:.12, corner:1.3, pred:false, charge:true, smart:.3, vision:18, lift:0, tags:['blindCharger'],
   traits:['Thickest armor on the board','Poor eyesight: charges anything that moves within 18 m, friend or foe','Fastest heavyweight charge (50 km/h)']},
- {id:'hippo', name:'Hippo', abbr:'HIP', price:400, mass:2000, spd:8, dmg:230, cd:1.3, armor:.4, reach:2.5, stam:8, heat:.5, cold:.4, water:.9, aggr:.9, flee:.1, corner:1.3, pred:false, charge:true, smart:.4, vision:25, lift:0, tags:['territorial','sunburn'],
+ {id:'hippo', name:'Hippo', abbr:'HIP', price:400, mass:2000, spd:8, dmg:230, cd:1.3, armor:.4, reach:2.5, stam:8, heat:.5, cold:.4, water:.9, swim:2.5, aggr:.9, flee:.1, corner:1.3, pred:false, charge:true, smart:.4, vision:25, lift:0, tags:['territorial','sunburn'],
   traits:['Bone-crushing bite, the most aggressive animal here','In water: faster, cooler, territorial','On dry land: sunburns and overheats']},
- {id:'giraffe', name:'Giraffe', abbr:'GIR', price:400, mass:1200, spd:15, dmg:120, cd:1.8, armor:.2, reach:3, stam:25, heat:1, cold:.5, water:-.6, aggr:.2, flee:.5, corner:1.4, pred:false, charge:false, smart:.5, vision:60, lift:0, tags:['lookout','kicker'],
+ {id:'giraffe', name:'Giraffe', abbr:'GIR', price:400, mass:1200, spd:15, dmg:120, cd:1.8, armor:.2, reach:3, stam:25, heat:1, cold:.5, water:-.6, swim:0.8, aggr:.2, flee:.5, corner:1.4, pred:false, charge:false, smart:.5, vision:60, lift:0, tags:['lookout','kicker'],
   traits:['Lookout: your whole team spots threats 50% farther away','Lethal kick, but only in self-defense','Cannot cover ground-level threats around you']},
- {id:'polar', name:'Polar Bear', abbr:'PBR', price:300, mass:500, spd:11, dmg:145, cd:1.0, armor:.4, reach:2.1, stam:12, heat:.4, cold:1, water:.85, swimMul:.8, aggr:.85, flee:.2, corner:1.3, pred:true, charge:false, smart:.6, vision:30, lift:3.0, tags:['scavenger','aquaStalk'], prey:{human:1.6},
+ {id:'polar', name:'Polar Bear', abbr:'PBR', price:300, mass:500, spd:11, dmg:145, cd:1.0, armor:.4, reach:2.1, stam:12, heat:.4, cold:1, water:.85, swim:3, aggr:.85, flee:.2, corner:1.3, pred:true, charge:false, smart:.6, vision:30, lift:3.0, tags:['scavenger','aquaStalk'], prey:{human:1.6},
   traits:['Largest land carnivore, actively hunts humans; 10 cm of fat under dense fur blunts bites and claws','Aquatic stalk: hidden under water until 7 m, then surges out for an ambush strike (x1.7)','Overheats fast anywhere warm, but swimming cools it; dominant in snow']},
- {id:'croc', name:'Saltwater Crocodile', abbr:'CRO', price:300, mass:1000, spd:4.5, dmg:220, cd:1.2, armor:.6, reach:2.2, stam:5, heat:1.1, cold:.2, water:1, aggr:.8, flee:.15, corner:1.2, pred:true, charge:false, smart:.3, vision:20, lift:0, tags:['deathroll','waterbound','ambush'], prey:{human:1.3},
+ {id:'croc', name:'Saltwater Crocodile', abbr:'CRO', price:300, mass:1000, spd:4.5, dmg:220, cd:1.2, armor:.6, reach:2.2, stam:5, heat:1.1, cold:.2, water:1, swim:5, aggr:.8, flee:.15, corner:1.2, pred:true, charge:false, smart:.3, vision:20, lift:0, tags:['deathroll','waterbound','ambush'], prey:{human:1.3},
   traits:['Strongest bite measured: grabs and death-rolls in water','Stays within 8 m of water; nearly helpless on dry land','Cold-blooded: barely moves in tundra']},
- {id:'buffalo', name:'Cape Buffalo', abbr:'BUF', price:300, mass:750, spd:15, dmg:150, cd:1.2, armor:.4, reach:2.3, stam:20, heat:.9, cold:.6, water:.2, aggr:.7, flee:.25, corner:1.5, pred:false, charge:true, smart:.6, vision:28, lift:0, tags:['vindictive','lionKiller'], rivals:{lion:3, tiger:1.8, hyena:1.6},
+ {id:'buffalo', name:'Cape Buffalo', abbr:'BUF', price:300, mass:750, spd:15, dmg:150, cd:1.2, armor:.4, reach:2.3, stam:20, heat:.9, cold:.6, water:.2, swim:1.5, aggr:.7, flee:.25, corner:1.5, pred:false, charge:true, smart:.6, vision:28, lift:0, tags:['vindictive','lionKiller'], rivals:{lion:3, tiger:1.8, hyena:1.6},
   traits:['Lion killer: +50% damage against big cats','Vindictive: hunts down whatever wounded it','Without a herd, it fights alone']},
- {id:'bison', name:'American Bison', abbr:'BIS', price:300, mass:900, spd:15, dmg:140, cd:1.3, armor:.35, reach:2.3, stam:40, heat:.75, cold:1, water:.2, aggr:.5, flee:.42, corner:1.8, pred:false, charge:true, smart:.5, vision:28, lift:0, tags:['standsGround'],
+ {id:'bison', name:'American Bison', abbr:'BIS', price:300, mass:900, spd:15, dmg:140, cd:1.3, armor:.35, reach:2.3, stam:40, heat:.75, cold:1, water:.2, swim:1.5, aggr:.5, flee:.42, corner:1.8, pred:false, charge:true, smart:.5, vision:28, lift:0, tags:['standsGround'],
   traits:['Runs when it can, fights furiously when cornered (x1.8)','Turns and stands its ground once wounded','Huge stamina; at home in snow']},
- {id:'grizzly', name:'Grizzly Bear', abbr:'GRZ', price:200, mass:320, spd:15, dmg:125, cd:.9, armor:.35, reach:2, stam:15, heat:.65, cold:.95, water:.3, aggr:.6, flee:.25, corner:1.3, pred:true, charge:false, smart:.7, vision:30, lift:2.8, hpMul:1.2, tags:['scavenger'], prey:{human:.8}, rivals:{polar:1.3, wolf:1.3, cougar:1.4},
+ {id:'grizzly', name:'Grizzly Bear', abbr:'GRZ', price:200, mass:320, spd:15, dmg:125, cd:.9, armor:.35, reach:2, stam:15, heat:.65, cold:.95, water:.3, swim:1.8, aggr:.6, flee:.25, corner:1.3, pred:true, charge:false, smart:.7, vision:30, lift:2.8, hpMul:1.2, tags:['scavenger'], prey:{human:.8}, rivals:{polar:1.3, wolf:1.3, cougar:1.4},
   traits:['Very hard to kill (+20% durability)','Takes kills from cougars and wolves','Scavenges carcasses aggressively']},
- {id:'tiger', name:'Bengal Tiger', abbr:'TIG', price:200, mass:220, spd:17, dmg:125, cd:.9, armor:.1, reach:2, stam:6, heat:.75, cold:.65, water:.5, aggr:.7, flee:.3, corner:1.3, pred:true, latch:true, charge:false, smart:.7, vision:30, lift:3.6, tags:['ambush'], prey:{human:1.4},
+ {id:'tiger', name:'Bengal Tiger', abbr:'TIG', price:200, mass:220, spd:17, dmg:125, cd:.9, armor:.1, reach:2, stam:6, heat:.75, cold:.65, water:.5, swim:2, aggr:.7, flee:.3, corner:1.3, pred:true, latch:true, charge:false, smart:.7, vision:30, lift:3.6, tags:['ambush'], prey:{human:1.4},
   traits:['Throat hold: latches onto prey up to 2.5x its mass','Ambush first strike (x1.7, x2 in forest)','Can leap onto an elephant (3.6 m)']},
- {id:'lion', name:'African Lion', abbr:'LIO', price:200, mass:190, spd:20, dmg:105, cd:.9, armor:.15, reach:2, stam:5, heat:.95, cold:.55, water:-.3, aggr:.65, flee:.35, corner:1.3, pred:true, latch:true, charge:false, smart:.6, vision:32, lift:3.0, tags:['mane','pack'], prey:{human:1.1}, rivals:{hyena:2.2},
-  traits:['Mane protects the neck: throat holds do 40% less','Pride animal: morale penalty fighting alone','Kills hyenas on sight']},
- {id:'gorilla', name:'Silverback Gorilla', abbr:'GOR', price:200, mass:180, spd:11, dmg:90, cd:1.0, armor:.15, reach:2, stam:10, heat:.8, cold:.5, water:-.8, aggr:.35, flee:.4, corner:1.4, pred:false, charge:false, smart:.9, vision:25, lift:0, climb:true, tags:['guardian','bluff'],
+ {id:'lion', name:'African Lion', abbr:'LIO', price:200, mass:190, spd:20, dmg:105, cd:.9, armor:.15, reach:2, stam:5, heat:.95, cold:.55, water:-.3, swim:1.2, aggr:.65, flee:.35, corner:1.3, pred:true, latch:true, charge:false, smart:.6, vision:32, lift:3.0, tags:['mane','pack'], prey:{human:1.1}, rivals:{hyena:2.2},
+  traits:['Mane protects the neck: throat holds do 40% less','Pride animal: nervous alone, bolder beside another pack animal (not hyenas)','Kills hyenas on sight']},
+ {id:'gorilla', name:'Silverback Gorilla', abbr:'GOR', price:200, mass:180, spd:11, dmg:90, cd:1.0, armor:.15, reach:2, stam:10, heat:.8, cold:.5, water:-.8, swim:0.5, aggr:.35, flee:.4, corner:1.4, pred:false, charge:false, smart:.9, vision:25, lift:0, climb:true, tags:['guardian','bluff'],
   traits:['Guardian: sticks closest to you, +40% damage against anything targeting you','Bluff charge: first approach shakes the morale of smaller enemies','Climbs trees']},
- {id:'jaguar', name:'Jaguar', abbr:'JAG', price:100, mass:100, spd:18, dmg:85, cd:.9, armor:.05, reach:1.8, stam:6, heat:.9, cold:.5, water:.7, aggr:.6, flee:.35, corner:1.3, pred:true, latch:true, charge:false, smart:.6, vision:28, lift:3.5, climb:true, pierce:.5, tags:['ambush'], prey:{human:.8},
+ {id:'jaguar', name:'Jaguar', abbr:'JAG', price:100, mass:100, spd:16, dmg:85, cd:.9, armor:.05, reach:1.8, stam:6, heat:.9, cold:.5, water:.7, swim:2, aggr:.6, flee:.35, corner:1.3, pred:true, latch:true, charge:false, smart:.6, vision:28, lift:3.5, climb:true, pierce:.5, tags:['ambush'], prey:{human:.8},
   traits:['Skull bite ignores half of armor','Swims, climbs, ambushes','Small (100 kg)']},
- {id:'wolf', name:'Gray Wolf', abbr:'WLF', price:100, mass:45, spd:16, dmg:40, cd:.7, armor:.05, reach:1.6, stam:60, heat:.7, cold:1, water:.2, aggr:.5, flee:.5, corner:1.3, pred:true, charge:false, smart:.8, vision:35, lift:0, tags:['hamstring','pack'], prey:{human:.6},
-  traits:['Hamstring bites slow the target','Endless stamina','Pack hunter alone: morale penalty']},
- {id:'cougar', name:'Cougar', abbr:'CGR', price:100, mass:60, spd:20, dmg:55, cd:.8, armor:.05, reach:1.8, stam:5, heat:.8, cold:.85, water:-.2, aggr:.45, flee:.6, corner:1.3, pred:true, latch:true, charge:false, smart:.6, vision:30, lift:5, climb:true, tags:['ambush','yields'], prey:{human:.8},
+ {id:'wolf', name:'Gray Wolf', abbr:'WLF', price:100, mass:45, spd:16, dmg:40, cd:.7, armor:.05, reach:1.6, stam:60, heat:.7, cold:1, water:.2, swim:1.5, aggr:.5, flee:.5, corner:1.3, pred:true, charge:false, smart:.8, vision:35, lift:0, tags:['hamstring','pack'], prey:{human:.6},
+  traits:['Hamstring bites slow the target','Endless stamina','Pack hunter: nervous alone; with another pack animal it is bolder and they hunt the same target']},
+ {id:'cougar', name:'Cougar', abbr:'CGR', price:100, mass:60, spd:18, dmg:55, cd:.8, armor:.05, reach:1.8, stam:5, heat:.8, cold:.85, water:-.2, swim:1.2, aggr:.45, flee:.6, corner:1.3, pred:true, latch:true, charge:false, smart:.6, vision:30, lift:5, climb:true, tags:['ambush','yields'], prey:{human:.8},
   traits:['Huge leap (5 m): can reach a rider or a tree','Gives way to bears and wolves','Ambusher']},
- {id:'hyena', name:'Spotted Hyena', abbr:'HYE', price:100, mass:60, spd:16, dmg:60, cd:.8, armor:.1, reach:1.6, stam:50, heat:.9, cold:.6, water:.1, aggr:.55, flee:.45, corner:1.3, pred:true, charge:false, smart:.8, vision:35, lift:0, pierce:.3, hpMul:1.3, tags:['scavenger','hamstring','pack'], prey:{human:1.0}, rivals:{lion:1.3},
-  traits:['Bone-crushing bite ignores 30% of armor','Tough (+30% durability) and tireless','Eats fast at carcasses']},
+ {id:'hyena', name:'Spotted Hyena', abbr:'HYE', price:100, mass:60, spd:16, dmg:60, cd:.8, armor:.1, reach:1.6, stam:50, heat:.9, cold:.6, water:.1, swim:1.5, aggr:.55, flee:.45, corner:1.3, pred:true, charge:false, smart:.8, vision:35, lift:0, pierce:.3, hpMul:1.3, tags:['scavenger','hamstring','pack'], prey:{human:1.0}, rivals:{lion:1.3},
+  traits:['Bone-crushing bite ignores 30% of armor','Tough (+30% durability) and tireless','Clan animal: bolder beside a wolf (never a lion); eats fast at carcasses']},
 ];
 // Fighting styles: how each animal moves and attacks. strikeH = highest point it can hit (m); mountH = rider height if it can carry you (0 = can't).
 const STYLE = {
@@ -64,14 +64,14 @@ const STYLE = {
  hyena:{gait:'orbit', strikeH:1.4, mountH:0, dart:1.5, style:'Harrier', how:'Circles tirelessly and darts in for bone-crushing bites.'},
 };
 ANIMALS.forEach(a => Object.assign(a, STYLE[a.id]));
-const HUMAN = {id:'human', name:'You', abbr:'YOU', price:0, mass:75, spd:6.5, dmg:6, cd:1, armor:0, reach:1.2, stam:8, heat:1, cold:.6, water:-.5, aggr:0, flee:0, corner:1, pred:false, charge:false, smart:1, vision:35, lift:0, strikeH:1.8, mountH:0, gait:'human', climb:true, tags:[]};
+const HUMAN = {id:'human', name:'You', abbr:'YOU', price:0, mass:75, spd:6.5, dmg:6, cd:1, armor:0, reach:1.2, stam:8, heat:1, cold:.6, water:-.5, aggr:0, flee:0, corner:1, pred:false, charge:false, smart:1, vision:35, lift:0, swim:1, strikeH:1.8, mountH:0, gait:'human', climb:true, tags:[]};
 const BY_ID = {}; ANIMALS.forEach(a => BY_ID[a.id] = a); BY_ID.human = HUMAN;
 
 const TERRAINS = {
- savanna:{id:'savanna', name:'Savanna', amb:1.0, heatRamp:true, shade:6, desc:'Open and baking. The sun climbs as the fight goes on, so heat builds for everyone; big bodies cook first. A few acacias give shade worth fighting over.'},
- river:{id:'river', name:'River', amb:.75, water:{x0:47, x1:57, fords:[[9,18],[47,56]]}, desc:'A river splits the field and the other side starts across it. Crocs and hippos hold the water, and land animals wade at 40% speed. Two shallow fords are the only fast crossings, and a charge founders in deep water.'},
- forest:{id:'forest', name:'Forest', amb:.55, trees:30, vision:.55, desc:'Trees block sight and slow big bodies. Cats ambush for double damage, and a charger that hits a tree is stunned. You can climb a tree.'},
- tundra:{id:'tundra', name:'Tundra', amb:.08, cold:true, snow:true, desc:'Deep snow and cold. Heavy animals flounder (an elephant moves at about half speed), and the cold drains stamina. Polar bear, wolf, bison and cougar move freely.'},
+ savanna:{id:'savanna', name:'Savanna', amb:1.0, heatRamp:true, shade:6, hazard:'fire', desc:'Open and baking. The sun climbs as the fight goes on, so heat builds for everyone; big bodies cook first. A few acacias give shade worth fighting over. After a minute a grass fire closes in from the edges.'},
+ river:{id:'river', name:'River', amb:.75, water:{x0:47, x1:57, fords:[[9,18],[47,56]]}, hazard:'flood', desc:'A river splits the field and the other side starts across it. Crocs and hippos hold the water, and everyone else has to swim it slowly. Two shallow fords are the only fast crossings, and a charge founders in deep water. After a minute flood water closes in from the edges; swimmers shrug it off.'},
+ forest:{id:'forest', name:'Forest', amb:.55, trees:30, vision:.55, hazard:'fire', desc:'Trees block sight and slow big bodies. Cats ambush for double damage, and a charger that hits a tree is stunned. You can climb a tree. After a minute a forest fire closes in from the edges.'},
+ tundra:{id:'tundra', name:'Tundra', amb:.08, cold:true, snow:true, hazard:'blizzard', desc:'Deep snow and cold. Heavy animals flounder (an elephant moves at about half speed), and the cold drains stamina. Polar bear, wolf, bison and cougar move freely. After a minute a blizzard closes in from the edges.'},
 };
 
 // ---------- utils ----------
@@ -158,6 +158,9 @@ function setup(cfg){
     for (let i = es.length - 1; i > 0; i--){ const j = Math.floor(R() * (i + 1)); [es[i], es[j]] = [es[j], es[i]]; }
     es.forEach((u, i) => { u.releaseT = 1 + i * 9; u.penned = true; u.x = W - 2; u.y = 6 + (i % 6) * 10.8; });
   }
+  // closing arena: a themed hazard (fire / flood / blizzard) closes in from the edges toward a point near mid-field
+  if (T.hazard && w.mode === 'wild' && cfg.hazard !== false) w.zone = {kind: T.hazard, cx: W / 2 + (R() - .5) * 16, cy: H / 2 + (R() - .5) * 12};
+  w.zb = zoneAt(w, 0);
   return w;
 }
 
@@ -197,7 +200,30 @@ function defaultPlacement(team, aid, i){
   return {dx: Math.cos(ang)*ring, dy: Math.sin(ang)*ring};
 }
 
+// ---------- closing arena ----------
+// The safe area shrinks from the whole field (t < ZONE_T0) to a ZONE_W x ZONE_H box (t >= ZONE_T1).
+const ZONE_T0 = 60, ZONE_T1 = 240, ZONE_W = 36, ZONE_H = 24;
+const HAZARD_NAME = {fire: 'fire', flood: 'flood water', blizzard: 'blizzard'};
+function zoneAt(w, t){
+  const z = w.zone; if (!z) return null;
+  const p = clamp((t - ZONE_T0) / (ZONE_T1 - ZONE_T0), 0, 1), e = p * p * (3 - 2 * p);
+  return {x0: (z.cx - ZONE_W / 2) * e, x1: W + (z.cx + ZONE_W / 2 - W) * e, y0: (z.cy - ZONE_H / 2) * e, y1: H + (z.cy + ZONE_H / 2 - H) * e, p};
+}
+function outsideZone(w, u){ const z = w.zb; return !!z && z.p > 0 && (u.x < z.x0 || u.x > z.x1 || u.y < z.y0 || u.y > z.y1); }
+function hazardHurt(w, u, dmg){
+  u.hp -= dmg; u.st.taken += dmg;
+  if (u.hp > 0) return;
+  if (u.side === 'H'){ u.hp = 0; u.state = 'dead'; u.deathT = w.t; log(w, `You were caught by the ${HAZARD_NAME[w.zone.kind]}`, 'death', u); w.over = true; w.result = {survived:false, t:w.t, score:w.t, killer:w.zone.kind}; return; }
+  kill(w, u, null);
+}
 // ---------- helpers ----------
+// 0 while above half health, rising to 1 at death: badly hurt animals are slower and hit softer
+function wound(u){ return clamp((.5 - u.hp / u.maxhp) / .5, 0, 1); }
+// locked in a fight right now (in contact with its target, or latched)
+function busy(u){ return !!(u.latchOn || u.latchedBy || (u.target && active(u.target) && dist(u, u.target) < u.r + u.target.r + u.s.reach + 1.5)); }
+// pack animals (tag 'pack') bond with any other pack animal on their side, except natural rivals (lion and hyena)
+function packMate(u, o){ return o !== u && o.side === u.side && has(o, 'pack') && active(o) && !(u.s.rivals && u.s.rivals[o.s.id]) && !(o.s.rivals && o.s.rivals[u.s.id]); }
+function packMates(w, u){ let n = 0; for (const o of w.units) if (packMate(u, o) && dist(u, o) < 15) n++; return n; }
 function strength(u){ return Math.sqrt(Math.max(1,u.hp) * (u.s.dmg / u.s.cd)); }
 function pressure(w){ return w.mode === 'wild' ? Math.min(1, w.t / 150) : 1; }
 function inFord(w, y){ return w.T.water.fords.some(([a, b]) => y >= a && y <= b); }
@@ -249,7 +275,7 @@ function guardsAround(w, t, me){
   let g = 0;
   for (const u of w.units){
     if (u === t || u === me || !active(u) || u.side === 'E' || u.state === 'flee') continue;
-    if (dist(u, t) < 7) g += strength(u);
+    if (dist(u, t) < 7) g += strength(u) * (busy(u) ? .5 : 1); // a guard already in a fight deters less
   }
   return g;
 }
@@ -277,8 +303,12 @@ function predatorTarget(w, u){
     if (!reachable(u, t)) continue;
     if (u.grudge === t && d < 8) sc *= 3;
     if (t.state === 'flee' || t.latchedBy) sc *= 1.3;
+    // opportunists: something already locked in a fight with one of ours, or badly hurt, is worth the risk
+    if (t.side === 'P' && t.target && t.target !== u && busy(t)) sc *= 1.5;
+    if (t.hp < t.maxhp * .6) sc *= 1 + (.6 - t.hp / t.maxhp) * 1.5;
     sc /= (1 + d / (t.side === 'H' ? 45 : 25));
     if (u.target === t) sc *= 1.25; // commitment
+    if (has(u,'pack')) for (const o of w.units) if (packMate(u, o) && o.target === t && dist(o, u) < 25){ sc *= 1.5; break; } // hunt as a pack
     if (sc > bs){ bs = sc; best = t; }
   }
   return {t:best, score:bs};
@@ -352,7 +382,7 @@ function allyTarget(w, u){
     if (has(u,'kicker') && !(dm < 6 || u.grudge === e)) sc *= .1;
     if (!reachable(u, e)) sc *= .05;
     // spread coverage
-    let others = 0; for (const a of w.units) if (a !== u && a.side === 'P' && active(a) && a.target === e) others++;
+    let others = 0; for (const a of w.units) if (a !== u && a.side === 'P' && active(a) && a.target === e && !(has(u,'pack') && packMate(u, a))) others++; // packmates gang up rather than spread
     sc *= Math.pow(.6, others);
     if (u.grudge === e && dm < 6) sc *= 2;
     if (u.target === e) sc *= 1.3;
@@ -414,6 +444,7 @@ function strike(w, a, t, opts){
   dmg *= massF;
   dmg *= envFactor(w, a);
   dmg *= 0.65 + 0.35 * clamp(a.morale, 0, 1);
+  dmg *= 1 - .2 * wound(a);
   if (a.cornerT > 0) dmg *= s.corner;
   let chargeF = 1;
   if (!opts.latch && speedFrac > .5) chargeF = 1 + (s.charge ? .7 : .25) * clamp((speedFrac - .5) / .5, 0, 1);
@@ -535,11 +566,13 @@ function speedOf(w, u){
   if (u.stam < .15) v *= .45; // exhausted
   v *= envFactor(w, u) / (inWater(w, u) && u.s.water >= .8 ? 1.2 : 1); // the swimmer damage bonus is not a speed bonus
   const wet = inWater(w, u);
-  if (wet){ v *= u.s.water >= .8 ? (u.s.swimMul || 1.25) : u.s.water >= .4 ? .7 : .4; }
+  if (wet) v *= (u.s.swim || 1) / u.s.spd; // swimming speed, with the same fatigue/heat/slow modifiers
   else if (onFord(w, u) && u.s.water < .8) v *= .8;
   if (w.T.id === 'forest' && u.s.mass > 800) v *= .78;
   if (w.T.snow) v *= snowFactor(u.s);
   if (u.slowT > 0) v *= (1 - u.slow);
+  v *= 1 - .3 * wound(u); // badly hurt animals slow down
+  if (w.zone && outsideZone(w, u) && w.zone.kind !== 'fire') v *= w.zone.kind === 'blizzard' ? .6 : (u.s.water >= .8 ? 1 : .5);
   if (u.latchedBy) v *= u.s.mass < 1.5 * u.latchedBy.s.mass ? .1 : .5;
   if (u.rider) v *= clamp(1 - .6 * 75 / u.s.mass, .6, 1);
   return v;
@@ -567,6 +600,19 @@ function step(w){
     if (u.latchOn && !active(u.latchOn)) { u.latchOn = null; }
     // an aquatic stalker that has slipped back under and stayed off prey for ~4 s can ambush again
     if (!u.ambushReady && has(u,'aquaStalk') && inWater(w, u) && u.atk < -4 && !u.latchedBy) u.ambushReady = true;
+  }
+  // closing arena
+  if (w.zone){
+    w.zb = zoneAt(w, w.t);
+    for (const u of units){
+      if (!active(u) || u.riding || !outsideZone(w, u)) continue;
+      const k = w.zone.kind;
+      if (!u.hazardLogged){ u.hazardLogged = true; log(w, `${capName(u)} ${u.side === 'H' ? 'are' : 'is'} caught in the ${HAZARD_NAME[k]}`, 'heat', u); }
+      if (k === 'fire'){ hazardHurt(w, u, u.maxhp * .025 * DT); u.heat = Math.min(1.4, u.heat + .04 * DT); }
+      else if (k === 'blizzard'){ u.stam = Math.max(0, u.stam - .06 * DT); hazardHurt(w, u, u.maxhp * .012 * DT); }
+      else if (k === 'flood' && u.s.water < .4) hazardHurt(w, u, u.maxhp * .015 * DT);
+      if (w.over) return;
+    }
   }
   // the other side is a team: pressure mounts over time, and only natural rivals ever flare up
   if (w.mode === 'wild'){
@@ -622,7 +668,7 @@ function step(w){
       if (o.side === u.side && u.side === 'P' && d < 10) friends++;
     }
     let tgt = 1 - .85 * (1 - u.hp / u.maxhp) - .3 * Math.max(0, fear / my - 1);
-    if (has(u,'pack')) tgt -= .12;
+    if (has(u,'pack')){ const m = packMates(w, u); tgt += m ? Math.min(.2, .1 * m) : -.12; } // alone it's nervous; with its pack it's bold
     let fallen = 0; for (const o of units) if (o.side === u.side && o !== u && (o.state === 'dead' || o.escaped)) fallen++;
     tgt -= (u.side === 'E' ? .05 : .03) * fallen;
     if (u.side === 'E' && u.state !== 'flee') tgt += .25 * pressure(w);
@@ -725,10 +771,21 @@ function step(w){
       else { tx = u.wander.x; ty = u.wander.y; frac = u.state === 'rest' ? .12 : .25 + .35 * pressure(w); }
     }
     if (u.rider && u.state === 'guard'){ tx = u.x; ty = u.y; frac = 0; }
+    // keep out of the closing hazard: get back inside first, and never chase or wander into it (routing animals run through it)
+    if (w.zb && w.zb.p > 0 && !u.routing){
+      const z = w.zb, m = 2.5;
+      const nearEdge = u.x < z.x0 + 1 || u.x > z.x1 - 1 || u.y < z.y0 + 1 || u.y > z.y1 - 1; // in it, or about to be: step inward even mid-fight
+      if (nearEdge){ tx = clamp(u.x, z.x0 + m, z.x1 - m); ty = clamp(u.y, z.y0 + m, z.y1 - m); frac = Math.max(frac, outsideZone(w, u) ? .9 : .5); }
+      else if (tx !== null){ tx = clamp(tx, z.x0 + m, z.x1 - m); ty = clamp(ty, z.y0 + m, z.y1 - m); }
+    }
     let dvx = 0, dvy = 0;
     if (tx !== null && frac > 0){
       const dx = tx - u.x, dy = ty - u.y, m = Math.hypot(dx, dy);
-      if (m > .2){ const sp = vmax * frac * (u.stam < .2 && frac > .6 ? .6 : 1); dvx = dx/m*sp; dvy = dy/m*sp; }
+      if (m > .2){
+        const sp = vmax * frac * (u.stam < .2 && frac > .6 ? .6 : 1); let d = steerTrees(w, u, dx/m, dy/m);
+        if (w.trees.length && sp > 1) d = unstick(w, u, d);
+        dvx = d.x*sp; dvy = d.y*sp;
+      }
     }
     const acc = Math.min(1, 6 / (1 + u.s.mass / 1500) * DT);
     u.vx += (dvx - u.vx) * acc; u.vy += (dvy - u.vy) * acc;
@@ -755,8 +812,16 @@ function step(w){
     }
     for (const t of w.trees){
       const dx = a.x - t.x, dy = a.y - t.y, d = Math.hypot(dx, dy), m = t.r + a.r * .6;
-      if (d < m && d > 1e-4){ a.x = t.x + dx/d*m; a.y = t.y + dy/d*m; }
+      if (d < m && d > 1e-4){
+        a.x = t.x + dx/d*m; a.y = t.y + dy/d*m;
+        // an elephant leaning into a trunk for a second or so simply shoves the tree over
+        if (a.s.mass >= 5000 && Math.hypot(a.vx, a.vy) > 1 && (t.push = (t.push || 0) + DT) > 1.2){ t.fell = true; log(w, `${capName(a)} shoves over a tree`, 'crash', a); }
+      }
     }
+  }
+  if (w.trees.some(t => t.fell)){
+    for (const t of w.trees) if (t.fell){ (w.fallen = w.fallen || []).push({x: t.x, y: t.y, r: t.r, t: w.t}); if (w.human.onTree === t){ w.human.onTree = null; log(w, 'Your tree goes down and you scramble clear', 'danger', w.human); } }
+    w.trees = w.trees.filter(t => !t.fell);
   }
   // shake-off attempts by latched prey
   for (const u of units){
@@ -769,7 +834,12 @@ function step(w){
   for (const u of units){
     if (!active(u) || u.stun > 0 || u.atk > 0 || u.climbT > 0) continue;
     if (u.side === 'H'){
-      const a = u.latchedBy; if (a && u.atk <= 0){ u.atk = 1; applyDamage(w, u, a, 5 * (1 - a.s.armor)); }
+      const a = u.latchedBy; if (a){ u.atk = 1; applyDamage(w, u, a, 5 * (1 - a.s.armor)); continue; }
+      if (heightOf(u) > 0) continue;
+      // on foot and cornered: kick and punch at whatever is on you (it barely hurts, but it can finish something)
+      let e = null, ed = 1e9;
+      for (const o of units) if (o.side === 'E' && active(o) && o.target === u){ const d = dist(u, o); if (d <= u.r + o.r + u.s.reach && d < ed){ ed = d; e = o; } }
+      if (e){ u.atk = 1; strike(w, u, e, {}); if (w.R() < .15) log(w, `You kick and punch at ${nameOf(e)}`, 'info', u); }
       continue;
     }
     if (u.latchOn){
@@ -817,7 +887,7 @@ function step(w){
     const hz = w.cfg.horizon || MATCH_T;
     for (const u of units) if (u.side === 'E' && active(u) && u.target && u.target.side !== 'E' && u.state !== 'flee') { w.lastPress = w.t; break; }
     const penned = units.some(u => u.penned);
-    const quiet = !penned && w.t - w.lastPress >= QUIET_T && w.t >= 75;
+    const quiet = !penned && w.t - w.lastPress >= QUIET_T && w.t >= (w.zone ? ZONE_T1 : 75); // with a closing arena, only once it has fully closed
     if (w.t >= hz || threats.length === 0 || quiet){
       w.over = true;
       const why = threats.length === 0 ? 'cleared' : quiet ? 'quiet' : 'time';
@@ -827,6 +897,30 @@ function step(w){
   }
 }
 function damp(u){ u.vx *= .5; u.vy *= .5; }
+// wedged between trunks (no progress for a second while trying to move): detour sideways for a moment
+function unstick(w, u, d){
+  if (!u.prog || w.t - u.prog.t > 1){
+    if (u.prog && Math.hypot(u.x - u.prog.x, u.y - u.prog.y) < .6 && !(u.detourT > 0)){ u.detourT = 1.6; u.detourSide = -(u.detourSide || 1); }
+    u.prog = {x: u.x, y: u.y, t: w.t};
+  }
+  if (!(u.detourT > 0)) return d;
+  u.detourT -= DT;
+  const px = -d.y * u.detourSide, py = d.x * u.detourSide, x = px * .85 - d.x * .15, y = py * .85 - d.y * .15, m = Math.hypot(x, y) || 1;
+  return {x: x / m, y: y / m};
+}
+// walk around a trunk in the way instead of pushing into it
+function steerTrees(w, u, nx, ny){
+  let sx = nx, sy = ny;
+  for (const t of w.trees){
+    const ox = t.x - u.x, oy = t.y - u.y, d = Math.hypot(ox, oy), clear = t.r + u.r * .6 + .6;
+    if (d > clear + 1.5 || d < 1e-4) continue;
+    const ahead = (ox * nx + oy * ny) / d; if (ahead < .3) continue;
+    let px = -ny, py = nx; if (px * ox + py * oy > 0){ px = -px; py = -py; } // the side away from the trunk
+    const k = 1.5 * ahead * (1 - .5 * clamp((d - clear) / 1.5, 0, 1));
+    sx += px * k; sy += py * k;
+  }
+  const m = Math.hypot(sx, sy) || 1; return {x: sx / m, y: sy / m};
+}
 
 function moveHuman(w, h){
   if (h.riding){ return; }
@@ -846,6 +940,7 @@ function moveHuman(w, h){
     if (e.target === h && d < nd){ nd = d; nearest = e; }
   }
   // tree logic
+  if (h.onTree && outsideZone(w, h)){ h.onTree = null; h.safeT = 0; log(w, `You climb down to get away from the ${HAZARD_NAME[w.zone.kind]}`, 'danger', h); }
   if (h.onTree){
     let safe = true; for (const e of units) if (e.side === 'E' && active(e) && e.target === h && dist(e,h) < 18) safe = false;
     if (safe){ h.safeT = (h.safeT || 0) + DT; if (h.safeT > 5){ h.onTree = null; h.safeT = 0; log(w, 'You climb down', 'info', h); } }
@@ -853,7 +948,7 @@ function moveHuman(w, h){
     return;
   }
   if (w.trees.length && nearest && nd < 14){
-    let bt = null, bd = 1e9; for (const t of w.trees){ const d = Math.hypot(t.x-h.x, t.y-h.y); if (d < bd){ bd = d; bt = t; } }
+    let bt = null, bd = 1e9; for (const t of w.trees){ if (outsideZone(w, t)) continue; const d = Math.hypot(t.x-h.x, t.y-h.y); if (d < bd){ bd = d; bt = t; } }
     let guarded = false; for (const a of units) if (a.side === 'P' && active(a) && dist(a, h) < 6 && strength(a) > strength(nearest)*.6) guarded = true;
     if (bt && bd < 10 && !guarded){
       if (bd < bt.r + 1.6 && !h.latchedBy){ h.climbT = 1.5; h.pendingTree = bt; h.x = bt.x; h.y = bt.y + bt.r * .3; damp(h); return; }
@@ -876,10 +971,12 @@ function moveHuman(w, h){
   if (danger > 0){ const m = Math.hypot(ax, ay) || 1; const k = Math.min(2, danger * 4); dx += ax/m * k; dy += ay/m * k; }
   // avoid water (crocs) and edges
   if (w.T.water && distWater(w, h) < 6 && !onFord(w, h)) dx += h.x < (w.T.water.x0 + w.T.water.x1) / 2 ? -1.5 : 1.5;
-  if (h.x < 4) dx += 1; if (h.x > W-4) dx -= 1; if (h.y < 4) dy += 1; if (h.y > H-4) dy -= 1;
+  // stay clear of the field edges and of the closing hazard (hard push once you are in it)
+  const zb = w.zb && w.zb.p > 0 ? w.zb : {x0: 0, x1: W, y0: 0, y1: H}, out = outsideZone(w, h), ek = out ? 4 : 1;
+  if (h.x < zb.x0 + 4) dx += ek; if (h.x > zb.x1 - 4) dx -= ek; if (h.y < zb.y0 + 4) dy += ek; if (h.y > zb.y1 - 4) dy -= ek;
   const m = Math.hypot(dx, dy);
   if (m < .05){ damp(h); return; }
-  const urgent = nearest && nd < 10;
+  const urgent = (nearest && nd < 10) || out;
   setVel(w, h, dx/m, dy/m, urgent ? 1 : Math.min(.6, m));
 }
 function setVel(w, u, nx, ny, frac){
@@ -1005,7 +1102,8 @@ function evadeMove(w, u){
   if (gw){ gx /= gw; gy /= gw; const d = Math.hypot(gx - u.x, gy - u.y); if (d > 3){ dx += (gx - u.x) / d * .6; dy += (gy - u.y) / d * .6; } }
   if (danger > 0){ const m = Math.hypot(ax, ay) || 1, k = Math.min(2.5, danger * 4); dx += ax / m * k; dy += ay / m * k; }
   if (w.T.water && distWater(w, u) < 6 && !onFord(w, u)) dx += u.x < (w.T.water.x0 + w.T.water.x1) / 2 ? -1.5 : 1.5;
-  if (u.x < 5) dx += 1.2; if (u.x > W - 5) dx -= 1.2; if (u.y < 5) dy += 1.2; if (u.y > H - 5) dy -= 1.2;
+  const zb = w.zb && w.zb.p > 0 ? w.zb : {x0: 0, x1: W, y0: 0, y1: H};
+  if (u.x < zb.x0 + 5) dx += 1.2; if (u.x > zb.x1 - 5) dx -= 1.2; if (u.y < zb.y0 + 5) dy += 1.2; if (u.y > zb.y1 - 5) dy -= 1.2;
   const m = Math.hypot(dx, dy);
   if (m < .05) return {tx: u.x, ty: u.y, frac: 0};
   return {tx: u.x + dx / m * 6, ty: u.y + dy / m * 6, frac: danger > .02 ? 1 : .35};
@@ -1042,6 +1140,6 @@ function randomDraft(R, budget){
   return team;
 }
 
-const API = { ESCORT_R, POST_R, zoneFor, homeFor, placeOK, clampPlace, defaultPost, snowFactor, heatLoad, QUIET_T, STYLE, ANIMALS, HUMAN, BY_ID, TERRAINS, W, H, DT, MATCH_T, setup, step, simulate, snapshot, summarize, randomDraft, defaultPlacement, rng, hpOf, radiusOf };
+const API = { ESCORT_R, POST_R, zoneAt, ZONE_T0, ZONE_T1, HAZARD_NAME, zoneFor, homeFor, placeOK, clampPlace, defaultPost, snowFactor, heatLoad, QUIET_T, STYLE, ANIMALS, HUMAN, BY_ID, TERRAINS, W, H, DT, MATCH_T, setup, step, simulate, snapshot, summarize, randomDraft, defaultPlacement, rng, hpOf, radiusOf };
 if (typeof module !== 'undefined' && module.exports) module.exports = API; else root.Arena = API;
 })(typeof window !== 'undefined' ? window : globalThis);

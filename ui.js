@@ -440,10 +440,22 @@ function drawUnits(g, sc, w, fr, events, t, opts){
 function drawFight(){
   const w = S.world; if (!w) return;
   const cv = $('fightCanvas'); const g = cv.getContext('2d'); const sc = cv._scale;
-  g.drawImage(groundFor(S.terrain_used || w.T.id, w.trees, cv.width, cv.height, w.shade), 0, 0);
+  const standing = w.fallen ? w.trees.concat(w.fallen.filter(f => f.t > S.playT)) : w.trees; // trees an elephant shoved over stay up until they fall
+  g.drawImage(groundFor(S.terrain_used || w.T.id, standing, cv.width, cv.height, w.shade), 0, 0);
   if (w.mode === 'allout'){ g.fillStyle = C.foe; for (let i = 0; i < 6; i++) g.fillRect((A.W-1.2)*sc, (6 + i*10.8 - 2)*sc, sc*1.2, sc*4); }
+  drawHazard(g, sc, w, S.playT);
   const fr = frameAt(S.playT);
   drawUnits(g, sc, w, fr, w.events, S.playT, {});
+}
+// closing arena: tint everything outside the safe box, with a bright edge
+const HAZCOL = {fire: ['rgba(214,84,30,.38)', '#ff8a3d'], flood: ['rgba(38,104,190,.42)', '#6fb4ff'], blizzard: ['rgba(236,242,250,.5)', '#ffffff']};
+function drawHazard(g, sc, w, t){
+  const z = A.zoneAt(w, t); if (!z || z.p <= 0) return;
+  const [fill, edge] = HAZCOL[w.zone.kind], X0 = z.x0 * sc, X1 = z.x1 * sc, Y0 = z.y0 * sc, Y1 = z.y1 * sc, CW = A.W * sc, CH = A.H * sc;
+  g.save(); g.fillStyle = fill;
+  g.fillRect(0, 0, CW, Y0); g.fillRect(0, Y1, CW, CH - Y1); g.fillRect(0, Y0, X0, Y1 - Y0); g.fillRect(X1, Y0, CW - X1, Y1 - Y0);
+  g.strokeStyle = edge; g.lineWidth = Math.max(1.5, sc * .25); g.setLineDash([sc * 1.2, sc * .8]); g.strokeRect(X0, Y0, X1 - X0, Y1 - Y0);
+  g.restore();
 }
 function renderSide(){
   const w = S.world; if (!w) return;
