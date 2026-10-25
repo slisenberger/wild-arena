@@ -1,0 +1,268 @@
+<title>Wild Arena</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800;900&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: a single-column field console. Stepper on top, one working surface per step, the arena canvas is the hero once you fight. Deliberately one dark theme: dusk over a game reserve. */
+:root{
+  color-scheme: dark;
+  --bg:#0d110e; --panel:#151b16; --panel2:#1b231d; --line:#2b352d; --fg:#ece6d3; --muted:#949d8c; --dim:#626b5f;
+  --gold:#f0b429; --orange:#ec7a2c; --red:#d8473b; --slate:#8297aa;
+  --you:#4fd1bd; --foe:#ef6b4b; --bone:#d9cfb4; --water:#1f5165;
+  --display:'Big Shoulders Display', 'Arial Narrow', Impact, sans-serif;
+  --body:'Barlow', 'Segoe UI', system-ui, sans-serif;
+  --mono:'JetBrains Mono', ui-monospace, Menlo, monospace;
+  --r:10px;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{background:var(--bg);color:var(--fg)}
+body{font-family:var(--body);font-size:15px;line-height:1.45;padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));padding-block:0 40px}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible, input:focus-visible, .card:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.wrap{max-width:1080px;margin:0 auto}
+header.top{position:sticky;top:env(safe-area-inset-top, 0px);z-index:20;background:var(--bg);padding-block:12px 10px;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:10px}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top, 0px);z-index:30;background:var(--bg)}
+.brand{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.brand h1{font-family:var(--display);font-weight:900;font-size:34px;letter-spacing:.02em;margin:0;line-height:1;text-transform:uppercase}
+.brand h1 span{color:var(--gold)}
+.budget{display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:13px;font-variant-numeric:tabular-nums}
+.meter{display:flex;gap:3px}
+.meter i{display:block;width:16px;height:10px;border-radius:2px;background:var(--line)}
+.meter i.on{background:var(--you)}
+.meter i.over{background:var(--red)}
+nav.steps{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
+nav.steps button{flex:0 0 auto;border:1px solid var(--line);background:var(--panel);padding:7px 12px;border-radius:999px;font-family:var(--display);font-weight:800;font-size:15px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+nav.steps button[aria-current="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+nav.steps button:disabled{opacity:.35;cursor:not-allowed}
+main{padding-top:18px}
+section.screen{display:flex;flex-direction:column;gap:16px}
+.lede{color:var(--muted);max-width:66ch;margin:0}
+h2{font-family:var(--display);font-weight:800;font-size:24px;letter-spacing:.03em;text-transform:uppercase;margin:0;text-wrap:balance}
+h3{font-family:var(--display);font-weight:800;font-size:18px;letter-spacing:.05em;text-transform:uppercase;margin:0}
+.label{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+
+/* draft */
+.tier{display:grid;grid-template-columns:44px 1fr;gap:10px;align-items:stretch}
+.tierTag{border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:var(--display);font-weight:900;font-size:22px;color:#14100a;writing-mode:vertical-rl;transform:rotate(180deg);letter-spacing:.04em}
+.cards{display:grid;grid-template-columns:repeat(4, minmax(0,1fr));gap:10px}
+.card{position:relative;text-align:left;background:var(--panel);border:1.5px solid var(--line);border-radius:var(--r);padding:10px 10px 11px;display:flex;flex-direction:column;gap:7px;min-width:0;transition:border-color .15s, background .15s}
+.card:hover{border-color:#4a574c}
+.card.picked{border-color:var(--you);background:color-mix(in srgb, var(--you) 9%, var(--panel))}
+.card.cant{opacity:.42}
+.card .row1{display:flex;align-items:center;gap:8px;min-width:0;padding-right:18px}
+.tok{flex:0 0 auto;width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--display);font-weight:900;font-size:13px;letter-spacing:.04em;color:#11140f}
+.card .nm{font-family:var(--display);font-weight:800;font-size:17px;line-height:1.05;text-transform:uppercase;letter-spacing:.02em;min-width:0;overflow-wrap:anywhere}
+.card .meta{font-family:var(--mono);font-size:11px;color:var(--muted)}
+.bars{display:grid;grid-template-columns:52px 1fr;gap:3px 6px;align-items:center;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--dim)}
+.bar{height:5px;border-radius:3px;background:var(--line);overflow:hidden}
+.bar b{display:block;height:100%;background:var(--bone)}
+.check{position:absolute;top:8px;right:8px;width:20px;height:20px;border-radius:50%;background:var(--you);color:var(--bg);font-weight:700;font-size:12px;display:none;align-items:center;justify-content:center}
+.card.picked .check{display:flex}
+.detail{background:var(--panel2);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:16px}
+.detail .stats{display:grid;grid-template-columns:repeat(3, minmax(0,1fr));gap:8px 12px}
+.stat .v{font-family:var(--mono);font-size:15px;font-variant-numeric:tabular-nums}
+.stat .k{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.traits{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:5px}
+.teamline{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:4px 10px 4px 4px;border-radius:999px;background:var(--panel2);border:1px solid var(--line);font-size:13px}
+.chip .tok{width:26px;height:26px;font-size:9px}
+
+/* style + terrain badges */
+.styleTag{font-family:var(--display);font-weight:800;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--gold)}
+.badges{display:flex;flex-wrap:wrap;gap:4px}
+.bdg{font-size:10.5px;font-weight:600;letter-spacing:.04em;padding:2px 7px;border-radius:999px;border:1px solid}
+.bdg.good{color:#8fe3b0;border-color:#2f6b47;background:#14261b}
+.bdg.bad{color:#f3a08d;border-color:#7a3426;background:#2a1612}
+.mounts{display:flex;flex-wrap:wrap;gap:8px}
+.mounts button{display:flex;align-items:center;gap:8px;border:1.5px solid var(--line);background:var(--panel2);border-radius:999px;padding:4px 12px 4px 4px;font-size:13.5px}
+.mounts button[aria-pressed="true"]{border-color:var(--you);background:color-mix(in srgb, var(--you) 12%, var(--panel2))}
+.mounts button .tok{width:30px;height:30px}
+.mounts .foot{padding:8px 12px}
+/* arena setup */
+.opts{display:grid;grid-template-columns:repeat(4, minmax(0,1fr));gap:10px}
+.opt{text-align:left;background:var(--panel);border:1.5px solid var(--line);border-radius:var(--r);padding:12px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.opt[aria-pressed="true"]{border-color:var(--gold);background:color-mix(in srgb, var(--gold) 7%, var(--panel))}
+.opt .sw{height:44px;border-radius:6px}
+.opt p{margin:0;color:var(--muted);font-size:13.5px}
+.opts.two{grid-template-columns:repeat(2, minmax(0,1fr))}
+.toggle{display:flex;align-items:center;gap:12px;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px}
+.toggle input{width:20px;height:20px;accent-color:var(--you)}
+
+/* canvas */
+.stage{position:relative;background:#000;border-radius:var(--r);overflow:hidden;border:1px solid var(--line);touch-action:none}
+.stage canvas{display:block;width:100%;height:auto}
+.btnrow{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.btn{border:1px solid var(--line);background:var(--panel2);padding:9px 14px;border-radius:8px;font-weight:600}
+.btn.primary{background:var(--gold);color:#16110a;border-color:var(--gold);font-family:var(--display);font-weight:900;font-size:18px;letter-spacing:.06em;text-transform:uppercase;padding:9px 18px}
+.btn.on{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{border:0;background:var(--panel2);padding:8px 11px;font-family:var(--mono);font-size:12.5px}
+.seg button[aria-pressed="true"]{background:var(--fg);color:var(--bg)}
+.timeline{position:relative;height:34px}
+.timeline input{position:absolute;inset:8px 0 auto;width:100%;margin:0;accent-color:var(--gold)}
+.marks{position:absolute;left:0;right:0;top:0;height:8px}
+.marks i{position:absolute;top:0;width:2px;height:8px;border-radius:1px}
+.fightgrid{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:14px;align-items:start}
+.side{display:flex;flex-direction:column;gap:12px;min-width:0}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;min-width:0}
+.log{max-height:340px;overflow-y:auto;display:flex;flex-direction:column;gap:2px;font-size:13px}
+.log div{display:grid;grid-template-columns:44px 1fr;gap:6px;padding:3px 0;border-bottom:1px solid color-mix(in srgb, var(--line) 60%, transparent);cursor:pointer}
+.log .t{font-family:var(--mono);font-size:11.5px;color:var(--dim);padding-top:1px}
+.log .k-info{color:var(--dim)}
+.inspect .hd{display:flex;gap:10px;align-items:center}
+.gauges{display:grid;grid-template-columns:72px 1fr 38px;gap:5px 8px;align-items:center;margin-top:10px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.gauges .bar{height:7px}
+.gauges .n{font-family:var(--mono);font-size:11px;text-align:right;color:var(--fg)}
+.banner{border-radius:var(--r);padding:14px 16px;display:flex;flex-wrap:wrap;gap:8px 18px;align-items:baseline;justify-content:space-between}
+.banner.win{background:color-mix(in srgb, var(--you) 16%, var(--panel));border:1px solid var(--you)}
+.banner.lose{background:color-mix(in srgb, var(--red) 16%, var(--panel));border:1px solid var(--red)}
+.banner .big{font-family:var(--display);font-weight:900;font-size:30px;text-transform:uppercase;letter-spacing:.03em;line-height:1}
+.tblwrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{padding:6px 8px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
+th{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:600}
+td.n{font-family:var(--mono);text-align:right;font-variant-numeric:tabular-nums}
+th.n{text-align:right}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:50%}
+.progress{height:6px;border-radius:3px;background:var(--line);overflow:hidden}
+.progress b{display:block;height:100%;width:0;background:var(--gold);transition:width .1s}
+.hbar{display:flex;align-items:center;gap:6px}
+.hbar .track{flex:1;height:8px;position:relative;background:var(--line);border-radius:2px;min-width:60px}
+.hbar .track b{position:absolute;top:0;bottom:0;border-radius:2px}
+.hbar .track .zero{position:absolute;top:-2px;bottom:-2px;width:1px;background:var(--muted)}
+.notes{color:var(--muted);font-size:13px;margin:0;max-width:72ch}
+@media (max-width:820px){
+  .fightgrid{grid-template-columns:1fr}
+  .opts{grid-template-columns:repeat(2, minmax(0,1fr))}
+  .detail{grid-template-columns:1fr}
+}
+@media (max-width:560px){
+  .cards{grid-template-columns:repeat(2, minmax(0,1fr))}
+  .card .row1{flex-direction:column;align-items:flex-start;gap:6px}
+  .card .nm{font-size:16px}
+  .tier{grid-template-columns:30px 1fr;gap:8px}
+  .tierTag{font-size:17px}
+  .brand h1{font-size:28px}
+  .detail .stats{grid-template-columns:repeat(2, minmax(0,1fr))}
+  .opts.two{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion: reduce){ *{transition:none!important} }
+</style>
+
+<div class="wrap">
+<header class="top">
+  <div class="brand">
+    <h1>Wild <span>Arena</span></h1>
+    <div class="budget"><span id="spent">$0</span><span class="meter" id="meter"></span><span style="color:var(--muted)">/ $1,000</span></div>
+  </div>
+  <nav class="steps" id="steps" aria-label="Steps">
+    <button data-s="arena">1 Arena</button>
+    <button data-s="draft">2 Draft</button>
+    <button data-s="deploy">3 Deploy</button>
+    <button data-s="fight">4 Fight</button>
+    <button data-s="lab">Lab</button>
+  </nav>
+</header>
+
+<main>
+<!-- DRAFT -->
+<section class="screen" id="s-draft">
+  <div style="display:flex;flex-direction:column;gap:6px">
+    <h2>Build a team to protect you from the rest</h2>
+    <p class="lede">Spend up to $1,000. Every animal you don't pick ends up on the other side. Tap a card to draft it; the panel below shows the full stat line.</p>
+  </div>
+  <div class="teamline" id="teamline"></div>
+  <div id="tiers" style="display:flex;flex-direction:column;gap:12px"></div>
+  <div class="detail" id="detail"></div>
+  <div class="btnrow"><button class="btn primary" id="toDeployD">Set formation</button><button class="btn" id="clearTeam">Clear team</button></div>
+</section>
+
+<!-- ARENA -->
+<section class="screen" id="s-arena" hidden>
+  <h2>Pick the ground first</h2>
+  <p class="lede">The terrain decides who's strong. Pick it now and the draft will flag which animals thrive or wilt here.</p>
+  <div class="label">Terrain</div>
+  <div class="opts" id="terrainOpts"></div>
+  <div class="label">How the other side behaves</div>
+  <div class="opts two" id="modeOpts"></div>
+  <div class="btnrow"><button class="btn primary" id="toDraft">Draft your team</button></div>
+</section>
+
+<!-- DEPLOY -->
+<section class="screen" id="s-deploy" hidden>
+  <div style="display:flex;flex-direction:column;gap:6px">
+    <h2>Set your formation</h2>
+    <p class="lede">Drag anyone, including yourself, anywhere on your side of the map. Animals inside the escort ring move with you. Anything placed farther out holds that spot as a guard post and fights whatever comes within 14 m of it. On the river, swimmers can start in the water: a croc beside a ford ambushes whatever crosses.</p>
+  </div>
+  <div class="panel" style="display:flex;flex-direction:column;gap:10px"><div class="label">Ride one of your animals</div><div class="mounts" id="mountOpts"></div><p class="notes" id="mountNote"></p></div>
+  <div class="stage" id="deployStage"><canvas id="deployCanvas"></canvas></div>
+  <div class="btnrow"><button class="btn primary" id="startFight">Release the animals</button><button class="btn" id="autoForm">Auto formation</button><span class="mono" style="color:var(--muted);font-size:12px">seed <span id="seedLbl"></span></span><button class="btn" id="newSeed">New seed</button></div>
+</section>
+
+<!-- FIGHT -->
+<section class="screen" id="s-fight" hidden>
+  <div id="banner"></div>
+  <div class="fightgrid">
+    <div style="display:flex;flex-direction:column;gap:10px;min-width:0">
+      <div class="stage" id="fightStage"><canvas id="fightCanvas"></canvas></div>
+      <div class="timeline"><div class="marks" id="marks"></div><input type="range" id="scrub" min="0" max="300" step="0.1" value="0" aria-label="Battle time"></div>
+      <div class="btnrow">
+        <button class="btn" id="playBtn">Pause</button>
+        <span class="seg" id="speedSeg"><button data-v="1">1×</button><button data-v="2">2×</button><button data-v="4">4×</button><button data-v="8">8×</button><button data-v="16">16×</button></span>
+        <span class="mono" id="clock" style="font-size:14px;margin-left:auto">0:00</span>
+      </div>
+      <div class="btnrow">
+        <button class="btn" id="rematch">Rematch, new seed</button>
+        <button class="btn" id="replaySame">Replay</button>
+        <label class="mono" style="font-size:12px;color:var(--muted);display:flex;gap:6px;align-items:center"><input type="checkbox" id="intentBox" checked> intent lines</label>
+      </div>
+      <div class="legend">
+        <span><i style="background:var(--you)"></i>your team</span><span><i style="background:var(--foe)"></i>other side</span><span><i style="background:#fff"></i>you</span><span><i style="background:transparent;border:2px solid var(--orange)"></i>heat glow</span><span><i style="background:transparent;border:2px dashed var(--slate)"></i>fleeing</span><span><i style="background:var(--bone);border-radius:2px"></i>carcass</span>
+      </div>
+    </div>
+    <div class="side">
+      <div class="panel inspect" id="inspect"></div>
+      <div class="panel"><h3 style="margin-bottom:8px">Field notes</h3><div class="log" id="log"></div></div>
+    </div>
+  </div>
+  <div class="panel" id="report" hidden></div>
+</section>
+
+<!-- LAB -->
+<section class="screen" id="s-lab" hidden>
+  <div style="display:flex;flex-direction:column;gap:6px">
+    <h2>Simulation lab</h2>
+    <p class="lede">One battle is a story. Hundreds are evidence. Run your draft across every terrain, or let random drafts price each animal by how many seconds of life it actually buys you.</p>
+  </div>
+  <div class="panel" style="display:flex;flex-direction:column;gap:12px">
+    <h3>Your draft, 200 battles</h3>
+    <p class="notes" id="labDraftDesc"></p>
+    <div class="btnrow"><button class="btn primary" id="runDraft">Run 200</button></div>
+    <div class="progress"><b id="pDraft"></b></div>
+    <div id="draftOut"></div>
+  </div>
+  <div class="panel" style="display:flex;flex-direction:column;gap:12px">
+    <h3>Price the board</h3>
+    <p class="notes">Plays 480 battles with random affordable drafts (rotating terrain, current rules, riding the tallest animal drafted). For each animal it compares average time alive when it's on your team against when it isn't. That gap counts the animal twice: once for helping you, once for not being against you. The ± is one standard error.</p>
+    <div class="btnrow"><button class="btn primary" id="runPrice">Price it</button></div>
+    <div class="progress"><b id="pPrice"></b></div>
+    <div id="priceOut"></div>
+  </div>
+</section>
+</main>
+</div>
+
+<script>
+const FACES = /*FACES*/;
+</script>
+<script>
+/*SIM*/
+</script>
+<script>
+/*UI*/
+</script>
