@@ -5,7 +5,7 @@
 //   score = map + Σ mine_i·a_i + Σ theirs_i·b_i     (least squares, light ridge)
 // swing_i = a_i − b_i. Prices are set ∝ swing, rounded to $100, minimum $100.
 // Usage: node price_board.js <config.json> <out.json>
-//   config: {prices:{id:$}, K, B, T (optional), tol, rareP, N, seed, meanPrice}
+//   config: {prices:{id:$}, K, B, T (optional), tol, rareP, N, seed, meanPrice | secPer100}
 const { Worker, isMainThread, parentPort, workerData } = require('worker_threads');
 const SIM = process.env.SIM || './sim.js';
 const A = require(SIM);
@@ -70,7 +70,9 @@ Promise.all([...Array(NW).keys()].map(wi => new Promise(res => { const w = new W
   const meanPrice = C.meanPrice || mean(common.map(o => P[o.id]));
   const pos = common.map(o => Math.max(0, swing(o.k)));
   const lam = mean(pos) / meanPrice;
-  const prop = {}; IDS.forEach((id, k) => { prop[id] = Math.max(100, Math.round(Math.max(0, swing(k)) / lam / 100) * 100); });
+  // either keep the mean price (default) or use a fixed exchange rate: secPer100 seconds of swing = $100
+  const perDollar = C.secPer100 ? C.secPer100 / 100 : lam;
+  const prop = {}; IDS.forEach((id, k) => { prop[id] = Math.max(100, Math.round(Math.max(0, swing(k)) / perDollar / 100) * 100); });
   console.log('animal        price  swing s ± SE   per $100 |  mine   theirs |  sav  riv  for  tun (swing per map) | proposed');
   IDS.map((id, k) => ({id, k, sw: swing(k)})).sort((a, b) => b.sw - a.sw).forEach(({id, k, sw}) => {
     const pm = perMap.map(f => (f.beta[4 + k] - f.beta[4 + n + k]).toFixed(0).padStart(4)).join(' ');

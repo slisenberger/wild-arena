@@ -39,6 +39,12 @@ const t0 = Date.now();
     const ele = bs.filter(x => x.B.board.includes('elephant')), noEle = bs.filter(x => !x.B.board.includes('elephant'));
     console.log(`\nboard of ${K} (other side = the other ${K}-minus-picks): best-team win% — min ${wins[0].toFixed(0)}, p25 ${wins[Math.floor(wins.length * .25)].toFixed(0)}, median ${wins[wins.length >> 1].toFixed(0)}, max ${wins[wins.length - 1].toFixed(0)}; boards with a ≥50% team: ${wins.filter(x => x >= 50).length}/${wins.length}; teams/board ~${Math.round(mean(bs.map(x => x.B.teams.length)))}`);
     console.log(`  elephant on board: median best ${ele.length ? ele.map(x => x.best.win).sort((a, b) => a - b)[ele.length >> 1].toFixed(0) : '-'}% (${ele.length})   no elephant on board: median best ${noEle.length ? noEle.map(x => x.best.win).sort((a, b) => a - b)[noEle.length >> 1].toFixed(0) : '-'}% (${noEle.length})`);
-    bs.slice(0, 6).forEach(x => console.log(`  ${x.B.tr.padEnd(8)} board ${x.B.board.map(id => A.BY_ID[id].abbr).join(' ')}  → best ${x.best.c.t.map(id => A.BY_ID[id].abbr).join('+')} ${x.best.win.toFixed(0)}%`));
+    // what a typical player gets: the median full-spend team's screen score, and the share of teams that won a screen run
+    const typ = bs.map(x => { const bi = boards.indexOf(x.B), sc = x.B.teams.map((_, ti) => mean(M[bi + '|' + ti])).sort((a, b) => a - b); return {med: sc[sc.length >> 1], anyWin: x.B.teams.filter((_, ti) => M[bi + '|' + ti].some(v => v >= 300)).length / x.B.teams.length}; });
+    const se = w => Math.sqrt(w * (100 - w) / NV);
+    const champs = new Set(bs.map(x => x.best.c.t.slice().sort().join('+'))), eleBest = bs.filter(x => x.best.c.t.includes('elephant')).length;
+    console.log(`  typical full-spend team: median score ${typ.map(t => t.med).sort((a, b) => a - b)[typ.length >> 1].toFixed(0)} s; teams with at least one screen win ${(100 * mean(typ.map(t => t.anyWin))).toFixed(0)}%; mean team size ${mean(bs.flatMap(x => x.B.teams.map(t => t.length))).toFixed(1)}`);
+    console.log(`  ${champs.size} distinct best teams over ${bs.length} boards; elephant in ${eleBest} of them; best-team SE ±${se(wins[wins.length >> 1]).toFixed(0)} pts at the median`);
+    bs.slice(0, 8).forEach(x => console.log(`  ${x.B.tr.padEnd(8)} board ${x.B.board.map(id => A.BY_ID[id].abbr).join(' ')}  → best ${x.best.c.t.map(id => A.BY_ID[id].abbr).join('+')} ${x.best.win.toFixed(0)}%`));
   }
 })();
