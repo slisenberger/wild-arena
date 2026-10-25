@@ -114,7 +114,7 @@ Pick for new roles. Top three for design value: **honey badger, moose, Komodo dr
 - [ ] Anaconda — river ambusher that constricts instead of biting.
 - [ ] Golden / harpy eagle — attacks from the air; height matters in reverse.
 - [ ] Kangaroo — kickboxer, holds a fighter at arm's length.
-- [ ] **Giant kangaroo (owner, not urgent):** rare Ice Age megafauna like the mammoth — *Procoptodon goliah*,
+- [x] **Giant kangaroo (built Oct 2026; portrait pending, Commons rate-limited):** rare Ice Age megafauna like the mammoth — *Procoptodon goliah*,
   ~230 kg, ~2 m tall, likely walked more than hopped; braced on its tail for a two-footed kick, long-clawed arms.
   Kit idea: kickboxer that holds attackers at leg's length (keep-away gait that actually fights back).
 - [ ] Wolverine — the tundra's honey badger.

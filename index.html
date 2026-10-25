@@ -343,6 +343,8 @@ const ANIMALS = [
   traits:['Cover-to-cover ambusher (x1.7, x2 in forest); climbs after you','Gives way to lions, tigers and hyenas','Deadliest of the big cats when wounded or cornered']},
  {id:'boar', name:'Wild Boar', abbr:'BOA', price:100, mass:150, spd:13, swim:1.5, dmg:75, cd:.8, armor:.3, reach:1.6, stam:20, heat:.6, cold:.85, water:.4, aggr:.7, flee:.2, corner:1.6, pred:false, charge:true, vision:20, tags:['standsGround','slash'],
   traits:['A big male: tusks slash at thigh height and leave bleeding wounds','A shield of thick skin and gristle over the shoulders','Hard to put down, and fights hardest when cornered']},
+ {id:'giantkangaroo', name:'Giant Kangaroo', abbr:'GKA', price:100, mass:230, spd:9, swim:1.5, dmg:120, cd:1.0, armor:.15, reach:2.1, stam:15, heat:1, cold:.5, water:.2, aggr:.4, flee:.35, corner:1.5, pred:false, charge:false, vision:30, rare:true, tags:['boxer'],
+  traits:['Rare: Procoptodon, the Ice Age short-faced kangaroo (230 kg, 2 m tall)','Braces on its tail for a two-footed kick that knocks attackers back','Holds a fight at leg\'s length; too heavy to hop, it walks']},
 ];
 // Fighting styles: how each animal moves and attacks. strikeH = highest point it can hit (m); mountH = rider height if it can carry you (0 = can't).
 const STYLE = {
@@ -367,6 +369,7 @@ const STYLE = {
  moose:{gait:'charge', strikeH:2.4, mountH:2.0, overshoot:3, turn:1.0, wheel:.8, style:'Stomper', how:'Short charge, then rears up and rains front-hoof strikes.'},
  ostrich:{gait:'keepaway', strikeH:1.3, mountH:1.4, style:'Kickboxer', how:'Outruns trouble; if cornered, kicks forward and down with a dagger claw.'},
  honeybadger:{gait:'lumber', strikeH:.8, mountH:0, style:'Pest', how:'Trundles straight at anything, latches onto ankles and will not quit.'},
+ giantkangaroo:{gait:'keepaway', strikeH:2, mountH:0, style:'Kickboxer', how:'Keeps attackers at leg\'s length, then leans back on its tail and kicks with both feet.'},
  mammoth:{gait:'lumber', strikeH:5, mountH:3.2, style:'Ice-age bulldozer', how:'Wades in steadily; every strike is a tusk-and-trunk sweep that also hits everything else within reach.'},
  blackbear:{gait:'lumber', strikeH:2.2, mountH:0, style:'Bluffer', how:'Huffs, swats and bluff-charges; brawls for real only when it has to.'},
  leopard:{gait:'stalk', strikeH:3.5, mountH:0, pounce:7, style:'Stalker', how:'Creeps in close under cover, then pounces from 7 m for the throat.'},
@@ -952,6 +955,7 @@ function strike(w, a, t, opts){
   dmg = Math.max(1, dmg);
   applyDamage(w, a, t, dmg);
   // secondary effects
+  if (has(a,'boxer') && t.state !== 'dead' && t.s.mass < 3 * a.s.mass && !t.latchedBy){ const d = dist(a, t) || 1; t.x += (t.x - a.x) / d * 1.5; t.y += (t.y - a.y) / d * 1.5; t.stun = Math.max(t.stun, .4); sig(w, a, 'two-footed kick'); } // braced on its tail
   if (has(a,'slash') && t.state !== 'dead'){ sig(w, a, 'bleeding slash'); t.bleed = Math.max(t.bleed || 0, dmg * .12); t.bleedT = 5; t.bleedBy = a; } // tusk wounds keep bleeding
   if (has(a,'hamstring') && t.s.mass < 2500){ t.slow = Math.max(t.slow * (t.slowT > 0 ? 1 : 0), t.s.mass > 3 * a.s.mass ? .5 : .4); t.slowT = 6; sig(w, a, 'hamstring'); } // leg bites cripple big prey
   // knockback & stun from momentum
@@ -1672,7 +1676,7 @@ function evadeMove(w, u){
 function defaultMount(team){ let b = null, h = 2.99; for (const id of team){ const m = BY_ID[id].mountH; if (m > h){ h = m; b = id; } } return b; }
 // Measured value of each pick (price_abs.js, seconds of survival): mine = with you vs left off the board,
 // theirs = against you vs off the board (negative = it hurts you). Written by apply_values.js; shown on the cards.
-const MEASURED = {/*MEASURED*/elephant:{mine:165,theirs:-37}, rhino:{mine:73,theirs:-29}, hippo:{mine:81,theirs:-25}, giraffe:{mine:40,theirs:-9}, polar:{mine:31,theirs:-16}, croc:{mine:38,theirs:-8}, buffalo:{mine:58,theirs:-19}, bison:{mine:45,theirs:-34}, grizzly:{mine:27,theirs:-15}, tiger:{mine:12,theirs:-18}, lion:{mine:20,theirs:-11}, gorilla:{mine:8,theirs:-4}, jaguar:{mine:19,theirs:-2}, wolf:{mine:7,theirs:-3}, cougar:{mine:19,theirs:-2}, hyena:{mine:8,theirs:-11}, blackrhino:{mine:47,theirs:-29}, bull:{mine:24,theirs:-16}, moose:{mine:36,theirs:-20}, ostrich:{mine:7,theirs:1}, honeybadger:{mine:-2,theirs:-5}, triceratops:{mine:150,theirs:-45}, mammoth:{mine:75,theirs:-28}, blackbear:{mine:6,theirs:-9}, leopard:{mine:4,theirs:-8}, boar:{mine:6,theirs:-15}, wolfpack:{mine:22,theirs:-13}, wolfpack6:{mine:29,theirs:-14}, hyenapack:{mine:27,theirs:-16}, lionpack:{mine:22,theirs:-13}, buffaloherd:{mine:151,theirs:-42}, bisonherd:{mine:139,theirs:-50}};
+const MEASURED = {/*MEASURED*/elephant:{mine:165,theirs:-37}, rhino:{mine:73,theirs:-29}, hippo:{mine:81,theirs:-25}, giraffe:{mine:40,theirs:-9}, polar:{mine:31,theirs:-16}, croc:{mine:38,theirs:-8}, buffalo:{mine:58,theirs:-19}, bison:{mine:45,theirs:-34}, grizzly:{mine:27,theirs:-15}, tiger:{mine:12,theirs:-18}, lion:{mine:20,theirs:-11}, gorilla:{mine:8,theirs:-4}, jaguar:{mine:19,theirs:-2}, wolf:{mine:7,theirs:-3}, cougar:{mine:19,theirs:-2}, hyena:{mine:8,theirs:-11}, blackrhino:{mine:47,theirs:-29}, bull:{mine:24,theirs:-16}, moose:{mine:36,theirs:-20}, ostrich:{mine:7,theirs:1}, honeybadger:{mine:-2,theirs:-5}, triceratops:{mine:150,theirs:-45}, mammoth:{mine:75,theirs:-28}, blackbear:{mine:6,theirs:-9}, leopard:{mine:4,theirs:-8}, boar:{mine:6,theirs:-15}, wolfpack:{mine:22,theirs:-13}, wolfpack6:{mine:29,theirs:-14}, hyenapack:{mine:27,theirs:-16}, lionpack:{mine:22,theirs:-13}, buffaloherd:{mine:151,theirs:-42}, bisonherd:{mine:139,theirs:-50}, giantkangaroo:{mine:12,theirs:-6}};
 // ---------- board rules ----------
 // Each game deals a board of RULES.board animals from the roster (a rare animal turns up with probability rareP).
 // You spend up to RULES.budget on the board; every board animal you don't pick is on the other side.
