@@ -811,8 +811,10 @@ function allyTarget(w, u){
     if (has(u,'waterbound') && w.wet && distWater(w, e) > 10) continue;
     const dh = dist(e, anchor), dm = dist(u, e);
     if (dh > leash && !(u.target === e && dh < leash + 8) && u.grudge !== e) continue;
-    let intent = e.target === H ? 1 : (e.target && e.target.side === 'P') ? .5 : .25;
-    if (u.post) intent = Math.max(intent, .7);
+    // bodyguards deal with what is coming at your side; something minding its own business is left alone unless it gets close
+    const coming = e.target && e.target.side !== 'E';
+    let intent = e.target === H ? 1 : coming ? .5 : dh < 10 ? .25 : .04;
+    if (u.post && (coming || dh < 8)) intent = Math.max(intent, .7);
     if (e.state === 'feed') intent = .04;
     if (e.state === 'flee' || e.heatstroke) intent = .02;
     if (e.sated && e.target !== H) intent *= .3;

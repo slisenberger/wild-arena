@@ -32,7 +32,11 @@ count as 5:00). Live site: GitHub Pages serves `index.html` from `main`.
 - `board.js [boards] [screenSeeds] [verifySeeds] [sizes] [budget] [total]` — board validation: deals boards with
   the game's `dealBoard` (env `PRICES=` candidate prices, `RAREP=`), screens every full-spend team on each
   board, re-runs the best 3 on fresh seeds, reports how winnable boards are.
-- `price_board.js <config.json> <out.json>` — board-mode pricing: random boards + player-like random teams, one
+- `price_abs.js [N] [out.json] [ids]` — **the pricing measurement to use.** Controlled experiment per catalog
+  item: the same random base boards, 3-animal base teams and seeds with the item absent, on your side, on
+  theirs; swing = mine − theirs ± paired SE (~4 min for all items at N=240). `price_scheme.js <abs out> <s per
+  $100> <giant cap> <out>` turns it into prices ($100 steps, min $100, giants capped) and a board total.
+- `price_board.js <config.json> <out.json>` — (superseded: biased) board-mode regression pricing: random boards + player-like random teams, one
   fight each; least-squares fit of each animal's swing value (seconds gained by moving it from their side to
   yours), proposed prices ∝ swing ($100 steps, min $100). Note: the older whole-roster tools (`quick.js`,
   `camp.js`, `budget.js`, `tourney.js`) predate the board model and now fight all 22 animals.
@@ -143,6 +147,17 @@ round. Report ± standard errors.
 - The "they gave up" ending is honest: with it switched off, 97%+ of would-be quiet wins still reach 5:00.
 - The real issue is the other side stalling: 67% of 5:00 results are "gave up"; strong teams settle the
   fight in ~1.5–2 min, then ~6 enemies loiter targetless. Fix ideas in BACKLOG.md §2 (before pricing).
+
+## Pricing findings (Oct 2026)
+- The regression in `price_board.js` is biased in board mode: with budget-fill teams, a cheap animal left on
+  their side mostly means you bought big animals, so cheap animals looked worth −10 to −43 s. Controlled
+  measurement (`price_abs.js`) shows every animal is worth something: elephant 190 s, triceratops 172,
+  mammoth/rhino/hippo ~108, black rhino/bison 83, moose/buffalo ~68, polar 59, bull 57, hyena clan 54,
+  croc 46, lion coalition 44, tiger/grizzly 42, giraffe 36, … leopard/cougar 10, honey badger 8, lone wolf 2.
+- Owner rule: the elephant must stay affordable (strictly proportional pricing would put it at ~$1,900), so
+  giants are capped (`price_scheme.js`).
+- Guards no longer attack enemies that are minding their own business far from you (they used to rank a
+  peaceful elephant as a top threat and provoke it).
 
 ## Open threads (full list in BACKLOG.md)
 1. Test $1,300 with scheme C prices (aim: top teams 75–85% wins, per-map champions preserved).
