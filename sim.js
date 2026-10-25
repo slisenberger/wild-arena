@@ -29,7 +29,7 @@ const ANIMALS = [
   traits:['Injures more Yellowstone visitors than any other animal','Tail up, mock charge, then the real thing; spins on a dime','Huge stamina; at home in snow']},
  {id:'grizzly', name:'Grizzly Bear', abbr:'GRZ', bluffP:.5, price:200, mass:320, spd:15, dmg:125, cd:.9, armor:.35, reach:2, stam:15, heat:.65, cold:.95, water:.3, swim:1.8, aggr:.6, flee:.25, corner:1.3, pred:true, charge:false, vision:30, hpMul:1.2, tags:['scavenger','bluff'], prey:{human:.5}, rivals:{polar:1.3, wolf:1.3, cougar:1.4},
   traits:['Very hard to kill (+20% durability)','Charges at 56 km/h, often a bluff; if it does not stop, it mauls','Takes kills from cougars and wolves']},
- {id:'tiger', name:'Bengal Tiger', abbr:'TIG', latchMax:4, price:100, mass:220, spd:17, dmg:125, cd:.9, armor:.1, reach:2, stam:6, heat:.75, cold:.65, water:.5, swim:2, aggr:.7, flee:.3, corner:1.3, pred:true, latch:true, charge:false, vision:30, tags:['catSense','ambush'], rivals:{leopard:1.6, cougar:1.6, jaguar:1.4}, prey:{human:1.4},
+ {id:'tiger', name:'Bengal Tiger', abbr:'TIG', latchMax:4, price:200, mass:220, spd:17, dmg:125, cd:.9, armor:.1, reach:2, stam:6, heat:.75, cold:.65, water:.5, swim:2, aggr:.7, flee:.3, corner:1.3, pred:true, latch:true, charge:false, vision:30, tags:['catSense','ambush'], rivals:{leopard:1.6, cougar:1.6, jaguar:1.4}, prey:{human:1.4},
   traits:['Throat hold: latches onto prey up to 2.5x its mass','Ambush first strike (x1.7, x2 in forest)','Can leap onto an elephant (3.6 m)']},
  {id:'lion', name:'African Lion', abbr:'LIO', latchMax:3, price:100, mass:190, spd:20, dmg:105, cd:.9, armor:.15, reach:2, stam:5, heat:.95, cold:.55, water:-.3, swim:1.2, aggr:.65, flee:.35, corner:1.3, pred:true, latch:true, charge:false, vision:32, tags:['catSense','mane','pack'], prey:{human:1.1}, rivals:{hyena:2.2, leopard:1.6, cougar:1.5},
   traits:['Fastest sprint here (74 km/h in GPS-collar studies): rushes in and leaps the last 5 m','Pride animal: nervous alone; two males together hold their nerve and share the target','Kills hyenas on sight, and its mane is its best defense at the throat']},
@@ -102,7 +102,7 @@ const STYLE = {
 };
 ANIMALS.forEach(a => Object.assign(a, STYLE[a.id]));
 // Pack items: the same species, but one pick brings several. A board deals a species solo or as a pack, never both.
-for (const [id, n, groupName, price, suffix, dealWeight, rare] of [['wolf', 4, 'Wolf pack', 100, null, 3], ['wolf', 6, 'Great wolf pack', 200, 'pack6', .3, true], ['hyena', 4, 'Hyena clan', 200], ['lion', 2, 'Lion coalition', 100], ['buffalo', 3, 'Buffalo herd', 700, 'herd'], ['bison', 3, 'Bison herd', 700, 'herd']])
+for (const [id, n, groupName, price, suffix, dealWeight, rare] of [['wolf', 4, 'Wolf pack', 100, null, 3], ['wolf', 6, 'Great wolf pack', 200, 'pack6', .3, true], ['hyena', 4, 'Hyena clan', 200], ['lion', 2, 'Lion coalition', 200], ['buffalo', 3, 'Buffalo herd', 700, 'herd'], ['bison', 3, 'Bison herd', 700, 'herd']])
   ANIMALS.push(Object.assign({}, ANIMALS.find(a => a.id === id), Object.assign({id: id + (suffix || 'pack'), species: id, group: n, groupName, price, dealWeight: dealWeight || 1}, rare ? {rare: true, traits: ['Rare: six wolves hunting as one', 'They circle, test and hamstring until the biggest prey goes down', 'Endless stamina; nervous only if the pack breaks up']} : {})));
 const HUMAN = {id:'human', name:'You', abbr:'YOU', price:0, mass:75, spd:6.5, dmg:6, cd:1, armor:0, reach:1.2, stam:8, heat:1, cold:.6, water:-.5, aggr:0, flee:0, corner:1, pred:false, charge:false, vision:35, swim:1, strikeH:1.8, mountH:0, gait:'human', climb:true, tags:[]};
 const BY_ID = {}; ANIMALS.forEach(a => BY_ID[a.id] = a); BY_ID.human = HUMAN;
@@ -576,14 +576,14 @@ function allyTarget(w, u){
     if (e.state !== 'flee' && !e.heatstroke) intent = Math.max(intent, .3 * dr); // bored guards go looking for trouble
     let threat = intent * strength(e) / (1 + dh / 10);
     const rawRatio = packStrength(w, u) / strength(e);
-    if (rawRatio < .35 && dh > 6 && u.grudge !== e && !has(u,'guardian') && !has(u,'fearless') && !(u.s.pred && u.s.latch && locked(e) && e.s.mass < 3000)) continue; // small guards don't pick fights with giants (a pack counts as one)
+    if (rawRatio < .35 && dh > 6 && u.grudge !== e && !has(u,'guardian') && !has(u,'fearless') ) continue; // small guards don't pick fights with giants (a pack counts as one)
     const ratio = clamp(rawRatio, .25, 2.5);
     let sc = threat * Math.sqrt(ratio) / (1 + dm / 15);
     if (has(u,'guardian') && e.target === H) sc *= 2;
     // a big cat on guard picks fights it can win: other predators, and things its size or smaller, above all
     // whatever is coming for you; a healthy tonne-plus herbivore is someone else's job
     if (u.s.pred && u.s.latch){ sc *= clamp(my / strength(e), .35, 2); if (e.s.pred) sc *= 1.5; if (e.target === H) sc *= 1.3;
-      if (!e.s.pred && locked(e)) sc *= 2.5; } // a big herbivore locked in a fight with one of ours (or you): hit it from behind, the way lions take buffalo
+      if (!e.s.pred && e.s.mass > 3 * u.s.mass && e.target !== H) sc *= .15; } // a big herbivore locked in a fight with one of ours (or you): hit it from behind, the way lions take buffalo
     if (u.s.rivals && u.s.rivals[sp(e.s)]) sc *= Math.sqrt(u.s.rivals[sp(e.s)]);
     if (yieldsTo(w, u, e)) sc *= .3;
     if (has(u,'kicker') && !has(u,'boxer') && !(dm < 6 || u.grudge === e)) sc *= .1; // a kangaroo on guard boxes whatever it's set on; it just doesn't hunt you on the other side
@@ -1459,7 +1459,7 @@ function evadeMove(w, u){
 function defaultMount(team){ let b = null, h = 2.99; for (const id of team){ const m = BY_ID[id].mountH; if (m > h){ h = m; b = id; } } return b; }
 // Measured value of each pick (price_abs.js, seconds of survival): mine = with you vs left off the board,
 // theirs = against you vs off the board (negative = it hurts you). Written by apply_values.js; shown on the cards.
-const MEASURED = {/*MEASURED*/elephant:{mine:135,theirs:-26}, rhino:{mine:46,theirs:-37}, hippo:{mine:39,theirs:-30}, giraffe:{mine:20,theirs:-16}, polar:{mine:21,theirs:-19}, croc:{mine:26,theirs:-21}, buffalo:{mine:33,theirs:-19}, bison:{mine:42,theirs:-26}, grizzly:{mine:25,theirs:-10}, tiger:{mine:9,theirs:-24}, lion:{mine:7,theirs:-10}, gorilla:{mine:11,theirs:-9}, jaguar:{mine:2,theirs:-12}, wolf:{mine:2,theirs:-6}, cougar:{mine:0,theirs:-1}, hyena:{mine:0,theirs:2}, blackrhino:{mine:43,theirs:-20}, bull:{mine:27,theirs:-7}, moose:{mine:24,theirs:-17}, ostrich:{mine:7,theirs:-7}, honeybadger:{mine:-1,theirs:-5}, triceratops:{mine:127,theirs:-34}, mammoth:{mine:66,theirs:-31}, blackbear:{mine:7,theirs:-5}, leopard:{mine:4,theirs:-1}, boar:{mine:3,theirs:-11}, giantkangaroo:{mine:10,theirs:-10}, smilodon:{mine:14,theirs:-12}, wolfpack:{mine:15,theirs:-4}, wolfpack6:{mine:31,theirs:-11}, hyenapack:{mine:30,theirs:-13}, lionpack:{mine:17,theirs:-14}, buffaloherd:{mine:125,theirs:-32}, bisonherd:{mine:131,theirs:-33}};
+const MEASURED = {/*MEASURED*/elephant:{mine:135,theirs:-26}, rhino:{mine:46,theirs:-37}, hippo:{mine:39,theirs:-30}, giraffe:{mine:20,theirs:-16}, polar:{mine:21,theirs:-19}, croc:{mine:26,theirs:-21}, buffalo:{mine:33,theirs:-19}, bison:{mine:42,theirs:-26}, grizzly:{mine:25,theirs:-10}, tiger:{mine:11,theirs:-23}, lion:{mine:14,theirs:0}, gorilla:{mine:11,theirs:-9}, jaguar:{mine:-2,theirs:-14}, wolf:{mine:2,theirs:-6}, cougar:{mine:-1,theirs:0}, hyena:{mine:0,theirs:2}, blackrhino:{mine:43,theirs:-20}, bull:{mine:27,theirs:-7}, moose:{mine:24,theirs:-17}, ostrich:{mine:7,theirs:-7}, honeybadger:{mine:-1,theirs:-5}, triceratops:{mine:127,theirs:-34}, mammoth:{mine:66,theirs:-31}, blackbear:{mine:7,theirs:-5}, leopard:{mine:8,theirs:1}, boar:{mine:3,theirs:-11}, giantkangaroo:{mine:10,theirs:-10}, smilodon:{mine:17,theirs:0}, wolfpack:{mine:15,theirs:-4}, wolfpack6:{mine:31,theirs:-11}, hyenapack:{mine:30,theirs:-13}, lionpack:{mine:25,theirs:-14}, buffaloherd:{mine:125,theirs:-32}, bisonherd:{mine:131,theirs:-33}};
 // ---------- board rules ----------
 // Each game deals a board of RULES.board animals from the roster (a rare animal turns up with probability rareP).
 // You spend up to RULES.budget on the board; every board animal you don't pick is on the other side.
