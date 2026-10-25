@@ -212,6 +212,9 @@ Pick for new roles. Top three for design value: **honey badger, moose, Komodo dr
 - [ ] Per-map score-attack leaderboards; shareable seed + team links.
 
 ## 9. Learned AI (ambition)
+- [ ] **Long-term architecture (owner, Oct 2026):** per-archetype policy nets with two rewards: goal (win the fight)
+  and style (grade against the animal's intended behaviour from `sig`/audit telemetry, as a constraint). Plan in
+  `policy/README.md` (Milestone 3). Replaces piecemeal heuristics like the battle drive and contextual targets.
 - [ ] **Policy nets.** The sim is pure, deterministic and fast (~40 fights/s on 4 cores in Node), so it can
   serve as an RL environment. Uses, roughly in order of payoff:
   0. *Predator target selection (owner's pick, Oct 2026):* the cleanest first problem — one decision (whom to

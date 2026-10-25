@@ -197,3 +197,18 @@ them onto it sooner; not measured directly).
   moved by ≤3 points either way, within noise). The one hint is "+2 on isHuman" (uniform human focus): on the validation
   set it shortened your survival by 10.9 ± 4.6 s (win % −2.8 ± 1.9), but it fails the cougar gate (on you +14 pts) and
   was not confirmed on fresh fights.
+
+## Milestone 3 plan (owner, Oct 2026): per-archetype policies with two rewards
+- **Actions:** one small policy per archetype (stalker, sprinter, pack harrier, charger, lumberer, keep-away kicker,
+  water ambusher) choosing a movement intent every ~0.5 s: commit, wait for an opening, flank or circle, get into
+  position, disengage. The engine keeps doing the low-level steering.
+- **Reward 1, the goal:** the team outcome (theirs: time-to-kill-you plus damage; yours: your survival time),
+  with a small idle penalty.
+- **Reward 2, style:** a grade against the animal's intended behaviour, built from the `sig` counters and
+  `audit.js` state shares. Examples: stalk-then-pounce share, sprint-then-leap rate, rhino charge and overshoot,
+  wolf dart-in-and-back-out rhythm, kicker fighting distance; plus realism gates ("a stalker never runs a long
+  chase"). Score it against today's heuristic profile so the starting point passes.
+- **Combine:** treat style as a constraint (Lagrangian: maximise the goal subject to style ≥ threshold), not as a
+  fixed weighted sum, so neither reward can be gamed by collapsing onto the other.
+- **Train:** ES on paired seeds, about 200 fights per candidate; per-archetype nets start at zero (= the heuristic) via
+  the skip parameterisation. Validate on fresh fights at 2 SE.
