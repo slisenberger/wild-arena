@@ -148,6 +148,14 @@ round. Report ± standard errors.
 - The real issue is the other side stalling: 67% of 5:00 results are "gave up"; strong teams settle the
   fight in ~1.5–2 min, then ~6 enemies loiter targetless. Fix ideas in BACKLOG.md §2 (before pricing).
 
+## Learned predator targeting (policy/, milestone 1 done Oct 2026)
+- Opt-in hook: `cfg.policy = weights` (net picks enemy-predator targets) or `{teacher:true}` (heuristic through
+  the hook); without it the engine is byte-identical. Require `policy/policy.js` to load the chooser.
+- 61-feature options (none / feed / each candidate), shared MLP 61→32→1, argmax. Behavior-cloned from the heuristic:
+  99.0% held-out agreement; 400 paired fights match within noise. `policy/README.md` has the milestone-2 plan
+  (evolution strategies + realism penalty; needs ~200 fights per candidate; overnight-scale compute).
+- `predCandidates` in sim.js mirrors `predatorTarget`'s eligibility filters: change both together.
+
 ## Pricing findings (Oct 2026)
 - The regression in `price_board.js` is biased in board mode: with budget-fill teams, a cheap animal left on
   their side mostly means you bought big animals, so cheap animals looked worth −10 to −43 s. Controlled
