@@ -116,6 +116,62 @@ const radiusOf = m => 0.18 * Math.cbrt(m) + 0.9;
 const hpOf = s => Math.round(22 * Math.pow(s.mass, 0.6) * (s.hpMul || 1));
 const has = (u, t) => u.s.tags.includes(t);
 
+// ---------- map variants ("freshness") ----------
+// Each map varies a little from game to game, drawn from its own rng stream so the fight's w.R sequence is untouched.
+// A variant holds the world's water bodies: band = the river (x0, x1, fords), ponds = ellipses {x, y, rx, ry, cold}.
+const HOME_PT = {x: 22, y: 36};
+function baseVariant(tid){
+  const T = TERRAINS[tid] || TERRAINS.savanna;
+  return { terrain: T.id, on: false, band: T.water ? {x0: T.water.x0, x1: T.water.x1, fords: T.water.fords.map(f => f.slice())} : null,
+    ponds: [], clearing: null, trees: T.trees || 0, shade: T.shade || 0, snow: 1, hasWater: !!T.water, features: [], note: null, key: T.id + ':base' };
+}
+const pondK = (p, x, y) => Math.hypot((x - p.x) / p.rx, (y - p.y) / p.ry);
+function mkPond(R, tid, kind, xr, yr, rxr, ryr, cold){
+  // keep it clear of where you start and off the edges
+  for (let i = 0; i < 40; i++){
+    const p = {kind, x: xr[0] + R() * (xr[1] - xr[0]), y: yr[0] + R() * (yr[1] - yr[0]), rx: rxr[0] + R() * (rxr[1] - rxr[0]), ry: ryr[0] + R() * (ryr[1] - ryr[0]), cold: !!cold};
+    const k = pondK(p, HOME_PT.x, HOME_PT.y), d = Math.hypot(HOME_PT.x - p.x, HOME_PT.y - p.y) * (1 - 1 / Math.max(k, 1e-6));
+    if (d >= 10 && p.y - p.ry > 4 && p.y + p.ry < H - 4) return p;
+  }
+  return null;
+}
+function mapVariant(tid, seed){
+  const v = baseVariant(tid);
+  const R = rng(((seed || 1) ^ 0x9e3779b9) >>> 0);
+  v.on = true; const notes = [];
+  if (v.terrain === 'savanna'){
+    v.shade = 5 + Math.floor(R() * 3); // 5-7 acacias
+    if (R() < .45){ const p = mkPond(R, tid, 'waterhole', [42, 56], [16, 50], [4.5, 6.5], [3.2, 4.6], false); if (p){ v.ponds.push(p); v.features.push('waterhole'); notes.push('A waterhole lies near the middle of the savanna.'); } }
+  } else if (v.terrain === 'river'){
+    const c = 52 + (R() - .5) * 3, wd = 8.5 + R() * 3; // river width 8.5-11.5 m around the usual 10
+    v.band.x0 = +(c - wd / 2).toFixed(2); v.band.x1 = +(c + wd / 2).toFixed(2);
+    const fa = 13.5 + (R() - .5) * 6, wa = 7 + R() * 3, fb = 51.5 + (R() - .5) * 6, wb = 7 + R() * 3;
+    v.band.fords = [[fa - wa / 2, fa + wa / 2], [fb - wb / 2, fb + wb / 2]].map(f => f.map(n => +n.toFixed(2)));
+    const third = R() < .35, fc = 32.5 + (R() - .5) * 6, wc = 4.5 + R() * 2;
+    if (third){ v.band.fords.splice(1, 0, [+(fc - wc / 2).toFixed(2), +(fc + wc / 2).toFixed(2)]); v.features.push('third ford'); notes.push('The water is low: a third, narrow ford has opened mid-river.'); }
+    if (wd > 10.8) notes.push('The river runs wide today.'); else if (wd < 9.2) notes.push('The river runs narrow today.');
+  } else if (v.terrain === 'forest'){
+    v.trees = 22 + Math.floor(R() * 17); // 22-38 trees
+    if (v.trees >= 34) notes.push('The forest is thick here.'); else if (v.trees <= 26) notes.push('Open woodland: the trees are thinner here.');
+    if (R() < .4){ v.clearing = {x: 36 + R() * 28, y: 18 + R() * 30, r: 8 + R() * 4}; v.features.push('clearing'); notes.push('There is a clearing in the trees.'); }
+    if (R() < .3){ const p = mkPond(R, tid, 'pool', [32, 68], [12, 54], [3.8, 5.5], [3, 4.4], false); if (p){ v.ponds.push(p); v.features.push('pool'); notes.push('A forest pool lies among the trees.'); } }
+  } else if (v.terrain === 'tundra'){
+    const sr = R(); v.snow = sr < .25 ? 1.2 : sr < .5 ? .75 : 1;
+    if (v.snow > 1){ v.features.push('deep snow'); notes.push('The snow is deep today.'); } else if (v.snow < 1){ v.features.push('light snow'); notes.push('The snow is shallow and wind-packed.'); }
+    if (R() < .45){ const p = mkPond(R, tid, 'lake', [42, 62], [14, 52], [6.5, 9.5], [4.5, 6.5], true); if (p){ v.ponds.push(p); v.features.push('frozen lake'); notes.push('A half-frozen lake: open water so cold it saps the strength of anything that swims in it.'); } }
+  }
+  v.hasWater = !!v.band || v.ponds.length > 0;
+  v.note = notes.length ? notes.join(' ') : null;
+  v.key = v.terrain + ':' + (seed || 1) + ':' + JSON.stringify([v.band, v.ponds, v.clearing, v.trees, v.shade, v.snow]);
+  return v;
+}
+function variantFor(cfg){
+  if (cfg.variant && typeof cfg.variant === 'object') return cfg.variant;
+  const tid = (TERRAINS[cfg.terrain] || TERRAINS.savanna).id;
+  if (cfg.variant === false) return baseVariant(tid);
+  return mapVariant(tid, cfg.mapSeed != null ? cfg.mapSeed : (cfg.seed || 1));
+}
+
 function mkUnit(s, side, x, y, id){
   const hp = hpOf(s);
   return { id, s, side, x, y, vx:0, vy:0, hp, maxhp:hp, r:radiusOf(s.mass), stam:1, heat:0, morale:1, state:'idle',
@@ -130,27 +186,34 @@ function setup(cfg){
   // cfg: {team:[ids], placements:{id:{dx,dy}}, terrain, mode:'wild'|'allout', ride:bool, seed, board:[ids] (optional: only these animals are in the game)}
   const R = rng(cfg.seed || 1);
   const T = TERRAINS[cfg.terrain] || TERRAINS.savanna;
+  const V = variantFor(cfg);
   const w = { t:0, lastPress:0, T, mode:cfg.mode || 'wild', units:[], carcasses:[], trees:[], events:[], R, over:false, result:null, cfg, nid:0, frames:null };
+  // the world's water bodies: the river band (river map) and any ponds this game's variant adds
+  w.variant = V; w.band = V.band; w.ponds = V.ponds; w.wet = !!(V.band || V.ponds.length); w.coldWater = V.ponds.some(p => p.cold); w.snowDepth = V.snow;
   const human = mkUnit(HUMAN, 'H', 22, 36, w.nid++); human.atk = 0; w.units.push(human); w.human = human;
   w.shade = [];
   { const hp = homeFor(T.id); human.x = hp.x; human.y = hp.y; }
-  if (cfg.human){ const p = clampPlace(T.id, HUMAN, cfg.human.x, cfg.human.y); human.x = p.x; human.y = p.y; }
+  if (cfg.human){ const p = clampPlace(T.id, HUMAN, cfg.human.x, cfg.human.y, V); human.x = p.x; human.y = p.y; }
   human.home = {x: human.x, y: human.y};
+  // nothing grows in a pond or a clearing
+  const open = (x, y, m) => (V.clearing && Math.hypot(x - V.clearing.x, y - V.clearing.y) < V.clearing.r) || V.ponds.some(p => pondDist(p, x, y) < m);
   // trees
-  if (T.trees){
+  if (V.trees){
     let tries = 0;
-    while (w.trees.length < T.trees && tries++ < 500){
+    while (w.trees.length < V.trees && tries++ < 500){
       const t = {x:6 + R()*(W-12), y:6 + R()*(H-12), r:1 + R()*1.2};
+      if (V.on && open(t.x, t.y, t.r + 1.5)) continue;
       if (Math.hypot(t.x-human.x, t.y-human.y) < 7 && Math.hypot(t.x-human.x, t.y-human.y) > 4.5 && !w.trees.some(o=>Math.hypot(o.x-human.x,o.y-human.y)<7)) { w.trees.push(t); continue; }
       if (w.trees.some(o => Math.hypot(o.x-t.x, o.y-t.y) < 7)) continue;
       if (Math.hypot(t.x-human.x, t.y-human.y) < 5) continue;
       w.trees.push(t);
     }
   }
-  if (T.shade){
+  if (V.shade){
     let tries = 0;
-    while (w.shade.length < T.shade && tries++ < 300){
+    while (w.shade.length < V.shade && tries++ < 300){
       const t = {x:8 + R()*(W-16), y:8 + R()*(H-16), r:3.6 + R()*1.4};
+      if (V.on && open(t.x, t.y, t.r + 1)) continue;
       if (w.shade.some(o => Math.hypot(o.x-t.x, o.y-t.y) < 16)) continue;
       if (Math.hypot(t.x-human.x, t.y-human.y) < 9) continue;
       w.shade.push(t);
@@ -161,8 +224,8 @@ function setup(cfg){
   team.forEach((aid, i) => {
     const s = BY_ID[aid];
     let p = cfg.placements && cfg.placements[aid];
-    if (!p){ const dp = defaultPost(T.id, aid); p = dp ? {dx: dp.x - human.x, dy: dp.y - human.y} : defaultPlacement(team, aid, i); }
-    const pos = clampPlace(T.id, s, human.x + p.dx, human.y + p.dy);
+    if (!p){ const dp = defaultPost(T.id, aid, V); p = dp ? {dx: dp.x - human.x, dy: dp.y - human.y} : defaultPlacement(team, aid, i); }
+    const pos = clampPlace(T.id, s, human.x + p.dx, human.y + p.dy, V);
     const u = mkUnit(s, 'P', pos.x, pos.y, w.nid++);
     u.homeDx = pos.x - human.x; u.homeDy = pos.y - human.y; u.agit = .5;
     if (Math.hypot(u.homeDx, u.homeDy) > ESCORT_R && aid !== mountId) u.post = {x: pos.x, y: pos.y};
@@ -170,7 +233,7 @@ function setup(cfg){
     if (aid === mountId && s.mountH > 0){ u.x = human.x; u.y = human.y; u.homeDx = 0; u.homeDy = 0; u.post = null; u.rider = human; human.riding = u; w.mount = u; }
     // a group item (wolf pack, hyena clan, lion pride) brings its packmates, placed around the leader
     for (let k = 1; k < groupSize(cfg, s); k++){
-      const a = k * 2.4, q = clampPlace(T.id, s, pos.x + Math.cos(a) * 2.2, pos.y + Math.sin(a) * 2.2), m = mkUnit(s, 'P', q.x, q.y, w.nid++);
+      const a = k * 2.4, q = clampPlace(T.id, s, pos.x + Math.cos(a) * 2.2, pos.y + Math.sin(a) * 2.2, V), m = mkUnit(s, 'P', q.x, q.y, w.nid++);
       m.homeDx = q.x - human.x; m.homeDy = q.y - human.y; m.agit = .5; if (u.post) m.post = {x: q.x, y: q.y};
       w.units.push(m);
     }
@@ -182,11 +245,19 @@ function setup(cfg){
     let x, y, ok = false, tries = 0;
     while (!ok && tries++ < 300){
       x = (w.mode === 'allout' ? 68 : 50) + R()*(w.mode === 'allout' ? 28 : 44); y = 5 + R()*(H-10);
-      if (T.water){
-        if (s.water >= .9){ x = T.water.x0 + 2 + R() * (T.water.x1 - T.water.x0 - 4); if (inFord(w, y)) continue; }
-        else { x = T.water.x1 + 5 + R() * (W - T.water.x1 - 9); }
+      const B = w.band;
+      if (B){
+        if (s.water >= .9){ x = B.x0 + 2 + R() * (B.x1 - B.x0 - 4); if (inFord(w, y)) continue; }
+        else { x = B.x1 + 5 + R() * (W - B.x1 - 9); }
+      } else if (s.water >= .9 && V.ponds.length){
+        // swimmers start in a pond on the other side's half when there is one
+        const ps = V.ponds.filter(p => p.x + p.rx * .5 > 48);
+        if (ps.length){
+          const p = ps[Math.floor(R() * ps.length)]; x = Math.max(p.x, 48); y = p.y;
+          for (let j = 0; j < 12; j++){ const a = R() * Math.PI * 2, k = Math.sqrt(R()) * .7, px = p.x + Math.cos(a) * p.rx * k; if (px >= 48){ x = px; y = p.y + Math.sin(a) * p.ry * k; break; } }
+        }
       }
-      if (s.id === 'croc' && !T.water) { x = 60 + R()*30; }
+      if (s.id === 'croc' && !B && !(V.ponds.length && pondAt(w, x, y))) { x = 60 + R()*30; }
       ok = !w.units.some(u => Math.hypot(u.x-x, u.y-y) < (tries < 200 ? 9 : 5)) && !w.trees.some(t => Math.hypot(t.x-x, t.y-y) < t.r + 3);
     }
     for (let k = 0; k < groupSize(cfg, s); k++){ // packmates arrive together
@@ -206,6 +277,7 @@ function setup(cfg){
   // closing arena: a themed hazard (fire / flood / blizzard) closes in from the edges toward a point near mid-field
   if (T.hazard && w.mode === 'wild' && cfg.hazard !== false) w.zone = {kind: T.hazard, cx: W / 2 + (R() - .5) * 16, cy: H / 2 + (R() - .5) * 12};
   w.zb = zoneAt(w, 0);
+  if (V.on && V.note) log(w, V.note, 'info');
   return w;
 }
 
@@ -213,27 +285,46 @@ const ESCORT_R = 9, POST_R = 14;
 // how many animals one pick brings (pack items bring their whole group); sp() = the species behind an item
 function groupSize(cfg, s){ return s.group || 1; }
 const sp = s => s.species || s.id;
-function zoneFor(tid){ const T = TERRAINS[tid] || TERRAINS.savanna; return {x0: 2, x1: T.water ? T.water.x1 : 45, y0: 2, y1: H - 2}; }
+// v (optional, all four helpers): this game's map variant from mapVariant(); omitted = the base map
+const varOf = (tid, v) => v || baseVariant((TERRAINS[tid] || TERRAINS.savanna).id);
+function zoneFor(tid, v){ v = varOf(tid, v); return {x0: 2, x1: v.band ? v.band.x1 : 45, y0: 2, y1: H - 2}; }
 function homeFor(tid){ const T = TERRAINS[tid] || TERRAINS.savanna; return T.water ? {x: 16, y: 33} : {x: 22, y: 36}; }
 // where an animal may stand at deployment: inside your zone; only swimmers may start in deep water
-function placeOK(tid, s, x, y){
-  const T = TERRAINS[tid] || TERRAINS.savanna, z = zoneFor(tid);
+function placeOK(tid, s, x, y, v){
+  v = varOf(tid, v); const z = zoneFor(tid, v), B = v.band;
   if (x < z.x0 || x > z.x1 || y < z.y0 || y > z.y1) return false;
-  if (T.water && x >= T.water.x0 && x <= T.water.x1 && !T.water.fords.some(([a, b]) => y >= a && y <= b)) return s.water >= .8;
+  if (B && x >= B.x0 && x <= B.x1 && !B.fords.some(([a, b]) => y >= a && y <= b)) return s.water >= .8;
+  if (v.ponds.some(p => pondK(p, x, y) <= 1)) return s.water >= .8;
   return true;
 }
-function clampPlace(tid, s, x, y){
-  const z = zoneFor(tid); x = clamp(x, z.x0, z.x1); y = clamp(y, z.y0, z.y1);
-  const T = TERRAINS[tid] || TERRAINS.savanna;
-  if (!placeOK(tid, s, x, y) && T.water) x = T.water.x0 - 1.5;
+function clampPlace(tid, s, x, y, v){
+  v = varOf(tid, v);
+  const z = zoneFor(tid, v); x = clamp(x, z.x0, z.x1); y = clamp(y, z.y0, z.y1);
+  if (!placeOK(tid, s, x, y, v)){
+    const p = v.ponds.find(p => pondK(p, x, y) <= 1);
+    if (p){ // step out onto the bank
+      let dx = x - p.x, dy = y - p.y, k = pondK(p, x, y); if (k < 1e-3){ dx = -p.rx; dy = 0; k = 1; }
+      const f = (1 + 1.6 / Math.min(p.rx, p.ry)) / k; x = clamp(p.x + dx * f, z.x0, z.x1); y = clamp(p.y + dy * f, z.y0, z.y1);
+      if (pondK(p, x, y) <= 1){ x = p.x - p.rx - 1.6; y = clamp(y, z.y0, z.y1); }
+    } else if (v.band) x = v.band.x0 - 1.5;
+  }
   return {x, y};
 }
-// swimmers start in the river by default on the river map: croc lurking beside a ford, hippo holding the deep water
-function defaultPost(tid, aid){
-  const T = TERRAINS[tid] || TERRAINS.savanna; if (!T.water) return null;
-  const W0 = T.water, mid = (W0.x0 + W0.x1) / 2;
-  if (aid === 'croc') return {x: W0.x0 + 2.5, y: W0.fords[0][1] + 3};
-  if (aid === 'hippo') return {x: mid, y: (W0.fords[0][1] + W0.fords[1][0]) / 2};
+// swimmers start in the water by default: on the river, croc lurking beside a ford and hippo holding the deep water;
+// on other maps, in a pond that reaches into your side
+function defaultPost(tid, aid, v){
+  v = varOf(tid, v);
+  if (aid !== 'croc' && aid !== 'hippo') return null;
+  if (v.band){
+    const W0 = v.band, mid = (W0.x0 + W0.x1) / 2;
+    if (aid === 'croc') return {x: W0.x0 + 2.5, y: W0.fords[0][1] + 3};
+    return {x: mid, y: (W0.fords[0][1] + W0.fords[1][0]) / 2};
+  }
+  const z = zoneFor(tid, v);
+  for (const p of v.ponds){
+    const q = {x: p.x - p.rx * (aid === 'croc' ? .6 : .3), y: p.y};
+    if (q.x <= z.x1) return q;
+  }
   return null;
 }
 function defaultPlacement(team, aid, i){
@@ -274,12 +365,40 @@ function packMate(u, o){ return o !== u && o.side === u.side && has(o, 'pack') &
 function packMates(w, u){ let n = 0; for (const o of w.units) if (packMate(u, o) && dist(u, o) < 15) n++; return n; }
 function strength(u){ return Math.sqrt(Math.max(1,u.hp) * (u.s.dmg / u.s.cd)); }
 function pressure(w){ return w.mode === 'wild' ? Math.min(1, w.t / 150) : 1; }
-function inFord(w, y){ return w.T.water.fords.some(([a, b]) => y >= a && y <= b); }
-function inBand(w, x){ return x >= w.T.water.x0 && x <= w.T.water.x1; }
-function inWater(w, u){ return !!(w.T.water && inBand(w, u.x) && !inFord(w, u.y)); }
-function onFord(w, u){ return !!(w.T.water && inBand(w, u.x) && inFord(w, u.y)); }
-function distWater(w, u){ if (!w.T.water) return 1e9; const W0 = w.T.water; return u.x < W0.x0 ? W0.x0 - u.x : u.x > W0.x1 ? u.x - W0.x1 : (inFord(w, u.y) ? 1 : 0); }
-function waterPoint(w, u){ const W0 = w.T.water; let y = u.y; for (const [a, b] of W0.fords) if (y >= a - 2 && y <= b + 2) y = (y - a < b - y) ? a - 4 : b + 4; return {x: (W0.x0 + W0.x1) / 2, y: clamp(y, 3, H - 3)}; }
+// water: w.band is the river (vertical band x0..x1 with shallow fords), w.ponds are ellipses; w.wet = any water at all
+function inFord(w, y){ return w.band.fords.some(([a, b]) => y >= a && y <= b); }
+function inBand(w, x){ return x >= w.band.x0 && x <= w.band.x1; }
+function pondDist(p, x, y){ const k = pondK(p, x, y); return k <= 1 ? 0 : Math.hypot(x - p.x, y - p.y) * (1 - 1 / k); }
+function pondAt(w, x, y){ for (const p of w.ponds) if (pondK(p, x, y) <= 1) return p; return null; }
+function nearestPond(w, u){ let b = null, bd = 1e9; for (const p of w.ponds){ const d = pondDist(p, u.x, u.y); if (d < bd){ bd = d; b = p; } } return b; }
+function inWater(w, u){ return !!(w.band && inBand(w, u.x) && !inFord(w, u.y)) || (w.ponds.length > 0 && !!pondAt(w, u.x, u.y)); }
+function inColdWater(w, u){ if (!w.coldWater) return false; const p = pondAt(w, u.x, u.y); return !!(p && p.cold); }
+function onFord(w, u){ return !!(w.band && inBand(w, u.x) && inFord(w, u.y)); }
+function bandDist(w, u){ const W0 = w.band; return u.x < W0.x0 ? W0.x0 - u.x : u.x > W0.x1 ? u.x - W0.x1 : (inFord(w, u.y) ? 1 : 0); }
+function distWater(w, u){ let d = w.band ? bandDist(w, u) : 1e9; for (const p of w.ponds) d = Math.min(d, pondDist(p, u.x, u.y)); return d; }
+// the nearest deep water to head for (to cool off, or for a waterbound animal); {band:true} = the river, keep your own y line
+function waterPoint(w, u, toward){
+  const p = nearestPond(w, u);
+  if (w.band && !(p && pondDist(p, u.x, u.y) < bandDist(w, u))){ const W0 = w.band; let y = u.y; for (const [a, b] of W0.fords) if (y >= a - 2 && y <= b + 2) y = (y - a < b - y) ? a - 4 : b + 4; return {x: (W0.x0 + W0.x1) / 2, y: clamp(y, 3, H - 3), band: true}; }
+  // a pond: the point well inside it nearest to where we want to be
+  const o = toward || u, dx = o.x - p.x, dy = o.y - p.y, k = pondK(p, o.x, o.y);
+  const f = k > .55 ? .55 / k : 1;
+  return {x: p.x + dx * f, y: p.y + dy * f};
+}
+// keep a point within m metres of the water nearest to u (waterbound animals)
+function nearWaterPt(w, u, pt, m){
+  if (w.band){ pt.x = clamp(pt.x, w.band.x0 - m, w.band.x1 + m); return pt; }
+  const p = nearestPond(w, u); if (!p || pondDist(p, pt.x, pt.y) <= m) return pt;
+  const dx = pt.x - p.x, dy = pt.y - p.y, k = pondK(p, pt.x, pt.y), f = (1 + m / Math.max(4, Math.min(p.rx, p.ry)) * .8) / k;
+  return {x: p.x + dx * f, y: p.y + dy * f};
+}
+// a nudge away from nearby deep water (you and evasive mounts keep clear of crocs); null when not near any
+function awayWater(w, u){
+  if (!w.wet || distWater(w, u) >= 6 || onFord(w, u)) return null;
+  if (w.band && !(w.ponds.length && pondDist(nearestPond(w, u), u.x, u.y) < bandDist(w, u))) return {x: u.x < (w.band.x0 + w.band.x1) / 2 ? -1.5 : 1.5, y: 0};
+  const p = nearestPond(w, u), dx = u.x - p.x, dy = u.y - p.y, m = Math.hypot(dx, dy) || 1;
+  return {x: dx / m * 1.5, y: dy / m * 1.5};
+}
 function inShade(w, u){ return w.shade.some(t => Math.hypot(t.x - u.x, t.y - u.y) < t.r); }
 function snowFactor(s){ if (['polar','wolf','cougar','moose'].includes(sp(s))) return 1; if (s.id === 'mammoth') return .75; if (s.id === 'bison') return .92; return clamp(1.05 - .25 * Math.log10(Math.max(50, s.mass) / 50), .5, .95); }
 function heatLoad(s){ return Math.pow(s.mass / 400, .3) / Math.pow(s.heat, 2.2); }
@@ -337,7 +456,7 @@ function predatorTarget(w, u){
     if (!hostile(w, u, t)) continue;
     if (!canSee(w, u, t) && !(t.side === 'H' && dist(u, t) < 70)) continue;
     const d = dist(u, t);
-    if (has(u,'waterbound') && w.T.water && distWater(w, t) > 5) continue; // a croc takes prey at the water's edge, never on open ground
+    if (has(u,'waterbound') && w.wet && distWater(w, t) > 5) continue; // a croc takes prey at the water's edge, never on open ground
     const ts = strength(t);
     let vuln = Math.min(4, Math.pow(my / ts, 1.2));
     if (has(u,'fearless')) vuln = Math.max(vuln, .6); // a honey badger takes on anything
@@ -415,7 +534,7 @@ function allyTarget(w, u){
   for (const e of w.units){
     if (e.side !== 'E' || !active(e)) continue;
     if (!teamSees(w, e) && !(u.post && dist(u, e) < 10)) continue;
-    if (has(u,'waterbound') && w.T.water && distWater(w, e) > 10) continue;
+    if (has(u,'waterbound') && w.wet && distWater(w, e) > 10) continue;
     const dh = dist(e, anchor), dm = dist(u, e);
     if (dh > leash && !(u.target === e && dh < leash + 8) && u.grudge !== e) continue;
     let intent = e.target === H ? 1 : (e.target && e.target.side === 'P') ? .5 : .25;
@@ -610,7 +729,7 @@ function envFactor(w, u){
   if (w.T.cold) f *= 1 - (1 - u.s.cold) * .55;
   const wet = inWater(w, u);
   if (wet && u.s.water >= .8) f *= 1.2;
-  if (!wet && u.s.water >= .9 && w.T.water) f *= .85;
+  if (!wet && u.s.water >= .9 && w.band) f *= .85;
   return f;
 }
 function speedOf(w, u){
@@ -618,11 +737,14 @@ function speedOf(w, u){
   if (u.stam < .15) v *= .45; // exhausted
   v *= envFactor(w, u) / (inWater(w, u) && u.s.water >= .8 ? 1.2 : 1); // the swimmer damage bonus is not a speed bonus
   const wet = inWater(w, u);
-  if (wet) v *= (u.s.swim || 1) / u.s.spd; // swimming speed, with the same fatigue/heat/slow modifiers
+  if (wet){
+    v *= (u.s.swim || 1) / u.s.spd; // swimming speed, with the same fatigue/heat/slow modifiers
+    if (w.coldWater && inColdWater(w, u)) v *= .6 + .4 * u.s.cold; // near-freezing water stiffens anything not built for it
+  }
   else if (onFord(w, u) && u.s.water < .8) v *= .8;
-  if (has(u,'waterbound') && !(w.T.water && distWater(w, u) < 4)) v *= .7; // a croc on land is slow and tires fast (its bite is as strong as ever)
+  if (has(u,'waterbound') && !(w.wet && distWater(w, u) < 4)) v *= .7; // a croc on land is slow and tires fast (its bite is as strong as ever)
   if (w.T.id === 'forest' && u.s.mass > 800) v *= .78;
-  if (w.T.snow) v *= snowFactor(u.s);
+  if (w.T.snow){ const sf = snowFactor(u.s); v *= w.snowDepth === 1 ? sf : Math.max(.35, 1 - (1 - sf) * w.snowDepth); }
   if (u.slowT > 0) v *= (1 - u.slow);
   v *= 1 - .3 * wound(u); // badly hurt animals slow down
   if (w.zone && outsideZone(w, u) && w.zone.kind !== 'fire') v *= w.zone.kind === 'blizzard' ? .6 : (u.s.water >= .8 ? 1 : .5);
@@ -707,6 +829,7 @@ function step(w){
     const chill = w.T.cold ? 1 - u.s.cold : 0;
     if (sp > .55) u.stam = Math.max(0, u.stam - DT / u.s.stam * sp * (1 + 1.5 * chill));
     else u.stam = Math.min(1, u.stam + (DT / (u.s.stam * 1.5) * .9 + DT * .02) * (1 - .6 * chill));
+    if (w.coldWater && !u.riding && inColdWater(w, u)) u.stam = Math.max(0, u.stam - .05 * DT * (1.15 - u.s.cold)); // swimming in near-freezing water saps strength fast
   }
   // morale
   for (const u of units){
@@ -790,7 +913,9 @@ function step(w){
       m = Math.hypot(ax, ay) || 1; u.fleeDir = {x: ax/m, y: ay/m};
       tx = u.x + ax/m*10; ty = u.y + ay/m*10; frac = 1;
     } else if (u.state === 'cool'){
-      if (w.T.water){ const p = waterPoint(w, u); tx = p.x; ty = p.y; }
+      let toWater = w.wet;
+      if (toWater && w.shade.length){ let sd = 1e9; for (const t of w.shade) sd = Math.min(sd, Math.hypot(t.x-u.x, t.y-u.y)); toWater = distWater(w, u) < sd + 10; } // a waterhole beats shade unless it is much farther
+      if (toWater){ const p = waterPoint(w, u); tx = p.x; ty = p.y; }
       else if (w.shade.length){ let b = w.shade[0], bd = 1e9; for (const t of w.shade){ const d = Math.hypot(t.x-u.x, t.y-u.y); if (d < bd){ bd = d; b = t; } } tx = b.x; ty = b.y; if (bd < b.r * .6) frac = 0; }
       else { tx = u.side === 'P' ? 4 : W - 4; ty = u.y; }
       frac = .35;
@@ -806,7 +931,7 @@ function step(w){
       } else { tx = c.x; ty = c.y; frac = .7; }
     } else if (u.state === 'engage' && u.target){
       const t = u.target, d = dist(u, t), touch = u.r + t.r + u.s.reach * .6;
-      if (has(u,'waterbound') && w.T.water && distWater(w, t) > 5){ const p = waterPoint(w, u); tx = p.x; ty = t.y; frac = .3; }
+      if (has(u,'waterbound') && w.wet && distWater(w, t) > 5){ const p = waterPoint(w, u, t); tx = p.x; ty = p.band ? t.y : p.y; frac = .3; }
       else { const m = gaitMove(w, u, t, d, touch, vmax); if (m === null) continue; tx = m.tx; ty = m.ty; frac = m.frac; }
     } else if (u.state === 'carry' || u.state === 'withdraw'){
       const m = evadeMove(w, u); tx = m.tx; ty = m.ty; frac = m.frac;
@@ -822,8 +947,8 @@ function step(w){
       if (!u.wander || R() < .01){
         const H0 = w.human, lean = u.sated ? 0 : Math.min(1, (u.s.pred ? .5 : u.agit * .6) + pressure(w) * .6);
         const bx = u.x + (H0.x - u.x) * lean * .5, by = u.y + (H0.y - u.y) * lean * .5;
-        u.wander = {x: clamp(bx + (R()-.5)*20, 5, W-5), y: clamp(by + (R()-.5)*20, 5, H-5)}; if (has(u,'waterbound') && w.T.water) u.wander.x = clamp(u.wander.x, w.T.water.x0 + 1, w.T.water.x1 - 1); } // lurk submerged
-      if (has(u,'waterbound') && !w.T.water){ frac = 0; }
+        u.wander = {x: clamp(bx + (R()-.5)*20, 5, W-5), y: clamp(by + (R()-.5)*20, 5, H-5)}; if (has(u,'waterbound') && w.wet) u.wander = nearWaterPt(w, u, u.wander, -1); } // lurk submerged
+      if (has(u,'waterbound') && !w.wet){ frac = 0; }
       else { tx = u.wander.x; ty = u.wander.y; frac = u.state === 'rest' ? .12 : .25 + .35 * pressure(w); }
     }
     if (u.rider && u.state === 'guard'){ tx = u.x; ty = u.y; frac = 0; }
@@ -1027,7 +1152,7 @@ function moveHuman(w, h){
   if (gw > 0){ gx /= gw; gy /= gw; const d = Math.hypot(gx-h.x, gy-h.y); if (d > 2){ dx += (gx-h.x)/d * Math.min(1, d/8); dy += (gy-h.y)/d * Math.min(1, d/8); } }
   if (danger > 0){ const m = Math.hypot(ax, ay) || 1; const k = Math.min(2, danger * 4); dx += ax/m * k; dy += ay/m * k; }
   // avoid water (crocs) and edges
-  if (w.T.water && distWater(w, h) < 6 && !onFord(w, h)) dx += h.x < (w.T.water.x0 + w.T.water.x1) / 2 ? -1.5 : 1.5;
+  { const aw = awayWater(w, h); if (aw){ dx += aw.x; if (aw.y) dy += aw.y; } }
   // stay clear of the field edges and of the closing hazard (hard push once you are in it)
   const zb = w.zb && w.zb.p > 0 ? w.zb : {x0: 0, x1: W, y0: 0, y1: H}, out = outsideZone(w, h), ek = out ? 4 : 1;
   if (h.x < zb.x0 + 4) dx += ek; if (h.x > zb.x1 - 4) dx -= ek; if (h.y < zb.y0 + 4) dy += ek; if (h.y > zb.y1 - 4) dy -= ek;
@@ -1071,7 +1196,7 @@ function gaitMove(w, u, t, d, touch, vmax){
     return go(1);
   }
   if (g === 'lunge'){
-    const nearW = w.T.water && distWater(w, u) < 3, L = nearW ? 7 : 3.5, V = nearW ? 12 : 7;
+    const nearW = w.wet && distWater(w, u) < 3, L = nearW ? 7 : 3.5, V = nearW ? 12 : 7;
     if (d <= L && d > touch * .7 && u.pounceCd <= 0 && reachable(u, t)){
       const dur = clamp(d / V, .2, .55), m = d || 1;
       u.mv = {k:'lunge', vx:(t.x - u.x) / m * V, vy:(t.y - u.y) / m * V, t:dur, tgt:t};
@@ -1158,7 +1283,7 @@ function evadeMove(w, u){
   let dx = 0, dy = 0;
   if (gw){ gx /= gw; gy /= gw; const d = Math.hypot(gx - u.x, gy - u.y); if (d > 3){ dx += (gx - u.x) / d * .6; dy += (gy - u.y) / d * .6; } }
   if (danger > 0){ const m = Math.hypot(ax, ay) || 1, k = Math.min(2.5, danger * 4); dx += ax / m * k; dy += ay / m * k; }
-  if (w.T.water && distWater(w, u) < 6 && !onFord(w, u)) dx += u.x < (w.T.water.x0 + w.T.water.x1) / 2 ? -1.5 : 1.5;
+  { const aw = awayWater(w, u); if (aw){ dx += aw.x; if (aw.y) dy += aw.y; } }
   const zb = w.zb && w.zb.p > 0 ? w.zb : {x0: 0, x1: W, y0: 0, y1: H};
   if (u.x < zb.x0 + 5) dx += 1.2; if (u.x > zb.x1 - 5) dx -= 1.2; if (u.y < zb.y0 + 5) dy += 1.2; if (u.y > zb.y1 - 5) dy -= 1.2;
   const m = Math.hypot(dx, dy);
@@ -1222,6 +1347,6 @@ function randomDraft(R, budget){
   return team;
 }
 
-const API = { RULES, dealBoard, ESCORT_R, POST_R, zoneAt, ZONE_T0, ZONE_T1, HAZARD_NAME, zoneFor, homeFor, placeOK, clampPlace, defaultPost, snowFactor, heatLoad, QUIET_T, STYLE, ANIMALS, HUMAN, BY_ID, TERRAINS, W, H, DT, MATCH_T, setup, step, simulate, snapshot, summarize, randomDraft, defaultPlacement, rng, hpOf, radiusOf };
+const API = { RULES, dealBoard, mapVariant, baseVariant, ESCORT_R, POST_R, zoneAt, ZONE_T0, ZONE_T1, HAZARD_NAME, zoneFor, homeFor, placeOK, clampPlace, defaultPost, snowFactor, heatLoad, QUIET_T, STYLE, ANIMALS, HUMAN, BY_ID, TERRAINS, W, H, DT, MATCH_T, setup, step, simulate, snapshot, summarize, randomDraft, defaultPlacement, rng, hpOf, radiusOf };
 if (typeof module !== 'undefined' && module.exports) module.exports = API; else root.Arena = API;
 })(typeof window !== 'undefined' ? window : globalThis);
