@@ -25,6 +25,9 @@ count as 5:00). Live site: GitHub Pages serves `index.html` from `main`.
   - `camp.js [teams] [seeds] [gridSeeds]` — camping/anti-pattern probe (4 workers, ~3 min at 200 4 12):
     how fights end, how long the other side presses, tree/ride time, enemies loitering without a target;
     then an exploit search over your start position, with the best spot re-checked on 40 fresh seeds.
+- `board.js [boards] [screenSeeds] [verifySeeds] [sizes] [budget]` — random-board probe: deals random boards of K
+  animals (other side = board animals you don't pick, `cfg.board`), screens every affordable team, re-runs the
+  best 3 on fresh seeds, reports how winnable boards are by K.
 - `BACKLOG.md` — every idea captured so far (realism, anti-camping, pricing, herds, maps, animals,
   mechanics, replayability) with status and suggested order. Add new ideas there.
 

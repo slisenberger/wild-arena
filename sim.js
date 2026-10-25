@@ -93,7 +93,7 @@ function mkUnit(s, side, x, y, id){
 
 // ---------- world setup ----------
 function setup(cfg){
-  // cfg: {team:[ids], placements:{id:{dx,dy}}, terrain, mode:'wild'|'allout', ride:bool, seed}
+  // cfg: {team:[ids], placements:{id:{dx,dy}}, terrain, mode:'wild'|'allout', ride:bool, seed, board:[ids] (optional: only these animals are in the game)}
   const R = rng(cfg.seed || 1);
   const T = TERRAINS[cfg.terrain] || TERRAINS.savanna;
   const w = { t:0, lastPress:0, T, mode:cfg.mode || 'wild', units:[], carcasses:[], trees:[], events:[], R, over:false, result:null, cfg, nid:0, frames:null };
@@ -136,7 +136,8 @@ function setup(cfg){
     if (aid === mountId && s.mountH > 0){ u.x = human.x; u.y = human.y; u.homeDx = 0; u.homeDy = 0; u.post = null; u.rider = human; human.riding = u; w.mount = u; }
   });
   // enemies
-  const enemies = ANIMALS.filter(a => !team.includes(a.id));
+  // the other side is every animal you didn't pick: from the whole roster, or only from this game's board (cfg.board)
+  const enemies = ANIMALS.filter(a => !team.includes(a.id) && (!cfg.board || cfg.board.includes(a.id)));
   enemies.forEach(s => {
     let x, y, ok = false, tries = 0;
     while (!ok && tries++ < 300){

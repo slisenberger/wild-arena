@@ -111,6 +111,13 @@ Pick for new roles. Top three for design value: **honey badger, moose, Komodo dr
 - [ ] Golden / harpy eagle — attacks from the air; height matters in reverse.
 - [ ] Kangaroo — kickboxer, holds a fighter at arm's length.
 - [ ] Wolverine — the tundra's honey badger.
+- [ ] **Fighting bull** (Spanish toro bravo, ~550 kg, bred for aggression): the most willing charger on the board,
+  never needs provoking, turns fast for its size. Cheap-to-mid price.
+- [ ] **Moose** (already above): ~600 kg, front-hoof strikes, at home in snow and water (strong swimmer ~2.5 m/s).
+- [ ] **Ostrich** (~120 kg, ~19 m/s, forward kick with a 10 cm claw): the first bird; a fast evasive light mount
+  (people do ride them). Height ~2.7 m makes it a lookout too.
+- [ ] **Triceratops** as a rare dinosaur (~6–9 t, horns and frill, charger): an elephant-class rival; only on rare
+  boards, priced at the top.
 - [ ] **Dinosaurs as a rare easter egg** (e.g. a T. rex or velociraptor pack showing up in a rare rotation
   or a special daily seed). Same rules — if you don't pick it, it's against you — so it should be rare and
   priced high. Ties into "rotating sets with rare choices" (§8). Realism stays: use paleontology estimates
@@ -152,6 +159,14 @@ Pick for new roles. Top three for design value: **honey badger, moose, Komodo dr
 - [ ] **Dynamic animal sets** (once the roster is big, ~25+): each game draws a subset of the roster
   (e.g. 16 of 30), by map theme or at random per seed. Unpicked animals in the set are the other side;
   animals outside the set sit out. Needs prices that hold up across sets (price by value, not by set).
+- [ ] **Random board, fixed budget (owner's direction, Oct 2026):** each game deals a random board of K animals
+  (an "auction board"); the budget is fixed; **the other side is every board animal you don't pick**. Fresh every
+  game, and difficulty is tuned by K and by checking the board is winnable. Board items can be groups ("Wolf
+  pack ×3"): skip it and the whole pack is against you. Key property: the roster can grow (new animals, rare
+  ones, dinosaurs) without making every game harder, because only K animals are in any one game.
+  Engine: `cfg.board` (done). Probe: `board.js` (how winnable random boards are by K). Open: group items
+  (multiple units per species), a winnability check when dealing a board (offline-verified daily boards, or a
+  fast value model), UI for the board, and pricing measured in board mode.
 - [ ] **Fixed animal-count choices:** a rules option where you pick exactly N animals (e.g. 3 or 4)
   instead of spending a budget — simpler, and a different puzzle. Can coexist with budget mode.
 - [ ] **Rotating sets with rare choices:** each day/week/seed offers a rotating roster; some animals are
