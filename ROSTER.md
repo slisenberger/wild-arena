@@ -39,7 +39,7 @@ Status: **strong** = distinct and worth picking; **thin** = real but blurs with 
 | Wolf pack ×4 | $100 | 22 (×3) | Attrition hunters | Circle, dart in, hamstring, back out | Tireless, slows prey | Low damage per bite | thin |
 | Spotted hyena | $100 | 27 | Bone-cruncher | Bite ignores 30% armor; very tough | Durable, tireless | Lions kill it on sight | thin |
 | Hyena clan ×4 | $300 | 54 | Mob | Four hyenas mobbing | Numbers + durability | Lions | strong |
-| Giant kangaroo (rare) | $100 | 19 | Kickboxer | Leans back on its tail, **two-footed kick** knocks attackers back and stuns them | Keeps fights at leg's length | Too heavy to hop; light damage | thin |
+| Giant kangaroo (rare) | $100 | 18 | Kickboxer | **Grabs, then two-footed kick** that shoves attackers back; **backs into water and holds them under**; foot-thump alarm | Great near water; clinches anything lighter | Can't shove big animals; gets mobbed in the open | thin |
 | Saltwater croc | $200 | 46 | Water ambusher | Invisible until 7 m in water; lunge, **death roll**, drags prey under | Strongest bite | Slow on land; never on the tundra | strong (water) |
 
 ## Gaps to work on (next design passes)

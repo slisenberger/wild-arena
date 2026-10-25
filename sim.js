@@ -64,8 +64,8 @@ const ANIMALS = [
   traits:['Cover-to-cover ambusher (x1.7, x2 in forest); climbs after you','Gives way to lions, tigers and hyenas','Deadliest of the big cats when wounded or cornered']},
  {id:'boar', name:'Wild Boar', abbr:'BOA', price:100, mass:150, spd:13, swim:1.5, dmg:75, cd:.8, armor:.3, reach:1.6, stam:20, heat:.6, cold:.85, water:.4, aggr:.7, flee:.2, corner:1.6, pred:false, charge:true, vision:20, tags:['standsGround','slash'],
   traits:['A big male: tusks slash at thigh height and leave bleeding wounds','A shield of thick skin and gristle over the shoulders','Hard to put down, and fights hardest when cornered']},
- {id:'giantkangaroo', name:'Giant Kangaroo', abbr:'GKA', price:100, mass:230, spd:9, swim:1.5, dmg:120, cd:1.0, armor:.15, reach:2.1, stam:15, heat:1, cold:.5, water:.2, aggr:.4, flee:.35, corner:1.5, pred:false, charge:false, vision:30, rare:true, tags:['boxer'],
-  traits:['Rare: Procoptodon, the Ice Age short-faced kangaroo (230 kg, 2 m tall)','Braces on its tail for a two-footed kick that knocks attackers back','Holds a fight at leg\'s length; too heavy to hop, it walks']},
+ {id:'giantkangaroo', name:'Giant Kangaroo', abbr:'GKA', price:100, mass:230, spd:9, swim:1.5, dmg:110, cd:1.0, armor:.1, reach:2.1, stam:18, heat:1, cold:.5, water:.4, aggr:.4, flee:.35, corner:1.5, pred:false, charge:false, vision:35, rare:true, tags:['boxer','kicker','drowner','thumper'],
+  traits:['Rare: Procoptodon, the Ice Age short-faced kangaroo (230 kg, 2–2.7 m tall)','Grabs with long clawed arms, then leans back for a crushing two-footed kick (a blunt hoof, not a claw)','Backs into water and holds attackers under, like kangaroos do to dogs','Thumps the ground when it spots a predator; strides rather than bounces, hopping only in bursts']},
 ];
 // Fighting styles: how each animal moves and attacks. strikeH = highest point it can hit (m); mountH = rider height if it can carry you (0 = can't).
 const STYLE = {
@@ -90,7 +90,7 @@ const STYLE = {
  moose:{gait:'charge', strikeH:2.4, mountH:2.0, overshoot:3, turn:1.0, wheel:.8, style:'Stomper', how:'Short charge, then rears up and rains front-hoof strikes.'},
  ostrich:{gait:'keepaway', strikeH:1.3, mountH:1.4, style:'Kickboxer', how:'Outruns trouble; if cornered, kicks forward and down with a dagger claw.'},
  honeybadger:{gait:'lumber', strikeH:.8, mountH:0, style:'Pest', how:'Trundles straight at anything, latches onto ankles and will not quit.'},
- giantkangaroo:{gait:'keepaway', strikeH:2, mountH:0, style:'Kickboxer', how:'Keeps attackers at leg\'s length, then leans back on its tail and kicks with both feet.'},
+ giantkangaroo:{gait:'keepaway', strikeH:2.3, mountH:0, style:'Kickboxer', how:'Grabs what gets close, rocks back and kicks with both feet; chased by a predator, it backs into water and holds it under.'},
  mammoth:{gait:'lumber', strikeH:5, mountH:3.2, style:'Ice-age bulldozer', how:'Wades in steadily; every strike is a tusk-and-trunk sweep that also hits everything else within reach.'},
  blackbear:{gait:'lumber', strikeH:2.2, mountH:0, style:'Bluffer', how:'Huffs, swats and bluff-charges; brawls for real only when it has to.'},
  leopard:{gait:'stalk', strikeH:3.5, mountH:0, pounce:7, style:'Stalker', how:'Creeps in close under cover, then pounces from 7 m for the throat.'},
@@ -437,6 +437,7 @@ function reachable(att, t){
 function canSee(w, viewer, u){
   let range = viewer.s.vision * (w.T.vision || 1);
   if (viewer.side !== 'E' && w.lookout) range *= 1.5;
+  else if (w.alarm && w.alarm[viewer.side === 'H' ? 'P' : viewer.side] > 0) range *= 1.25; // a kangaroo's thump put everyone on alert
   // big cats find each other by scent: a hidden cat is no secret to another cat
   if (has(viewer, 'catSense') && has(u, 'catSense')) return dist(viewer, u) <= range;
   if (has(u, 'ambush') && u.ambushReady && u.state !== 'flee' && w.T.id === 'forest') range = Math.min(range, 9);
@@ -572,7 +573,7 @@ function allyTarget(w, u){
     if (u.s.pred && u.s.latch){ sc *= clamp(my / strength(e), .35, 2); if (e.s.pred) sc *= 1.5; if (e.target === H) sc *= 1.3; }
     if (u.s.rivals && u.s.rivals[sp(e.s)]) sc *= Math.sqrt(u.s.rivals[sp(e.s)]);
     if (yieldsTo(w, u, e)) sc *= .3;
-    if (has(u,'kicker') && !(dm < 6 || u.grudge === e)) sc *= .1;
+    if (has(u,'kicker') && !has(u,'boxer') && !(dm < 6 || u.grudge === e)) sc *= .1; // a kangaroo on guard boxes whatever it's set on; it just doesn't hunt you on the other side
     if (!reachable(u, e)) sc *= .05;
     // spread coverage
     let others = 0; for (const a of w.units) if (a !== u && a.side === 'P' && active(a) && a.target === e && !(social(u) && packMate(u, a))) others++; // packmates and herdmates gang up rather than spread
@@ -652,6 +653,14 @@ function strike(w, a, t, opts){
   if (s.pierce) sig(w, a, 'armor-piercing bite');
   if (has(a,'guardian') && a.side === 'P' && t.target === w.human){ dmg *= 1.4; sig(w, a, 'guarding you'); }
   if (has(a,'deathroll') && opts.latch) dmg *= inWater(w, a) ? 2 : .5;
+  // a kangaroo grabs with its forearms first (the target can't dart out), then the kick lands harder
+  let clinched = false;
+  if (has(a,'boxer') && !opts.latch && t.side !== 'H' && t.s.mass < a.s.mass && !t.latchedBy){
+    if (a.clinch === t){ dmg *= 1.4; clinched = true; a.clinch = null; }
+    else { dmg *= .6; a.clinch = t; t.stun = Math.max(t.stun, .7); sig(w, a, 'grabs'); }
+  }
+  // held under water: drowning on top of the hold
+  if (has(a,'drowner') && opts.latch){ dmg = dmg * .5 + t.maxhp * .03 * s.cd; t.stam = Math.max(0, t.stam - .1); }
   if (opts.latch){ dmg *= .65; if (has(t,'mane')) dmg *= .6; if (has(t,'looseSkin')) dmg *= .5; }
   if (opts.pounce){ dmg *= 1.4; sig(w, a, a.fromTree ? 'tree drop' : 'pounce'); }
   if (has(a,'stomp') && (t.stun > 0 || t.s.mass < 150)){ dmg *= 1.5; sig(w, a, 'stomp'); } // front hooves on something small or down
@@ -676,7 +685,8 @@ function strike(w, a, t, opts){
   dmg = Math.max(1, dmg);
   applyDamage(w, a, t, dmg);
   // secondary effects
-  if (has(a,'boxer') && t.state !== 'dead' && t.s.mass < 3 * a.s.mass && !t.latchedBy){ const d = dist(a, t) || 1; t.x += (t.x - a.x) / d * 1.5; t.y += (t.y - a.y) / d * 1.5; t.stun = Math.max(t.stun, .4); sig(w, a, 'two-footed kick'); } // braced on its tail
+  if (has(a,'boxer') && !opts.latch && t.state !== 'dead' && t.s.mass < 1.5 * a.s.mass && !t.latchedBy){ // the kick: a heavy blunt shove (it can't move something much bigger)
+    const d = dist(a, t) || 1, kb = 1.5 * Math.min(1, a.s.mass / t.s.mass); t.x += (t.x - a.x) / d * kb; t.y += (t.y - a.y) / d * kb; t.stun = Math.max(t.stun, .4); sig(w, a, clinched ? 'clinch and kick' : 'two-footed kick'); }
   if (has(a,'slash') && t.state !== 'dead'){ sig(w, a, 'bleeding slash'); t.bleed = Math.max(t.bleed || 0, dmg * .12); t.bleedT = 5; t.bleedBy = a; } // tusk wounds keep bleeding
   if (has(a,'hamstring') && t.s.mass < 2500){ t.slow = Math.max(t.slow * (t.slowT > 0 ? 1 : 0), t.s.mass > 3 * a.s.mass ? .5 : .4); t.slowT = 6; sig(w, a, 'hamstring'); } // leg bites cripple big prey
   // knockback & stun from momentum
@@ -697,6 +707,10 @@ function strike(w, a, t, opts){
   if (!opts.latch && !opts.sweep && s.latch && !a.latchOn && !t.latchedBy && t.state !== 'dead' && t.s.mass <= (s.latchMax || 2.5) * s.mass && heightOf(t) === 0 && w.R() < (opts.pounce ? .7 : .45)){
     a.latchOn = t; t.latchedBy = a; sig(w, a, 'hold');
     log(w, `${capName(a)} gets a hold on ${nameOf(t)}`, 'latch', t);
+  }
+  if (!opts.latch && has(a,'drowner') && !a.latchOn && !t.latchedBy && t.side !== 'H' && t.state !== 'dead' && t.s.mass < a.s.mass && inWater(w, t) && inWater(w, a) && w.R() < .6){
+    a.latchOn = t; t.latchedBy = a; a.holdT = 2.5; sig(w, a, 'holds it under');
+    log(w, `${capName(a)} pins ${nameOf(t)} and holds it under the water`, 'latch', t);
   }
   if (!opts.latch && has(a,'deathroll') && !a.latchOn && !t.latchedBy && t.state !== 'dead' && heightOf(t) === 0 && t.s.mass < 2500 && w.R() < (inWater(w, a) || inWater(w, t) ? .7 : .12)){
     a.latchOn = t; t.latchedBy = a; sig(w, a, inWater(w, a) ? 'death roll' : 'clamp');
@@ -786,6 +800,7 @@ function step(w){
   const R = w.R;
   w.t += DT;
   w.lookout = w.units.some(u => u.side === 'P' && active(u) && has(u,'lookout'));
+  if (!w.alarm) w.alarm = {P: 0, E: 0}; w.alarm.P -= DT; w.alarm.E -= DT;
   for (const u of w.units) if (u.penned && w.t >= u.releaseT){ u.penned = false; u.agit = 1; log(w, `Gate opens: ${nameOf(u)} is released`, 'gate', u); }
   const units = w.units;
   // hunger, timers
@@ -802,6 +817,10 @@ function step(w){
     u.agit = has(u,'bred') ? 1 : Math.max(u.s.aggr * .3, u.agit - .01 * DT); // a fighting bull is always worked up
     if (u.target && !active(u.target)) u.target = null;
     if (u.latchOn && !active(u.latchOn)) { u.latchOn = null; }
+    if (u.latchOn && has(u,'drowner')){ u.holdT -= DT; if (u.holdT <= 0 || !inWater(w, u.latchOn)) release(w, u); }
+    if (has(u,'thumper') && !u.thumped && active(u) && u.state !== 'dead'){ // foot-thump alarm: its side looks sharper for a while
+      for (const o of units) if (o.s.pred && active(o) && hostile(w, u, o) && dist(u, o) < u.s.vision && canSee(w, u, o)){ u.thumped = true; w.alarm[u.side] = 8; sig(w, u, 'foot-thump alarm'); log(w, `${capName(u)} thumps the ground: predator!`, 'info', u); break; }
+    }
     // an aquatic stalker that has slipped back under and stayed off prey for ~4 s can ambush again
     if (!u.ambushReady && has(u,'aquaStalk') && inWater(w, u) && u.atk < -4 && !u.latchedBy) u.ambushReady = true;
     // a cat that has been out of the action for a while (no strike for ~8 s, nothing after it) lies low and can ambush again
@@ -951,7 +970,7 @@ function step(w){
     const vmax = speedOf(w, u);
     if (u.mv){ commitMove(w, u, vmax); continue; }
     // a big cat doesn't trade blows with a charging buffalo or rhino: it sidesteps and gives ground, then comes back
-    if (has(u,'catSense') && u.state !== 'flee' && !u.latchOn && !u.latchedBy && u.cornerT <= 0){
+    if ((has(u,'catSense') || has(u,'boxer')) && u.state !== 'flee' && !u.latchOn && !u.latchedBy && u.cornerT <= 0){
       let th = null, td = 9; for (const o of units) if (active(o) && hostile(w, o, u) && o.target === u && !o.s.pred && o.s.mass > 3 * u.s.mass){ const d = dist(o, u); if (d < td){ td = d; th = o; } }
       if (th){ const ax = (u.x - th.x) / (td || 1), ay = (u.y - th.y) / (td || 1); u.dodge = {x: u.x + ax * 6 - ay * 4 * u.orbitDir, y: u.y + ay * 6 + ax * 4 * u.orbitDir}; if (!u.dodging){ u.dodging = true; sig(w, u, 'dodge'); } }
       else { u.dodge = null; u.dodging = false; }
@@ -1014,6 +1033,13 @@ function step(w){
       else { tx = u.wander.x; ty = u.wander.y; frac = u.state === 'rest' ? .12 : .35 + .35 * pressure(w); }
     }
     if (u.dodge){ tx = u.dodge.x; ty = u.dodge.y; frac = 1; } // the sidestep wins over whatever else it was doing
+    // a kangaroo chased by a predator lighter than itself backs into water, where the attacker has to swim
+    if (has(u,'drowner') && w.wet && !u.latchOn && !u.routing){
+      let th = null; for (const o of units) if (active(o) && hostile(w, o, u) && o.s.pred && o.s.mass < u.s.mass && o.target === u && dist(o, u) < 14) th = o;
+      if (th && !inWater(w, u) && distWater(w, u) < 30){ const p = waterPoint(w, u, u); tx = p.x; ty = p.band ? u.y : p.y; frac = 1; if (!u.wading){ u.wading = true; sig(w, u, 'backs into water'); } }
+      else if (th && inWater(w, u) && u.target && !inWater(w, u.target)){ tx = u.x; ty = u.y; frac = 0; } // stay in: let it come
+      else if (!th) u.wading = false;
+    }
     if (u.rider && u.state === 'guard'){ tx = u.x; ty = u.y; frac = 0; }
     // keep out of the closing hazard: get back inside first, and never chase or wander into it (routing animals run through it)
     if (w.zb && w.zb.p > 0 && !u.routing){
@@ -1397,7 +1423,7 @@ function evadeMove(w, u){
 function defaultMount(team){ let b = null, h = 2.99; for (const id of team){ const m = BY_ID[id].mountH; if (m > h){ h = m; b = id; } } return b; }
 // Measured value of each pick (price_abs.js, seconds of survival): mine = with you vs left off the board,
 // theirs = against you vs off the board (negative = it hurts you). Written by apply_values.js; shown on the cards.
-const MEASURED = {/*MEASURED*/elephant:{mine:165,theirs:-37}, rhino:{mine:73,theirs:-29}, hippo:{mine:81,theirs:-25}, giraffe:{mine:40,theirs:-9}, polar:{mine:31,theirs:-16}, croc:{mine:38,theirs:-8}, buffalo:{mine:58,theirs:-19}, bison:{mine:45,theirs:-34}, grizzly:{mine:27,theirs:-15}, tiger:{mine:12,theirs:-18}, lion:{mine:20,theirs:-11}, gorilla:{mine:8,theirs:-4}, jaguar:{mine:19,theirs:-2}, wolf:{mine:7,theirs:-3}, cougar:{mine:19,theirs:-2}, hyena:{mine:8,theirs:-11}, blackrhino:{mine:47,theirs:-29}, bull:{mine:24,theirs:-16}, moose:{mine:36,theirs:-20}, ostrich:{mine:7,theirs:1}, honeybadger:{mine:-2,theirs:-5}, triceratops:{mine:150,theirs:-45}, mammoth:{mine:75,theirs:-28}, blackbear:{mine:6,theirs:-9}, leopard:{mine:4,theirs:-8}, boar:{mine:6,theirs:-15}, wolfpack:{mine:22,theirs:-13}, wolfpack6:{mine:29,theirs:-14}, hyenapack:{mine:27,theirs:-16}, lionpack:{mine:22,theirs:-13}, buffaloherd:{mine:151,theirs:-42}, bisonherd:{mine:139,theirs:-50}, giantkangaroo:{mine:12,theirs:-6}};
+const MEASURED = {/*MEASURED*/elephant:{mine:165,theirs:-37}, rhino:{mine:73,theirs:-29}, hippo:{mine:81,theirs:-25}, giraffe:{mine:40,theirs:-9}, polar:{mine:31,theirs:-16}, croc:{mine:38,theirs:-8}, buffalo:{mine:58,theirs:-19}, bison:{mine:45,theirs:-34}, grizzly:{mine:27,theirs:-15}, tiger:{mine:12,theirs:-18}, lion:{mine:20,theirs:-11}, gorilla:{mine:8,theirs:-4}, jaguar:{mine:19,theirs:-2}, wolf:{mine:7,theirs:-3}, cougar:{mine:19,theirs:-2}, hyena:{mine:8,theirs:-11}, blackrhino:{mine:47,theirs:-29}, bull:{mine:24,theirs:-16}, moose:{mine:36,theirs:-20}, ostrich:{mine:7,theirs:1}, honeybadger:{mine:-2,theirs:-5}, triceratops:{mine:150,theirs:-45}, mammoth:{mine:75,theirs:-28}, blackbear:{mine:6,theirs:-9}, leopard:{mine:4,theirs:-8}, boar:{mine:6,theirs:-15}, wolfpack:{mine:22,theirs:-13}, wolfpack6:{mine:29,theirs:-14}, hyenapack:{mine:27,theirs:-16}, lionpack:{mine:22,theirs:-13}, buffaloherd:{mine:151,theirs:-42}, bisonherd:{mine:139,theirs:-50}, giantkangaroo:{mine:11,theirs:-6}};
 // ---------- board rules ----------
 // Each game deals a board of RULES.board animals from the roster (a rare animal turns up with probability rareP).
 // You spend up to RULES.budget on the board; every board animal you don't pick is on the other side.

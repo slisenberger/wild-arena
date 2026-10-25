@@ -117,6 +117,16 @@ Pick for new roles. Top three for design value: **honey badger, moose, Komodo dr
 - [x] **Giant kangaroo (built Oct 2026; portrait pending, Commons rate-limited):** rare Ice Age megafauna like the mammoth — *Procoptodon goliah*,
   ~230 kg, ~2 m tall, likely walked more than hopped; braced on its tail for a two-footed kick, long-clawed arms.
   Kit idea: kickboxer that holds attackers at leg's length (keep-away gait that actually fights back).
+  Built after a zoology review (Janis 2014, Tedford 1967, Dawson 2000): grab-then-kick, backs into water and holds
+  lighter attackers under, foot-thump alarm, doesn't hunt you from the other side. Hold-under rarely fires unless it
+  starts near water (it gets mobbed on the way): a deployment-skill payoff, revisit if it should be more common.
+- [ ] **More rare megafauna (owner asked, Oct 2026)**, ranked by new identity: Smilodon (~280 kg, forelimb pin +
+  one killing stab; a distinct cat), Glyptodon (~2 t armadillo: near-total armor, spiked tail club; a fortress),
+  Megatherium (~4 t ground sloth: rears to 4 m, huge claws; anti-rider reach), Arctodus (short-faced bear, ~900 kg,
+  fast apex bear), Thylacoleo (marsupial lion: strongest bite for its size, climbs), Megalania (5–7 m monitor,
+  venom over time; cold-blooded, no tundra), Irish elk (3.6 m antler sweep), woolly rhino (the cold rhino),
+  Gigantopithecus (overlaps gorilla), terror bird (overlaps ostrich), Diprotodon (2.7 t wombat). Idea: an
+  "Ice Age Australia" themed board (giant kangaroo, Diprotodon, Thylacoleo, Megalania).
 - [ ] Wolverine — the tundra's honey badger.
 - [ ] **Fighting bull** (Spanish toro bravo, ~550 kg, bred for aggression): the most willing charger on the board,
   never needs provoking, turns fast for its size. Cheap-to-mid price.

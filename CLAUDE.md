@@ -88,8 +88,11 @@ round. Report ± standard errors.
   on ~10% of boards). Hippo armor .5 (5–6 cm skin). Polar bear `snowCamo`: hard to see beyond 15 m on tundra.
   Then (26): rare woolly mammoth (`sweep` like the elephant, cold-proof, heat-intolerant), black bear (timid,
   climbs), leopard (ambush stalker, climbs), wild boar (cheap tusked charger, `standsGround`).
-  Then (27): rare giant kangaroo (Procoptodon, 230 kg, `boxer`: keep-away gait, two-footed kick knocks the attacker
-  back 1.5 m and stuns .4 s; $100, swing 19 s; no portrait yet, shows a lettered token).
+  Then (27): rare giant kangaroo (Procoptodon, 230 kg; zoology-reviewed). `boxer`: grabs a lighter attacker (stun .7,
+  ×.6) then kicks ×1.4; the kick shoves anything under 1.5× its mass back up to 1.5 m. `kicker` on the other side
+  (doesn't hunt you) but boxes freely on guard; `drowner`: chased by a lighter predator it heads for water within
+  30 m and holds swimmers under (2.5 s, 3% max HP/s); `thumper`: first predator sighting gives its side 8 s of
+  ×1.25 vision (`w.alarm`); sidesteps much bigger herbivores like the cats. $100, swing 18 ± 4 s. No portrait yet.
 - **Pack items:** `wolfpack` ×4 (dealt 3 in 4), rare `wolfpack6` ×6, `hyenapack` ×4, `lionpack` ×2 (coalition),
   `buffaloherd` ×3, `bisonherd` ×3 are extra catalog entries (`species` points at the base animal, `group` = size,
   `dealWeight`; `sp(s)` gives the species for rivals/yields/snow checks). A board deals each species once, solo or
