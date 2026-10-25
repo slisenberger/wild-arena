@@ -58,3 +58,13 @@ Status: **strong** = distinct and worth picking; **thin** = real but blurs with 
    piercing + water), cougar (leaps onto riders). Make each signature fire visibly and often enough to read.
 4. **Identity check in the audit:** count each signature per fight (sweeps, mock charges, stomps, tree drops,
    death rolls, holds, grudge kills, lookout spots, …) so we can see every animal actually does its thing.
+
+## Cats on your side (Oct 2026 pass)
+Owner: "cats murk me but I get little value out of them." Measured cause: guard cats chased the biggest threat
+(often a tonne-plus herbivore) and died (86% of them per fight), and the other side's herbivores single out
+predators. Changes (all realistic, all symmetric where they apply):
+- Guard cats pick fights they can win: other predators, things their size, above all whatever is after you.
+- A cat out of the action for ~8 s with nothing after it can ambush again.
+- Cats sidestep and give ground when a much bigger herbivore comes for them.
+Result, value on your side: lion 8 → ~20 s, jaguar 5 → ~19, cougar 7 → ~19, leopard 2 → ~4–11, tiger ~15
+(unchanged within noise). Their biggest value is still denial: left on the other side they hunt you.
