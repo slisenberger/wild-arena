@@ -275,7 +275,7 @@ const W = 100, H = 66, DT = 0.1, MATCH_T = 300, QUIET_T = 30;
 // water = aquatic affinity (-1..1), aggr, flee = morale break point, corner = cornered damage mult,
 // lift = height it can strike up to (leap / rear), climb = can climb trees.
 const ANIMALS = [
- {id:'elephant', name:'African Elephant', abbr:'ELE', price:400, mass:6000, spd:11, dmg:260, cd:1.6, armor:.45, reach:3.5, stam:20, heat:.8, cold:.6, water:.3, aggr:.55, flee:.15, corner:1.3, pred:false, charge:true, smart:.95, vision:40, lift:0, tags:['hatesPredators','mount'],
+ {id:'elephant', name:'African Elephant', abbr:'ELE', price:400, mass:6000, spd:11, dmg:260, cd:1.6, armor:.35, reach:3.5, stam:20, heat:.8, cold:.6, water:.3, aggr:.55, flee:.15, corner:1.3, pred:false, charge:true, smart:.95, vision:40, lift:0, tags:['hatesPredators','mount'],
   traits:['Rideable: you sit 3.2 m up, out of reach of anything that cannot leap that high','Mobs predators on sight','Tusk, trunk and stomp: momentum hits scatter anything smaller']},
  {id:'rhino', name:'White Rhino', abbr:'RHI', price:400, mass:2300, spd:14, dmg:180, cd:1.4, armor:.55, reach:2.6, stam:15, heat:.8, cold:.55, water:0, aggr:.6, flee:.12, corner:1.3, pred:false, charge:true, smart:.3, vision:18, lift:0, tags:['blindCharger'],
   traits:['Thickest armor on the board','Poor eyesight: charges anything that moves within 18 m, friend or foe','Fastest heavyweight charge (50 km/h)']},
@@ -332,10 +332,10 @@ const HUMAN = {id:'human', name:'You', abbr:'YOU', price:0, mass:75, spd:6.5, dm
 const BY_ID = {}; ANIMALS.forEach(a => BY_ID[a.id] = a); BY_ID.human = HUMAN;
 
 const TERRAINS = {
- savanna:{id:'savanna', name:'Savanna', amb:1.0, desc:'Open, hot and dry. Heat builds fast with exertion; no water, no cover.'},
- river:{id:'river', name:'Riverbank', amb:.75, water:{y1:15}, desc:'A river runs along the north edge. Crocs and hippos rule the water; land animals wade at 40% speed.'},
- forest:{id:'forest', name:'Forest', amb:.55, trees:26, vision:.55, desc:'Trees block sight and slow big bodies. Cats ambush. You can climb a tree.'},
- tundra:{id:'tundra', name:'Tundra', amb:.08, cold:true, desc:'Snow and cold. Tropical animals stiffen; polar bear, bison and wolf thrive.'},
+ savanna:{id:'savanna', name:'Savanna', amb:1.0, heatRamp:true, shade:6, desc:'Open and baking. The sun climbs as the fight goes on, so heat builds for everyone; big bodies cook first. A few acacias give shade worth fighting over.'},
+ river:{id:'river', name:'River', amb:.75, water:{x0:47, x1:57, fords:[[9,18],[47,56]]}, desc:'A river splits the field and the other side starts across it. Crocs and hippos hold the water, and land animals wade at 40% speed. Two shallow fords are the only fast crossings, and a charge founders in deep water.'},
+ forest:{id:'forest', name:'Forest', amb:.55, trees:30, vision:.55, desc:'Trees block sight and slow big bodies. Cats ambush for double damage, and a charger that hits a tree is stunned. You can climb a tree.'},
+ tundra:{id:'tundra', name:'Tundra', amb:.08, cold:true, snow:true, desc:'Deep snow and cold. Heavy animals flounder (an elephant moves at about half speed), and the cold drains stamina. Polar bear, wolf, bison and cougar move freely.'},
 };
 
 // ---------- utils ----------
@@ -362,7 +362,8 @@ function setup(cfg){
   const T = TERRAINS[cfg.terrain] || TERRAINS.savanna;
   const w = { t:0, lastPress:0, T, mode:cfg.mode || 'wild', units:[], carcasses:[], trees:[], events:[], R, over:false, result:null, cfg, nid:0, frames:null };
   const human = mkUnit(HUMAN, 'H', 22, 36, w.nid++); human.atk = 0; w.units.push(human); w.human = human;
-  if (T.water) human.y = 38;
+  w.shade = [];
+  if (T.water){ human.x = 16; human.y = 33; }
   // trees
   if (T.trees){
     let tries = 0;
@@ -374,12 +375,21 @@ function setup(cfg){
       w.trees.push(t);
     }
   }
+  if (T.shade){
+    let tries = 0;
+    while (w.shade.length < T.shade && tries++ < 300){
+      const t = {x:8 + R()*(W-16), y:8 + R()*(H-16), r:3.6 + R()*1.4};
+      if (w.shade.some(o => Math.hypot(o.x-t.x, o.y-t.y) < 16)) continue;
+      if (Math.hypot(t.x-human.x, t.y-human.y) < 9) continue;
+      w.shade.push(t);
+    }
+  }
   const team = cfg.team || [];
   const mountId = cfg.mount !== undefined ? cfg.mount : (cfg.ride ? 'elephant' : null);
   team.forEach((aid, i) => {
     const s = BY_ID[aid];
     const p = (cfg.placements && cfg.placements[aid]) || defaultPlacement(team, aid, i);
-    const u = mkUnit(s, 'P', clamp(human.x + p.dx, 3, W-3), clamp(human.y + p.dy, 3, H-3), w.nid++);
+    const u = mkUnit(s, 'P', clamp(human.x + p.dx, 3, T.water ? T.water.x0 - 2 : W-3), clamp(human.y + p.dy, 3, H-3), w.nid++);
     u.homeDx = p.dx; u.homeDy = p.dy; u.agit = .5;
     w.units.push(u);
     if (aid === mountId && s.mountH > 0){ u.x = human.x; u.y = human.y; u.homeDx = 0; u.homeDy = 0; u.rider = human; human.riding = u; w.mount = u; }
@@ -390,13 +400,16 @@ function setup(cfg){
     let x, y, ok = false, tries = 0;
     while (!ok && tries++ < 300){
       x = (w.mode === 'allout' ? 68 : 50) + R()*(w.mode === 'allout' ? 28 : 44); y = 5 + R()*(H-10);
-      if (T.water){ if (s.water >= .9) y = 3 + R()*10; else if (y < 19) continue; }
+      if (T.water){
+        if (s.water >= .9){ x = T.water.x0 + 2 + R() * (T.water.x1 - T.water.x0 - 4); if (inFord(w, y)) continue; }
+        else { x = T.water.x1 + 5 + R() * (W - T.water.x1 - 9); }
+      }
       if (s.id === 'croc' && !T.water) { x = 60 + R()*30; }
       ok = !w.units.some(u => Math.hypot(u.x-x, u.y-y) < (tries < 200 ? 9 : 5)) && !w.trees.some(t => Math.hypot(t.x-x, t.y-y) < t.r + 3);
     }
     const u = mkUnit(s, 'E', x, y, w.nid++); w.units.push(u);
     if (w.mode === 'allout'){ u.releaseT = 0; }
-    u.atk = R()*1; u.agit = Math.max(u.agit, .15 + R()*.25);
+    u.atk = R()*1; u.agit = Math.max(u.agit, .4 + R()*.2);
   });
   w.units.forEach(u => { u.ambushReady = has(u, 'ambush'); u.orbitDir = R() < .5 ? 1 : -1; u.dartT = R() * 1.5; });
   if (w.mode === 'allout'){
@@ -422,7 +435,16 @@ function defaultPlacement(team, aid, i){
 // ---------- helpers ----------
 function strength(u){ return Math.sqrt(Math.max(1,u.hp) * (u.s.dmg / u.s.cd)); }
 function pressure(w){ return w.mode === 'wild' ? Math.min(1, w.t / 150) : 1; }
-function inWater(w, u){ return !!(w.T.water && u.y < w.T.water.y1); }
+function inFord(w, y){ return w.T.water.fords.some(([a, b]) => y >= a && y <= b); }
+function inBand(w, x){ return x >= w.T.water.x0 && x <= w.T.water.x1; }
+function inWater(w, u){ return !!(w.T.water && inBand(w, u.x) && !inFord(w, u.y)); }
+function onFord(w, u){ return !!(w.T.water && inBand(w, u.x) && inFord(w, u.y)); }
+function distWater(w, u){ if (!w.T.water) return 1e9; const W0 = w.T.water; return u.x < W0.x0 ? W0.x0 - u.x : u.x > W0.x1 ? u.x - W0.x1 : (inFord(w, u.y) ? 1 : 0); }
+function waterPoint(w, u){ const W0 = w.T.water; let y = u.y; for (const [a, b] of W0.fords) if (y >= a - 2 && y <= b + 2) y = (y - a < b - y) ? a - 4 : b + 4; return {x: (W0.x0 + W0.x1) / 2, y: clamp(y, 3, H - 3)}; }
+function inShade(w, u){ return w.shade.some(t => Math.hypot(t.x - u.x, t.y - u.y) < t.r); }
+function snowFactor(s){ if (['polar','wolf','cougar'].includes(s.id)) return 1; if (s.id === 'bison') return .92; return clamp(1.05 - .25 * Math.log10(Math.max(50, s.mass) / 50), .5, .95); }
+function heatLoad(s){ return Math.pow(s.mass / 400, .3) / Math.pow(s.heat, 2.2); }
+function ambient(w){ return w.T.amb * (w.T.heatRamp ? Math.min(2.2, 1 + w.t / 110) : 1); }
 function active(u){ return u.state !== 'dead' && !u.escaped && !u.penned; }
 function heightOf(u){ return u.riding ? u.riding.s.mountH : u.onTree ? 4.5 : 0; }
 function evasiveMount(u){ return !!u.rider && (u.s.mass < 700 || u.s.id === 'giraffe'); }
@@ -473,7 +495,7 @@ function predatorTarget(w, u){
     if (!hostile(w, u, t)) continue;
     if (!canSee(w, u, t) && !(t.side === 'H' && dist(u, t) < 70)) continue;
     const d = dist(u, t);
-    if (has(u,'waterbound') && w.T.water && t.y > w.T.water.y1 + 16) continue;
+    if (has(u,'waterbound') && w.T.water && distWater(w, t) > 16) continue;
     const ts = strength(t);
     let vuln = Math.min(4, Math.pow(my / ts, 1.2));
     let sc = Math.pow(t.s.mass, expo) * vuln;
@@ -505,7 +527,7 @@ function herbivoreTarget(w, u){
     return reachable(u, w.human) ? w.human : (blocker || nearestPlayer(w,u));
   }
   let best = null, bs = 0;
-  let R = 6 + 14 * u.agit + 30 * pressure(w);
+  let R = 12 + 16 * u.agit + 30 * pressure(w);
   if (has(u,'territorial') && inWater(w,u)) R += 8;
   if (has(u,'blindCharger')) R = Math.max(R, 18);
   for (const t of w.units){
@@ -634,9 +656,21 @@ function strike(w, a, t, opts){
   if (has(a,'deathroll') && opts.latch) dmg *= inWater(w, a) ? 2 : .5;
   if (opts.latch){ dmg *= .65; if (has(t,'mane')) dmg *= .6; }
   if (opts.pounce){ dmg *= 1.4; }
-  if (opts.sweep){ dmg *= .5; }
+  if (opts.sweep){ dmg *= .35; }
   if (s.maul && !opts.latch && !opts.sweep){ a.strikes++; if (a.strikes % 3 === 0){ dmg *= 2; log(w, `${capName(a)} rears up and mauls ${nameOf(t)}`, 'maul', a); } }
-  let armor = t.s.armor * (1 - (s.pierce || 0)) * (opts.latch ? .5 : 1);
+  // surrounded: every extra attacker in contact makes each hit count more and armor less
+  let mob = 0;
+  for (const o of w.units) if (o !== t && active(o) && hostile(w, o, t) && (o.target === t || o.latchOn === t) && dist(o, t) <= o.r + t.r + o.s.reach + .5) mob++;
+  mob = Math.max(1, mob);
+  dmg *= Math.min(1.75, 1 + .15 * (mob - 1));
+  // chargers are exposed while wheeling after a run, or when hit from behind mid-charge
+  let flank = false;
+  if (t.mv && (t.mv.k === 'wheel' || t.mv.k === 'charge')){
+    if (t.mv.k === 'wheel') flank = true;
+    else { const hx = t.mv.nx, hy = t.mv.ny, ax = a.x - t.x, ay = a.y - t.y, m = Math.hypot(ax, ay) || 1; if ((hx * ax + hy * ay) / m < -.3) flank = true; }
+  }
+  if (flank){ dmg *= 1.25; if (w.R() < .3) log(w, `${capName(a)} catches ${nameOf(t)} side-on`, 'flank', t); }
+  let armor = t.s.armor * (1 - (s.pierce || 0)) * (opts.latch ? .5 : 1) * Math.max(.4, 1 - .1 * (mob - 1)) * (flank ? .5 : 1);
   if (t.s.id === 'croc') armor = inWater(w,t) ? Math.min(.8, armor + .1) : armor - .2;
   dmg *= (1 - armor);
   if (t.side === 'H' && t.riding) dmg *= 1;
@@ -722,7 +756,7 @@ function envFactor(w, u){
   const wet = inWater(w, u);
   if (wet && u.s.water >= .8) f *= 1.2;
   if (!wet && u.s.water >= .9 && w.T.water) f *= .85;
-  if (has(u,'waterbound') && !(w.T.water && u.y < w.T.water.y1 + 4)) f *= .4;
+  if (has(u,'waterbound') && !(w.T.water && distWater(w, u) < 4)) f *= .4;
   return f;
 }
 function speedOf(w, u){
@@ -731,8 +765,9 @@ function speedOf(w, u){
   v *= envFactor(w, u);
   const wet = inWater(w, u);
   if (wet){ v *= u.s.water >= .8 ? 1.25 : u.s.water >= .4 ? .7 : .4; }
+  else if (onFord(w, u) && u.s.water < .8) v *= .8;
   if (w.T.id === 'forest' && u.s.mass > 800) v *= .78;
-  if (w.T.cold && !['polar','wolf','bison','cougar'].includes(u.s.id)) v *= .85;
+  if (w.T.snow) v *= snowFactor(u.s);
   if (u.slowT > 0) v *= (1 - u.slow);
   if (u.latchedBy) v *= u.s.mass < 1.5 * u.latchedBy.s.mass ? .1 : .5;
   if (u.rider) v *= clamp(1 - .6 * 75 / u.s.mass, .6, 1);
@@ -762,7 +797,7 @@ function step(w){
   }
   // the other side is a team: pressure mounts over time, and only natural rivals ever flare up
   if (w.mode === 'wild'){
-    const floor = Math.min(.9, .15 + w.t / 140);
+    const floor = Math.min(.95, .4 + w.t / 120);
     for (const u of units){
       if (!active(u) || u.side !== 'E') continue;
       if (!u.s.pred) u.agit = Math.max(u.agit, floor);
@@ -784,19 +819,22 @@ function step(w){
     const sp = Math.hypot(u.vx, u.vy) / u.s.spd;
     let exert = sp * sp + (u.state === 'engage' && u.target && dist(u,u.target) < u.r + u.target.r + u.s.reach + 1 ? .5 : 0) + (u.latchOn || u.latchedBy ? .5 : 0);
     if (u.riding) exert = 0;
-    const amb = w.T.amb;
-    let gain = amb * exert * .02 * Math.pow(u.s.mass / 400, .15) / Math.pow(u.s.heat, 2.2);
+    const shaded = w.shade.length && inShade(w, u);
+    const amb = ambient(w) * (shaded ? .35 : 1);
+    let gain = amb * exert * .016 * heatLoad(u.s) / .9;
     if (has(u,'sunburn') && !inWater(w,u)) gain += .012 * amb;
-    let cool = .012 * (1 - amb * .5) + (inWater(w,u) ? .09 : 0) + (exert < .15 ? .008 : 0);
+    let cool = Math.max(0, .012 * (1 - amb * .5)) + (inWater(w,u) ? .09 : 0) + (exert < .15 ? .008 : 0) + (shaded ? .02 : 0);
     if (w.T.id === 'forest') cool += .004;
     u.heat = clamp(u.heat + (gain - cool) * DT, 0, 1.4);
     if (!u.heatstroke && u.heat >= 1.05 && u.side !== 'H'){
       u.heatstroke = true; release(w, u);
       log(w, `${capName(u)} is overheating and pulls out of the fight`, 'heat', u);
+      if (u.rider){ const h = u.rider; u.rider = null; h.riding = null; h.x = u.x - 2; h.y = u.y; h.stun = .6; log(w, `Your ${u.s.name} kneels to cool off and you have to climb down`, 'danger', h); }
     } else if (u.heatstroke && u.heat < .55){ u.heatstroke = false; log(w, `${capName(u)} has cooled down`, 'info', u); }
     // stamina
-    if (sp > .55) u.stam = Math.max(0, u.stam - DT / u.s.stam * (sp));
-    else u.stam = Math.min(1, u.stam + DT / (u.s.stam * 1.5) * .9 + DT * .02);
+    const chill = w.T.cold ? 1 - u.s.cold : 0;
+    if (sp > .55) u.stam = Math.max(0, u.stam - DT / u.s.stam * sp * (1 + 1.5 * chill));
+    else u.stam = Math.min(1, u.stam + (DT / (u.s.stam * 1.5) * .9 + DT * .02) * (1 - .6 * chill));
   }
   // morale
   for (const u of units){
@@ -822,6 +860,7 @@ function step(w){
     if (u.state !== 'flee' && u.cornerT <= 0 && u.morale < u.s.flee && u.fleeT <= 0 && !u.withdrawn){
       u.state = 'flee'; u.fleeT = 4 + R() * 4; release(w, u); u.mv = null;
       u.breaks = (u.breaks || 0) + 1;
+      if (u.rider && R() < .5) throwRider(w, u, 'it panicked and bolted');
       const broken = u.breaks >= (u.side === 'E' ? 2 : 3) || u.hp < u.maxhp * .3;
       if (broken && u.side === 'E' && w.mode === 'wild' && !u.routing){ u.routing = true; log(w, `${capName(u)} is beaten and makes for the edge`, 'flee', u); }
       else if (broken && u.side === 'P'){ u.withdrawn = true; log(w, `${capName(u)} is too badly hurt to fight and falls back`, 'flee', u); }
@@ -876,7 +915,9 @@ function step(w){
       m = Math.hypot(ax, ay) || 1; u.fleeDir = {x: ax/m, y: ay/m};
       tx = u.x + ax/m*10; ty = u.y + ay/m*10; frac = 1;
     } else if (u.state === 'cool'){
-      if (w.T.water){ tx = u.x; ty = 6; } else { tx = u.side === 'P' ? 4 : W - 4; ty = u.y; }
+      if (w.T.water){ const p = waterPoint(w, u); tx = p.x; ty = p.y; }
+      else if (w.shade.length){ let b = w.shade[0], bd = 1e9; for (const t of w.shade){ const d = Math.hypot(t.x-u.x, t.y-u.y); if (d < bd){ bd = d; b = t; } } tx = b.x; ty = b.y; if (bd < b.r * .6) frac = 0; }
+      else { tx = u.side === 'P' ? 4 : W - 4; ty = u.y; }
       frac = .35;
     } else if (u.state === 'feed' && u.carcass){
       const c = u.carcass, d = Math.hypot(c.x-u.x, c.y-u.y);
@@ -890,7 +931,7 @@ function step(w){
       } else { tx = c.x; ty = c.y; frac = .7; }
     } else if (u.state === 'engage' && u.target){
       const t = u.target, d = dist(u, t), touch = u.r + t.r + u.s.reach * .6;
-      if (has(u,'waterbound') && w.T.water && t.y > w.T.water.y1 + 16){ tx = u.x; ty = Math.min(u.y, w.T.water.y1 - 1); frac = .3; }
+      if (has(u,'waterbound') && w.T.water && distWater(w, t) > 16){ const p = waterPoint(w, u); tx = p.x; ty = t.y; frac = .3; }
       else { const m = gaitMove(w, u, t, d, touch, vmax); if (m === null) continue; tx = m.tx; ty = m.ty; frac = m.frac; }
     } else if (u.state === 'carry' || u.state === 'withdraw'){
       const m = evadeMove(w, u); tx = m.tx; ty = m.ty; frac = m.frac;
@@ -905,7 +946,7 @@ function step(w){
       if (!u.wander || R() < .01){
         const H0 = w.human, lean = u.sated ? 0 : Math.min(1, (u.s.pred ? .5 : u.agit * .6) + pressure(w) * .6);
         const bx = u.x + (H0.x - u.x) * lean * .5, by = u.y + (H0.y - u.y) * lean * .5;
-        u.wander = {x: clamp(bx + (R()-.5)*20, 5, W-5), y: clamp(by + (R()-.5)*20, 5, H-5)}; if (has(u,'waterbound') && w.T.water) u.wander.y = clamp(u.wander.y, 2, w.T.water.y1+4); }
+        u.wander = {x: clamp(bx + (R()-.5)*20, 5, W-5), y: clamp(by + (R()-.5)*20, 5, H-5)}; if (has(u,'waterbound') && w.T.water) u.wander.x = clamp(u.wander.x, w.T.water.x0 - 3, w.T.water.x1 + 3); }
       if (has(u,'waterbound') && !w.T.water){ frac = 0; }
       else { tx = u.wander.x; ty = u.wander.y; frac = u.state === 'rest' ? .12 : .25 + .35 * pressure(w); }
     }
@@ -1001,7 +1042,7 @@ function step(w){
     const hz = w.cfg.horizon || MATCH_T;
     for (const u of units) if (u.side === 'E' && active(u) && u.target && u.target.side !== 'E' && u.state !== 'flee') { w.lastPress = w.t; break; }
     const penned = units.some(u => u.penned);
-    const quiet = !penned && w.t - w.lastPress >= QUIET_T && w.t > QUIET_T;
+    const quiet = !penned && w.t - w.lastPress >= QUIET_T && w.t >= 75;
     if (w.t >= hz || threats.length === 0 || quiet){
       w.over = true;
       const why = threats.length === 0 ? 'cleared' : quiet ? 'quiet' : 'time';
@@ -1046,7 +1087,7 @@ function moveHuman(w, h){
   }
   // get back on the elephant if it is close
   const M = w.mount;
-  if (M && active(M) && !M.rider && M.state !== 'flee' && !h.latchedBy){
+  if (M && active(M) && !M.rider && M.state !== 'flee' && !M.heatstroke && !h.latchedBy){
     const d = dist(M, h);
     if (d < M.r + 1.8){ h.climbT = 2; h.pendingMount = M; damp(h); return; }
     if (d < 25){ const dx = M.x - h.x, dy = M.y - h.y; setVel(w, h, dx/d, dy/d, 1); return; }
@@ -1058,7 +1099,7 @@ function moveHuman(w, h){
   if (gw > 0){ gx /= gw; gy /= gw; const d = Math.hypot(gx-h.x, gy-h.y); if (d > 2){ dx += (gx-h.x)/d * Math.min(1, d/8); dy += (gy-h.y)/d * Math.min(1, d/8); } }
   if (danger > 0){ const m = Math.hypot(ax, ay) || 1; const k = Math.min(2, danger * 4); dx += ax/m * k; dy += ay/m * k; }
   // avoid water (crocs) and edges
-  if (w.T.water && h.y < w.T.water.y1 + 5) dy += 1.5;
+  if (w.T.water && distWater(w, h) < 6 && !onFord(w, h)) dx += h.x < (w.T.water.x0 + w.T.water.x1) / 2 ? -1.5 : 1.5;
   if (h.x < 4) dx += 1; if (h.x > W-4) dx -= 1; if (h.y < 4) dy += 1; if (h.y > H-4) dy -= 1;
   const m = Math.hypot(dx, dy);
   if (m < .05){ damp(h); return; }
@@ -1100,7 +1141,7 @@ function gaitMove(w, u, t, d, touch, vmax){
     return go(1);
   }
   if (g === 'lunge'){
-    const nearW = w.T.water && u.y < w.T.water.y1 + 3, L = nearW ? 7 : 3.5, V = nearW ? 12 : 7;
+    const nearW = w.T.water && distWater(w, u) < 3, L = nearW ? 7 : 3.5, V = nearW ? 12 : 7;
     if (d <= L && d > touch * .7 && u.pounceCd <= 0 && reachable(u, t)){
       const dur = clamp(d / V, .2, .55), m = d || 1;
       u.mv = {k:'lunge', vx:(t.x - u.x) / m * V, vy:(t.y - u.y) / m * V, t:dur, tgt:t};
@@ -1132,6 +1173,14 @@ function commitMove(w, u, vmax){
     if (t){ const cur = Math.atan2(mv.ny, mv.nx); let da = wrapA(Math.atan2(t.y - u.y, t.x - u.x) - cur); const mx = (u.s.turn || .5) * DT; da = clamp(da, -mx, mx); mv.nx = Math.cos(cur + da); mv.ny = Math.sin(cur + da); }
     accel(u, mv.nx * vmax, mv.ny * vmax, 1.6);
     mv.left -= Math.hypot(u.vx, u.vy) * DT;
+    if (inWater(w, u) && u.s.water < .8){ u.mv = {k:'wheel', t:(u.s.wheel || 1) + .8}; u.chargeCd = 2.5; u.vx *= .3; u.vy *= .3; log(w, `${capName(u)}'s charge founders in the deep water`, 'info', u); return; }
+    for (const tr of w.trees){
+      if (Math.hypot(tr.x - u.x, tr.y - u.y) < tr.r + u.r * .55 + .4 && Math.hypot(u.vx, u.vy) > vmax * .5){
+        u.mv = null; u.vx = u.vy = 0; u.stun = Math.max(u.stun, 1.6); u.chargeCd = 3;
+        applyDamage(w, u, u, u.maxhp * .04); if (u.state === 'dead') return;
+        log(w, `${capName(u)} slams into a tree and is stunned`, 'crash', u); return;
+      }
+    }
     for (const o of w.units){
       if (!hostile(w, u, o) || mv.hit[o.id] || heightOf(o) > u.s.strikeH) continue;
       if (dist(u, o) <= u.r + o.r + u.s.reach * .5 && Math.hypot(u.vx, u.vy) > vmax * .45){ mv.hit[o.id] = 1; strike(w, u, o, {}); if (w.over) return; }
@@ -1173,7 +1222,7 @@ function evadeMove(w, u){
   let dx = 0, dy = 0;
   if (gw){ gx /= gw; gy /= gw; const d = Math.hypot(gx - u.x, gy - u.y); if (d > 3){ dx += (gx - u.x) / d * .6; dy += (gy - u.y) / d * .6; } }
   if (danger > 0){ const m = Math.hypot(ax, ay) || 1, k = Math.min(2.5, danger * 4); dx += ax / m * k; dy += ay / m * k; }
-  if (w.T.water && u.y < w.T.water.y1 + 5) dy += 1.5;
+  if (w.T.water && distWater(w, u) < 6 && !onFord(w, u)) dx += u.x < (w.T.water.x0 + w.T.water.x1) / 2 ? -1.5 : 1.5;
   if (u.x < 5) dx += 1.2; if (u.x > W - 5) dx -= 1.2; if (u.y < 5) dy += 1.2; if (u.y > H - 5) dy -= 1.2;
   const m = Math.hypot(dx, dy);
   if (m < .05) return {tx: u.x, ty: u.y, frac: 0};
@@ -1211,7 +1260,7 @@ function randomDraft(R, budget){
   return team;
 }
 
-const API = { QUIET_T, STYLE, ANIMALS, HUMAN, BY_ID, TERRAINS, W, H, DT, MATCH_T, setup, step, simulate, snapshot, summarize, randomDraft, defaultPlacement, rng, hpOf, radiusOf };
+const API = { snowFactor, heatLoad, QUIET_T, STYLE, ANIMALS, HUMAN, BY_ID, TERRAINS, W, H, DT, MATCH_T, setup, step, simulate, snapshot, summarize, randomDraft, defaultPlacement, rng, hpOf, radiusOf };
 if (typeof module !== 'undefined' && module.exports) module.exports = API; else root.Arena = API;
 })(typeof window !== 'undefined' ? window : globalThis);
 
@@ -1244,13 +1293,12 @@ const FACEIMG = {}; for (const id in FACES){ const im = new Image(); im.src = FA
 function esc(s){ return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 
 function terrainFit(a, tid){
-  const T = A.TERRAINS[tid], out = [];
-  if (tid === 'savanna' || tid === 'river'){ if (a.heat <= .5) out.push(['bad', 'Overheats here']); }
-  if (tid === 'savanna' || tid === 'forest' || tid === 'tundra'){ if (a.tags.includes('waterbound')) out.push(['bad', 'No water: weak']); }
-  if (tid === 'river' && a.water >= .8) out.push(['good', 'Rules the water']);
-  if (tid === 'forest'){ if (a.tags.includes('ambush')) out.push(['good', 'Ambush ×2']); if (a.mass > 800) out.push(['bad', 'Slowed by trees']); }
-  if (tid === 'tundra'){ if (a.cold < .5) out.push(['bad', 'Stiff in the cold']); else if (['polar','wolf','bison','cougar'].includes(a.id)) out.push(['good', 'At home in snow']); }
-  if (tid === 'savanna' && a.heat >= .9 && !a.tags.includes('waterbound')) out.push(['good', 'Built for heat']);
+  const out = [], load = A.heatLoad(a), snow = A.snowFactor(a), charger = a.gait === 'charge';
+  if (tid === 'savanna'){ if (load >= 2.5) out.push(['bad', 'Cooks in the heat']); else if (load < 1) out.push(['good', 'Built for heat']); }
+  if (tid === 'river'){ if (a.water >= .8) out.push(['good', 'Rules the river']); else if (load >= 6) out.push(['bad', 'Runs hot']); if (charger && a.water < .8) out.push(['bad', 'Charge founders in water']); }
+  if (tid !== 'river' && a.tags.includes('waterbound')) out.push(['bad', 'No water: weak']);
+  if (tid === 'forest'){ if (a.tags.includes('ambush')) out.push(['good', 'Ambush ×2']); if (charger) out.push(['bad', 'Crashes into trees']); else if (a.mass > 800) out.push(['bad', 'Slowed by trees']); }
+  if (tid === 'tundra'){ if (snow >= .92) out.push(['good', 'At home in snow']); else if (snow < .7) out.push(['bad', `Bogged down (${Math.round(snow*100)}% speed)`]); if (a.cold < .5) out.push(['bad', 'Stiff in the cold']); }
   return out;
 }
 function badgesHTML(a){ return terrainFit(a, S.terrain).map(([k, t]) => `<span class="bdg ${k}">${t}</span>`).join(''); }
@@ -1336,12 +1384,12 @@ $('toDeployD').addEventListener('click', () => go('deploy'));
 $('clearTeam').addEventListener('click', () => { S.team.clear(); S.world = null; S.placements = {}; renderAll(); });
 
 // ---------- arena setup ----------
-const TCOL = {savanna:'linear-gradient(135deg,#4a3f1d,#2c2614)', river:'linear-gradient(180deg,#1f5165 0 34%,#26341f 34%)', forest:'radial-gradient(circle at 30% 40%,#244a2c 0 18%,transparent 19%),radial-gradient(circle at 70% 60%,#244a2c 0 22%,transparent 23%),#17241a', tundra:'linear-gradient(135deg,#55606a,#2f363d)'};
+const TCOL = {savanna:'radial-gradient(circle at 70% 35%,#3d4a1f 0 14%,transparent 15%),linear-gradient(135deg,#5a4a1d,#2c2614)', river:'linear-gradient(90deg,#26341f 0 44%,#1f5165 44% 56%,#26341f 56%)', forest:'radial-gradient(circle at 30% 40%,#244a2c 0 18%,transparent 19%),radial-gradient(circle at 70% 60%,#244a2c 0 22%,transparent 23%),#17241a', tundra:'linear-gradient(135deg,#55606a,#2f363d)'};
 function renderArenaOpts(){
   const to = $('terrainOpts'); to.innerHTML = '';
   for (const T of Object.values(A.TERRAINS)){
     const b = document.createElement('button'); b.className = 'opt'; b.setAttribute('aria-pressed', S.terrain === T.id);
-    b.innerHTML = `<div class="sw" style="background:${TCOL[T.id]}"></div><h3>${T.name}</h3><div class="mono" style="font-size:11px;color:var(--muted)">heat load ×${T.amb.toFixed(2)}</div><p>${esc(T.desc)}</p>`;
+    b.innerHTML = `<div class="sw" style="background:${TCOL[T.id]}"></div><h3>${T.name}</h3><p>${esc(T.desc)}</p>`;
     b.addEventListener('click', () => { S.terrain = T.id; S.world = null; renderArenaOpts(); renderDraft(); });
     to.appendChild(b);
   }
@@ -1397,8 +1445,9 @@ function sizeCanvas(cv){
   cv.style.height = Math.round(w * A.H / A.W) + 'px';
   cv._dpr = dpr; cv._scale = cv.width / A.W;
 }
-function groundFor(terrain, trees, w, h){
-  const key = terrain + w + 'x' + h + ':' + trees.map(t => t.x.toFixed(1)).join(',');
+function groundFor(terrain, trees, w, h, shade){
+  shade = shade || [];
+  const key = terrain + w + 'x' + h + ':' + trees.map(t => t.x.toFixed(1)).join(',') + ':' + shade.map(t => t.x.toFixed(1)).join(',');
   if (groundCache[key]) return groundCache[key];
   const c = document.createElement('canvas'); c.width = w; c.height = h; const g = c.getContext('2d');
   const sc = w / A.W;
@@ -1411,12 +1460,25 @@ function groundFor(terrain, trees, w, h){
   if (terrain === 'tundra'){ g.fillStyle = 'rgba(230,238,245,.05)'; for (let i = 0; i < 40; i++){ g.beginPath(); g.ellipse(R()*w, R()*h, sc*(4+R()*8), sc*(1.5+R()*3), R()*3, 0, 7); g.fill(); } }
   const T = A.TERRAINS[terrain];
   if (T.water){
-    const y1 = T.water.y1 * sc;
-    const grd = g.createLinearGradient(0, 0, 0, y1); grd.addColorStop(0, '#173f52'); grd.addColorStop(1, '#22596e');
-    g.fillStyle = grd; g.fillRect(0, 0, w, y1);
-    g.fillStyle = '#5c5034'; g.fillRect(0, y1 - sc*.2, w, sc*.9);
+    const x0 = T.water.x0 * sc, x1 = T.water.x1 * sc;
+    g.fillStyle = '#5c5034'; g.fillRect(x0 - sc*.8, 0, sc*.9, h); g.fillRect(x1 - sc*.1, 0, sc*.9, h);
+    const grd = g.createLinearGradient(x0, 0, x1, 0); grd.addColorStop(0, '#22596e'); grd.addColorStop(.5, '#173f52'); grd.addColorStop(1, '#22596e');
+    g.fillStyle = grd; g.fillRect(x0, 0, x1 - x0, h);
+    for (const [a, b] of T.water.fords){
+      g.fillStyle = '#6f6a4a'; g.fillRect(x0, a*sc, x1 - x0, (b - a)*sc);
+      g.fillStyle = 'rgba(90,150,170,.35)'; g.fillRect(x0, a*sc, x1 - x0, (b - a)*sc);
+      g.fillStyle = 'rgba(236,230,211,.75)'; g.font = `800 ${Math.max(9, sc*1.4)}px "Big Shoulders Display", sans-serif`; g.textAlign = 'center'; g.fillText('FORD', (x0 + x1) / 2, (a + b) / 2 * sc + sc*.5); g.textAlign = 'left';
+    }
     g.strokeStyle = 'rgba(160,210,225,.18)'; g.lineWidth = sc*.15;
-    for (let i = 0; i < 26; i++){ const x = R()*w, y = R()*(y1 - sc*2) + sc; g.beginPath(); g.moveTo(x, y); g.quadraticCurveTo(x + sc*1.5, y - sc*.5, x + sc*3, y); g.stroke(); }
+    for (let i = 0; i < 40; i++){ const x = x0 + R()*(x1 - x0 - sc*3), y = R()*h; if (T.water.fords.some(([a, b]) => y >= a*sc && y <= b*sc)) continue; g.beginPath(); g.moveTo(x, y); g.quadraticCurveTo(x + sc*1.5, y - sc*.5, x + sc*3, y); g.stroke(); }
+  }
+  if (T.snow){ g.fillStyle = 'rgba(240,245,250,.09)'; for (let i = 0; i < 70; i++){ g.beginPath(); g.ellipse(R()*w, R()*h, sc*(3+R()*9), sc*(1+R()*2.5), R()*.6 - .3, 0, 7); g.fill(); } }
+  for (const t of shade){
+    g.fillStyle = 'rgba(0,0,0,.28)'; g.beginPath(); g.arc(t.x*sc, t.y*sc, t.r*sc, 0, 7); g.fill();
+    g.strokeStyle = 'rgba(120,150,70,.55)'; g.lineWidth = Math.max(1, sc*.25); g.setLineDash([sc*.5, sc*.4]); g.beginPath(); g.arc(t.x*sc, t.y*sc, t.r*sc, 0, 7); g.stroke(); g.setLineDash([]);
+    g.fillStyle = '#3d4a1f'; g.beginPath(); g.ellipse(t.x*sc, t.y*sc, t.r*.55*sc, t.r*.38*sc, 0, 0, 7); g.fill();
+    g.fillStyle = '#4c5c26'; g.beginPath(); g.ellipse((t.x-.3)*sc, (t.y-.3)*sc, t.r*.4*sc, t.r*.26*sc, 0, 0, 7); g.fill();
+    g.fillStyle = 'rgba(236,230,211,.5)'; g.font = `700 ${Math.max(8, sc*1.1)}px "Big Shoulders Display", sans-serif`; g.textAlign = 'center'; g.fillText('SHADE', t.x*sc, (t.y + t.r + 1.2)*sc); g.textAlign = 'left';
   }
   // 10 m grid
   g.strokeStyle = 'rgba(236,230,211,.05)'; g.lineWidth = 1;
@@ -1442,7 +1504,7 @@ function makeCfg(){ return { team:[...S.team], placements:S.placements, terrain:
 function drawDeploy(){
   deployWorld = A.setup(makeCfg());
   const cv = $('deployCanvas'); const g = cv.getContext('2d'); const sc = cv._scale;
-  g.drawImage(groundFor(S.terrain, deployWorld.trees, cv.width, cv.height), 0, 0);
+  g.drawImage(groundFor(S.terrain, deployWorld.trees, cv.width, cv.height, deployWorld.shade), 0, 0);
   const H = deployWorld.human;
   // deploy ring
   g.strokeStyle = 'rgba(79,209,189,.55)'; g.setLineDash([sc*.8, sc*.6]); g.lineWidth = Math.max(1.5, sc*.18);
@@ -1509,7 +1571,7 @@ $('fightCanvas').addEventListener('pointerdown', e => {
   if (best >= 0) S.sel = best;
 });
 
-const KINDCOL = {kill:C.red, death:C.red, charge:C.orange, latch:C.red, flee:C.slate, heat:C.orange, feed:C.bone, corner:C.gold, ambush:C.red, gate:C.gold, pounce:C.gold, lunge:C.gold, maul:C.red, sweep:C.orange, feud:C.orange, rout:C.slate, win:C.you, danger:C.foe, bluff:C.bone, info:C.muted};
+const KINDCOL = {kill:C.red, death:C.red, charge:C.orange, latch:C.red, flee:C.slate, heat:C.orange, feed:C.bone, corner:C.gold, ambush:C.red, gate:C.gold, crash:C.orange, flank:C.red, pounce:C.gold, lunge:C.gold, maul:C.red, sweep:C.orange, feud:C.orange, rout:C.slate, win:C.you, danger:C.foe, bluff:C.bone, info:C.muted};
 function renderMarks(){
   const m = $('marks'); m.innerHTML = '';
   for (const e of S.world.events){
@@ -1614,7 +1676,7 @@ function drawUnits(g, sc, w, fr, events, t, opts){
       let slot = 0; while (slot < 2 && placed.some(p => Math.abs(p.x - e.x) < 7 && p.slot === slot && Math.abs(p.y - e.y) < 6)) slot++;
       if (slot >= 2) continue; placed.push({x:e.x, y:e.y, slot});
       if (e.kind === 'charge' || e.kind === 'pounce' || e.kind === 'lunge' || e.kind === 'ambush') continue;
-      const short = ({kill:'DOWN', death:'KILLED', charge:'CHARGE', latch:'GRAB', flee:'BREAKS', heat:'OVERHEAT', feed:'FEEDING', corner:'CORNERED', ambush:'AMBUSH', pounce:'POUNCE', lunge:'LUNGE', maul:'MAUL', sweep:'SWEEP', gate:'GATE', feud:'RIVALRY', rout:'ROUTED', danger:'!', bluff:'BLUFF', win:''})[e.kind];
+      const short = ({kill:'DOWN', death:'KILLED', charge:'CHARGE', latch:'GRAB', flee:'BREAKS', heat:'OVERHEAT', feed:'FEEDING', corner:'CORNERED', ambush:'AMBUSH', pounce:'POUNCE', lunge:'LUNGE', maul:'MAUL', sweep:'SWEEP', gate:'GATE', crash:'CRASH', flank:'FLANK', feud:'RIVALRY', rout:'ROUTED', danger:'!', bluff:'BLUFF', win:''})[e.kind];
       if (!short) continue;
       g.globalAlpha = 1 - age / 1.8; g.fillStyle = KINDCOL[e.kind];
       g.font = `900 ${Math.max(11, sc*1.9)}px "Big Shoulders Display", sans-serif`; g.textAlign = 'center';
@@ -1626,7 +1688,7 @@ function drawUnits(g, sc, w, fr, events, t, opts){
 function drawFight(){
   const w = S.world; if (!w) return;
   const cv = $('fightCanvas'); const g = cv.getContext('2d'); const sc = cv._scale;
-  g.drawImage(groundFor(S.terrain_used || w.T.id, w.trees, cv.width, cv.height), 0, 0);
+  g.drawImage(groundFor(S.terrain_used || w.T.id, w.trees, cv.width, cv.height, w.shade), 0, 0);
   if (w.mode === 'allout'){ g.fillStyle = C.foe; for (let i = 0; i < 6; i++) g.fillRect((A.W-1.2)*sc, (6 + i*10.8 - 2)*sc, sc*1.2, sc*4); }
   const fr = frameAt(S.playT);
   drawUnits(g, sc, w, fr, w.events, S.playT, {});
