@@ -19,9 +19,10 @@ const spent = () => [...S.team].reduce((s, id) => s + A.BY_ID[id].price, 0);
 const fmtT = t => { t = Math.max(0, t); const m = Math.floor(t/60), s = Math.floor(t%60); return m + ':' + String(s).padStart(2,'0'); };
 const kmh = v => Math.round(v * 3.6);
 function strengthOf(a){ return Math.sqrt(A.hpOf(a) * a.dmg / a.cd); }
-function tok(a, size){ const d = document.createElement('span'); d.className = 'tok'; d.style.cssText = tokStyle(a); d.title = a.name; if (size) { d.style.width = d.style.height = size + 'px'; } if (!FACES[a.id]) d.textContent = a.abbr; return d; }
-function tokStyle(a){ return FACES[a.id] ? `background:#222 url(${FACES[a.id]}) center/cover;border:2px solid ${tierHex(a.price)}` : `background:${tierHex(a.price)};color:#14130f;font-weight:700`; }
-function tokHTML(a, px){ return `<span class="tok" title="${esc(a.name)}" style="${tokStyle(a)};width:${px}px;height:${px}px;font-size:${Math.round(px*.4)}px">${FACES[a.id] ? '' : a.abbr}</span>`; }
+function tok(a, size){ const d = document.createElement('span'); d.className = 'tok'; d.style.cssText = tokStyle(a); d.title = a.name; if (size) { d.style.width = d.style.height = size + 'px'; } if (!faceOf(a)) d.textContent = a.abbr; return d; }
+const faceOf = a => FACES[a.species || a.id]; // pack items share their species' portrait
+function tokStyle(a){ return faceOf(a) ? `background:#222 url(${faceOf(a)}) center/cover;border:2px solid ${tierHex(a.price)}` : `background:${tierHex(a.price)};color:#14130f;font-weight:700`; }
+function tokHTML(a, px){ return `<span class="tok" title="${esc(a.name)}" style="${tokStyle(a)};width:${px}px;height:${px}px;font-size:${Math.round(px*.4)}px">${faceOf(a) ? '' : a.abbr}</span>`; }
 const FACEIMG = {}; for (const id in FACES){ const im = new Image(); im.src = FACES[id]; FACEIMG[id] = im; }
 function esc(s){ return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 
@@ -29,7 +30,7 @@ function terrainFit(a, tid){
   const out = [], load = A.heatLoad(a), snow = A.snowFactor(a), charger = a.gait === 'charge';
   if (tid === 'savanna'){ if (load >= 2.5) out.push(['bad', 'Cooks in the heat']); else if (load < 1) out.push(['good', 'Built for heat']); }
   if (tid === 'river'){ if (a.water >= .8) out.push(['good', 'Rules the river']); else if (load >= 6) out.push(['bad', 'Runs hot']); if (charger && a.water < .8) out.push(['bad', 'Charge founders in water']); }
-  if (tid !== 'river' && a.tags.includes('waterbound')) out.push(['bad', 'No water: weak']);
+  if (tid !== 'river' && a.tags.includes('waterbound')) out.push(['bad', 'No water: slow on land']);
   if (tid === 'forest'){ if (a.tags.includes('ambush')) out.push(['good', 'Ambush ×2']); if (charger) out.push(['bad', 'Crashes into trees']); else if (a.mass > 800) out.push(['bad', 'Slowed by trees']); }
   if (tid === 'tundra'){ if (snow >= .92) out.push(['good', 'At home in snow']); else if (snow < .7) out.push(['bad', `Bogged down (${Math.round(snow*100)}% speed)`]); if (a.cold < .5) out.push(['bad', 'Stiff in the cold']); }
   return out;
@@ -37,7 +38,7 @@ function terrainFit(a, tid){
 function badgesHTML(a){ return terrainFit(a, S.terrain).map(([k, t]) => `<span class="bdg ${k}">${t}</span>`).join(''); }
 // ---------- board ----------
 // a pick of a pack animal brings its whole group when the rules use groups
-const groupOf = a => A.RULES.groups && a.group ? a.group : 1;
+const groupOf = a => a.group || 1;
 const itemName = a => groupOf(a) > 1 ? `${a.groupName} (${groupOf(a)})` : a.name;
 const boardTotal = () => S.board.reduce((t, id) => t + A.BY_ID[id].price, 0);
 function dealNewBoard(seed){
@@ -48,14 +49,14 @@ function dealNewBoard(seed){
 function go(screen){
   S.screen = screen;
   for (const id of ['arena','draft','deploy','fight','lab']) $('s-' + id).hidden = id !== screen;
-  document.querySelectorAll('#steps button').forEach(b => b.setAttribute('aria-current', b.dataset.s === screen ? 'true' : 'false'));
+  document.querySelectorAll('#steps button[data-s]').forEach(b => b.setAttribute('aria-current', b.dataset.s === screen ? 'true' : 'false'));
   if (screen === 'deploy') { renderMounts(); sizeCanvas($('deployCanvas')); drawDeploy(); }
   if (screen === 'draft') renderDraft();
   if (screen === 'fight') { sizeCanvas($('fightCanvas')); }
   if (screen === 'lab') renderLabDesc();
   window.scrollTo({top:0});
 }
-document.querySelectorAll('#steps button').forEach(b => b.addEventListener('click', () => {
+document.querySelectorAll('#steps button[data-s]').forEach(b => b.addEventListener('click', () => {
   if (b.dataset.s === 'fight' && !S.world) { startBattle(); return; }
   go(b.dataset.s);
 }));
@@ -131,6 +132,8 @@ function renderDetail(){
 $('toDeployD').addEventListener('click', () => go('deploy'));
 $('clearTeam').addEventListener('click', () => { S.team.clear(); S.world = null; S.pos = {}; renderAll(); });
 $('newBoard').addEventListener('click', () => { dealNewBoard(); renderAll(); });
+// start over: fresh board and fight seed, empty team, default formation, back to the map screen
+$('startOver').addEventListener('click', () => { S.seed = newBoardSeed(); $('seedLbl').textContent = S.seed; dealNewBoard(); S.playing = false; renderAll(); go('arena'); });
 
 // ---------- arena setup ----------
 const TCOL = {savanna:'radial-gradient(circle at 70% 35%,#3d4a1f 0 14%,transparent 15%),linear-gradient(135deg,#5a4a1d,#2c2614)', river:'linear-gradient(90deg,#26341f 0 44%,#1f5165 44% 56%,#26341f 56%)', forest:'radial-gradient(circle at 30% 40%,#244a2c 0 18%,transparent 19%),radial-gradient(circle at 70% 60%,#244a2c 0 22%,transparent 23%),#17241a', tundra:'linear-gradient(135deg,#55606a,#2f363d)'};
@@ -260,7 +263,7 @@ function absPlacements(){
   return out;
 }
 function currentPlacements(){ const y = youAt(), abs = absPlacements(), out = {}; for (const id in abs) out[id] = {dx: abs[id].x - y.x, dy: abs[id].y - y.y}; return out; }
-function makeCfg(){ return { board:S.board.slice(), groups:A.RULES.groups, team:[...S.team], placements:currentPlacements(), human:youAt(), terrain:S.terrain, mode:S.mode, mount:(S.mount && S.team.has(S.mount)) ? S.mount : null, seed:S.seed }; }
+function makeCfg(){ return { board:S.board.slice(), team:[...S.team], placements:currentPlacements(), human:youAt(), terrain:S.terrain, mode:S.mode, mount:(S.mount && S.team.has(S.mount)) ? S.mount : null, seed:S.seed }; }
 function drawDeploy(){
   deployWorld = A.setup(makeCfg());
   const cv = $('deployCanvas'); const g = cv.getContext('2d'); const sc = cv._scale;
@@ -401,7 +404,7 @@ function drawUnits(g, sc, w, fr, events, t, opts){
     g.fillStyle = 'rgba(0,0,0,.45)'; g.beginPath(); g.arc(x + sc*.25, y + sc*.35, rr, 0, 7); g.fill();
     g.fillStyle = isH ? '#f5f2ea' : unit.side === 'P' ? '#1e5c53' : '#6b2a1d';
     g.beginPath(); g.arc(x, y, rr, 0, 7); g.fill();
-    const im = !isH && FACEIMG[s.id];
+    const im = !isH && FACEIMG[s.species || s.id];
     if (im && im.complete && im.naturalWidth){ g.save(); g.beginPath(); g.arc(x, y, rr, 0, 7); g.clip(); g.globalAlpha = u[4] === 'flee' ? .55 : u[15] === 'stalk' ? .6 : 1; g.drawImage(im, x - rr, y - rr, rr*2, rr*2); g.restore(); }
     // tier ring
     g.lineWidth = Math.max(2.5, rr*.22);
@@ -607,7 +610,7 @@ $('runPrice').addEventListener('click', () => {
     const order = S.board.slice(); for (let k = order.length - 1; k > 0; k--){ const j = Math.floor(R() * (k + 1)); [order[k], order[j]] = [order[j], order[k]]; }
     const team = []; let left = BUDGET; for (const id of order) if (A.BY_ID[id].price <= left){ team.push(id); left -= A.BY_ID[id].price; }
     const terrain = terr[i % 4];
-    const w = A.simulate({board:S.board, groups:A.RULES.groups, team, terrain, mode:S.mode, mount:bestMount(team) || null, seed: 5000 + i});
+    const w = A.simulate({board:S.board, team, terrain, mode:S.mode, mount:bestMount(team) || null, seed: 5000 + i});
     const sc = w.result.score;
     onBoard.forEach(a => (team.includes(a.id) ? on : off)[a.id].push(sc));
   }, p => $('pPrice').style.width = (p*100) + '%', () => {

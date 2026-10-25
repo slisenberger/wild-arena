@@ -10,7 +10,7 @@ const { Worker, isMainThread, parentPort, workerData } = require('worker_threads
 const SIM = process.env.SIM || './sim.js';
 const A = require(SIM);
 function tallest(t){ let b = null, h = 0; for (const id of t){ const m = A.BY_ID[id].mountH; if (m > h){ h = m; b = id; } } return b; }
-if (!isMainThread){ parentPort.postMessage(workerData.jobs.map(j => ({i: j.i, s: A.simulate({team: j.team, board: j.board, groups: A.RULES.groups, terrain: j.tr, mode: 'wild', mount: tallest(j.team), seed: j.seed}).result.score}))); return; }
+if (!isMainThread){ parentPort.postMessage(workerData.jobs.map(j => ({i: j.i, s: A.simulate({team: j.team, board: j.board, terrain: j.tr, mode: 'wild', mount: tallest(j.team), seed: j.seed}).result.score}))); return; }
 
 const fs = require('fs');
 const C = JSON.parse(fs.readFileSync(process.argv[2], 'utf8')), OUT = process.argv[3];
