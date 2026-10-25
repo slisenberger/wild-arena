@@ -200,7 +200,7 @@ th.n{text-align:right}
 <section class="screen" id="s-deploy" hidden>
   <div style="display:flex;flex-direction:column;gap:6px">
     <h2>Set your formation</h2>
-    <p class="lede">Drag your animals anywhere inside the ring around you. Guards hold these spots relative to you and peel off to intercept threats. The other side starts in the east half.</p>
+    <p class="lede">Drag anyone, including yourself, anywhere on your side of the map. Animals inside the escort ring move with you. Anything placed farther out holds that spot as a guard post and fights whatever comes within 14 m of it. On the river, swimmers can start in the water: a croc beside a ford ambushes whatever crosses.</p>
   </div>
   <div class="panel" style="display:flex;flex-direction:column;gap:10px"><div class="label">Ride one of your animals</div><div class="mounts" id="mountOpts"></div><p class="notes" id="mountNote"></p></div>
   <div class="stage" id="deployStage"><canvas id="deployCanvas"></canvas></div>
@@ -363,7 +363,9 @@ function setup(cfg){
   const w = { t:0, lastPress:0, T, mode:cfg.mode || 'wild', units:[], carcasses:[], trees:[], events:[], R, over:false, result:null, cfg, nid:0, frames:null };
   const human = mkUnit(HUMAN, 'H', 22, 36, w.nid++); human.atk = 0; w.units.push(human); w.human = human;
   w.shade = [];
-  if (T.water){ human.x = 16; human.y = 33; }
+  { const hp = homeFor(T.id); human.x = hp.x; human.y = hp.y; }
+  if (cfg.human){ const p = clampPlace(T.id, HUMAN, cfg.human.x, cfg.human.y); human.x = p.x; human.y = p.y; }
+  human.home = {x: human.x, y: human.y};
   // trees
   if (T.trees){
     let tries = 0;
@@ -388,11 +390,14 @@ function setup(cfg){
   const mountId = cfg.mount !== undefined ? cfg.mount : (cfg.ride ? 'elephant' : null);
   team.forEach((aid, i) => {
     const s = BY_ID[aid];
-    const p = (cfg.placements && cfg.placements[aid]) || defaultPlacement(team, aid, i);
-    const u = mkUnit(s, 'P', clamp(human.x + p.dx, 3, T.water ? T.water.x0 - 2 : W-3), clamp(human.y + p.dy, 3, H-3), w.nid++);
-    u.homeDx = p.dx; u.homeDy = p.dy; u.agit = .5;
+    let p = cfg.placements && cfg.placements[aid];
+    if (!p){ const dp = defaultPost(T.id, aid); p = dp ? {dx: dp.x - human.x, dy: dp.y - human.y} : defaultPlacement(team, aid, i); }
+    const pos = clampPlace(T.id, s, human.x + p.dx, human.y + p.dy);
+    const u = mkUnit(s, 'P', pos.x, pos.y, w.nid++);
+    u.homeDx = pos.x - human.x; u.homeDy = pos.y - human.y; u.agit = .5;
+    if (Math.hypot(u.homeDx, u.homeDy) > ESCORT_R && aid !== mountId) u.post = {x: pos.x, y: pos.y};
     w.units.push(u);
-    if (aid === mountId && s.mountH > 0){ u.x = human.x; u.y = human.y; u.homeDx = 0; u.homeDy = 0; u.rider = human; human.riding = u; w.mount = u; }
+    if (aid === mountId && s.mountH > 0){ u.x = human.x; u.y = human.y; u.homeDx = 0; u.homeDy = 0; u.post = null; u.rider = human; human.riding = u; w.mount = u; }
   });
   // enemies
   const enemies = ANIMALS.filter(a => !team.includes(a.id));
@@ -420,6 +425,30 @@ function setup(cfg){
   return w;
 }
 
+const ESCORT_R = 9, POST_R = 14;
+function zoneFor(tid){ const T = TERRAINS[tid] || TERRAINS.savanna; return {x0: 2, x1: T.water ? T.water.x1 : 45, y0: 2, y1: H - 2}; }
+function homeFor(tid){ const T = TERRAINS[tid] || TERRAINS.savanna; return T.water ? {x: 16, y: 33} : {x: 22, y: 36}; }
+// where an animal may stand at deployment: inside your zone; only swimmers may start in deep water
+function placeOK(tid, s, x, y){
+  const T = TERRAINS[tid] || TERRAINS.savanna, z = zoneFor(tid);
+  if (x < z.x0 || x > z.x1 || y < z.y0 || y > z.y1) return false;
+  if (T.water && x >= T.water.x0 && x <= T.water.x1 && !T.water.fords.some(([a, b]) => y >= a && y <= b)) return s.water >= .8;
+  return true;
+}
+function clampPlace(tid, s, x, y){
+  const z = zoneFor(tid); x = clamp(x, z.x0, z.x1); y = clamp(y, z.y0, z.y1);
+  const T = TERRAINS[tid] || TERRAINS.savanna;
+  if (!placeOK(tid, s, x, y) && T.water) x = T.water.x0 - 1.5;
+  return {x, y};
+}
+// swimmers start in the river by default on the river map: croc lurking beside a ford, hippo holding the deep water
+function defaultPost(tid, aid){
+  const T = TERRAINS[tid] || TERRAINS.savanna; if (!T.water) return null;
+  const W0 = T.water, mid = (W0.x0 + W0.x1) / 2;
+  if (aid === 'croc') return {x: W0.x0 + 2.5, y: W0.fords[0][1] + 3};
+  if (aid === 'hippo') return {x: mid, y: (W0.fords[0][1] + W0.fords[1][0]) / 2};
+  return null;
+}
 function defaultPlacement(team, aid, i){
   // biggest units in front (toward enemies, +x), guardians close, small on flanks/behind
   const sorted = [...team].sort((a,b) => BY_ID[b].mass - BY_ID[a].mass);
@@ -470,6 +499,7 @@ function canSee(w, viewer, u){
   let range = viewer.s.vision * (w.T.vision || 1);
   if (viewer.side !== 'E' && w.lookout) range *= 1.5;
   if (has(u, 'ambush') && u.ambushReady && u.state !== 'flee' && w.T.id === 'forest') range = Math.min(range, 9);
+  if (has(u, 'waterbound') && inWater(w, u) && u.state !== 'flee') range = Math.min(range, 7);
   return dist(viewer, u) <= range;
 }
 function teamSees(w, u){
@@ -560,15 +590,18 @@ function nearestPlayer(w,u){ let b=null,bd=1e9; for(const t of w.units) if(t.sid
 
 function allyTarget(w, u){
   const H = w.human;
-  const leash = u.rider ? 9 : has(u,'guardian') ? 12 : 24;
+  const anchor = u.post || H;
+  const leash = u.post ? POST_R : u.rider ? 9 : has(u,'guardian') ? 12 : 24;
   let best = null, bs = 0;
   const my = strength(u);
   for (const e of w.units){
     if (e.side !== 'E' || !active(e)) continue;
-    if (!teamSees(w, e)) continue;
-    const dh = dist(e, H), dm = dist(u, e);
+    if (!teamSees(w, e) && !(u.post && dist(u, e) < 10)) continue;
+    if (has(u,'waterbound') && w.T.water && distWater(w, e) > 10) continue;
+    const dh = dist(e, anchor), dm = dist(u, e);
     if (dh > leash && !(u.target === e && dh < leash + 8) && u.grudge !== e) continue;
     let intent = e.target === H ? 1 : (e.target && e.target.side === 'P') ? .5 : .25;
+    if (u.post) intent = Math.max(intent, .7);
     if (e.state === 'feed') intent = .04;
     if (e.state === 'flee' || e.heatstroke) intent = .02;
     if (e.sated && e.target !== H) intent *= .3;
@@ -938,6 +971,7 @@ function step(w){
     } else if (u.side === 'P'){
       const H = w.human;
       tx = H.x + u.homeDx; ty = H.y + u.homeDy;
+      if (u.post){ tx = u.post.x; ty = u.post.y; }
       if (u.rider || w.mount === u){ tx = H.x; ty = H.y; }
       frac = Math.hypot(tx-u.x, ty-u.y) > 6 ? .8 : .35;
       if (Math.hypot(tx-u.x, ty-u.y) < 1) frac = 0;
@@ -1094,7 +1128,8 @@ function moveHuman(w, h){
   }
   // pull toward allies (centroid weighted by strength), away from threats
   let gx = 0, gy = 0, gw = 0;
-  for (const a of units){ if (a.side === 'P' && active(a) && a.state !== 'flee'){ const s = strength(a); gx += a.x * s; gy += a.y * s; gw += s; } }
+  for (const a of units){ if (a.side === 'P' && active(a) && a.state !== 'flee' && !a.post){ const s = strength(a); gx += a.x * s; gy += a.y * s; gw += s; } }
+  if (!gw && h.home){ gx = h.home.x; gy = h.home.y; gw = 1; }
   let dx = 0, dy = 0;
   if (gw > 0){ gx /= gw; gy /= gw; const d = Math.hypot(gx-h.x, gy-h.y); if (d > 2){ dx += (gx-h.x)/d * Math.min(1, d/8); dy += (gy-h.y)/d * Math.min(1, d/8); } }
   if (danger > 0){ const m = Math.hypot(ax, ay) || 1; const k = Math.min(2, danger * 4); dx += ax/m * k; dy += ay/m * k; }
@@ -1260,7 +1295,7 @@ function randomDraft(R, budget){
   return team;
 }
 
-const API = { snowFactor, heatLoad, QUIET_T, STYLE, ANIMALS, HUMAN, BY_ID, TERRAINS, W, H, DT, MATCH_T, setup, step, simulate, snapshot, summarize, randomDraft, defaultPlacement, rng, hpOf, radiusOf };
+const API = { ESCORT_R, POST_R, zoneFor, homeFor, placeOK, clampPlace, defaultPost, snowFactor, heatLoad, QUIET_T, STYLE, ANIMALS, HUMAN, BY_ID, TERRAINS, W, H, DT, MATCH_T, setup, step, simulate, snapshot, summarize, randomDraft, defaultPlacement, rng, hpOf, radiusOf };
 if (typeof module !== 'undefined' && module.exports) module.exports = API; else root.Arena = API;
 })(typeof window !== 'undefined' ? window : globalThis);
 
@@ -1276,8 +1311,8 @@ const C = {you:'#4fd1bd', foe:'#ef6b4b', bone:'#d9cfb4', fg:'#ece6d3', muted:'#9
 const BUDGET = 1000;
 const maxStr = Math.max(...A.ANIMALS.map(a => Math.sqrt(A.hpOf(a) * a.dmg / a.cd)));
 
-const S = {
-  team: new Set(), focus:'elephant', terrain:'savanna', mode:'wild', mount:'', placements:{}, seed: (Math.random()*1e6|0) + 1,
+const S = window.__wa = {
+  team: new Set(), focus:'elephant', terrain:'savanna', mode:'wild', mount:'', pos:{}, youPos:null, seed: (Math.random()*1e6|0) + 1,
   screen:'draft', world:null, playT:0, playing:true, speed:2, sel:0, lastTs:0, dur:120
 };
 
@@ -1351,7 +1386,7 @@ function renderDraft(){
         S.focus = a.id;
         if (S.team.has(a.id)) S.team.delete(a.id);
         else if (a.price <= BUDGET - spent()) S.team.add(a.id);
-        S.world = null; S.placements = {};
+        S.world = null;
         if (S.mount && !S.team.has(S.mount)) S.mount = bestMount();
         if (!S.mount) S.mount = bestMount();
         renderAll();
@@ -1381,7 +1416,7 @@ function renderDetail(){
     <p class="notes" style="margin-top:10px">${a.pred ? 'Predator: hunts by weighing meat against risk, and gets hungrier as the fight goes on.' : 'Herbivore: fights intruders, predators and anything that wounds it.'}</p></div>`;
 }
 $('toDeployD').addEventListener('click', () => go('deploy'));
-$('clearTeam').addEventListener('click', () => { S.team.clear(); S.world = null; S.placements = {}; renderAll(); });
+$('clearTeam').addEventListener('click', () => { S.team.clear(); S.world = null; S.pos = {}; renderAll(); });
 
 // ---------- arena setup ----------
 const TCOL = {savanna:'radial-gradient(circle at 70% 35%,#3d4a1f 0 14%,transparent 15%),linear-gradient(135deg,#5a4a1d,#2c2614)', river:'linear-gradient(90deg,#26341f 0 44%,#1f5165 44% 56%,#26341f 56%)', forest:'radial-gradient(circle at 30% 40%,#244a2c 0 18%,transparent 19%),radial-gradient(circle at 70% 60%,#244a2c 0 22%,transparent 23%),#17241a', tundra:'linear-gradient(135deg,#55606a,#2f363d)'};
@@ -1390,7 +1425,7 @@ function renderArenaOpts(){
   for (const T of Object.values(A.TERRAINS)){
     const b = document.createElement('button'); b.className = 'opt'; b.setAttribute('aria-pressed', S.terrain === T.id);
     b.innerHTML = `<div class="sw" style="background:${TCOL[T.id]}"></div><h3>${T.name}</h3><p>${esc(T.desc)}</p>`;
-    b.addEventListener('click', () => { S.terrain = T.id; S.world = null; renderArenaOpts(); renderDraft(); });
+    b.addEventListener('click', () => { S.terrain = T.id; S.world = null; S.pos = {}; S.youPos = null; renderArenaOpts(); renderDraft(); });
     to.appendChild(b);
   }
   const mo = $('modeOpts'); mo.innerHTML = '';
@@ -1500,18 +1535,39 @@ function groundFor(terrain, trees, w, h, shade){
 
 // ---------- deploy ----------
 let deployWorld = null;
-function makeCfg(){ return { team:[...S.team], placements:S.placements, terrain:S.terrain, mode:S.mode, mount:(S.mount && S.team.has(S.mount)) ? S.mount : null, seed:S.seed }; }
+// Positions are stored absolute on the map; the sim takes offsets from you.
+function youAt(){ return S.youPos || A.homeFor(S.terrain); }
+function absPlacements(){
+  const out = {}, team = [...S.team], h = A.homeFor(S.terrain);
+  team.forEach((id, i) => {
+    if (S.pos[id]) { out[id] = S.pos[id]; return; }
+    const dp = A.defaultPost(S.terrain, id); if (dp){ out[id] = dp; return; }
+    const p = A.defaultPlacement(team, id, i), y = youAt(); out[id] = {x: y.x + p.dx, y: y.y + p.dy};
+  });
+  return out;
+}
+function currentPlacements(){ const y = youAt(), abs = absPlacements(), out = {}; for (const id in abs) out[id] = {dx: abs[id].x - y.x, dy: abs[id].y - y.y}; return out; }
+function makeCfg(){ return { team:[...S.team], placements:currentPlacements(), human:youAt(), terrain:S.terrain, mode:S.mode, mount:(S.mount && S.team.has(S.mount)) ? S.mount : null, seed:S.seed }; }
 function drawDeploy(){
   deployWorld = A.setup(makeCfg());
   const cv = $('deployCanvas'); const g = cv.getContext('2d'); const sc = cv._scale;
   g.drawImage(groundFor(S.terrain, deployWorld.trees, cv.width, cv.height, deployWorld.shade), 0, 0);
-  const H = deployWorld.human;
-  // deploy ring
-  g.strokeStyle = 'rgba(79,209,189,.55)'; g.setLineDash([sc*.8, sc*.6]); g.lineWidth = Math.max(1.5, sc*.18);
-  g.beginPath(); g.arc(H.x*sc, H.y*sc, 16*sc, 0, 7); g.stroke(); g.setLineDash([]);
-  g.fillStyle = 'rgba(79,209,189,.06)'; g.beginPath(); g.arc(H.x*sc, H.y*sc, 16*sc, 0, 7); g.fill();
-  // east half
-  g.fillStyle = 'rgba(239,107,75,.05)'; g.fillRect(50*sc, 0, 50*sc, cv.height);
+  const H = deployWorld.human, z = A.zoneFor(S.terrain);
+  // your side of the map
+  g.fillStyle = 'rgba(79,209,189,.07)'; g.fillRect(z.x0*sc, 0, (z.x1 - z.x0)*sc, cv.height);
+  g.strokeStyle = 'rgba(79,209,189,.7)'; g.lineWidth = Math.max(1.5, sc*.2); g.setLineDash([sc*1.2, sc*.8]);
+  g.beginPath(); g.moveTo(z.x1*sc, 0); g.lineTo(z.x1*sc, cv.height); g.stroke(); g.setLineDash([]);
+  g.fillStyle = 'rgba(79,209,189,.9)'; g.font = `800 ${Math.max(11, sc*1.8)}px "Big Shoulders Display", sans-serif`; g.textAlign = 'right'; g.fillText('YOUR SIDE', z.x1*sc - sc, sc*3); g.textAlign = 'left';
+  g.fillStyle = 'rgba(239,107,75,.05)'; g.fillRect(z.x1*sc, 0, (A.W - z.x1)*sc, cv.height);
+  // escort ring around you; post rings around guards holding a spot
+  g.strokeStyle = 'rgba(79,209,189,.6)'; g.setLineDash([sc*.6, sc*.5]); g.lineWidth = Math.max(1.2, sc*.15);
+  g.beginPath(); g.arc(H.x*sc, H.y*sc, A.ESCORT_R*sc, 0, 7); g.stroke(); g.setLineDash([]);
+  g.fillStyle = 'rgba(79,209,189,.85)'; g.font = `700 ${Math.max(9, sc*1.2)}px "Big Shoulders Display", sans-serif`; g.textAlign = 'center'; g.fillText('ESCORT', H.x*sc, (H.y + A.ESCORT_R + 1.6)*sc);
+  for (const u of deployWorld.units) if (u.side === 'P' && u.post){
+    g.strokeStyle = 'rgba(240,180,41,.45)'; g.setLineDash([sc*.4, sc*.5]); g.beginPath(); g.arc(u.post.x*sc, u.post.y*sc, A.POST_R*sc, 0, 7); g.stroke(); g.setLineDash([]);
+    g.fillStyle = 'rgba(240,180,41,.9)'; g.fillText('POST', u.post.x*sc, (u.post.y + u.r + 2.6)*sc);
+  }
+  g.textAlign = 'left';
   if (S.mode === 'allout'){ g.fillStyle = C.foe; for (let i = 0; i < 6; i++){ g.fillRect((A.W-1.2)*sc, (6 + i*10.8 - 2)*sc, sc*1.2, sc*4); } }
   const fr = A.snapshot(deployWorld);
   drawUnits(g, sc, deployWorld, fr, null, 0, {deploy:true});
@@ -1523,32 +1579,32 @@ function drawDeploy(){
   cv.addEventListener('pointerdown', e => {
     if (!deployWorld) return; const p = pos(e);
     let best = null, bd = 4;
-    for (const u of deployWorld.units) if (u.side === 'P' && !u.rider){ const d = Math.hypot(u.x - p.x, u.y - p.y); if (d < bd + u.r){ bd = d; best = u; } }
-    if (best){ drag = best.s.id; cv.setPointerCapture(e.pointerId); e.preventDefault(); }
+    for (const u of deployWorld.units) if ((u.side === 'P' && !u.rider) || u.side === 'H'){ const d = Math.hypot(u.x - p.x, u.y - p.y); if (d < bd + u.r){ bd = d; best = u; } }
+    if (best){ drag = best.side === 'H' ? 'you' : best.s.id; cv.setPointerCapture(e.pointerId); e.preventDefault(); }
   });
   cv.addEventListener('pointermove', e => {
-    if (!drag) return; const p = pos(e); const H = deployWorld.human;
-    let dx = p.x - H.x, dy = p.y - H.y; const d = Math.hypot(dx, dy);
-    if (d > 16){ dx *= 16/d; dy *= 16/d; }
-    S.placements = Object.assign({}, currentPlacements(), {[drag]:{dx, dy}});
+    if (!drag) return; const p = pos(e);
+    if (drag === 'you'){
+      const abs = absPlacements(), old = youAt();
+      const nu = A.clampPlace(S.terrain, A.HUMAN, p.x, p.y), dx = nu.x - old.x, dy = nu.y - old.y;
+      // escorts come with you; guards on a post stay where they are
+      for (const id in abs){ const q = abs[id]; if (Math.hypot(q.x - old.x, q.y - old.y) <= A.ESCORT_R) abs[id] = A.clampPlace(S.terrain, A.BY_ID[id], q.x + dx, q.y + dy); }
+      S.pos = abs; S.youPos = nu;
+      if (S.mount && S.team.has(S.mount)) S.pos[S.mount] = Object.assign({}, S.youPos);
+    } else {
+      S.pos = absPlacements(); S.pos[drag] = A.clampPlace(S.terrain, A.BY_ID[drag], p.x, p.y);
+    }
     drawDeploy();
   });
   const end = () => { drag = null; };
   cv.addEventListener('pointerup', end); cv.addEventListener('pointercancel', end);
 })();
-function currentPlacements(){
-  const out = {};
-  const team = [...S.team];
-  team.forEach((id, i) => { out[id] = S.placements[id] || A.defaultPlacement(team, id, i); });
-  return out;
-}
-$('autoForm').addEventListener('click', () => { S.placements = {}; drawDeploy(); });
+$('autoForm').addEventListener('click', () => { S.pos = {}; S.youPos = null; drawDeploy(); });
 $('newSeed').addEventListener('click', () => { S.seed = (Math.random()*1e6|0) + 1; $('seedLbl').textContent = S.seed; drawDeploy(); });
 $('startFight').addEventListener('click', () => startBattle());
 
 // ---------- battle ----------
 function startBattle(){
-  S.placements = currentPlacements();
   const w = A.simulate(makeCfg(), true);
   S.world = w; S.dur = w.result.t; S.playT = 0; S.playing = true; S.sel = 0;
   $('scrub').max = S.dur.toFixed(1); $('scrub').value = 0;
@@ -1795,7 +1851,6 @@ const sem = a => { const m = mean(a); return Math.sqrt(a.reduce((x, y) => x + (y
 $('runDraft').addEventListener('click', () => {
   const btn = $('runDraft'); btn.disabled = true;
   const terr = Object.keys(A.TERRAINS); const res = {}; terr.forEach(t => res[t] = []); const killers = {};
-  S.placements = currentPlacements();
   const base = makeCfg();
   runBatched(200, i => {
     const terrain = terr[i % 4];
