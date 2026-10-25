@@ -191,7 +191,8 @@ round. Report ± standard errors.
   peaceful elephant as a top threat and provoke it).
 
 ## Open threads (full list in BACKLOG.md)
-1. Test $1,300 with scheme C prices (aim: top teams 75–85% wins, per-map champions preserved).
-2. Add the chosen budget/price scheme as a rules option on the arena screen.
-3. Possibly lower white-rhino aggression (they're placid grazers) if it still feels too strong.
-4. Daily challenge (shared seed) + verified leaderboard (store config, re-simulate to verify score).
+1. Realism: lions (coalitions) encircle prey instead of charging in a line; owner decision on a more fragile human.
+2. Policy: give the net timing decisions (wait for an opening vs commit, pack timing) — target choice alone has no leverage.
+3. Movement policy pilot for pack harriers (wolves/hyenas) with an idle penalty.
+4. Identity: signature counters for lookout, bull chases, rhino blind charges; keep strengthening the light picks (ROSTER.md).
+5. Replayability: daily challenge (shared seed) + verified leaderboard, fixed-animal-count mode, rotating rosters, new animals.
