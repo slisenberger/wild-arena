@@ -1341,6 +1341,17 @@ function gaitMove(w, u, t, d, touch, vmax){
     }
     return go(d > 8 ? .55 : .8);
   }
+  if (g === 'rush' && has(u,'pack') && d > 9 && !t.latchedBy && t.state !== 'flee'){ // a coalition doesn't charge in line: the second lion swings round to the far side
+    let lead2 = null; for (const o of w.units) if (packMate(u, o) && o.target === t && dist(o, t) < d && dist(o, t) < 25){ lead2 = o; break; }
+    if (lead2){
+      const ax = t.x - lead2.x, ay = t.y - lead2.y, m = Math.hypot(ax, ay) || 1, fx = t.x + ax / m * 7, fy = t.y + ay / m * 7; // the point opposite its packmate
+      if (Math.hypot(fx - u.x, fy - u.y) > 4){ if (!u.encircling){ u.encircling = true; sig(w, u, 'encircles'); } const sx = fx - t.x, sy = fy - t.y, k = Math.hypot(sx, sy) || 1, ux = u.x - t.x, uy = u.y - t.y, ud = Math.hypot(ux, uy) || 1;
+        // swing wide around the prey rather than through it
+        const side = Math.sign(ux * sy - uy * sx) || 1, wx = t.x + (ux / ud * Math.cos(.8 * side) - uy / ud * Math.sin(.8 * side)) * Math.max(9, ud * .9), wy = t.y + (ux / ud * Math.sin(.8 * side) + uy / ud * Math.cos(.8 * side)) * Math.max(9, ud * .9);
+        return (ux * sx + uy * sy) / (ud * k) > .3 ? {tx: fx, ty: fy, frac: 1} : {tx: wx, ty: wy, frac: 1}; }
+    }
+  }
+  if (u.encircling && (g !== 'rush' || d <= 9)) u.encircling = false;
   if (g === 'stalk' || g === 'rush'){
     const P = s.pounce || 5;
     if (d <= P && d > touch * .8 && u.pounceCd <= 0 && u.stam > .2 && reachable(u, t)){
