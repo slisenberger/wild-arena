@@ -36,9 +36,12 @@ function terrainFit(a, tid){
 }
 function badgesHTML(a){ return terrainFit(a, S.terrain).map(([k, t]) => `<span class="bdg ${k}">${t}</span>`).join(''); }
 // ---------- board ----------
+// a pick of a pack animal brings its whole group when the rules use groups
+const groupOf = a => A.RULES.groups && a.group ? a.group : 1;
+const itemName = a => groupOf(a) > 1 ? `${a.groupName} (${groupOf(a)})` : a.name;
 const boardTotal = () => S.board.reduce((t, id) => t + A.BY_ID[id].price, 0);
 function dealNewBoard(seed){
-  S.boardSeed = seed || newBoardSeed(); S.board = A.dealBoard(S.boardSeed);
+  S.boardSeed = seed || newBoardSeed(); S.board = A.dealBoard(S.boardSeed, {terrain: S.terrain});
   S.team.clear(); S.pos = {}; S.youPos = null; S.mount = ''; S.world = null; S.focus = S.board[0];
 }
 // ---------- navigation ----------
@@ -79,10 +82,10 @@ function renderDraft(){
       const c = document.createElement('button'); c.className = 'card' + (picked ? ' picked' : '') + (!picked && a.price > left ? ' cant' : '');
       c.setAttribute('aria-pressed', picked);
       const r1 = document.createElement('div'); r1.className = 'row1'; r1.appendChild(tok(a, 46));
-      const nm = document.createElement('div'); nm.className = 'nm'; nm.textContent = a.name; r1.appendChild(nm);
+      const nm = document.createElement('div'); nm.className = 'nm'; nm.textContent = itemName(a); r1.appendChild(nm);
       c.appendChild(r1);
       const st = document.createElement('div'); st.className = 'styleTag'; st.textContent = a.style; c.appendChild(st);
-      const fit = (a.rare ? '<span class="bdg good">Rare</span>' : '') + badgesHTML(a); if (fit){ const bd = document.createElement('div'); bd.className = 'badges'; bd.innerHTML = fit; c.appendChild(bd); }
+      const fit = (a.rare ? '<span class="bdg good">Rare</span>' : '') + (groupOf(a) > 1 ? `<span class="bdg good">×${groupOf(a)}, hunt together</span>` : '') + badgesHTML(a); if (fit){ const bd = document.createElement('div'); bd.className = 'badges'; bd.innerHTML = fit; c.appendChild(bd); }
       const meta = document.createElement('div'); meta.className = 'meta'; meta.textContent = `${a.mass.toLocaleString()} kg · ${kmh(a.spd)} km/h`; c.appendChild(meta);
       const bars = document.createElement('div'); bars.className = 'bars';
       const rows = [['Power', strengthOf(a)/maxStr], ['Armor', a.armor/.6], ['Speed', a.spd/20], ['Stamina', Math.min(1, a.stam/60)]];
@@ -105,7 +108,7 @@ function renderDraft(){
   // team line
   const tl = $('teamline'); tl.innerHTML = '';
   if (!S.team.size){ const s = document.createElement('span'); s.className = 'label'; s.textContent = 'No animals drafted yet. You can fight alone, but you will not like it.'; tl.appendChild(s); }
-  for (const id of S.team){ const a = A.BY_ID[id]; const ch = document.createElement('span'); ch.className = 'chip'; ch.appendChild(tok(a)); ch.append(a.name + ' $' + a.price); tl.appendChild(ch); }
+  for (const id of S.team){ const a = A.BY_ID[id]; const ch = document.createElement('span'); ch.className = 'chip'; ch.appendChild(tok(a)); ch.append(itemName(a) + ' $' + a.price); tl.appendChild(ch); }
   const foes = S.board.filter(id => !S.team.has(id));
   const fl = document.createElement('span'); fl.className = 'label'; fl.style.marginLeft = '6px';
   fl.textContent = `Against you: ${foes.length} animals, $${foes.reduce((t, id) => t + A.BY_ID[id].price, 0).toLocaleString()}`; tl.appendChild(fl);
@@ -120,7 +123,7 @@ function renderDetail(){
     ['Reach', a.reach + ' m'], ['Sprint', a.stam + ' s'], ['Breaks at', Math.round(a.flee*100) + '% morale'],
     ['Heat tolerance', a.heat.toFixed(2)], ['Cold tolerance', a.cold.toFixed(2)], ['Strikes up to', a.strikeH + ' m'], ['Carries you at', a.mountH ? a.mountH + ' m' : 'too small'],
   ];
-  d.innerHTML = `<div><div style="display:flex;gap:10px;align-items:center;margin-bottom:10px">${tokHTML(a, 64)}<h3 style="font-size:22px">${esc(a.name)}</h3></div>
+  d.innerHTML = `<div><div style="display:flex;gap:10px;align-items:center;margin-bottom:10px">${tokHTML(a, 64)}<h3 style="font-size:22px">${esc(itemName(a))}</h3></div>${groupOf(a) > 1 ? `<p class="notes" style="margin:-4px 0 8px">One pick brings ${groupOf(a)} of them; they keep each other's nerve and go for the same target. Left on the board, all ${groupOf(a)} come at you.</p>` : ''}
     <div class="stats">${stats.map(([k,v]) => `<div class="stat"><div class="v">${esc(v)}</div><div class="k">${k}</div></div>`).join('')}</div></div>
     <div><div class="styleTag" style="font-size:15px">${esc(a.style)}</div><p style="margin:4px 0 10px">${esc(a.how)}</p>${badgesHTML(a) ? `<div class="badges" style="margin-bottom:10px">${badgesHTML(a)} <span class="notes" style="font-size:12px">in the ${esc(A.TERRAINS[S.terrain].name.toLowerCase())}</span></div>` : ''}<div class="label" style="margin-bottom:6px">Traits</div><ul class="traits">${a.traits.map(t => `<li>${esc(t)}</li>`).join('')}</ul>
     <p class="notes" style="margin-top:10px">${a.pred ? 'Predator: hunts by weighing meat against risk, and gets hungrier as the fight goes on.' : 'Herbivore: fights intruders, predators and anything that wounds it.'}</p></div>`;
@@ -136,7 +139,7 @@ function renderArenaOpts(){
   for (const T of Object.values(A.TERRAINS)){
     const b = document.createElement('button'); b.className = 'opt'; b.setAttribute('aria-pressed', S.terrain === T.id);
     b.innerHTML = `<div class="sw" style="background:${TCOL[T.id]}"></div><h3>${T.name}</h3><p>${esc(T.desc)}</p>`;
-    b.addEventListener('click', () => { S.terrain = T.id; S.world = null; S.pos = {}; S.youPos = null; renderArenaOpts(); renderDraft(); });
+    b.addEventListener('click', () => { if (S.terrain !== T.id){ S.terrain = T.id; dealNewBoard(S.boardSeed); } S.world = null; S.pos = {}; S.youPos = null; renderArenaOpts(); renderDraft(); renderBudget(); }); // water-only animals depend on the map
     to.appendChild(b);
   }
   const mo = $('modeOpts'); mo.innerHTML = '';
@@ -257,7 +260,7 @@ function absPlacements(){
   return out;
 }
 function currentPlacements(){ const y = youAt(), abs = absPlacements(), out = {}; for (const id in abs) out[id] = {dx: abs[id].x - y.x, dy: abs[id].y - y.y}; return out; }
-function makeCfg(){ return { board:S.board.slice(), team:[...S.team], placements:currentPlacements(), human:youAt(), terrain:S.terrain, mode:S.mode, mount:(S.mount && S.team.has(S.mount)) ? S.mount : null, seed:S.seed }; }
+function makeCfg(){ return { board:S.board.slice(), groups:A.RULES.groups, team:[...S.team], placements:currentPlacements(), human:youAt(), terrain:S.terrain, mode:S.mode, mount:(S.mount && S.team.has(S.mount)) ? S.mount : null, seed:S.seed }; }
 function drawDeploy(){
   deployWorld = A.setup(makeCfg());
   const cv = $('deployCanvas'); const g = cv.getContext('2d'); const sc = cv._scale;
@@ -604,7 +607,7 @@ $('runPrice').addEventListener('click', () => {
     const order = S.board.slice(); for (let k = order.length - 1; k > 0; k--){ const j = Math.floor(R() * (k + 1)); [order[k], order[j]] = [order[j], order[k]]; }
     const team = []; let left = BUDGET; for (const id of order) if (A.BY_ID[id].price <= left){ team.push(id); left -= A.BY_ID[id].price; }
     const terrain = terr[i % 4];
-    const w = A.simulate({board:S.board, team, terrain, mode:S.mode, mount:bestMount(team) || null, seed: 5000 + i});
+    const w = A.simulate({board:S.board, groups:A.RULES.groups, team, terrain, mode:S.mode, mount:bestMount(team) || null, seed: 5000 + i});
     const sc = w.result.score;
     onBoard.forEach(a => (team.includes(a.id) ? on : off)[a.id].push(sc));
   }, p => $('pPrice').style.width = (p*100) + '%', () => {

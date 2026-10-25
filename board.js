@@ -8,7 +8,7 @@ const { Worker, isMainThread, parentPort, workerData } = require('worker_threads
 const SIM = process.env.SIM || './sim.js';
 const A = require(SIM);
 function tallest(t){ let b = null, h = 0; for (const id of t){ const m = A.BY_ID[id].mountH; if (m > h){ h = m; b = id; } } return b; }
-if (!isMainThread){ parentPort.postMessage(workerData.jobs.map(j => ({k: j.k, s: A.simulate({team: j.team, board: j.board, terrain: j.tr, mode: 'wild', mount: tallest(j.team), seed: j.seed}).result.score}))); return; }
+if (!isMainThread){ parentPort.postMessage(workerData.jobs.map(j => ({k: j.k, s: A.simulate({team: j.team, board: j.board, groups: A.RULES.groups, terrain: j.tr, mode: 'wild', mount: tallest(j.team), seed: j.seed}).result.score}))); return; }
 const NB = +process.argv[2] || 20, NS = +process.argv[3] || 2, NV = +process.argv[4] || 24, SIZES = (process.argv[5] || '8,10,12').split(',').map(Number), BUD = +process.argv[6] || 1000, TOT = +process.argv[7] || 0;
 const PJ = process.env.PRICES ? JSON.parse(require('fs').readFileSync(process.env.PRICES, 'utf8')) : {}, PR = Object.assign({}, ...A.ANIMALS.map(a => ({[a.id]: a.price})), PJ.proposed || PJ);
 const RAREP = process.env.RAREP !== undefined ? +process.env.RAREP : 0.1;
@@ -17,7 +17,7 @@ const par = jobs => Promise.all([...Array(NW).keys()].map(wi => new Promise(res 
 const mean = a => a.reduce((p, q) => p + q, 0) / a.length;
 const boards = [];
 for (const K of SIZES) for (let b = 0; b < NB; b++){
-  const board = A.dealBoard(Math.floor(R() * 1e9) + 1, {board: K, total: TOT || null, tol: 100, rareP: RAREP}, PR), tr = TERR[Math.floor(R() * 4)], teams = [];
+  const tr = TERR[Math.floor(R() * 4)], board = A.dealBoard(Math.floor(R() * 1e9) + 1, {board: K, total: TOT || null, tol: 100, rareP: RAREP, terrain: tr}, PR), teams = [];
   const minP = Math.min(...board.map(id => PR[id]));
   // every team that spends the budget down to less than the cheapest board animal
   for (let m = 1; m < (1 << K); m++){ let c = 0; const t = []; for (let i = 0; i < K; i++) if (m >> i & 1){ c += PR[board[i]]; t.push(board[i]); } if (c <= BUD && c > BUD - minP) teams.push(t); }

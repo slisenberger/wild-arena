@@ -277,7 +277,7 @@ const W = 100, H = 66, DT = 0.1, MATCH_T = 300, QUIET_T = 30;
 // swim = speed in deep water, m/s (real swimming/bottom-walking speed, not a fraction of sprint speed).
 // tag aquaStalk = hides submerged like a croc, lunges out of the water, first strike from the water is an ambush.
 const ANIMALS = [
- {id:'elephant', name:'African Elephant', abbr:'ELE', price:400, mass:6000, spd:7, dmg:260, cd:1.6, armor:.35, reach:3.5, stam:20, heat:.8, cold:.6, water:.5, swim:1.5, aggr:.55, flee:.15, corner:1.3, pred:false, charge:true, smart:.95, vision:40, lift:0, tags:['hatesPredators','mount'],
+ {id:'elephant', name:'African Elephant', abbr:'ELE', price:400, mass:6000, spd:7, dmg:260, cd:1.6, armor:.35, reach:3.5, stam:20, heat:.8, cold:.6, water:.5, swim:1.5, aggr:.55, flee:.15, corner:1.3, pred:false, charge:true, smart:.95, vision:40, lift:0, tags:['hatesPredators','mount','sweep'],
   traits:['Rideable: you sit 3.2 m up, out of reach of anything that cannot leap that high','Mobs predators on sight','Tusk, trunk and stomp: momentum hits scatter anything smaller']},
  {id:'rhino', name:'White Rhino', abbr:'RHI', price:400, mass:2300, spd:14, dmg:180, cd:1.4, armor:.55, reach:2.6, stam:15, heat:.8, cold:.55, water:0, swim:1, aggr:.4, flee:.12, corner:1.3, pred:false, charge:true, smart:.3, vision:18, lift:0, tags:[],
   traits:['Thickest armor on the board','Placid grazer with poor eyesight: slow to anger, but a full charge is devastating','Fastest heavyweight charge (50 km/h)']},
@@ -297,17 +297,17 @@ const ANIMALS = [
   traits:['Very hard to kill (+20% durability)','Takes kills from cougars and wolves','Scavenges carcasses aggressively']},
  {id:'tiger', name:'Bengal Tiger', abbr:'TIG', price:200, mass:220, spd:17, dmg:125, cd:.9, armor:.1, reach:2, stam:6, heat:.75, cold:.65, water:.5, swim:2, aggr:.7, flee:.3, corner:1.3, pred:true, latch:true, charge:false, smart:.7, vision:30, lift:3.6, tags:['ambush'], prey:{human:1.4},
   traits:['Throat hold: latches onto prey up to 2.5x its mass','Ambush first strike (x1.7, x2 in forest)','Can leap onto an elephant (3.6 m)']},
- {id:'lion', name:'African Lion', abbr:'LIO', price:200, mass:190, spd:20, dmg:105, cd:.9, armor:.15, reach:2, stam:5, heat:.95, cold:.55, water:-.3, swim:1.2, aggr:.65, flee:.35, corner:1.3, pred:true, latch:true, charge:false, smart:.6, vision:32, lift:3.0, tags:['mane','pack'], prey:{human:1.1}, rivals:{hyena:2.2},
+ {id:'lion', name:'African Lion', abbr:'LIO', price:200, mass:190, spd:20, dmg:105, cd:.9, armor:.15, reach:2, stam:5, heat:.95, cold:.55, water:-.3, swim:1.2, aggr:.65, flee:.35, corner:1.3, pred:true, latch:true, charge:false, smart:.6, vision:32, lift:3.0, tags:['mane','pack'], group:2, groupName:'Lion pride', prey:{human:1.1}, rivals:{hyena:2.2},
   traits:['Mane protects the neck: throat holds do 40% less','Pride animal: nervous alone, bolder beside another pack animal (not hyenas)','Kills hyenas on sight']},
  {id:'gorilla', name:'Silverback Gorilla', abbr:'GOR', price:200, mass:180, spd:11, dmg:90, cd:1.0, armor:.15, reach:2, stam:10, heat:.8, cold:.5, water:-.8, swim:0.5, aggr:.35, flee:.4, corner:1.4, pred:false, charge:false, smart:.9, vision:25, lift:0, climb:true, tags:['guardian','bluff'],
   traits:['Guardian: sticks closest to you, +40% damage against anything targeting you','Bluff charge: first approach shakes the morale of smaller enemies','Climbs trees']},
  {id:'jaguar', name:'Jaguar', abbr:'JAG', price:100, mass:100, spd:16, dmg:85, cd:.9, armor:.05, reach:1.8, stam:6, heat:.9, cold:.5, water:.7, swim:2, aggr:.6, flee:.35, corner:1.3, pred:true, latch:true, charge:false, smart:.6, vision:28, lift:3.5, climb:true, pierce:.5, tags:['ambush'], prey:{human:.8},
   traits:['Skull bite ignores half of armor','Swims, climbs, ambushes','Small (100 kg)']},
- {id:'wolf', name:'Gray Wolf', abbr:'WLF', price:100, mass:45, spd:16, dmg:40, cd:.7, armor:.05, reach:1.6, stam:60, heat:.7, cold:1, water:.2, swim:1.5, aggr:.5, flee:.5, corner:1.3, pred:true, charge:false, smart:.8, vision:35, lift:0, tags:['hamstring','pack'], prey:{human:.6},
+ {id:'wolf', name:'Gray Wolf', abbr:'WLF', price:100, mass:45, spd:16, dmg:40, cd:.7, armor:.05, reach:1.6, stam:60, heat:.7, cold:1, water:.2, swim:1.5, aggr:.5, flee:.5, corner:1.3, pred:true, charge:false, smart:.8, vision:35, lift:0, tags:['hamstring','pack'], group:3, groupName:'Wolf pack', prey:{human:.6},
   traits:['Hamstring bites slow the target','Endless stamina','Pack hunter: nervous alone; with another pack animal it is bolder and they hunt the same target']},
  {id:'cougar', name:'Cougar', abbr:'CGR', price:100, mass:60, spd:18, dmg:55, cd:.8, armor:.05, reach:1.8, stam:5, heat:.8, cold:.85, water:-.2, swim:1.2, aggr:.45, flee:.6, corner:1.3, pred:true, latch:true, charge:false, smart:.6, vision:30, lift:5, climb:true, tags:['ambush','yields'], prey:{human:.8},
   traits:['Huge leap (5 m): can reach a rider or a tree','Gives way to bears and wolves','Ambusher']},
- {id:'hyena', name:'Spotted Hyena', abbr:'HYE', price:100, mass:60, spd:16, dmg:60, cd:.8, armor:.1, reach:1.6, stam:50, heat:.9, cold:.6, water:.1, swim:1.5, aggr:.55, flee:.45, corner:1.3, pred:true, charge:false, smart:.8, vision:35, lift:0, pierce:.3, hpMul:1.3, tags:['scavenger','hamstring','pack'], prey:{human:1.0}, rivals:{lion:1.3},
+ {id:'hyena', name:'Spotted Hyena', abbr:'HYE', price:100, mass:60, spd:16, dmg:60, cd:.8, armor:.1, reach:1.6, stam:50, heat:.9, cold:.6, water:.1, swim:1.5, aggr:.55, flee:.45, corner:1.3, pred:true, charge:false, smart:.8, vision:35, lift:0, pierce:.3, hpMul:1.3, tags:['scavenger','hamstring','pack'], group:3, groupName:'Hyena clan', prey:{human:1.0}, rivals:{lion:1.3},
   traits:['Bone-crushing bite ignores 30% of armor','Tough (+30% durability) and tireless','Clan animal: bolder beside a wolf (never a lion); eats fast at carcasses']},
  // ---- added Oct 2026 (no portrait yet: shown as a lettered token) ----
  {id:'blackrhino', name:'Black Rhino', abbr:'BRH', price:300, mass:1200, spd:15, swim:1, dmg:160, cd:1.3, armor:.5, reach:2.3, stam:12, heat:.8, cold:.5, water:0, aggr:.8, flee:.1, corner:1.4, pred:false, charge:true, smart:.3, vision:15, lift:0, tags:['blindCharger'],
@@ -322,6 +322,14 @@ const ANIMALS = [
   traits:['Fearless: its morale never breaks, whatever it faces','Thick, loose skin shrugs off bites; very hard to kill for its size','Goes for the legs']},
  {id:'triceratops', name:'Triceratops', abbr:'TRI', price:500, mass:8000, spd:8, swim:1.2, dmg:300, cd:1.5, armor:.5, reach:3.2, stam:15, heat:.8, cold:.6, water:.3, aggr:.6, flee:.1, corner:1.3, pred:false, charge:true, smart:.3, vision:25, lift:0, rare:true, tags:['hatesPredators','giant'],
   traits:['Rare: only turns up on the odd board','Eight tonnes, a bony frill and two 1 m brow horns','Rideable 3 m up; charges like a rhino the size of an elephant']},
+ {id:'mammoth', name:'Woolly Mammoth', abbr:'MAM', price:500, mass:6000, spd:7, swim:1.5, dmg:260, cd:1.6, armor:.4, reach:3.6, stam:20, heat:.4, cold:1, water:.5, aggr:.55, flee:.15, corner:1.3, pred:false, charge:true, smart:.95, vision:40, lift:0, rare:true, tags:['hatesPredators','giant','sweep'],
+  traits:['Rare: only turns up on the odd board','An elephant in a fur coat: shrugs off the cold, wilts in the heat','Huge curved tusks sweep everything in reach; rideable 3.2 m up']},
+ {id:'blackbear', name:'Black Bear', abbr:'BBR', price:100, mass:120, spd:13.5, swim:1.8, dmg:75, cd:.9, armor:.25, reach:1.8, stam:15, heat:.7, cold:.9, water:.4, aggr:.35, flee:.4, corner:1.3, pred:true, charge:false, smart:.7, vision:25, lift:2.5, climb:true, tags:['scavenger'], prey:{human:.4},
+  traits:['Usually timid: more bluster than fight','Climbs trees as easily as you do','A real fighter when cornered']},
+ {id:'leopard', name:'Leopard', abbr:'LEO', price:100, mass:70, spd:16, swim:1.5, dmg:70, cd:.9, armor:.05, reach:1.8, stam:6, heat:.95, cold:.6, water:.4, aggr:.6, flee:.4, corner:1.3, pred:true, latch:true, charge:false, smart:.7, vision:30, lift:3.5, climb:true, tags:['ambush'], prey:{human:.9},
+  traits:['Pound for pound the strongest climber of the big cats','Ambush first strike (x1.7, x2 in forest)','Throat hold on prey up to 2.5x its mass']},
+ {id:'boar', name:'Wild Boar', abbr:'BOA', price:100, mass:150, spd:13, swim:1.5, dmg:75, cd:.8, armor:.3, reach:1.6, stam:20, heat:.7, cold:.85, water:.4, aggr:.7, flee:.2, corner:1.6, pred:false, charge:true, smart:.6, vision:20, lift:0, tags:['standsGround'],
+  traits:['A big male: tusks that slash at thigh height','A shield of thick skin and gristle over the shoulders','Hard to put down, and fights hardest when cornered']},
 ];
 // Fighting styles: how each animal moves and attacks. strikeH = highest point it can hit (m); mountH = rider height if it can carry you (0 = can't).
 const STYLE = {
@@ -346,6 +354,10 @@ const STYLE = {
  moose:{gait:'charge', strikeH:2.4, mountH:2.0, overshoot:3, turn:1.0, wheel:.8, style:'Stomper', how:'Short charge, then rears up and rains front-hoof strikes.'},
  ostrich:{gait:'keepaway', strikeH:2, mountH:1.4, style:'Kickboxer', how:'Outruns trouble; if cornered, kicks forward and down with a dagger claw.'},
  honeybadger:{gait:'lumber', strikeH:.8, mountH:0, style:'Pest', how:'Trundles straight at anything, latches onto ankles and will not quit.'},
+ mammoth:{gait:'lumber', strikeH:5, mountH:3.2, style:'Ice-age bulldozer', how:'Wades in steadily; every strike is a tusk-and-trunk sweep that also hits everything else within reach.'},
+ blackbear:{gait:'lumber', strikeH:2.2, mountH:0, style:'Bluffer', how:'Huffs, swats and bluff-charges; brawls for real only when it has to.'},
+ leopard:{gait:'stalk', strikeH:3.5, mountH:0, pounce:7, style:'Stalker', how:'Creeps in close under cover, then pounces from 7 m for the throat.'},
+ boar:{gait:'charge', strikeH:1.0, mountH:0, overshoot:3, turn:1.5, wheel:.4, style:'Slasher', how:'Short, low charges with a sideways slash of the tusks, then spins and comes again.'},
  triceratops:{gait:'charge', strikeH:2.4, mountH:3.0, overshoot:6, turn:.3, wheel:1.5, style:'Living battering ram', how:'Lowers its frill and charges; brow horns at the height of a lion\'s chest.'},
 };
 ANIMALS.forEach(a => Object.assign(a, STYLE[a.id]));
@@ -419,6 +431,12 @@ function setup(cfg){
     if (Math.hypot(u.homeDx, u.homeDy) > ESCORT_R && aid !== mountId) u.post = {x: pos.x, y: pos.y};
     w.units.push(u);
     if (aid === mountId && s.mountH > 0){ u.x = human.x; u.y = human.y; u.homeDx = 0; u.homeDy = 0; u.post = null; u.rider = human; human.riding = u; w.mount = u; }
+    // a group item (wolf pack, hyena clan, lion pride) brings its packmates, placed around the leader
+    for (let k = 1; k < groupSize(cfg, s); k++){
+      const a = k * 2.4, q = clampPlace(T.id, s, pos.x + Math.cos(a) * 2.2, pos.y + Math.sin(a) * 2.2), m = mkUnit(s, 'P', q.x, q.y, w.nid++);
+      m.homeDx = q.x - human.x; m.homeDy = q.y - human.y; m.agit = .5; if (u.post) m.post = {x: q.x, y: q.y};
+      w.units.push(m);
+    }
   });
   // enemies
   // the other side is every animal you didn't pick: from the whole roster, or only from this game's board (cfg.board)
@@ -434,9 +452,13 @@ function setup(cfg){
       if (s.id === 'croc' && !T.water) { x = 60 + R()*30; }
       ok = !w.units.some(u => Math.hypot(u.x-x, u.y-y) < (tries < 200 ? 9 : 5)) && !w.trees.some(t => Math.hypot(t.x-x, t.y-y) < t.r + 3);
     }
-    const u = mkUnit(s, 'E', x, y, w.nid++); w.units.push(u);
-    if (w.mode === 'allout'){ u.releaseT = 0; }
-    u.atk = R()*1; u.agit = Math.max(u.agit, .4 + R()*.2);
+    for (let k = 0; k < groupSize(cfg, s); k++){ // packmates arrive together
+      let gx = x, gy = y;
+      if (k){ const a = R() * 6.283; gx = clamp(x + Math.cos(a) * 3, 3, W - 3); gy = clamp(y + Math.sin(a) * 3, 3, H - 3); }
+      const u = mkUnit(s, 'E', gx, gy, w.nid++); w.units.push(u);
+      if (w.mode === 'allout'){ u.releaseT = 0; }
+      u.atk = R()*1; u.agit = Math.max(u.agit, .4 + R()*.2);
+    }
   });
   w.units.forEach(u => { u.ambushReady = has(u, 'ambush') || has(u, 'aquaStalk'); u.orbitDir = R() < .5 ? 1 : -1; u.dartT = R() * 1.5; });
   if (w.mode === 'allout'){
@@ -451,6 +473,8 @@ function setup(cfg){
 }
 
 const ESCORT_R = 9, POST_R = 14;
+// how many animals one pick brings: group items (packs) only when the rules use them (cfg.groups)
+function groupSize(cfg, s){ return cfg.groups && s.group ? s.group : 1; }
 function zoneFor(tid){ const T = TERRAINS[tid] || TERRAINS.savanna; return {x0: 2, x1: T.water ? T.water.x1 : 45, y0: 2, y1: H - 2}; }
 function homeFor(tid){ const T = TERRAINS[tid] || TERRAINS.savanna; return T.water ? {x: 16, y: 33} : {x: 22, y: 36}; }
 // where an animal may stand at deployment: inside your zone; only swimmers may start in deep water
@@ -519,7 +543,7 @@ function onFord(w, u){ return !!(w.T.water && inBand(w, u.x) && inFord(w, u.y));
 function distWater(w, u){ if (!w.T.water) return 1e9; const W0 = w.T.water; return u.x < W0.x0 ? W0.x0 - u.x : u.x > W0.x1 ? u.x - W0.x1 : (inFord(w, u.y) ? 1 : 0); }
 function waterPoint(w, u){ const W0 = w.T.water; let y = u.y; for (const [a, b] of W0.fords) if (y >= a - 2 && y <= b + 2) y = (y - a < b - y) ? a - 4 : b + 4; return {x: (W0.x0 + W0.x1) / 2, y: clamp(y, 3, H - 3)}; }
 function inShade(w, u){ return w.shade.some(t => Math.hypot(t.x - u.x, t.y - u.y) < t.r); }
-function snowFactor(s){ if (['polar','wolf','cougar','moose'].includes(s.id)) return 1; if (s.id === 'bison') return .92; return clamp(1.05 - .25 * Math.log10(Math.max(50, s.mass) / 50), .5, .95); }
+function snowFactor(s){ if (['polar','wolf','cougar','moose'].includes(s.id)) return 1; if (s.id === 'mammoth') return .75; if (s.id === 'bison') return .92; return clamp(1.05 - .25 * Math.log10(Math.max(50, s.mass) / 50), .5, .95); }
 function heatLoad(s){ return Math.pow(s.mass / 400, .3) / Math.pow(s.heat, 2.2); }
 function ambient(w){ return w.T.amb * (w.T.heatRamp ? Math.min(2.2, 1 + w.t / 110) : 1); }
 function active(u){ return u.state !== 'dead' && !u.escaped && !u.penned; }
@@ -574,7 +598,7 @@ function predatorTarget(w, u){
     if (!hostile(w, u, t)) continue;
     if (!canSee(w, u, t) && !(t.side === 'H' && dist(u, t) < 70)) continue;
     const d = dist(u, t);
-    if (has(u,'waterbound') && w.T.water && distWater(w, t) > 16) continue;
+    if (has(u,'waterbound') && w.T.water && distWater(w, t) > 5) continue; // a croc takes prey at the water's edge, never on open ground
     const ts = strength(t);
     let vuln = Math.min(4, Math.pow(my / ts, 1.2));
     if (has(u,'fearless')) vuln = Math.max(vuln, .6); // a honey badger takes on anything
@@ -1039,7 +1063,7 @@ function step(w){
       } else { tx = c.x; ty = c.y; frac = .7; }
     } else if (u.state === 'engage' && u.target){
       const t = u.target, d = dist(u, t), touch = u.r + t.r + u.s.reach * .6;
-      if (has(u,'waterbound') && w.T.water && distWater(w, t) > 16){ const p = waterPoint(w, u); tx = p.x; ty = t.y; frac = .3; }
+      if (has(u,'waterbound') && w.T.water && distWater(w, t) > 5){ const p = waterPoint(w, u); tx = p.x; ty = t.y; frac = .3; }
       else { const m = gaitMove(w, u, t, d, touch, vmax); if (m === null) continue; tx = m.tx; ty = m.ty; frac = m.frac; }
     } else if (u.state === 'carry' || u.state === 'withdraw'){
       const m = evadeMove(w, u); tx = m.tx; ty = m.ty; frac = m.frac;
@@ -1055,7 +1079,7 @@ function step(w){
       if (!u.wander || R() < .01){
         const H0 = w.human, lean = u.sated ? 0 : Math.min(1, (u.s.pred ? .5 : u.agit * .6) + pressure(w) * .6);
         const bx = u.x + (H0.x - u.x) * lean * .5, by = u.y + (H0.y - u.y) * lean * .5;
-        u.wander = {x: clamp(bx + (R()-.5)*20, 5, W-5), y: clamp(by + (R()-.5)*20, 5, H-5)}; if (has(u,'waterbound') && w.T.water) u.wander.x = clamp(u.wander.x, w.T.water.x0 - 3, w.T.water.x1 + 3); }
+        u.wander = {x: clamp(bx + (R()-.5)*20, 5, W-5), y: clamp(by + (R()-.5)*20, 5, H-5)}; if (has(u,'waterbound') && w.T.water) u.wander.x = clamp(u.wander.x, w.T.water.x0 + 1, w.T.water.x1 - 1); } // lurk submerged
       if (has(u,'waterbound') && !w.T.water){ frac = 0; }
       else { tx = u.wander.x; ty = u.wander.y; frac = u.state === 'rest' ? .12 : .25 + .35 * pressure(w); }
     }
@@ -1166,7 +1190,7 @@ function step(w){
     }
     // giraffe only kicks predators / attackers
     strike(w, u, t, {}); u.atk = u.s.cd * (0.9 + w.R() * .2);
-    if (u.s.id === 'elephant' && !w.over) sweep(w, u, t);
+    if (has(u,'sweep') && !w.over) sweep(w, u, t);
     if (u.s.gait === 'orbit'){ u.mv = {k:'retreat', t:.7, tgt:t}; }
     if (t.state === 'dead' || w.over) continue;
   }
@@ -1402,12 +1426,15 @@ function evadeMove(w, u){
 // Each game deals a board of RULES.board animals from the roster (a rare animal turns up with probability rareP).
 // You spend up to RULES.budget on the board; every board animal you don't pick is on the other side.
 // With RULES.total set, every board's prices add up to total (± tol), so every board has the same total value
-// and you always buy the same share of it.
-const RULES = {board: 12, budget: 1000, total: null, tol: 100, rareP: .1};
+// and you always buy the same share of it. rules.terrain (optional) keeps water-only animals off dry maps.
+// With RULES.groups, pack animals come as group items (a wolf pick is a pack of 3); pass groups:true in cfg.
+const RULES = {board: 12, budget: 1000, total: null, tol: 100, rareP: .1, groups: true};
 function dealBoard(seed, rules, prices){
   rules = Object.assign({}, RULES, rules || {});
   const R = rng(seed), price = id => (prices && prices[id]) || BY_ID[id].price;
-  const common = ANIMALS.filter(a => !a.rare).map(a => a.id), rare = ANIMALS.filter(a => a.rare).map(a => a.id);
+  // water-only animals (the croc) are only dealt on a map that has water
+  const dry = rules.terrain && !(TERRAINS[rules.terrain] || {}).water, ok = a => !(dry && a.tags.includes('waterbound'));
+  const common = ANIMALS.filter(a => !a.rare && ok(a)).map(a => a.id), rare = ANIMALS.filter(a => a.rare && ok(a)).map(a => a.id);
   let b = [];
   for (let tries = 0; tries < 20000; tries++){
     const pool = common.slice(); b = [];
@@ -1493,9 +1520,12 @@ function terrainFit(a, tid){
 }
 function badgesHTML(a){ return terrainFit(a, S.terrain).map(([k, t]) => `<span class="bdg ${k}">${t}</span>`).join(''); }
 // ---------- board ----------
+// a pick of a pack animal brings its whole group when the rules use groups
+const groupOf = a => A.RULES.groups && a.group ? a.group : 1;
+const itemName = a => groupOf(a) > 1 ? `${a.groupName} (${groupOf(a)})` : a.name;
 const boardTotal = () => S.board.reduce((t, id) => t + A.BY_ID[id].price, 0);
 function dealNewBoard(seed){
-  S.boardSeed = seed || newBoardSeed(); S.board = A.dealBoard(S.boardSeed);
+  S.boardSeed = seed || newBoardSeed(); S.board = A.dealBoard(S.boardSeed, {terrain: S.terrain});
   S.team.clear(); S.pos = {}; S.youPos = null; S.mount = ''; S.world = null; S.focus = S.board[0];
 }
 // ---------- navigation ----------
@@ -1536,10 +1566,10 @@ function renderDraft(){
       const c = document.createElement('button'); c.className = 'card' + (picked ? ' picked' : '') + (!picked && a.price > left ? ' cant' : '');
       c.setAttribute('aria-pressed', picked);
       const r1 = document.createElement('div'); r1.className = 'row1'; r1.appendChild(tok(a, 46));
-      const nm = document.createElement('div'); nm.className = 'nm'; nm.textContent = a.name; r1.appendChild(nm);
+      const nm = document.createElement('div'); nm.className = 'nm'; nm.textContent = itemName(a); r1.appendChild(nm);
       c.appendChild(r1);
       const st = document.createElement('div'); st.className = 'styleTag'; st.textContent = a.style; c.appendChild(st);
-      const fit = (a.rare ? '<span class="bdg good">Rare</span>' : '') + badgesHTML(a); if (fit){ const bd = document.createElement('div'); bd.className = 'badges'; bd.innerHTML = fit; c.appendChild(bd); }
+      const fit = (a.rare ? '<span class="bdg good">Rare</span>' : '') + (groupOf(a) > 1 ? `<span class="bdg good">×${groupOf(a)}, hunt together</span>` : '') + badgesHTML(a); if (fit){ const bd = document.createElement('div'); bd.className = 'badges'; bd.innerHTML = fit; c.appendChild(bd); }
       const meta = document.createElement('div'); meta.className = 'meta'; meta.textContent = `${a.mass.toLocaleString()} kg · ${kmh(a.spd)} km/h`; c.appendChild(meta);
       const bars = document.createElement('div'); bars.className = 'bars';
       const rows = [['Power', strengthOf(a)/maxStr], ['Armor', a.armor/.6], ['Speed', a.spd/20], ['Stamina', Math.min(1, a.stam/60)]];
@@ -1562,7 +1592,7 @@ function renderDraft(){
   // team line
   const tl = $('teamline'); tl.innerHTML = '';
   if (!S.team.size){ const s = document.createElement('span'); s.className = 'label'; s.textContent = 'No animals drafted yet. You can fight alone, but you will not like it.'; tl.appendChild(s); }
-  for (const id of S.team){ const a = A.BY_ID[id]; const ch = document.createElement('span'); ch.className = 'chip'; ch.appendChild(tok(a)); ch.append(a.name + ' $' + a.price); tl.appendChild(ch); }
+  for (const id of S.team){ const a = A.BY_ID[id]; const ch = document.createElement('span'); ch.className = 'chip'; ch.appendChild(tok(a)); ch.append(itemName(a) + ' $' + a.price); tl.appendChild(ch); }
   const foes = S.board.filter(id => !S.team.has(id));
   const fl = document.createElement('span'); fl.className = 'label'; fl.style.marginLeft = '6px';
   fl.textContent = `Against you: ${foes.length} animals, $${foes.reduce((t, id) => t + A.BY_ID[id].price, 0).toLocaleString()}`; tl.appendChild(fl);
@@ -1577,7 +1607,7 @@ function renderDetail(){
     ['Reach', a.reach + ' m'], ['Sprint', a.stam + ' s'], ['Breaks at', Math.round(a.flee*100) + '% morale'],
     ['Heat tolerance', a.heat.toFixed(2)], ['Cold tolerance', a.cold.toFixed(2)], ['Strikes up to', a.strikeH + ' m'], ['Carries you at', a.mountH ? a.mountH + ' m' : 'too small'],
   ];
-  d.innerHTML = `<div><div style="display:flex;gap:10px;align-items:center;margin-bottom:10px">${tokHTML(a, 64)}<h3 style="font-size:22px">${esc(a.name)}</h3></div>
+  d.innerHTML = `<div><div style="display:flex;gap:10px;align-items:center;margin-bottom:10px">${tokHTML(a, 64)}<h3 style="font-size:22px">${esc(itemName(a))}</h3></div>${groupOf(a) > 1 ? `<p class="notes" style="margin:-4px 0 8px">One pick brings ${groupOf(a)} of them; they keep each other's nerve and go for the same target. Left on the board, all ${groupOf(a)} come at you.</p>` : ''}
     <div class="stats">${stats.map(([k,v]) => `<div class="stat"><div class="v">${esc(v)}</div><div class="k">${k}</div></div>`).join('')}</div></div>
     <div><div class="styleTag" style="font-size:15px">${esc(a.style)}</div><p style="margin:4px 0 10px">${esc(a.how)}</p>${badgesHTML(a) ? `<div class="badges" style="margin-bottom:10px">${badgesHTML(a)} <span class="notes" style="font-size:12px">in the ${esc(A.TERRAINS[S.terrain].name.toLowerCase())}</span></div>` : ''}<div class="label" style="margin-bottom:6px">Traits</div><ul class="traits">${a.traits.map(t => `<li>${esc(t)}</li>`).join('')}</ul>
     <p class="notes" style="margin-top:10px">${a.pred ? 'Predator: hunts by weighing meat against risk, and gets hungrier as the fight goes on.' : 'Herbivore: fights intruders, predators and anything that wounds it.'}</p></div>`;
@@ -1593,7 +1623,7 @@ function renderArenaOpts(){
   for (const T of Object.values(A.TERRAINS)){
     const b = document.createElement('button'); b.className = 'opt'; b.setAttribute('aria-pressed', S.terrain === T.id);
     b.innerHTML = `<div class="sw" style="background:${TCOL[T.id]}"></div><h3>${T.name}</h3><p>${esc(T.desc)}</p>`;
-    b.addEventListener('click', () => { S.terrain = T.id; S.world = null; S.pos = {}; S.youPos = null; renderArenaOpts(); renderDraft(); });
+    b.addEventListener('click', () => { if (S.terrain !== T.id){ S.terrain = T.id; dealNewBoard(S.boardSeed); } S.world = null; S.pos = {}; S.youPos = null; renderArenaOpts(); renderDraft(); renderBudget(); }); // water-only animals depend on the map
     to.appendChild(b);
   }
   const mo = $('modeOpts'); mo.innerHTML = '';
@@ -1714,7 +1744,7 @@ function absPlacements(){
   return out;
 }
 function currentPlacements(){ const y = youAt(), abs = absPlacements(), out = {}; for (const id in abs) out[id] = {dx: abs[id].x - y.x, dy: abs[id].y - y.y}; return out; }
-function makeCfg(){ return { board:S.board.slice(), team:[...S.team], placements:currentPlacements(), human:youAt(), terrain:S.terrain, mode:S.mode, mount:(S.mount && S.team.has(S.mount)) ? S.mount : null, seed:S.seed }; }
+function makeCfg(){ return { board:S.board.slice(), groups:A.RULES.groups, team:[...S.team], placements:currentPlacements(), human:youAt(), terrain:S.terrain, mode:S.mode, mount:(S.mount && S.team.has(S.mount)) ? S.mount : null, seed:S.seed }; }
 function drawDeploy(){
   deployWorld = A.setup(makeCfg());
   const cv = $('deployCanvas'); const g = cv.getContext('2d'); const sc = cv._scale;
@@ -2061,7 +2091,7 @@ $('runPrice').addEventListener('click', () => {
     const order = S.board.slice(); for (let k = order.length - 1; k > 0; k--){ const j = Math.floor(R() * (k + 1)); [order[k], order[j]] = [order[j], order[k]]; }
     const team = []; let left = BUDGET; for (const id of order) if (A.BY_ID[id].price <= left){ team.push(id); left -= A.BY_ID[id].price; }
     const terrain = terr[i % 4];
-    const w = A.simulate({board:S.board, team, terrain, mode:S.mode, mount:bestMount(team) || null, seed: 5000 + i});
+    const w = A.simulate({board:S.board, groups:A.RULES.groups, team, terrain, mode:S.mode, mount:bestMount(team) || null, seed: 5000 + i});
     const sc = w.result.score;
     onBoard.forEach(a => (team.includes(a.id) ? on : off)[a.id].push(sc));
   }, p => $('pPrice').style.width = (p*100) + '%', () => {

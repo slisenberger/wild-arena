@@ -80,6 +80,12 @@ round. Report ± standard errors.
   front-hoof stomper), ostrich (lookout + kicker, fast evasive mount), honey badger (`fearless`: morale never
   breaks, takes on anything), and the rare triceratops (`rare`, `giant`: 8 t charger, rideable at 3 m; only
   on ~10% of boards). Hippo armor .5 (5–6 cm skin). Polar bear `snowCamo`: hard to see beyond 15 m on tundra.
+  Then (26): rare woolly mammoth (`sweep` like the elephant, cold-proof, heat-intolerant), black bear (timid,
+  climbs), leopard (ambush stalker, climbs), wild boar (cheap tusked charger, `standsGround`).
+- **Packs as board items** (`RULES.groups`, pass `cfg.groups:true`): wolf pack ×3, hyena clan ×3, lion pride ×2.
+  One pick brings the whole group (placed around the leader); left on the board, the whole group is against you.
+- **Croc:** only takes prey within 5 m of water and lurks submerged otherwise (it used to walk out onto land and
+  spend 86% of the fight weak). `dealBoard` never deals water-only animals on a map without water.
 - **Trees:** animals steer around trunks and detour when wedged; an elephant pushing a trunk ~1 s knocks it
   over (`w.fallen` keeps the time, so replays show it standing until then).
 - **Maps:** savanna (sun climbs: heat ramps for everyone; acacia shade), river (vertical river x 47–57

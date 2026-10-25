@@ -10,24 +10,12 @@ const { Worker, isMainThread, parentPort, workerData } = require('worker_threads
 const SIM = process.env.SIM || './sim.js';
 const A = require(SIM);
 function tallest(t){ let b = null, h = 0; for (const id of t){ const m = A.BY_ID[id].mountH; if (m > h){ h = m; b = id; } } return b; }
-if (!isMainThread){ parentPort.postMessage(workerData.jobs.map(j => ({i: j.i, s: A.simulate({team: j.team, board: j.board, terrain: j.tr, mode: 'wild', mount: tallest(j.team), seed: j.seed}).result.score}))); return; }
+if (!isMainThread){ parentPort.postMessage(workerData.jobs.map(j => ({i: j.i, s: A.simulate({team: j.team, board: j.board, groups: A.RULES.groups, terrain: j.tr, mode: 'wild', mount: tallest(j.team), seed: j.seed}).result.score}))); return; }
 
 const fs = require('fs');
 const C = JSON.parse(fs.readFileSync(process.argv[2], 'utf8')), OUT = process.argv[3];
 const P = Object.assign({}, ...A.ANIMALS.map(a => ({[a.id]: a.price})), C.prices || {});
 const IDS = A.ANIMALS.map(a => a.id), TERR = Object.keys(A.TERRAINS), NW = 4;
-// deal a board: K distinct animals; rare ones only with probability rareP; total price within tol of T if T given
-function dealBoard(R, K, T, tol, rareP){
-  const common = IDS.filter(id => !A.BY_ID[id].rare), rare = IDS.filter(id => A.BY_ID[id].rare);
-  for (let tries = 0; tries < 20000; tries++){
-    const pool = common.slice(); const b = [];
-    if (rare.length && R() < rareP) b.push(rare[Math.floor(R() * rare.length)]);
-    while (b.length < K){ const i = Math.floor(R() * pool.length); b.push(pool.splice(i, 1)[0]); }
-    const tot = b.reduce((s, id) => s + P[id], 0);
-    if (!T || Math.abs(tot - T) <= tol) return b;
-  }
-  throw new Error('could not deal a board with that total');
-}
 function fillTeam(R, board, B){
   const order = board.slice(); for (let i = order.length - 1; i > 0; i--){ const j = Math.floor(R() * (i + 1)); [order[i], order[j]] = [order[j], order[i]]; }
   const t = []; let left = B; for (const id of order) if (P[id] <= left){ t.push(id); left -= P[id]; }
@@ -50,7 +38,7 @@ function solve(X, y, ridge, free){
 
 const R = A.rng(C.seed || 1), jobs = [];
 for (let i = 0; i < C.N; i++){
-  const board = dealBoard(R, C.K, C.T, C.tol || 100, C.rareP || 0), team = fillTeam(R, board, C.B), tr = TERR[i % 4];
+  const tr = TERR[i % 4], board = A.dealBoard(Math.floor(R() * 1e9) + 1, {board: C.K, total: C.T || null, tol: C.tol || 100, rareP: C.rareP || 0, terrain: tr}, P), team = fillTeam(R, board, C.B); // the game's own dealer
   jobs.push({i, board, team, tr, seed: 100000 + i * 7919 + (C.seed || 1)});
 }
 const t0 = Date.now();
