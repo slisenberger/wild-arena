@@ -33,4 +33,4 @@ All 28 portraits are 112×112 crops of images from Wikimedia Commons. All are in
 | `leopard` | Leopard | [Panthera pardus japonensis JdP.jpg](https://commons.wikimedia.org/wiki/File:Panthera_pardus_japonensis_JdP.jpg) | Marie-Lan Nguyen | Public domain |
 | `boar` | Wild boar | [HPIM9277.JPG](https://commons.wikimedia.org/wiki/File:HPIM9277.JPG) | I.Sáček, senior | Public domain |
 | `giantkangaroo` | Giant kangaroo (Procoptodon goliah, reconstruction) | [Procoptodon goliah.jpg](https://commons.wikimedia.org/wiki/File:Procoptodon_goliah.jpg) | Stanton F. Fink | CC BY 3.0 (cropped and resized) |
-| `smilodon` | Smilodon (life restoration) | [National Fossil Day 2016 artwork (cropped).png](https://commons.wikimedia.org/wiki/File:National_Fossil_Day_2016_artwork_(cropped).png) | National Park Service | Public domain |
+| `smilodon` | Sabre-toothed cat (Smilodon fatalis, life restoration) | [National Fossil Day 2016 artwork (cropped).png](https://commons.wikimedia.org/wiki/File:National_Fossil_Day_2016_artwork_(cropped).png) | National Park Service | Public domain |
