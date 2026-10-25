@@ -206,6 +206,12 @@ Pick for new roles. Top three for design value: **honey badger, moose, Komodo dr
      (does it still look like a tiger?). Today it's hand-tuned scoring (`predatorTarget`, `waitForOpening`).
   0b. *Guard positioning / anti-idle:* the same setup can train where your guards stand and when they step out
      (reward survival, small penalty for idle time) instead of hand-tuning it. Owner: "can help idle behavior too".
+  0c. *Movement policy per archetype (owner idea):* ~7 archetypes (chargers, stalkers, pack harriers, lumberers,
+     keep-away, water ambushers, your guards). Observation: own state, nearest allies/enemies (relative position,
+     velocity, strength, intent), target, hazard edge, nearby trees/water. Action: direction + speed, and when to
+     trigger the signature move; physics stays hand-coded (a rhino still can't turn like a cat). Train like
+     targeting: clone today's gaits, then ES with an idle penalty + realism penalty. Plan: finish targeting ES
+     first, then pilot on pack harriers (wolves/hyenas), then roll out if it reads better and idles less.
   1. *Learned exploit finder:* train a policy for your side's placement/commands to maximize survival;
      whatever it discovers is a camping/exploit report (stronger than grid search).
   2. *Learned enemy pressure:* train the other side to kill you, then keep the hand-written realistic
