@@ -12,7 +12,7 @@ count as 5:00). Live site: GitHub Pages serves `index.html` from `main`.
   Exports `window.Arena` in the browser and `module.exports` in Node.
 - `ui.js` — the game UI (arena → draft → deploy → fight → lab), canvas rendering, Lab batch runs.
 - `template.html` — page shell + CSS with placeholders `/*FACES*/`, `/*SIM*/`, `/*UI*/`.
-- `faces.json` — 26 base64 portraits (112×112) keyed by species id, all cropped from public-domain or CC0
+- `faces.json` — 28 base64 portraits (112×112) keyed by species id, cropped from public-domain/CC0 (giant kangaroo: CC BY 3.0)
   Wikimedia Commons images (the original meme crops were replaced: unknown rights). `CREDITS.md` lists each
   source; `build.js` turns its table into the in-game Image credits panel. Pack items reuse their species' face.
 - `build.js` — `node build.js` assembles everything into the single self-contained `index.html`.
@@ -81,13 +81,23 @@ round. Report ± standard errors.
   the arena has fully closed. `zoneAt(w, t)` gives the box for rendering.
 - **Morale from losses** is species- and proximity-based: a death shakes its own kind fully and anything within
   15 m that saw it (0.4); it no longer demoralizes the whole side (that made weak animals and packs liabilities).
-- **Roster (26 species, 32 picks with packs/herds):** the original 16 plus black rhino (1.2 t, irritable blind charger — the white rhino is now
+- **Roster (28 species, 34 picks with packs/herds):** the original 16 plus black rhino (1.2 t, irritable blind charger — the white rhino is now
   placid, no `blindCharger`), fighting bull (`bred`: always worked up), moose (snow-proof, strong swimmer,
   front-hoof stomper), ostrich (lookout + kicker, fast evasive mount), honey badger (`fearless`: morale never
   breaks, takes on anything), and the rare triceratops (`rare`, `giant`: 8 t charger, rideable at 3 m; only
   on ~10% of boards). Hippo armor .5 (5–6 cm skin). Polar bear `snowCamo`: hard to see beyond 15 m on tundra.
   Then (26): rare woolly mammoth (`sweep` like the elephant, cold-proof, heat-intolerant), black bear (timid,
   climbs), leopard (ambush stalker, climbs), wild boar (cheap tusked charger, `standsGround`).
+  Then (27): rare giant kangaroo (Procoptodon, 230 kg; zoology-reviewed). `boxer`: grabs a lighter attacker (stun .7,
+  ×.6) then kicks ×1.4; the kick shoves anything under 1.5× its mass back up to 1.5 m. `kicker` on the other side
+  (doesn't hunt you) but boxes freely on guard; `drowner`: chased by a lighter predator it heads for water within
+  30 m and holds swimmers under (2.5 s, 3% max HP/s); `thumper`: first predator sighting gives its side 8 s of
+  ×1.25 vision (`w.alarm`); sidesteps much bigger herbivores like the cats. $100, swing 18 ± 4 s.
+  Then (28): rare Smilodon fatalis (260 kg, zoology-reviewed; spd 14, stam 4, strikeH 3 so it can't reach riders on
+  giants, no climbing). `pinStab`: forelimb pin (hold dmg ×.4, shake-off ×.6), after 1.2 s pinned (or on a stunned
+  target) a killing stab ×3, half armor, 8 s bleed, then it lets go and circles at 8 m (`backT`) while it bleeds.
+  Canine break 3% (+30% unheld or big fresh prey, +35% armor ≥ .45): dmg ×.7 for good. `bigGame` prey ×1.5 at
+  1.5–4× its mass; avoids armor ×.3; cougar yields to it. $100, swing 27 ± 4 s (mine +17 vs tiger +14).
 - **Pack items:** `wolfpack` ×4 (dealt 3 in 4), rare `wolfpack6` ×6, `hyenapack` ×4, `lionpack` ×2 (coalition),
   `buffaloherd` ×3, `bisonherd` ×3 are extra catalog entries (`species` points at the base animal, `group` = size,
   `dealWeight`; `sp(s)` gives the species for rivals/yields/snow checks). A board deals each species once, solo or
@@ -187,6 +197,11 @@ round. Report ± standard errors.
   p25 83; with/without elephant both 88%), typical full-spend team median 167 s, 51% of teams win at least one
   screen run, 13 distinct best teams over 16 boards. Cards show measured "Helps you" / "Threat if left"
   (`MEASURED`, written by `apply_values.js`).
+- **Current prices (Oct 2026, `abs_r6` after the cat pass, giant kangaroo, sabre-toothed cat; rares on 30% of boards):**
+  20 s of swing per $100, giants/herds capped at $700 (triceratops $800), board total $2,700, budget $1,200. Validation
+  (16 boards, `RAREP=.3`): median board's best team 92% (min 54, p25 88), typical full-spend team median 170 s, 60% of
+  teams win at least one screen run, 15 distinct best teams over 16 boards. At 24 s/$100 (total $2,500) it was far too
+  easy (median 100%, typical 300 s); at 17 s/$100 (total $2,900) too hard (79%, 81 s).
 - Guards no longer attack enemies that are minding their own business far from you (they used to rank a
   peaceful elephant as a top threat and provoke it).
 
