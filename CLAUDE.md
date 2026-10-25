@@ -12,9 +12,9 @@ count as 5:00). Live site: GitHub Pages serves `index.html` from `main`.
   Exports `window.Arena` in the browser and `module.exports` in Node.
 - `ui.js` — the game UI (arena → draft → deploy → fight → lab), canvas rendering, Lab batch runs.
 - `template.html` — page shell + CSS with placeholders `/*FACES*/`, `/*SIM*/`, `/*UI*/`.
-- `faces.json` — 16 base64 portrait crops (from the meme image) keyed by animal id. Animals added later
-  (black rhino, fighting bull, moose, ostrich, honey badger, triceratops) have no portrait yet and show as
-  lettered tokens in their price-tier color.
+- `faces.json` — 26 base64 portraits (112×112) keyed by species id, all cropped from public-domain or CC0
+  Wikimedia Commons images (the original meme crops were replaced: unknown rights). `CREDITS.md` lists each
+  source; `build.js` turns its table into the in-game Image credits panel. Pack items reuse their species' face.
 - `build.js` — `node build.js` assembles everything into the single self-contained `index.html`.
   **Always rebuild and commit `index.html` after changing sim.js/ui.js/template.html** — Pages serves it.
 - Analysis tools (Node, use `worker_threads`, 2 workers):
@@ -79,16 +79,19 @@ round. Report ± standard errors.
   2.5% max HP/s + heat), flood (river; slows non-swimmers, non-swimmers lose 1.5%/s), blizzard (tundra; slow,
   stamina drain, 1.2%/s). Everyone steers inside except routing animals. "They gave up" only counts after
   the arena has fully closed. `zoneAt(w, t)` gives the box for rendering.
-- **Roster (22):** the original 16 plus black rhino (1.2 t, irritable blind charger — the white rhino is now
+- **Morale from losses** is species- and proximity-based: a death shakes its own kind fully and anything within
+  15 m that saw it (0.4); it no longer demoralizes the whole side (that made weak animals and packs liabilities).
+- **Roster (26 species, 32 picks with packs/herds):** the original 16 plus black rhino (1.2 t, irritable blind charger — the white rhino is now
   placid, no `blindCharger`), fighting bull (`bred`: always worked up), moose (snow-proof, strong swimmer,
   front-hoof stomper), ostrich (lookout + kicker, fast evasive mount), honey badger (`fearless`: morale never
   breaks, takes on anything), and the rare triceratops (`rare`, `giant`: 8 t charger, rideable at 3 m; only
   on ~10% of boards). Hippo armor .5 (5–6 cm skin). Polar bear `snowCamo`: hard to see beyond 15 m on tundra.
   Then (26): rare woolly mammoth (`sweep` like the elephant, cold-proof, heat-intolerant), black bear (timid,
   climbs), leopard (ambush stalker, climbs), wild boar (cheap tusked charger, `standsGround`).
-- **Pack items:** `wolfpack` ×3, `hyenapack` ×3, `lionpack` ×2 are extra catalog entries (`species` points at the
-  base animal, `group` = size; `sp(s)` gives the species for rivals/yields/snow checks). A board deals each
-  species once, solo or as a pack (50/50). One pick brings the whole group; left on the board, all of it is
+- **Pack items:** `wolfpack` ×4 (dealt 3 in 4), rare `wolfpack6` ×6, `hyenapack` ×4, `lionpack` ×2 (coalition),
+  `buffaloherd` ×3, `bisonherd` ×3 are extra catalog entries (`species` points at the base animal, `group` = size,
+  `dealWeight`; `sp(s)` gives the species for rivals/yields/snow checks). A board deals each species once, solo or
+  as a group. One pick brings the whole group; left on the board, all of it is
   against you. Whole-roster mode (no `cfg.board`) ignores pack items.
 - **Croc:** on a map with water it only takes prey within 5 m of the water and lurks submerged otherwise (it
   used to walk out and spend 86% of the fight on land). Away from water it bites as hard as ever but moves at
