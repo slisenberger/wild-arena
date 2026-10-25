@@ -148,6 +148,13 @@ Pick for new roles. Top three for design value: **honey badger, moose, Komodo dr
 - [ ] **Wounds and limping:** crippling hits that read better than raw HP.
 - [ ] **Replays:** time scrubber, per-animal damage graphs, death reasons. Also a debugging tool.
 
+## 7a. Roster identity (owner: "a roster like Smash Bros.")
+- [ ] Work through ROSTER.md: every animal gets one visible signature it does better than anyone. First targets:
+  lone wolf, leopard, cougar, honey badger, black bear, ostrich (lowest measured value).
+- [ ] Identity check in audit.js: per-fight counts of each signature (sweeps, mock charges, stomps, tree drops,
+  death rolls, holds, grudge kills, lookout spots).
+- [x] Decided against: leopard dragging kills up a tree (it would leave the fight: a liability on your side).
+
 ## 7b. Art and presentation
 - [ ] **Portraits for every animal** (in progress: public-domain/CC0 Commons images only, credited in CREDITS.md).
 - [ ] **Credits footer + panel** in the game listing each portrait's source, author and license.
@@ -197,6 +204,8 @@ Pick for new roles. Top three for design value: **honey badger, moose, Komodo dr
   0. *Predator target selection (owner's pick, Oct 2026):* the cleanest first problem — one decision (whom to
      hunt, or whether to wait), a clear reward (damage dealt / survival / killing you), and an easy realism check
      (does it still look like a tiger?). Today it's hand-tuned scoring (`predatorTarget`, `waitForOpening`).
+  0b. *Guard positioning / anti-idle:* the same setup can train where your guards stand and when they step out
+     (reward survival, small penalty for idle time) instead of hand-tuning it. Owner: "can help idle behavior too".
   1. *Learned exploit finder:* train a policy for your side's placement/commands to maximize survival;
      whatever it discovers is a camping/exploit report (stronger than grid search).
   2. *Learned enemy pressure:* train the other side to kill you, then keep the hand-written realistic
