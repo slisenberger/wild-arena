@@ -62,5 +62,10 @@ Promise.all([...Array(NW).keys()].map(wi => new Promise(res => { const w = new W
       if (sh('heat') > .25) flags.push(`${id} (${side === 'P' ? 'yours' : 'theirs'}): overheated ${pct(sh('heat'))} of its time`);
     }
   }
+  // headline metric: share of animal-time spent idle (no target, not fleeing/feeding/overheated), time-weighted
+  for (const side of ['P', 'E']){
+    const r = rows.filter(x => x.side === side), tot = r.reduce((s, x) => s + x.life, 0), idle = r.reduce((s, x) => s + x.t.idle, 0), close = r.reduce((s, x) => s + x.t.close, 0), fight = r.reduce((s, x) => s + x.t.fight, 0);
+    console.log(`IDLE ${side === 'P' ? 'yours ' : 'theirs'}: ${(100 * idle / tot).toFixed(1)}% of animal-time idle (closing in ${(100 * close / tot).toFixed(0)}%, fighting ${(100 * fight / tot).toFixed(0)}%)`);
+  }
   console.log('\nflags:\n  ' + (flags.length ? flags.join('\n  ') : 'none'));
 });

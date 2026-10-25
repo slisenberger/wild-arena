@@ -436,6 +436,7 @@ function canSee(w, viewer, u){
   if (has(u, 'ambush') && u.ambushReady && u.state === 'engage' && w.T.id === 'savanna' && Math.hypot(u.vx, u.vy) < u.s.spd * .45) range = Math.min(range, 12); // creeping through tall grass
   if ((has(u, 'waterbound') || has(u, 'aquaStalk')) && inWater(w, u) && u.state !== 'flee') range = Math.min(range, 7);
   if (has(u, 'snowCamo') && w.T.snow && u.state !== 'flee') range = Math.min(range, 15);
+  if (u.perch && u.onTree) range = Math.min(range, 6); // still in the branches
   if (has(u, 'submerges') && inWater(w, u) && u.state !== 'flee') range = Math.min(range, 10);
   return dist(viewer, u) <= range;
 }
@@ -499,7 +500,7 @@ function herbivoreTarget(w, u){
     return reachable(u, w.human) ? w.human : (blocker || nearestPlayer(w,u));
   }
   let best = null, bs = 0;
-  let R = 12 + 16 * u.agit + 30 * pressure(w);
+  let R = 20 + 16 * u.agit + 30 * pressure(w); // a crowd of intruders in its space: it notices and closes sooner
   if (has(u,'territorial') && inWater(w,u)) R += 8;
   if (has(u,'blindCharger')) R = Math.max(R, 18);
   for (const t of w.units){
@@ -545,7 +546,8 @@ function allyTarget(w, u){
     const dh = dist(e, anchor), dm = dist(u, e);
     if (dh > leash && !(u.target === e && dh < leash + 8) && u.grudge !== e) continue;
     // bodyguards deal with what is coming at your side; something minding its own business is left alone unless it gets close
-    const coming = e.target && e.target.side !== 'E';
+    const v = Math.hypot(e.vx, e.vy), toward = v > 1.5 && ((anchor.x - e.x) * e.vx + (anchor.y - e.y) * e.vy) / ((dist(e, anchor) || 1) * v) > .7 && dh < 25;
+    const coming = (e.target && e.target.side !== 'E') || toward; // aimed at us, or plainly heading our way
     let intent = e.target === H ? 1 : coming ? .5 : dh < 10 ? .25 : .04;
     if (u.post && (coming || dh < 8)) intent = Math.max(intent, .7);
     if (e.state === 'feed') intent = .04;
@@ -802,7 +804,7 @@ function step(w){
   }
   // the other side is a team: pressure mounts over time, and only natural rivals ever flare up
   if (w.mode === 'wild'){
-    const floor = Math.min(.95, .4 + w.t / 120);
+    const floor = Math.min(.95, .5 + w.t / 90);
     for (const u of units){
       if (!active(u) || u.side !== 'E') continue;
       if (!u.s.pred) u.agit = Math.max(u.agit, floor);
@@ -957,6 +959,7 @@ function step(w){
     } else if (u.state === 'engage' && u.target){
       const t = u.target, d = dist(u, t), touch = u.r + t.r + u.s.reach * .6;
       if (has(u,'waterbound') && w.wet && distWater(w, t) > 5){ const p = waterPoint(w, u, t); tx = p.x; ty = p.band ? t.y : p.y; frac = .3; }
+      else if (perchAmbush(w, u, t, d)){ continue; } // up a tree, waiting to drop on it
       else if (waitForOpening(w, u, t, d)){ // shadow a well-guarded target from ~16 m instead of charging into its guards
         const rx = (u.x - t.x) / (d || 1), ry = (u.y - t.y) / (d || 1), vx = -ry * u.orbitDir + rx * (16 - d) * .25, vy = rx * u.orbitDir + ry * (16 - d) * .25, m = Math.hypot(vx, vy) || 1;
         tx = u.x + vx / m * 5; ty = u.y + vy / m * 5; frac = .45;
@@ -974,11 +977,11 @@ function step(w){
     } else {
       // roam / rest: drift gently, enemies wander
       if (!u.wander || R() < .01){
-        const H0 = w.human, lean = u.sated ? 0 : Math.min(1, (u.s.pred ? .5 : u.agit * .6) + pressure(w) * .6);
+        const H0 = w.human, lean = u.sated ? 0 : Math.min(1, (u.s.pred ? .5 : .2 + u.agit * .7) + pressure(w) * .6);
         const bx = u.x + (H0.x - u.x) * lean * .5, by = u.y + (H0.y - u.y) * lean * .5;
         u.wander = {x: clamp(bx + (R()-.5)*20, 5, W-5), y: clamp(by + (R()-.5)*20, 5, H-5)}; if (has(u,'waterbound') && w.wet) u.wander = nearWaterPt(w, u, u.wander, -1); } // lurk submerged
       if (has(u,'waterbound') && !w.wet){ frac = 0; }
-      else { tx = u.wander.x; ty = u.wander.y; frac = u.state === 'rest' ? .12 : .25 + .35 * pressure(w); }
+      else { tx = u.wander.x; ty = u.wander.y; frac = u.state === 'rest' ? .12 : .35 + .35 * pressure(w); }
     }
     if (u.rider && u.state === 'guard'){ tx = u.x; ty = u.y; frac = 0; }
     // keep out of the closing hazard: get back inside first, and never chase or wander into it (routing animals run through it)
@@ -1108,6 +1111,25 @@ function step(w){
   }
 }
 function damp(u){ u.vx *= .5; u.vy *= .5; }
+// Tree ambush (leopard, jaguar): climb a tree near the prey's approach, wait hidden in the branches, then drop onto it.
+// Returns true while perched (the caller skips movement); the drop is a pounce that counts as an ambush and stuns.
+function perchAmbush(w, u, t, d){
+  if (u.onTree && u.perch){
+    u.perchT += DT;
+    if (d <= 7 && heightOf(t) <= u.s.strikeH){ // drop onto it
+      u.onTree = null; u.perch = false; u.fromTree = true; const dur = .35;
+      u.mv = {k:'pounce', vx:(t.x - u.x) / dur, vy:(t.y - u.y) / dur, t:dur, tgt:t};
+      log(w, `${capName(u)} drops out of a tree onto ${nameOf(t)}`, 'ambush', u); return false;
+    }
+    if (u.perchT > 20 || outsideZone(w, u) || !active(t)){ u.onTree = null; u.perch = false; }
+    return !!u.onTree;
+  }
+  if (u.side !== 'E' || !u.s.climb || !has(u,'ambush') || !w.trees.length || !u.ambushReady || u.onTree || d < 9 || d > 30 || w.t < (u.nextPerch || 0)) return false;
+  let bt = null, bd = 5; for (const tr of w.trees){ const q = Math.hypot(tr.x - u.x, tr.y - u.y) - tr.r; if (q < bd && !outsideZone(w, tr)){ bd = q; bt = tr; } }
+  if (!bt) return false;
+  u.onTree = bt; u.perch = true; u.perchT = 0; u.nextPerch = w.t + 30; u.x = bt.x; u.y = bt.y; u.vx = u.vy = 0; u.climbT = 1.2;
+  return true;
+}
 // A predator on the other side doesn't throw itself at a target ringed by stronger guards: it waits nearby for an
 // opening (a guard busy elsewhere, the target hurt or running) until its patience runs out (bolder = less patient,
 // hungrier = less patient). Crocs keep to their water and honey badgers don't wait for anything.
@@ -1297,8 +1319,8 @@ function commitMove(w, u, vmax){
     u.vx = mv.vx; u.vy = mv.vy;
     if (mv.t <= 0){
       u.mv = null; u.pounceCd = mv.k === 'lunge' ? 3.5 : 3;
-      if (t && dist(u, t) <= u.r + t.r + u.s.reach + .8 && heightOf(t) <= u.s.strikeH){ u.vx *= .2; u.vy *= .2; strike(w, u, t, {pounce:true}); u.atk = u.s.cd; }
-      else { u.wetLunge = false; u.vx *= .2; u.vy *= .2; u.stun = Math.max(u.stun, mv.k === 'lunge' ? .9 : .5); if (t && dist(u, t) < 14) log(w, `${capName(u)} ${mv.k === 'lunge' ? 'lunges' : 'pounces'} and misses`, 'info', u); }
+      if (t && dist(u, t) <= u.r + t.r + u.s.reach + .8 && heightOf(t) <= u.s.strikeH){ u.vx *= .2; u.vy *= .2; strike(w, u, t, {pounce:true}); u.atk = u.s.cd; if (u.fromTree && t.state !== 'dead') t.stun = Math.max(t.stun, 1.2); u.fromTree = false; }
+      else { u.fromTree = false; u.wetLunge = false; u.vx *= .2; u.vy *= .2; u.stun = Math.max(u.stun, mv.k === 'lunge' ? .9 : .5); if (t && dist(u, t) < 14) log(w, `${capName(u)} ${mv.k === 'lunge' ? 'lunges' : 'pounces'} and misses`, 'info', u); }
     }
     return;
   }
@@ -1342,7 +1364,7 @@ function defaultMount(team){ let b = null, h = 2.99; for (const id of team){ con
 // With RULES.total set, every board's prices add up to total (± tol), so every board has the same total value
 // and you always buy the same share of it. rules.terrain (optional) keeps cold-blooded animals off cold maps.
 // Wolves, hyenas and lions are dealt either solo or as a pack item (one pick brings the whole group).
-const RULES = {board: 12, budget: 1000, total: 2800, tol: 100, rareP: .1}; // validated Oct 2026: best team on a typical board ~75%
+const RULES = {board: 12, budget: 1200, total: 2800, tol: 100, rareP: .1}; // owner: $1,000 felt hard; see CLAUDE.md for validation
 function dealBoard(seed, rules, prices){
   rules = Object.assign({}, RULES, rules || {});
   const R = rng(seed), price = id => (prices && prices[id]) || BY_ID[id].price;
