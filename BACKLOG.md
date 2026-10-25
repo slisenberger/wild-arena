@@ -109,6 +109,15 @@ Pick for new roles. Top three for design value: **honey badger, moose, Komodo dr
 ## 7. Mechanics
 - [ ] **Your own actions:** 1–2 cooldown abilities (flare scares off the timid, whistle rallies guards,
   climb a tree, mount/dismount). Biggest lever for making it *feel* like a game.
+- [ ] **You can fight back.** Today you only struggle when something latches on (5 dmg/s × (1 − its
+  armor) against the latcher); otherwise you never attack (`HUMAN.dmg: 6` is unused). Options: punch/kick
+  (realistically almost nothing against a lion, but it can finish a wounded hyena or break a latch),
+  an improvised weapon (stick, rock, spear as a draft item that costs budget), or a flare/shout that
+  scares rather than damages. Pairs with "your own actions" above.
+- [ ] **Wounds sap power directly.** Today it's indirect: lost HP lowers morale (`tgt = 1 − .85·(1 − hp/maxhp)`),
+  morale scales damage (`× (.65 + .35·morale)`, so up to −35%), and <30% HP routs. Make it explicit and
+  visible: damage, speed and stamina fall with wounds (a limp), maybe per-wound location (a hamstrung
+  leg slows, a bitten neck weakens).
 - [ ] **Mid-fight commands** ("hold", "regroup on me", "charge that one") — light tactics; maybe a mode.
 - [ ] **Draft synergies** beyond the rivals table (elephant + tiger: the tiger won't leap onto your mount;
   buffalo + lion feud).
@@ -128,6 +137,9 @@ Pick for new roles. Top three for design value: **honey badger, moose, Komodo dr
 - [ ] **PvP draft:** two players each draft from the same 16; unpicked animals are neutral or split. Async
   first (ghost drafts), since fights are deterministic.
 - [ ] **Bans:** each side bans one animal before the draft.
+- [ ] **Dynamic animal sets** (once the roster is big, ~25+): each game draws a subset of the roster
+  (e.g. 16 of 30), by map theme or at random per seed. Unpicked animals in the set are the other side;
+  animals outside the set sit out. Needs prices that hold up across sets (price by value, not by set).
 - [ ] Per-map score-attack leaderboards; shareable seed + team links.
 
 ## 9. Infrastructure
