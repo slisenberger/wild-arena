@@ -174,6 +174,10 @@ round. Report ± standard errors.
   choice alone has little leverage (even "always attack the human" gains only ~4 pts of kills while losing damage);
   next: give the policy actions such as "wait for an opening". Details: `policy/README.md`, tools `es.js`, `probe.js`,
   `gates.js`, `run.js`. sim.js has a stat-only `st.foe` (damage to your side).
+- Milestone 3 harness (Oct 2026): opt-in `cfg.movePolicy = {harrier: weights}` (movement intents commit / wait / flank /
+  regroup / disengage for enemy orbit-gait packs; zero weights = heuristic), goal + style rewards with a Lagrangian, a
+  sharded ES trainer (`policy/train.js` + `train_worker.js`, plain JSON, resumable) and `policy/harness_test.js`.
+  Usage, sharding and pilot results: `policy/README.md` "Milestone 3 harness".
 
 ## Pricing findings (Oct 2026)
 - The regression in `price_board.js` is biased in board mode: with budget-fill teams, a cheap animal left on
