@@ -217,7 +217,8 @@ round. Report ± standard errors.
   peaceful elephant as a top threat and provoke it).
 
 ## Open threads (full list in BACKLOG.md)
-1. Realism: lions (coalitions) encircle prey instead of charging in a line; owner decision on a more fragile human.
+1. Realism: owner decision on a more fragile human. (Done Oct 2026: lion coalitions encircle — the second lion swings to
+   the far side of a shared target, `sig 'encircles'` ~1.5/fight, value neutral.)
 2. Policy: give the net timing decisions (wait for an opening vs commit, pack timing) — target choice alone has no leverage.
 3. Movement policy pilot for pack harriers (wolves/hyenas) with an idle penalty.
 4. Identity: signature counters for lookout, bull chases, rhino blind charges; keep strengthening the light picks (ROSTER.md).
