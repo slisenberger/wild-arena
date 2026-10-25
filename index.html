@@ -1274,11 +1274,12 @@ function step(w){
     const vmax = speedOf(w, u);
     if (u.mv){ commitMove(w, u, vmax); continue; }
     // a big cat doesn't trade blows with a charging buffalo or rhino: it sidesteps and gives ground, then comes back
+    u.dodge = null; // recomputed every tick: a stale sidestep must not steer a cat that is now fleeing, cornered or overheated
     if ((has(u,'catSense') || has(u,'boxer')) && u.state !== 'flee' && !u.latchOn && !u.latchedBy && u.cornerT <= 0){
       let th = null, td = 9; for (const o of units) if (active(o) && hostile(w, o, u) && o.target === u && !o.s.pred && o.s.mass > 3 * u.s.mass){ const d = dist(o, u); if (d < td){ td = d; th = o; } }
       if (th){ const ax = (u.x - th.x) / (td || 1), ay = (u.y - th.y) / (td || 1); u.dodge = {x: u.x + ax * 6 - ay * 4 * u.orbitDir, y: u.y + ay * 6 + ax * 4 * u.orbitDir}; if (!u.dodging){ u.dodging = true; sig(w, u, 'dodge'); } }
-      else { u.dodge = null; u.dodging = false; }
-    }
+      else u.dodging = false;
+    } else u.dodging = false;
     if (u.state === 'flee'){
       let ax = 0, ay = 0;
       for (const o of units) if (active(o) && hostile(w,o,u)){ const d = dist(o,u); const k = 1 / (d*d + 1); ax += (u.x-o.x)*k; ay += (u.y-o.y)*k; }
