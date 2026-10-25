@@ -10,6 +10,7 @@
 //   node policy/train.js merge state.json jobs.json out_0.json [out_1.json ...]
 //   node policy/train.js run   state.json [--threads=4] [--serial] [--steps=N] [--until=test|done]
 //   node policy/train.js report state.json
+//   node policy/train.js retest state.json [--which=center|best] [--fights=400] [--index=1]   (read-only extra test draw)
 // Resuming = running `run` (or jobs/merge) again on the same state file: the next step depends only on the state.
 const fs = require('fs');
 const path = require('path');
@@ -31,6 +32,7 @@ const DEFAULTS = {
   styleThr: .9, lambda0: 1, lambdaLr: 4, gatePenalty: .25,
   holdMap: null,             // a map kept out of train/validation (the test always covers every map)
   acceptNoDrift: true,       // validation acceptance also requires no telemetry drift flags
+  baseline: true,            // also run zero weights on each generation's train fights: curves relative to the heuristic
 };
 const DRY = {calibFights: 24, calibPerturb: 1, pairs: 2, fights: 12, gens: 1, valEvery: 1, valFights: 12, testFights: 12};
 
@@ -75,6 +77,7 @@ function makeJobs(s){
   } else if (s.phase === 'train'){
     const eps = noise(s, s.gen), ids = [];
     for (const e of eps){ ids.push(add(weightsOf(s, s.theta.map((v, i) => v + c.sigma * e[i])))); ids.push(add(weightsOf(s, s.theta.map((v, i) => v - c.sigma * e[i])))); }
+    if (c.baseline) ids.push(add(weightsOf(s, s.theta.map(() => 0)))); // last: the heuristic on the same fights (not in the ES update)
     sets.push({name: 'train', cands: ids, fights: R.fightSet('train', s.gen, s.N.train, fopts(s))});
     if (s.gen > 0 && s.gen % c.valEvery === 0) sets.push(valSet(s, add));
   } else if (s.phase === 'val'){ // the final centre (after the last update) gets its own validation check
@@ -140,7 +143,9 @@ function validate(s, vs, recs, theta, out){
   const ok = P.diff > 2 * P.se, styleOk = P.styleB.style >= c.styleThr && P.styleB.gatesPass, driftOk = !c.acceptNoDrift || !P.driftB.length;
   const accept = ok && styleOk && driftOk, label = `after ${s.phase === "train" ? s.gen : s.history.length} updates`;
   s.val.push({gen: s.gen, phase: s.phase, valIndex: vs.valIndex, n: P.n, diff: P.diff, se: P.se, goalBest: P.goalA, goalCenter: P.goalB, style: P.styleB.style, gates: P.styleB.failed, drift: P.driftB, accept, vsBest: s.best.from, center: label});
-  out(`  [val #${vs.valIndex}] centre (${label}) vs best (${s.best.from}) on ${P.n} fresh fights: ${P.diff >= 0 ? '+' : ''}${P.diff.toFixed(3)} ± ${P.se.toFixed(3)} | style ${P.styleB.style.toFixed(3)} gates [${P.styleB.failed}] drift [${P.driftB.join('; ')}] -> ${accept ? 'ACCEPT' : 'keep best'}`);
+  const nc = recs.map(a => { const it = a.reduce((q, r) => (r.intents || [0, 0, 0, 0, 0]).map((v, k) => q[k] + v), [0, 0, 0, 0, 0]), n = it.reduce((x, y) => x + y, 0); return n ? 1 - it[0] / n : 0; });
+  s.val[s.val.length - 1].nonCommit = {best: nc[0], center: nc[1]};
+  out(`  [val #${vs.valIndex}] centre (${label}, non-commit ${(100 * nc[1]).toFixed(1)}%) vs best (${s.best.from}) on ${P.n} fresh fights: ${P.diff >= 0 ? '+' : ''}${P.diff.toFixed(3)} ± ${P.se.toFixed(3)} | style ${P.styleB.style.toFixed(3)} gates [${P.styleB.failed}] drift [${P.driftB.join('; ')}] -> ${accept ? 'ACCEPT' : 'keep best'}`);
   if (accept) s.best = {theta: theta.slice(), gen: s.gen, from: label};
   s.valIndex++;
 }
@@ -160,11 +165,14 @@ function merge(s, jobs, outs, wall, file, quiet){
     out(`  fights for 2 SE: ${JSON.stringify(calib.nDetect)} -> N train ${N.train}, val ${N.val}${calib.capped.val ? ' (capped)' : ''}, test ${N.test}${calib.capped.test ? ' (capped)' : ''}`);
     s.phase = c.gens > 0 ? 'train' : 'test';
   } else if (s.phase === 'train'){
-    const tr = recs[0], sum = tr.map(r => candSummary(s, r, r.length));
+    const tr = recs[0].slice(0, 2 * c.pairs), base = c.baseline ? recs[0][2 * c.pairs] : null, sum = tr.map(r => candSummary(s, r, r.length));
+    const g0 = base ? RW.mean(base.map(RW.goal)) : null;
     const fit = sum.map(q => q.goal + s.lambda * (q.styleEff - c.styleThr));
     // centered ranks, antithetic gradient, Adam ascent
     const order = fit.map((v, i) => [v, i]).sort((a, b) => a[0] - b[0] || a[1] - b[1]), rank = new Array(fit.length);
-    order.forEach(([, i], r) => { rank[i] = r / (fit.length - 1) - .5; });
+    // ties (e.g. both arms of a pair still below the commit margin = identical fights) share their average rank, so an
+    // unchanged pair contributes no gradient instead of a spurious one from index order
+    for (let a = 0; a < order.length;){ let b = a; while (b + 1 < order.length && order[b + 1][0] === order[a][0]) b++; for (let q = a; q <= b; q++) rank[order[q][1]] = (a + b) / 2 / (fit.length - 1) - .5; a = b + 1; }
     const eps = noise(s, s.gen), g = s.theta.map(() => 0);
     eps.forEach((e, k) => { const w0 = rank[2 * k] - rank[2 * k + 1]; for (let i = 0; i < g.length; i++) g[i] += w0 * e[i]; });
     for (let i = 0; i < g.length; i++) g[i] /= 2 * eps.length * c.sigma;
@@ -176,11 +184,11 @@ function merge(s, jobs, outs, wall, file, quiet){
     const styleMean = RW.mean(sum.map(q => q.styleEff));
     const lambda0 = s.lambda; s.lambda = Math.max(0, s.lambda + c.lambdaLr * (c.styleThr - styleMean));
     const ib = fit.indexOf(Math.max(...fit));
-    const h = {gen: s.gen, fights: nf, wall, fps, goalMean: RW.mean(sum.map(q => q.goal)), goalBest: sum[ib].goal, styleMean, styleMin: Math.min(...sum.map(q => q.styleEff)),
+    const h = {gen: s.gen, fights: nf, wall, fps, goalHeuristic: g0, goalMean: RW.mean(sum.map(q => q.goal)), goalBest: sum[ib].goal, styleMean, styleMin: Math.min(...sum.map(q => q.styleEff)),
       feasible: sum.filter(q => q.styleEff >= c.styleThr && !q.gates.length).length / sum.length, lambda: lambda0, lambdaNext: s.lambda,
       flagged: sum.filter(q => q.drift.length).length, step: Math.hypot(...s.theta.map((v, i) => v - theta0[i])), norm: Math.hypot(...s.theta),
       nonCommit: RW.mean(sum.map(q => 1 - q.intents[0])), cands: sum};
-    out(`[gen ${s.gen}] goal mean ${h.goalMean.toFixed(3)} best ${h.goalBest.toFixed(3)} | style mean ${h.styleMean.toFixed(3)} min ${h.styleMin.toFixed(3)} feasible ${(100 * h.feasible).toFixed(0)}% | λ ${lambda0.toFixed(2)}→${s.lambda.toFixed(2)} | non-commit ${(100 * h.nonCommit).toFixed(1)}% | drift-flagged ${h.flagged}/${sum.length} | |θ| ${h.norm.toFixed(3)} | ${nf} fights${wall ? `, ${wall.toFixed(0)} s, ${fps.toFixed(1)}/s` : ''}`);
+    out(`[gen ${s.gen}] goal mean ${h.goalMean.toFixed(3)} best ${h.goalBest.toFixed(3)}${g0 === null ? '' : ` (heuristic ${g0.toFixed(3)}: mean ${(h.goalMean - g0 >= 0 ? '+' : '') + (h.goalMean - g0).toFixed(3)})`} | style mean ${h.styleMean.toFixed(3)} min ${h.styleMin.toFixed(3)} feasible ${(100 * h.feasible).toFixed(0)}% | λ ${lambda0.toFixed(2)}→${s.lambda.toFixed(2)} | non-commit ${(100 * h.nonCommit).toFixed(1)}% | drift-flagged ${h.flagged}/${sum.length} | |θ| ${h.norm.toFixed(3)} | ${nf} fights${wall ? `, ${wall.toFixed(0)} s, ${fps.toFixed(1)}/s` : ''}`);
     for (const q of sum) if (q.drift.length || q.gates.length) out(`    flagged: goal ${q.goal.toFixed(3)} style ${q.style.toFixed(3)} gates [${q.gates}] drift [${q.drift.join('; ')}]`);
     s.history.push(h);
     if (recs[1]) validate(s, jobs.sets[1], recs[1], theta0, out);
@@ -215,14 +223,28 @@ async function runLocal(file, opts){
   }
   return s;
 }
+// extra read-only test: zero weights vs the centre (or best) on a fresh draw from the test pool (index >= 1; index 0 is
+// the official test). For a null run (best = zero) this is the informative check of where ES ended up.
+async function retest(file, opts){
+  const s = load(file), theta = opts.which === 'best' ? s.best.theta : s.theta, n = opts.fights || 400, index = opts.index || 1;
+  if (index < 1) throw new Error('index 0 is the official test draw');
+  const fights = R.fightSet('test', index, n, fopts(s)), cands = [weightsOf(s, s.theta.map(() => 0)), weightsOf(s, theta)];
+  const jobs = {format: WK.JOBS_FORMAT, version: WK.VERSION, simHash: s.simHash, harnessHash: s.harnessHash, arch: s.config.arch, phase: 'retest', gen: s.gen, seed: s.config.seed, config: s.config, cands, sets: [{name: 'retest', cands: [0, 1], fights}]};
+  const t0 = Date.now(), res = await WK.runShard(jobs, 0, 1, opts.threads || 4), wall = (Date.now() - t0) / 1000;
+  const rz = res.slice(0, n).map(r => r.rec), rc = res.slice(n).map(r => r.rec), P = RW.paired(rz, rc, s.ref);
+  const it = rc.reduce((q, r) => (r.intents || [0, 0, 0, 0, 0]).map((v, k) => q[k] + v), [0, 0, 0, 0, 0]), tot = it.reduce((a, b) => a + b, 0) || 1;
+  const tel = k => `${k} ${P.mA[k].toFixed(3)}→${P.mB[k].toFixed(3)}`;
+  logLine(file, `[retest #${index}] ${opts.which === 'best' ? 'best' : 'centre'} vs zero on ${n} fresh test fights (${wall.toFixed(0)} s): ${P.diff >= 0 ? '+' : ''}${P.diff.toFixed(3)} ± ${P.se.toFixed(3)} (${Math.abs(P.diff) > 2 * P.se ? 'beyond' : 'within'} 2 SE) | style ${P.styleB.style.toFixed(3)} gates [${P.styleB.failed}] | intents ${it.map(v => (100 * v / tot).toFixed(1) + '%').join(' ')} | ${['dartRate', 'meanDist', 'noContact', 'deathRate', 'humanShare'].map(tel).join(', ')} | drift [${P.driftB.join('; ')}]`);
+  return P;
+}
 function report(s){
   console.log(`state: phase ${s.phase}, gen ${s.gen}/${s.config.gens}, λ ${s.lambda.toFixed(2)}, best ${s.best.from}, sim ${s.simHash}`);
   if (s.calib) console.log(`calib: heuristic goal ${s.calib.goal.mean.toFixed(3)}, paired sd ${s.calib.sdPair.toFixed(3)}, effect ${s.calib.effect.toFixed(3)}, N ${JSON.stringify(s.N)}`);
-  for (const h of s.history) console.log(`gen ${h.gen}: goal ${h.goalMean.toFixed(3)} / best ${h.goalBest.toFixed(3)}, style ${h.styleMean.toFixed(3)}, λ ${h.lambda.toFixed(2)}, non-commit ${(100 * h.nonCommit).toFixed(1)}%, flagged ${h.flagged}`);
+  for (const h of s.history) console.log(`gen ${h.gen}: goal ${h.goalMean.toFixed(3)} / best ${h.goalBest.toFixed(3)}${h.goalHeuristic == null ? '' : ` / heuristic ${h.goalHeuristic.toFixed(3)}`}, style ${h.styleMean.toFixed(3)}, λ ${h.lambda.toFixed(2)}, non-commit ${(100 * h.nonCommit).toFixed(1)}%, flagged ${h.flagged}`);
   for (const v of s.val) console.log(`val gen ${v.gen} (#${v.valIndex}): ${v.diff.toFixed(3)} ± ${v.se.toFixed(3)} style ${v.style.toFixed(3)} ${v.accept ? 'ACCEPT' : ''}`);
   if (s.test) console.log(`test: ${s.test.diff.toFixed(3)} ± ${s.test.se.toFixed(3)} (${s.test.sig ? 'significant' : 'within noise'}), style ${s.test.style.toFixed(3)}`);
 }
-module.exports = { DEFAULTS, DRY, init, load, save, makeJobs, merge, runLocal, report, weightsOf, noise };
+module.exports = { DEFAULTS, DRY, init, load, save, makeJobs, merge, runLocal, retest, report, weightsOf, noise };
 
 if (require.main === module){
   const args = process.argv.slice(2), pos = args.filter(a => !a.startsWith('--'));
@@ -243,6 +265,7 @@ if (require.main === module){
     } else if (cmd === 'run'){
       await runLocal(file, {threads: +(opt.threads || 4), serial: !!opt.serial, steps: opt.steps ? +opt.steps : Infinity, until: opt.until});
     } else if (cmd === 'report'){ report(load(file)); }
-    else { console.error('usage: node policy/train.js init|jobs|merge|run|report state.json ...'); process.exit(2); }
+    else if (cmd === 'retest'){ await retest(file, {which: opt.which, fights: opt.fights ? +opt.fights : 400, index: opt.index ? +opt.index : 1, threads: +(opt.threads || 4)}); }
+    else { console.error('usage: node policy/train.js init|jobs|merge|run|report|retest state.json ...'); process.exit(2); }
   })().catch(e => { console.error(e.message); process.exit(1); });
 }

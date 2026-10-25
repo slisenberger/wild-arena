@@ -53,8 +53,9 @@ function refSim(){
   console.log('\n1. Determinism and plumbing');
   const rs = refSim();
   if (rs){
-    const a = await plainFP(rs.f || rs, fights), b = await plainFP(R.SIM, fights);
-    ok(a.every((x, i) => x === b[i]), `no movePolicy: ${fights.length} fights identical to the pre-hook engine (${rs.h ? 'git ' + rs.h.slice(0, 7) : rs}); events, final positions/HP/states, end time`);
+    const all = QUICK ? fights : fights.concat(require('./common.js').boardJobs(2, 40, 31337)); // + check_identical.js's 320 board fights
+    const a = await plainFP(rs.f || rs, all), b = await plainFP(R.SIM, all);
+    ok(a.every((x, i) => x === b[i]), `no movePolicy: ${all.length} fights identical to the pre-hook engine (${rs.h ? 'git ' + rs.h.slice(0, 7) : rs}); events, final positions/HP/states, end time`);
   } else console.log('  SKIP pre-hook comparison (set REF_SIM=path/to/pre-hook/sim.js)');
   const Z = M.zeros(F.DIM, 0, 1), ZH = M.withHidden(M.zeros(F.DIM, 16, 0), R.A.rng(3));
   const cands = [null, Z, {fixed: 0}, ZH, M.zeros(F.DIM, 0, 0)];
@@ -111,16 +112,22 @@ function refSim(){
   ok(JSON.stringify(RW.metrics(strip2(rn))) === JSON.stringify(RW.metrics(strip2(rz))), 'telemetry and metrics identical for no-policy and zero-weight arms (style computed the same way per fight)');
   // variance and sample size (the calibration phase does the same on its own pool and sets N from it)
   const st = T.init({cfg: {calibFights: fights.length}}); st.ref = ref;
-  const pert = await WK.runShard(jobsOf([0, 1, 2, 3].map(k => T.weightsOf(st, st.theta.map((v, i) => v + .2 * T.noise(st, -1, 99)[k][i]))), fights), 0, 1, 4);
-  const pa = byCand(pert, 4, fights.length);
+  const sg = T.DEFAULTS.sigma, eps = T.noise(st, -1, 99), NP = QUICK ? 4 : eps.length;
+  const pert = await WK.runShard(jobsOf(eps.slice(0, NP).map(e => T.weightsOf(st, st.theta.map((v, i) => v + sg * e[i]))), fights), 0, 1, 4);
+  const pa = byCand(pert, NP, fights.length);
   const gz = rz.map(RW.goal);
   console.log(`  heuristic goal per fight ${RW.mean(gz).toFixed(3)} (sd ${RW.sd(gz).toFixed(3)}); components:`);
   for (const k of Object.keys(RW.goalParts(rz[0]))){ const a = rz.map(r => RW.goalParts(r)[k]); console.log(`    ${k.padEnd(8)} mean ${RW.mean(a).toFixed(3)} sd ${RW.sd(a).toFixed(3)}`); }
-  const dd = pa.map(p => p.map((r, i) => RW.goal(r) - gz[i]));
-  const sdPair = Math.sqrt(RW.mean(dd.map(d => RW.sd(d) ** 2)));
-  console.log(`  σ = .2 perturbations vs heuristic: ${dd.map(d => `${RW.mean(d).toFixed(3)}±${RW.se(d).toFixed(3)}`).join(', ')}; paired per-fight sd ${sdPair.toFixed(3)}`);
-  for (const eff of [.01, .02, .05, .1]) console.log(`    fights for a 2 SE detection of ${eff}: ${Math.ceil((2 * sdPair / eff) ** 2)}`);
-  ok(sdPair < RW.sd(gz), 'pairing reduces per-fight noise (paired sd < unpaired sd)');
+  const dd = pa.map(p => p.map((r, i) => RW.goal(r) - gz[i])), feas = pa.map(p => { const g = RW.grade(RW.metrics(p), ref, p.length); return g.style >= T.DEFAULTS.styleThr && g.gatesPass; });
+  const nc = pa.map(p => { const it = p.reduce((a, r) => (r.intents || [0, 0, 0, 0, 0]).map((v, k) => a[k] + v), [0, 0, 0, 0, 0]); return 1 - it[0] / it.reduce((a, b) => a + b, 0); });
+  const sdOf = ds => Math.sqrt(RW.mean(ds.map(d => RW.sd(d) ** 2))), sdAll = sdOf(dd), fd = dd.filter((_, i) => feas[i]), sdF = fd.length ? sdOf(fd) : NaN;
+  console.log(`  σ = ${sg} perturbations vs heuristic (goal diff ± SE, share of non-commit decisions, realistic = style >= threshold and gates pass):`);
+  dd.forEach((d, i) => console.log(`    ${(RW.mean(d) >= 0 ? '+' : '') + RW.mean(d).toFixed(3)} ± ${RW.se(d).toFixed(3)}  non-commit ${(100 * nc[i]).toFixed(0)}%  ${feas[i] ? 'realistic' : 'unrealistic'}`));
+  console.log(`  paired per-fight sd: all ${sdAll.toFixed(3)}, realistic only ${isNaN(sdF) ? 'n/a' : sdF.toFixed(3)} (unpaired ${RW.sd(gz).toFixed(3)})`);
+  const sdN = isNaN(sdF) ? sdAll : sdF;
+  for (const eff of [.01, .02, .05, .1]) console.log(`    fights for a 2 SE detection of ${eff}: ${Math.ceil((2 * sdN / eff) ** 2)}`);
+  if (fd.length) ok(sdF < RW.sd(gz), 'pairing reduces per-fight noise for realistic perturbations (paired sd < unpaired sd)');
+  else console.log('  SKIP pairing check: no realistic perturbation in this sample');
 
   console.log('\n3. Anti-overfitting (seed pools)');
   const o = {seed: 1, holdMap: 'forest'}, sets = {train: [0, 1, 2].map(i => R.fightSet('train', i, 40, o)), val: [0, 1].map(i => R.fightSet('val', i, 40, o)), test: [R.fightSet('test', 0, 40, o)], calib: [R.fightSet('calib', 0, 40, o)]};

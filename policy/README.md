@@ -212,3 +212,158 @@ them onto it sooner; not measured directly).
   fixed weighted sum, so neither reward can be gamed by collapsing onto the other.
 - **Train:** ES on paired seeds, about 200 fights per candidate; per-archetype nets start at zero (= the heuristic) via
   the skip parameterisation. Validate on fresh fights at 2 SE.
+
+## Milestone 3 harness (Oct 2026): movement intents, goal + style, sharded ES
+
+A training harness for per-archetype **movement-intent** policies. It runs locally on worker threads today and fans
+out to any number of machines (GitHub Actions matrix, a VM, several VMs) without code changes, because every step is
+plain JSON in and plain JSON out. First archetype: the other side's pack harriers (gait `orbit`: wolf, hyena,
+`wolfpack`, `wolfpack6`, `hyenapack`).
+
+### Engine hook (sim.js, opt-in)
+- `cfg.movePolicy = {harrier: weights}`. `archetypeOf(u)` maps a unit to an archetype (`'harrier'` = side E, gait
+  orbit). While such a unit is engaged, `intentMove` picks an intent every 0.5 s (and on a target change) through
+  `A._internals.moveChoose` (registered by `policy/move_policy.js`), and the engine does the steering:
+  0 **commit** = the existing chain (`waitForOpening`, else `gaitMove`: orbit + darts), i.e. the heuristic;
+  1 **wait** = shadow at ~16 m (the `waitForOpening` circle); 2 **flank** = swing round to the target's rear (opposite
+  its heading, or its own target), then dart in from there; 3 **regroup** = close on packmates within 40 m, then hang
+  back with them; 4 **disengage** = back off to ~10 m outside reach.
+- One call site in the engage branch plus `intentMove`/`intentGo`/`archetypeOf` next to the other policy hooks; nothing
+  else changed. Without `cfg.movePolicy` the engine is byte-identical (see the checks below).
+
+### Policy (`move_features.js`, `move_model.js`, `move_policy.js`)
+- 41 features, all from the engine's pure helpers (`packStrength`, `guardsAround`, `busy`, `wound`, `strength`,
+  `packMate`, …; nothing mutates the fight or touches its rng): distance and gap to the target, target is you / riding /
+  hurt / busy / fleeing / easy / on me, log strength ratio vs my pack, guards around it (and whether they'd make the
+  heuristic wait), packmates near / alive / on the same target, attackers on me, own HP, wound, stamina, morale, heat,
+  hunger, dart ready, time, pressure, closing-zone progress and distance to its edge, in water, appetite for people,
+  hyena, map one-hot, previous intent one-hot.
+- `logit[a] = margin·[a = commit] + bl[a] + Wl[a]·x + W2[a]·tanh(W1·x + b1)`, argmax with ties to commit. All-zero
+  `bl, Wl, W2` = always commit = the heuristic, whatever the hidden layer holds; `margin` (default 1) is a trust region a
+  perturbation has to overcome before behaviour changes. `mode: 'linear'` trains `[bl, Wl]` (210 numbers); `'full'`
+  also trains `W2` over a fixed random hidden layer (`nh`). Probe policies: `{fixed: k}`.
+
+### Rewards (`move_reward.js`, telemetry in `move_run.js`)
+- **Goal** (per fight, the side's harriers together): damage to you / your max HP + 1 if a harrier killed you + damage
+  to your animals / 1000 − 0.25 per harrier death − 0.05 per harrier-minute without contact. "Without contact" = idle
+  *or closing in* for more than 10 s without touching anything, so circling or approaching that never arrives is
+  penalised like standing still (the anti-gaming rule).
+- **Style** in [0, 1], from per-fight telemetry pooled over the fight set (ratio of sums), graded against the heuristic's
+  own profile measured on the calibration fights: time shares fight / close / idle / flee (±8 pts), dart rate per
+  engaged minute (the dart-in-and-out rhythm, ±25%), share of engaged time within 10 m (commit vs circle, ±10 pts),
+  mean distance kept from the target (±25%); one-sided: face-on time (in reach of something fighting it back, not darting,
+  > 3 s), long idle (> 30 s without contact), no-contact share, fruitless approaches. A metric scores 1 inside tolerance
+  + 2 SE of the heuristic's sampling noise at that fight count, falling to 0 at twice the tolerance; style = the mean.
+  **Gates** (must score 1): face-on and long idle. `w.sig` counts both sides, so the dart rhythm is counted per unit
+  from `u.mv.k === 'dart'` starts instead.
+- **Drift flags**: every metric, plus telemetry-only death rate, escape rate, your-share of their damage and damage per
+  fight, checked against the heuristic's normal range (tolerance + 2 SE). Logged per candidate every generation; a
+  validation accept requires no flags (`acceptNoDrift`).
+- **Combined**: Lagrangian, fitness = goal + λ·(style_eff − threshold) with style_eff = style − 0.25 per failed gate,
+  λ ← max(0, λ + 4·(threshold − mean candidate style)) after each generation; threshold 0.9, λ₀ = 1.
+
+### Trainer (`train.js` coordinator, `train_worker.js` workers)
+- Phases in one state file: `calib` → `train` (gens) → `val` (final centre) → `test` → `done`.
+  - calib: zero weights + a few σ-perturbations on 300–400 calibration fights → the heuristic's reference profile, the
+    variance of each goal component, the paired per-fight SD, and N (below).
+  - train: OpenAI-ES, `pairs` antithetic pairs, all candidates on the same fresh `train` fights (common seeds),
+    centred ranks with tie-averaging, Adam. Every `valEvery` gens and after the last one: the centre vs the best so far
+    on a **fresh** draw from the validation pool (never reused); accept only at > 2 SE with style ≥ threshold, gates
+    passing and no drift flags.
+  - test: zero weights vs the best on the held-out test pool, per map.
+- **Seed pools**: `train` (one draw per generation), `val` (one per check), `test`, `calib`, `probe` are separate rng
+  streams; boards come from `A.dealBoard` per map, player-like teams, and only fights with harriers on the other side.
+  `holdMap=<map>` also keeps a map out of train/val (the test always covers all four).
+- **N from the variance, not by hand** (`fights`, `valFights`, `testFights` = `'auto'`): realistic effect δ = the spread of
+  true effects among the calibration perturbations that stay realistic (style ≥ threshold, gates pass), floored at
+  0.1 × the heuristic's per-fight goal SD; validation/test N = (2·sd_pair/δ)² (2 SE detection, capped by `valMax` /
+  `testMax`, the log says when the cap binds); train N = 2·(sd_pair/δ)² clamped to [`fightsMin`, `fightsMax`].
+- **Checkpoints**: the state file is rewritten atomically after every step and holds everything the next step needs
+  (θ, Adam moments, λ, best, validation index, history). ES noise is drawn from `(seed, gen)`, so resuming after a crash,
+  a 6-hour CI limit or on another machine gives exactly the same run.
+- **Versioning**: state, jobs and results carry `format` + `version`, the `sim.js` hash and the harness hash
+  (`move_*.js`). A changed engine or harness is refused (`ALLOW_ENGINE_CHANGE=1` / `ALLOW_ENGINE_MISMATCH=1` to
+  override). Every jobs file records the config, the seed and every fight's board seed and fight seed.
+- **Logs**: `<state>.log`, one line per generation: mean / best goal, the heuristic's goal on the same fights
+  (`baseline`, on by default: one extra zero-weight arm, not used in the update, so the curve isn't fight-set luck), mean / min style, feasible share, λ, non-commit
+  share, drift-flagged candidates, |θ|, fights, wall time, fights/s; each flagged candidate; each validation check.
+  The state's `history[g].cands` keeps per-candidate telemetry (time shares, dart rate, distance, deaths, your share
+  of damage, intent shares).
+
+### Usage
+```
+node policy/train.js init  run/state.json [--pairs=8 --gens=8 --sigma=.1 --lr=.08 --holdMap=forest ...] [--dry-run]
+node policy/train.js run   run/state.json [--threads=4] [--serial] [--steps=N]   # local loop; rerun to resume
+node policy/train.js report run/state.json
+node policy/train.js retest run/state.json [--which=center|best] [--fights=400] [--index=1]   # read-only extra test draw
+node policy/harness_test.js [--quick]     # the checks below (~8 min / ~4 min on a shared 4-core box)
+```
+`--dry-run` presets a tiny run (24 calibration fights, 2 pairs × 12 fights, 1 generation, 12-fight val/test): ~25 s.
+
+**Sharded step** (any machines with the same checkout; the coordinator is just these three commands):
+```
+node policy/train.js jobs  run/state.json run/jobs.json                 # next step's jobs (calib / gen g / val / test)
+node policy/train_worker.js run/jobs.json run/out_3.json 3/16 --threads=4   # on each of 16 machines, i = 0..15
+node policy/train.js merge run/state.json run/jobs.json run/out_*.json  # checks coverage + hashes, updates, checkpoints
+```
+GitHub Actions: one workflow run per step. Job `plan` restores `state.json` (artifact or a branch), runs `jobs`, uploads
+`jobs.json`; job `work` with `strategy.matrix.shard: [0..15]` runs `train_worker.js jobs.json out_${{ matrix.shard }}.json
+${{ matrix.shard }}/16 --threads=4` and uploads its output; job `merge` downloads all outputs, runs `merge`, and saves
+the state (re-dispatching itself until `report` says `done`). Each step is minutes, far under the 6-hour job limit. A VM
+does the same with `run` (threads) or a shell loop over `jobs` / workers / `merge`.
+
+File formats: jobs `{format:'wild-arena/move-jobs', version, id, simHash, harnessHash, arch, phase, gen, seed, config,
+cands:[weights], sets:[{name, cands:[index], fights:[{pool, index, i, tr, bseed, board, team, mount, seed}]}]}`; task k
+enumerates sets × their candidates × their fights in order, shard i takes k % n = i. Results `{format:'wild-arena/
+move-results', version, jobsId, simHash, harnessHash, shard:[i,n], nTasks, wall, host, results:[{k, rec}]}` with `rec`
+the per-fight telemetry (`move_run.js runFight`). State `{format:'wild-arena/move-state', version, simHash, harnessHash,
+config, features, intents, P0, phase, gen, theta, adam, lambda, best, valIndex, calib, ref, N, history, val, test}`.
+
+### Harness checks (`node policy/harness_test.js`, 31/31 pass; `logs/m3_harness_test.txt`)
+- No `movePolicy`: 480 fights (160 harrier board fights + `check_identical.js`'s 320) identical to the pre-hook engine
+  (git 8f24f13): event log, final positions / HP / states, end time. Zero weights (margin 1 and margin 0), the
+  always-commit probe and a random hidden layer with a zero output layer: identical to no policy on every fight.
+  (The pre-hook reference is the newest git revision of sim.js without `movePolicy`, or `REF_SIM=`; once other engine
+  changes land after the hook, that comparison stops being meaningful and the zero-weight checks carry the guarantee.)
+- Serial = 4 threads = 4 shards merged (full records); a whole dry run gives the same final state serial, on 4 threads
+  and as CLI `jobs` → 3 worker processes → `merge`; stopping after 2 steps and resuming from the checkpoint gives the
+  same run as never stopping; every validation check used its own draw.
+- Probes on 160 fights (goal diff vs heuristic, style): commit +0.000, 1.00; wait −0.172 ± 0.047, 0.64 (long-idle gate
+  fails, no-contact 16% → 38%, idle penalty ×3.5); flank −0.151 ± 0.051, 0.91; regroup −0.138 ± 0.057, 0.35; disengage
+  −0.275 ± 0.049, 0.47. Every non-commit probe is drift-flagged; the heuristic is not. Style and goal are symmetric
+  under swapping the arms.
+- Variance (heuristic, per fight): goal −0.31 (sd 0.63); components human 0.04 (sd 0.16), kill 0.04 (0.19), your
+  animals 0.20 (0.25), harrier deaths −0.58 (0.46), idle −0.008 (0.016). Harrier deaths dominate both mean and variance.
+  σ = 0.1 perturbations: paired per-fight sd 0.51 (realistic ones) vs 0.63 unpaired; fights for 2 SE detection: 0.05 →
+  ~420, 0.1 → ~105, 0.02 → ~2,600.
+
+### Pilot (Oct 2026, `logs/m3_pilot.txt`): harriers, linear mode, 6 pairs × 6 gens, 6.6 min + 1 min retest
+Config: σ 0.1, Adam 0.08, margin 1, style threshold 0.9, λ₀ 1, baseline arm on. Calibration (300 fights × 5 arms):
+heuristic goal −0.400 (sd 0.563), paired sd 0.362, realistic effect 0.074 → N train 100, val 95, test 95 (auto).
+
+| gen | candidates' mean goal − heuristic (same fights) | best candidate | mean style | λ | non-commit | drift-flagged |
+|---|---|---|---|---|---|---|
+| 0 | +0.042 | +0.139 | 0.944 | 1.00 | 28% | 2/12 |
+| 1 | −0.008 | +0.336 (flagged) | 0.902 | 0.82 | 54% | 6/12 |
+| 2 | −0.013 | +0.063 | 0.830 | 0.81 | 64% | 5/12 |
+| 3 | +0.001 | +0.147 | 0.996 | 1.09 | 53% | 2/12 |
+| 4 | +0.004 | +0.072 | 0.944 | 0.71 | 53% | 3/12 |
+| 5 | +0.005 | +0.098 | 0.992 | 0.54 | 50% | 2/12 |
+
+Validation (centre vs best = zero, fresh 95-fight draws): after 2 updates −0.027 ± 0.048, after 4 −0.082 ± 0.070,
+after 6 +0.047 ± 0.053: nothing accepted, so the official test is zero vs zero. Read-only retest of the final centre
+on 600 fresh test fights: **−0.029 ± 0.019 (within 2 SE)**, style 1.00, no drift; it flanks on 44% of decisions (which
+mostly ends in the usual dart from behind) and its telemetry barely moved (dart rate 9.6 → 9.1 per engaged minute,
+distance 22.9 → 23.5 m, deaths per harrier 0.65 → 0.67). **Null result: nothing beats zero weights.**
+
+What the pilot shows about the problem (more than about the optimiser):
+- The goal's easy gains are unrealistic. The best candidate in a generation was usually drift-flagged: harriers that
+  hang back (mean distance 23 → 34–38 m, dart rate 9.6 → 2–5, no-contact share 15% → 35–55%) die less (0.66 → 0.41–0.47
+  per harrier) and so score up to +0.34. The style constraint and gates kept them out (λ rose when mean style fell
+  to 0.83), and the anti-gaming no-contact term counts their circling as idle.
+- Realistic perturbations move the goal by a few hundredths, and that is the size of the noise at 100 fights per
+  candidate (paired sd 0.36–0.51): to resolve 0.03 at 2 SE takes ~600–1,200 paired fights. Next runs: N train
+  300–400 via `fightsMin`, val/test ≥ 1,000 (`valMax`/`testMax`), more pairs (12–16), 20+ generations: ~2–3 h on
+  4 cores, or one GitHub Actions matrix of 16 shards per step (~5–10 min per generation).
+- Consider weighting harrier deaths less (or by HP lost) so the goal is less about self-preservation, and a richer
+  style profile per species (hyena vs wolf) before trusting a positive result.
