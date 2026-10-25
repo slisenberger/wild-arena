@@ -1,0 +1,54 @@
+## probe 1: node policy/probe.js 100 5005 2 (screen set; arms are biases in standardized units on top of the BC net)
+probes (bias 2 standardized units) vs heuristic, 400 paired fights, seed base 5005; 257s
+arm                    game reward  dmg to you+yours      killed you %            deaths        your win %        disagree %
+BC                  +0.037 ± 0.073       -3.2 ± 10.3        +0.3 ± 1.1        -0.0 ± 0.0        +0.3 ± 1.4               1.1
+you +               +0.283 ± 0.100       -4.4 ± 17.2        +4.5 ± 1.5        -0.1 ± 0.0        -2.3 ± 1.8               2.6
+you -               +0.200 ± 0.099      +27.1 ± 19.2        +0.5 ± 1.4        -0.1 ± 0.0        -1.5 ± 1.7               2.7
+roam less           +0.025 ± 0.070       -0.4 ± 10.4        +0.0 ± 1.1        -0.0 ± 0.0        +0.3 ± 1.4               1.1
+roam more           +0.028 ± 0.075       -4.5 ± 10.5        +0.0 ± 1.1        -0.0 ± 0.0        +1.0 ± 1.5               1.5
+feed less           +0.036 ± 0.073       +5.8 ± 12.7        +0.5 ± 1.1        -0.0 ± 0.0        +0.0 ± 1.3               1.5
+wounded +           +0.081 ± 0.085       +8.9 ± 11.7        +1.0 ± 1.3        -0.0 ± 0.0        -0.3 ± 1.4               1.6
+guarded -           +0.071 ± 0.094       -8.8 ± 14.9        +0.0 ± 1.5        -0.1 ± 0.0        -1.0 ± 1.8               3.0
+busy +              +0.029 ± 0.103      +19.1 ± 17.3        -0.8 ± 1.6        -0.0 ± 0.0        -0.8 ± 1.7               2.1
+pack focus +        +0.024 ± 0.089      -13.8 ± 15.6        +0.0 ± 1.2        -0.0 ± 0.0        +0.5 ± 1.5               1.8
+keep target +       +0.141 ± 0.100       -8.9 ± 16.8        +1.5 ± 1.4        -0.1 ± 0.0        -0.5 ± 1.8               3.1
+near +              +0.042 ± 0.089       +2.1 ± 14.5        -0.3 ± 1.3        -0.1 ± 0.0        -1.5 ± 1.6               3.0
+mount/rider +       +0.089 ± 0.083      -11.3 ± 10.9        +1.0 ± 1.3        -0.1 ± 0.0        -0.8 ± 1.5               1.4
+
+## probe 2: human-focus arms, screen set 5005
+probes (bias 2 standardized units) vs heuristic, 400 paired fights, seed base 5005; 87s
+arm                    game reward  dmg to you+yours      killed you %            deaths        your win %        disagree %
+you 1               +0.139 ± 0.084     -8.14 ± 13.45      +2.50 ± 1.27      -0.02 ± 0.04      -1.75 ± 1.52               1.6
+you 2               +0.283 ± 0.100     -4.40 ± 17.19      +4.50 ± 1.53      -0.06 ± 0.04      -2.25 ± 1.82               2.6
+you 3               +0.192 ± 0.108    -35.66 ± 17.04      +4.00 ± 1.57      -0.03 ± 0.05      -2.75 ± 1.92               3.9
+you 4               +0.168 ± 0.112    -62.39 ± 18.28      +4.00 ± 1.61      -0.03 ± 0.05      -1.25 ± 1.89               5.3
+you 2 keep 2        +0.162 ± 0.108    -53.39 ± 18.45      +3.00 ± 1.54      -0.07 ± 0.05      -0.75 ± 1.89               5.2
+you 3 keep 2        +0.149 ± 0.120    -80.62 ± 18.26      +4.25 ± 1.70      -0.02 ± 0.05      -1.25 ± 1.92               6.4
+you 2 wounded 2     +0.149 ± 0.092    -28.46 ± 14.27      +2.75 ± 1.43      -0.04 ± 0.04      -0.25 ± 1.72               2.1
+you 2 rider 2       +0.259 ± 0.103    -15.55 ± 17.63      +4.00 ± 1.57      -0.07 ± 0.04      -2.25 ± 1.82               2.9
+
+## probe 3: appetite-scaled human focus, screen set 5005 (gates here used the first, noise-blind rule: |pooled diff| > 10)
+arm                    game reward  dmg to you+yours      killed you %            deaths        your win %        disagree %  realism gates
+you 2               +0.283 ± 0.100     -4.40 ± 17.19      +4.50 ± 1.53      -0.06 ± 0.04      -2.25 ± 1.82               2.6  FAIL: cougar you +12.1 pts; grizzly feed -12.3 pts
+app 2               +0.230 ± 0.090     +7.36 ± 13.40      +2.75 ± 1.43      -0.09 ± 0.04      -2.25 ± 1.75               2.4  FAIL: grizzly feed -11.0 pts
+app 4               +0.186 ± 0.108    +10.72 ± 17.76      +2.25 ± 1.48      -0.06 ± 0.05      -0.25 ± 1.82               6.3  FAIL: honeybadger none +11.4 pts; grizzly feed -10.3 pts
+you 1 app 2         +0.294 ± 0.097    -13.73 ± 15.92      +4.75 ± 1.42      -0.07 ± 0.04      -2.25 ± 1.75               2.2  FAIL: grizzly feed -12.0 pts
+you 2 app 2         +0.279 ± 0.100    -26.48 ± 15.41      +4.75 ± 1.50      -0.07 ± 0.04      -1.75 ± 1.75               2.4  FAIL: grizzly feed -12.4 pts
+you 1 app 4         +0.260 ± 0.114     -9.77 ± 17.73      +4.00 ± 1.65      -0.07 ± 0.05      -0.75 ± 1.89               5.0  FAIL: grizzly feed -10.4 pts
+you 2 app 4         +0.344 ± 0.114    -15.76 ± 17.98      +5.50 ± 1.71      -0.09 ± 0.04      -1.75 ± 1.95               4.1  FAIL: grizzly feed -11.0 pts
+you 3 app 4         +0.313 ± 0.111    -34.84 ± 19.31      +5.50 ± 1.60      -0.07 ± 0.05      -2.00 ± 1.84               4.1  FAIL: cougar you +11.7 pts; leopard you +11.5 pts; grizzly feed -10.7 pts
+(BC on the same set, noise-aware rule: pass | warn: grizzly feed -11.1 ± 6.8 pts (within noise) -> the grizzly feed "failures" above are noise)
+
+## probe 4: extreme (unrealistic) biases as an upper bound, fresh set 8008
+arm                    game reward  dmg to you+yours      killed you %            deaths        your win %        disagree %  realism gates
+you 6               -0.012 ± 0.138   -111.85 ± 22.09      +3.75 ± 1.95      +0.09 ± 0.06      +3.00 ± 1.93               9.5  FAIL: hyenapack you +14.4 ± 2.8 pts; hyenapack animals -14.7 ± 2.9 pts; appetite order polar (41.5%) <= jaguar (43.1%) on you
+you 12 (always you)    -0.228 ± 0.130   -223.09 ± 24.38      +4.00 ± 1.86      +0.20 ± 0.06      +3.25 ± 1.92              20.5  FAIL: grizzly you +21.9 ± 2.7 pts; grizzly animals -22.0 ± 3.2 pts; tiger you +15.4 ± 2.4 pts; tiger animals -13.3 ± 1.4 pts ...
+never switch        +0.074 ± 0.126    -93.89 ± 21.05      +4.00 ± 1.83      +0.03 ± 0.05      +1.25 ± 1.92               9.5  pass | warn: hyenapack animals -12.0 ± 2.6 pts (within noise)
+never roam          -0.026 ± 0.085    -21.30 ± 18.68      +0.25 ± 1.25      +0.02 ± 0.04      +2.00 ± 1.46               1.8  pass
+wounded 6           +0.011 ± 0.116    -11.61 ± 20.95      +0.50 ± 1.58      +0.00 ± 0.05      +1.25 ± 1.95               8.2  pass | warn: jaguar you/feed/none (within noise)
+busy 6              -0.043 ± 0.115    +61.99 ± 20.55      -1.50 ± 1.50      +0.03 ± 0.05      +1.25 ± 1.71               5.6  pass
+
+## screened candidates re-measured on the fixed validation set 4004 (node policy/eval.js <weights> 100 1 4004)
+you 2 (isHuman 2):                  game +0.140 ± 0.115, killed you +2.3 ± 1.6 pts, your score -10.9 ± 4.6 s, your wins -2.8 ± 1.9, damage -43 ± 21; gates FAIL: cougar you +14.3 pts
+you 2 app 4 (screen winner):        game -0.048 ± 0.112, killed you +0.0 ± 1.5 pts, your score  -6.9 ± 4.4 s, your wins -2.3 ± 1.9, damage -65 ± 23
+you 1 app 2 (isHuman 1, appetite 2): game +0.047 ± 0.112, killed you +0.8 ± 1.6 pts, your score  -6.6 ± 4.1 s, your wins -1.8 ± 1.8, damage -38 ± 21; gates PASS (warn: cougar you +10.4 ± 6.0)

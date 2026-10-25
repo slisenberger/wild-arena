@@ -155,6 +155,12 @@ round. Report ± standard errors.
   99.0% held-out agreement; 400 paired fights match within noise. `policy/README.md` has the milestone-2 plan
   (evolution strategies + realism penalty; needs ~200 fights per candidate; overnight-scale compute).
 - `predCandidates` in sim.js mirrors `predatorTarget`'s eligibility filters: change both together.
+- Milestone 2 (Oct 2026): BC retrained on the current engine (63 features, 98.9% held-out, paired eval within noise).
+  ES (full net and a 39-dim linear skip term), directed probes and a validation-gated walk found nothing that beats BC on
+  fresh fights within the realism gates (final 400 fresh fights: reward −0.000 ± 0.094); no `es_weights.json`. Target
+  choice alone has little leverage (even "always attack the human" gains only ~4 pts of kills while losing damage);
+  next: give the policy actions such as "wait for an opening". Details: `policy/README.md`, tools `es.js`, `probe.js`,
+  `gates.js`, `run.js`. sim.js has a stat-only `st.foe` (damage to your side).
 
 ## Pricing findings (Oct 2026)
 - The regression in `price_board.js` is biased in board mode: with budget-fill teams, a cheap animal left on

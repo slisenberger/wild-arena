@@ -14,10 +14,10 @@ const TYPE = ['isNone', 'isFeed', 'isTarget'];
 const TGT = ['dist', 'logDist', 'logMassRatio', 'logMass', 'appetite', 'logStrVsPack', 'logStrVsSelf', 'muchStronger',
   'hpFrac', 'isHuman', 'isPlayerAnimal', 'isFeud', 'humanAppetite', 'guardLog', 'guardRatio', 'busyElsewhere',
   'fleeing', 'latchedBy', 'stunned', 'heatstroke', 'heightRatio', 'rival', 'yieldsTo', 'giant', 'packOn', 'packOnAny',
-  'isMine', 'grudge', 'grudgeNear', 'visible', 'inWater', 'isMount'];
+  'isMine', 'grudge', 'grudgeNear', 'visible', 'inWater', 'isMount', 'riding'];
 const FEED = ['feedLog', 'feedDist', 'feedMeat'];
 const CTX = ['hunger', 'hpFrac', 'morale', 'aggr', 'stam', 'heat', 'packMates', 'preyHuman', 'fearless', 'waterbound',
-  'pack', 'scavenger', 'inWater', ...TERR.map(t => 'map_' + t), 'allout', 'time', 'pressure', 'packBoost', 'wound', 'nCand'];
+  'pack', 'scavenger', 'riderSnatcher', 'inWater', ...TERR.map(t => 'map_' + t), 'allout', 'time', 'pressure', 'packBoost', 'wound', 'nCand'];
 const NAMES = [...TYPE, ...TGT, ...FEED, ...CTX];
 const DIM = NAMES.length;
 const lg = x => Math.log(Math.max(1e-6, x));
@@ -33,7 +33,7 @@ function options(w, u){
 function context(w, u, nCand){
   const own = I.strength(u), my = I.packStrength(w, u);
   const c = [u.hunger, u.hp / u.maxhp, u.morale, u.s.aggr, u.stam, Math.min(1.5, u.heat), Math.min(3, I.packMates(w, u)) / 3,
-    lg((u.s.prey && u.s.prey.human) || 1), +I.has(u, 'fearless'), +I.has(u, 'waterbound'), +I.has(u, 'pack'), +I.has(u, 'scavenger'),
+    lg((u.s.prey && u.s.prey.human) || 1), +I.has(u, 'fearless'), +I.has(u, 'waterbound'), +I.has(u, 'pack'), +I.has(u, 'scavenger'), +I.has(u, 'riderSnatcher'),
     +I.inWater(w, u), ...TERR.map(t => +(w.T.id === t)), +(w.mode === 'allout'), w.t / 300, I.pressure(w), lg(my / own) / 2, I.wound(u),
     Math.min(8, nCand) / 8];
   return {c, own, my};
@@ -50,7 +50,7 @@ function targetFeats(w, u, t, own, my){
     Math.log1p(.45 * g), Math.min(5, g) / 5, +(t.side === 'P' && !!t.target && t.target !== u && I.busy(t)),
     +(t.state === 'flee'), +!!t.latchedBy, +(t.stun > 0), +!!t.heatstroke, I.heightOf(t) / Math.max(.5, u.s.strikeH), rv ? lg(rv) : 0,
     +I.yieldsTo(w, u, t), +(t.s.id === 'elephant' || I.has(t, 'giant')), Math.min(3, packOn) / 3, +(packOn > 0),
-    +(u.target === t), +(u.grudge === t), +(u.grudge === t && d < 8), +I.canSee(w, u, t), +I.inWater(w, t), +!!t.rider];
+    +(u.target === t), +(u.grudge === t), +(u.grudge === t && d < 8), +I.canSee(w, u, t), +I.inWater(w, t), +!!t.rider, +!!t.riding];
 }
 
 // {opts, X}: X[i] is the feature vector (length DIM) of option i
