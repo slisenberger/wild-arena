@@ -2,7 +2,7 @@
 
 ## Animal portraits (`faces.json`)
 
-All 26 portraits are 112×112 crops of images from Wikimedia Commons that are in the public domain or released under CC0. None of them is a crop of the original meme image any more (the earlier meme crops were replaced because the rights to their source photos are unknown). Author/artist is as stated on the Commons file page.
+All 28 portraits are 112×112 crops of images from Wikimedia Commons. All are in the public domain or released under CC0 except the giant kangaroo, which is CC BY 3.0 (attribution below). None of them is a crop of the original meme image any more (the earlier meme crops were replaced because the rights to their source photos are unknown). Author/artist is as stated on the Commons file page.
 
 | id | Animal | Source (Wikimedia Commons) | Author / artist | License |
 |---|---|---|---|---|
@@ -32,3 +32,5 @@ All 26 portraits are 112×112 crops of images from Wikimedia Commons that are in
 | `blackbear` | American black bear | [Close up american black bear face.jpg](https://commons.wikimedia.org/wiki/File:Close_up_american_black_bear_face.jpg) | Traylor Waverley, U.S. Fish and Wildlife Service | Public domain |
 | `leopard` | Leopard | [Panthera pardus japonensis JdP.jpg](https://commons.wikimedia.org/wiki/File:Panthera_pardus_japonensis_JdP.jpg) | Marie-Lan Nguyen | Public domain |
 | `boar` | Wild boar | [HPIM9277.JPG](https://commons.wikimedia.org/wiki/File:HPIM9277.JPG) | I.Sáček, senior | Public domain |
+| `giantkangaroo` | Giant kangaroo (Procoptodon goliah, reconstruction) | [Procoptodon goliah.jpg](https://commons.wikimedia.org/wiki/File:Procoptodon_goliah.jpg) | Stanton F. Fink | CC BY 3.0 (cropped and resized) |
+| `smilodon` | Smilodon (life restoration) | [National Fossil Day 2016 artwork (cropped).png](https://commons.wikimedia.org/wiki/File:National_Fossil_Day_2016_artwork_(cropped).png) | National Park Service | Public domain |

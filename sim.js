@@ -39,7 +39,7 @@ const ANIMALS = [
   traits:['Skull-crushing bite that ignores half of armor','Swims well and hunts from the river','Stocky ambusher: power, not leaping; rarely attacks people']},
  {id:'wolf', name:'Gray Wolf', abbr:'WLF', price:100, mass:45, spd:16, dmg:40, cd:.7, armor:.05, reach:1.6, stam:60, heat:.7, cold:1, water:.2, swim:1.5, aggr:.5, flee:.5, corner:1.3, pred:true, charge:false, vision:35, tags:['hamstring','pack'], prey:{human:.3},
   traits:['Hamstring bites slow the target','Endless stamina: circles, tests, and bleeds prey out',"A pack takes on prey ten times one wolf's size; alone it is nervous"]},
- {id:'cougar', name:'Cougar', abbr:'CGR', latchMax:4, yieldsTo:['grizzly','polar','blackbear','wolf'], price:100, mass:60, spd:18, dmg:55, cd:.8, armor:.05, reach:1.8, stam:5, heat:.8, cold:.85, water:-.2, swim:1.2, aggr:.45, flee:.6, corner:1.3, pred:true, latch:true, charge:false, vision:30, climb:true, tags:['catSense','ambush','riderSnatcher'], prey:{human:.8},
+ {id:'cougar', name:'Cougar', abbr:'CGR', latchMax:4, yieldsTo:['grizzly','polar','blackbear','wolf','smilodon'], price:100, mass:60, spd:18, dmg:55, cd:.8, armor:.05, reach:1.8, stam:5, heat:.8, cold:.85, water:-.2, swim:1.2, aggr:.45, flee:.6, corner:1.3, pred:true, latch:true, charge:false, vision:30, climb:true, tags:['catSense','ambush','riderSnatcher'], prey:{human:.8},
   traits:['Huge leap (5 m): can reach a rider or a tree','Gives way to bears, and to wolves that come as a pack','Ambusher that slinks off if faced down']},
  {id:'hyena', name:'Spotted Hyena', abbr:'HYE', price:100, mass:60, spd:16, dmg:60, cd:.8, armor:.1, reach:1.6, stam:50, heat:.9, cold:.6, water:.1, swim:1.5, aggr:.55, flee:.45, corner:1.3, pred:true, charge:false, vision:35, pierce:.3, hpMul:1.3, tags:['scavenger','hamstring','pack'], prey:{human:1.0}, rivals:{lion:1.3},
   traits:['Bone-crushing bite ignores 30% of armor','Tough (+30% durability) and tireless: a clan runs prey down','Clan hunter, not a scavenger: kills most of its own food and eats fast']},
@@ -66,6 +66,8 @@ const ANIMALS = [
   traits:['A big male: tusks slash at thigh height and leave bleeding wounds','A shield of thick skin and gristle over the shoulders','Hard to put down, and fights hardest when cornered']},
  {id:'giantkangaroo', name:'Giant Kangaroo', abbr:'GKA', price:100, mass:230, spd:9, swim:1.5, dmg:110, cd:1.0, armor:.1, reach:2.1, stam:18, heat:1, cold:.5, water:.4, aggr:.4, flee:.35, corner:1.5, pred:false, charge:false, vision:35, rare:true, tags:['boxer','kicker','drowner','thumper'],
   traits:['Rare: Procoptodon, the Ice Age short-faced kangaroo (230 kg, 2–2.7 m tall)','Grabs with long clawed arms, then leans back for a crushing two-footed kick (a blunt hoof, not a claw)','Backs into water and holds attackers under, like kangaroos do to dogs','Thumps the ground when it spots a predator; strides rather than bounces, hopping only in bursts']},
+ {id:'smilodon', name:'Smilodon', abbr:'SMI', latchMax:3.5, price:100, mass:260, spd:14, swim:1.3, dmg:95, cd:1.0, armor:.15, reach:2, stam:4, heat:.85, cold:.7, water:-.1, aggr:.6, flee:.3, corner:1.3, pred:true, latch:true, charge:false, vision:30, rare:true, tags:['catSense','ambush','pinStab','bigGame'], rivals:{lion:1.5, hyena:1.3, tiger:1.2, wolf:1.2}, prey:{human:.6},
+  traits:['Rare: Smilodon fatalis, the Ice Age sabre-tooth (260 kg)','Pins prey with huge forearms, then one killing stab that leaves it bleeding','Fragile sabres: stabbing armor or prey that isn\'t held can snap a canine']},
 ];
 // Fighting styles: how each animal moves and attacks. strikeH = highest point it can hit (m); mountH = rider height if it can carry you (0 = can't).
 const STYLE = {
@@ -90,6 +92,7 @@ const STYLE = {
  moose:{gait:'charge', strikeH:2.4, mountH:2.0, overshoot:3, turn:1.0, wheel:.8, style:'Stomper', how:'Short charge, then rears up and rains front-hoof strikes.'},
  ostrich:{gait:'keepaway', strikeH:1.3, mountH:1.4, style:'Kickboxer', how:'Outruns trouble; if cornered, kicks forward and down with a dagger claw.'},
  honeybadger:{gait:'lumber', strikeH:.8, mountH:0, style:'Pest', how:'Trundles straight at anything, latches onto ankles and will not quit.'},
+ smilodon:{gait:'stalk', strikeH:3, mountH:1.2, pounce:6, style:'Sabre-tooth', how:'Creeps close and springs from 6 m, wrestles its prey down, drives in its sabres, then lets go and waits for it to bleed out.'},
  giantkangaroo:{gait:'keepaway', strikeH:2.3, mountH:0, style:'Kickboxer', how:'Grabs what gets close, rocks back and kicks with both feet; chased by a predator, it backs into water and holds it under.'},
  mammoth:{gait:'lumber', strikeH:5, mountH:3.2, style:'Ice-age bulldozer', how:'Wades in steadily; every strike is a tusk-and-trunk sweep that also hits everything else within reach.'},
  blackbear:{gait:'lumber', strikeH:2.2, mountH:0, style:'Bluffer', how:'Huffs, swats and bluff-charges; brawls for real only when it has to.'},
@@ -480,6 +483,8 @@ function predatorTarget(w, u){
     if (t.s.id === 'elephant' || has(t,'giant')) sc *= 0.1;
     if (t.side === 'H') sc *= (u.s.prey && u.s.prey.human) || 1;
     if (has(u,'riderSnatcher') && t.riding) sc *= 1.6; // a rider is just prey on a high perch to a cougar
+    if (has(u,'bigGame') && t.s.mass >= 1.5 * u.s.mass && t.s.mass <= 4 * u.s.mass) sc *= 1.5; // a sabre-tooth's prey: bison, horses, camels
+    if (has(u,'pinStab') && t.s.armor >= .45) sc *= .3; // sabres and armor don't mix
     if (w.mode === 'allout' && t.side === 'H') sc *= 6;
     if (t.side === 'E') sc *= 1.5; // a live feud gets settled first
     if (u.s.rivals && u.s.rivals[sp(t.s)]) sc *= u.s.rivals[sp(t.s)];
@@ -661,6 +666,9 @@ function strike(w, a, t, opts){
   }
   // held under water: drowning on top of the hold
   if (has(a,'drowner') && opts.latch){ dmg = dmg * .5 + t.maxhp * .03 * s.cd; t.stam = Math.max(0, t.stam - .1); }
+  if (opts.latch && has(a,'pinStab')) dmg *= .6; // wrestling it down, not throttling
+  if (a.fangBroken) dmg *= .7;
+  if (opts.stab) dmg *= 3;
   if (opts.latch){ dmg *= .65; if (has(t,'mane')) dmg *= .6; if (has(t,'looseSkin')) dmg *= .5; }
   if (opts.pounce){ dmg *= 1.4; sig(w, a, a.fromTree ? 'tree drop' : 'pounce'); }
   if (has(a,'stomp') && (t.stun > 0 || t.s.mass < 150)){ dmg *= 1.5; sig(w, a, 'stomp'); } // front hooves on something small or down
@@ -678,7 +686,7 @@ function strike(w, a, t, opts){
     else { const hx = t.mv.nx, hy = t.mv.ny, ax = a.x - t.x, ay = a.y - t.y, m = Math.hypot(ax, ay) || 1; if ((hx * ax + hy * ay) / m < -.3) flank = true; }
   }
   if (flank){ dmg *= 1.25; sig(w, a, 'flank'); if (w.R() < .3) log(w, `${capName(a)} catches ${nameOf(t)} side-on`, 'flank', t); }
-  let armor = t.s.armor * (1 - (s.pierce || 0)) * (opts.latch ? .5 : 1) * Math.max(.4, 1 - .1 * (mob - 1)) * (flank ? .5 : 1);
+  let armor = t.s.armor * (1 - (s.pierce || 0)) * (opts.latch || opts.stab ? .5 : 1) * Math.max(.4, 1 - .1 * (mob - 1)) * (flank ? .5 : 1);
   if (t.s.id === 'croc') armor = inWater(w,t) ? Math.min(.8, armor + .1) : armor - .2;
   dmg *= (1 - armor);
   if (t.side === 'H' && t.riding) dmg *= 1;
@@ -687,6 +695,7 @@ function strike(w, a, t, opts){
   // secondary effects
   if (has(a,'boxer') && !opts.latch && t.state !== 'dead' && t.s.mass < 1.5 * a.s.mass && !t.latchedBy){ // the kick: a heavy blunt shove (it can't move something much bigger)
     const d = dist(a, t) || 1, kb = 1.5 * Math.min(1, a.s.mass / t.s.mass); t.x += (t.x - a.x) / d * kb; t.y += (t.y - a.y) / d * kb; t.stun = Math.max(t.stun, .4); sig(w, a, clinched ? 'clinch and kick' : 'two-footed kick'); }
+  if (opts.stab && t.state !== 'dead'){ t.bleed = Math.max(t.bleed || 0, dmg * .08); t.bleedT = 8; t.bleedBy = a; }
   if (has(a,'slash') && t.state !== 'dead'){ sig(w, a, 'bleeding slash'); t.bleed = Math.max(t.bleed || 0, dmg * .12); t.bleedT = 5; t.bleedBy = a; } // tusk wounds keep bleeding
   if (has(a,'hamstring') && t.s.mass < 2500){ t.slow = Math.max(t.slow * (t.slowT > 0 ? 1 : 0), t.s.mass > 3 * a.s.mass ? .5 : .4); t.slowT = 6; sig(w, a, 'hamstring'); } // leg bites cripple big prey
   // knockback & stun from momentum
@@ -817,6 +826,7 @@ function step(w){
     u.agit = has(u,'bred') ? 1 : Math.max(u.s.aggr * .3, u.agit - .01 * DT); // a fighting bull is always worked up
     if (u.target && !active(u.target)) u.target = null;
     if (u.latchOn && !active(u.latchOn)) { u.latchOn = null; }
+    if (has(u,'pinStab')){ u.pinT = u.latchOn ? (u.pinT || 0) + DT : 0; u.backT = Math.max(0, (u.backT || 0) - DT); if (u.stabbed && (!active(u.stabbed) || u.stabbed.state === 'flee')) u.backT = 0; if (!u.backT) u.circling = false; }
     if (u.latchOn && has(u,'drowner')){ u.holdT -= DT; if (u.holdT <= 0 || !inWater(w, u.latchOn)) release(w, u); }
     if (has(u,'thumper') && !u.thumped && active(u) && u.state !== 'dead'){ // foot-thump alarm: its side looks sharper for a while
       for (const o of units) if (o.s.pred && active(o) && hostile(w, u, o) && dist(u, o) < u.s.vision && canSee(w, u, o)){ u.thumped = true; w.alarm[u.side] = 8; sig(w, u, 'foot-thump alarm'); log(w, `${capName(u)} thumps the ground: predator!`, 'info', u); break; }
@@ -1009,6 +1019,11 @@ function step(w){
       const t = u.target, d = dist(u, t), touch = u.r + t.r + u.s.reach * .6;
       if (has(u,'waterbound') && w.wet && distWater(w, t) > 5){ const p = waterPoint(w, u, t); tx = p.x; ty = p.band ? t.y : p.y; frac = .3; }
       else if (perchAmbush(w, u, t, d)){ continue; } // up a tree, waiting to drop on it
+      else if (u.backT > 0 && t === u.stabbed){ // stabbed and let go: circle out of reach while it bleeds
+        const rx = (u.x - t.x) / (d || 1), ry = (u.y - t.y) / (d || 1), vx = -ry * u.orbitDir + rx * (8 - d) * .4, vy = rx * u.orbitDir + ry * (8 - d) * .4, m = Math.hypot(vx, vy) || 1;
+        tx = u.x + vx / m * 5; ty = u.y + vy / m * 5; frac = .6;
+        if (!u.circling){ u.circling = true; sig(w, u, 'lets it bleed'); }
+      }
       else if (waitForOpening(w, u, t, d)){ // shadow a well-guarded target from ~16 m instead of charging into its guards
         const rx = (u.x - t.x) / (d || 1), ry = (u.y - t.y) / (d || 1), vx = -ry * u.orbitDir + rx * (16 - d) * .25, vy = rx * u.orbitDir + ry * (16 - d) * .25, m = Math.hypot(vx, vy) || 1;
         tx = u.x + vx / m * 5; ty = u.y + vy / m * 5; frac = .45;
@@ -1098,7 +1113,7 @@ function step(w){
     if (!active(u) || !u.latchOn) continue;
     const t = u.latchOn;
     const p = .15 * Math.sqrt(t.s.mass / u.s.mass) * (t.cornerT > 0 ? 1.5 : 1) * (t.side === 'H' ? .3 : 1) * (has(t,'looseSkin') ? 5 : 1); // loose skin: it twists free
-    if (w.R() < p * DT){ if (has(t,'looseSkin')) sig(w, t, 'twists free'); release(w, u, 'shaken off'); }
+    if (w.R() < p * DT * (has(u,'pinStab') ? .6 : 1)){ if (has(t,'looseSkin')) sig(w, t, 'twists free'); release(w, u, 'shaken off'); }
   }
   // attacks
   for (const u of units){
@@ -1112,8 +1127,15 @@ function step(w){
       if (e){ u.atk = 1; strike(w, u, e, {}); if (w.R() < .15) log(w, `You kick and punch at ${nameOf(e)}`, 'info', u); }
       continue;
     }
+    if (has(u,'pinStab') && !u.fangBroken && (u.latchOn ? u.pinT >= 1.2 : u.target && active(u.target) && u.target.stun > .2 && dist(u, u.target) <= u.r + u.target.r + u.s.reach)){
+      const t = u.latchOn || u.target, held = u.latchOn === t;
+      let pb = .03; if (!held || (t.s.mass > 2 * u.s.mass && t.stam > .5)) pb += .3; if (t.s.armor >= .45) pb += .35; // thrashing prey or armor can snap a sabre
+      if (w.R() < pb){ u.fangBroken = true; u.morale -= .1; sig(w, u, 'snaps a canine'); log(w, `${capName(u)} snaps a sabre on ${nameOf(t)}`, 'info', u); strike(w, u, t, {latch: held}); }
+      else { sig(w, u, 'killing stab'); log(w, `${capName(u)} drives its sabres into ${nameOf(t)}`, 'maul', t); strike(w, u, t, {stab:true}); }
+      if (u.latchOn) release(w, u); u.stabbed = t; u.backT = 5; u.pinT = 0; u.atk = u.s.cd; continue;
+    }
     if (u.latchOn){
-      strike(w, u, u.latchOn, {latch:true}); u.atk = u.s.cd; continue;
+      strike(w, u, u.latchOn, {latch:true}); u.atk = has(u,'pinStab') && u.pinT < 1.2 ? clamp(1.2 - u.pinT, .3, u.s.cd) : u.s.cd; continue; // a sabre-tooth stabs as soon as the prey is pinned
     }
     // defensive counterattack: anything latching me
     let t = u.target;
@@ -1423,7 +1445,7 @@ function evadeMove(w, u){
 function defaultMount(team){ let b = null, h = 2.99; for (const id of team){ const m = BY_ID[id].mountH; if (m > h){ h = m; b = id; } } return b; }
 // Measured value of each pick (price_abs.js, seconds of survival): mine = with you vs left off the board,
 // theirs = against you vs off the board (negative = it hurts you). Written by apply_values.js; shown on the cards.
-const MEASURED = {/*MEASURED*/elephant:{mine:165,theirs:-37}, rhino:{mine:73,theirs:-29}, hippo:{mine:81,theirs:-25}, giraffe:{mine:40,theirs:-9}, polar:{mine:31,theirs:-16}, croc:{mine:38,theirs:-8}, buffalo:{mine:58,theirs:-19}, bison:{mine:45,theirs:-34}, grizzly:{mine:27,theirs:-15}, tiger:{mine:12,theirs:-18}, lion:{mine:20,theirs:-11}, gorilla:{mine:8,theirs:-4}, jaguar:{mine:19,theirs:-2}, wolf:{mine:7,theirs:-3}, cougar:{mine:19,theirs:-2}, hyena:{mine:8,theirs:-11}, blackrhino:{mine:47,theirs:-29}, bull:{mine:24,theirs:-16}, moose:{mine:36,theirs:-20}, ostrich:{mine:7,theirs:1}, honeybadger:{mine:-2,theirs:-5}, triceratops:{mine:150,theirs:-45}, mammoth:{mine:75,theirs:-28}, blackbear:{mine:6,theirs:-9}, leopard:{mine:4,theirs:-8}, boar:{mine:6,theirs:-15}, wolfpack:{mine:22,theirs:-13}, wolfpack6:{mine:29,theirs:-14}, hyenapack:{mine:27,theirs:-16}, lionpack:{mine:22,theirs:-13}, buffaloherd:{mine:151,theirs:-42}, bisonherd:{mine:139,theirs:-50}, giantkangaroo:{mine:11,theirs:-6}};
+const MEASURED = {/*MEASURED*/elephant:{mine:165,theirs:-37}, rhino:{mine:73,theirs:-29}, hippo:{mine:81,theirs:-25}, giraffe:{mine:40,theirs:-9}, polar:{mine:31,theirs:-16}, croc:{mine:38,theirs:-8}, buffalo:{mine:58,theirs:-19}, bison:{mine:45,theirs:-34}, grizzly:{mine:27,theirs:-15}, tiger:{mine:12,theirs:-18}, lion:{mine:20,theirs:-11}, gorilla:{mine:8,theirs:-4}, jaguar:{mine:19,theirs:-2}, wolf:{mine:7,theirs:-3}, cougar:{mine:19,theirs:-2}, hyena:{mine:8,theirs:-11}, blackrhino:{mine:47,theirs:-29}, bull:{mine:24,theirs:-16}, moose:{mine:36,theirs:-20}, ostrich:{mine:7,theirs:1}, honeybadger:{mine:-2,theirs:-5}, triceratops:{mine:150,theirs:-45}, mammoth:{mine:75,theirs:-28}, blackbear:{mine:6,theirs:-9}, leopard:{mine:4,theirs:-8}, boar:{mine:6,theirs:-15}, wolfpack:{mine:22,theirs:-13}, wolfpack6:{mine:29,theirs:-14}, hyenapack:{mine:27,theirs:-16}, lionpack:{mine:22,theirs:-13}, buffaloherd:{mine:151,theirs:-42}, bisonherd:{mine:139,theirs:-50}, giantkangaroo:{mine:11,theirs:-6}, smilodon:{mine:17,theirs:-10}};
 // ---------- board rules ----------
 // Each game deals a board of RULES.board animals from the roster (a rare animal turns up with probability rareP).
 // You spend up to RULES.budget on the board; every board animal you don't pick is on the other side.
