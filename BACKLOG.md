@@ -81,6 +81,10 @@ that gives you one of each animal, they're weaker by design.
   and rally morale; a lone herbivore panics sooner. Cheap; do first.
 - [x] **done (v2)** **Pack bonding:** any `pack` animal (lion, wolf, hyena) is bolder beside another pack animal,
   converges on its packmate's target and doesn't spread out; rivals (lion–hyena) excluded.
+- [x] **done** **Buffalo and bison herds:** `buffaloherd`, `bisonherd` (×3) items; `herd` animals bond with their
+  own kind like packs (no lone penalty: a lone buffalo is grumpy, not nervous) and mob the same target.
+- [ ] Herd ideas next: ringing up around you (musk-ox style), stampede contagion, herd-class bonuses (e.g. any two
+  bovids together hold their nerve).
 - [ ] **Sell some animals as groups** (rules option, bends "one of each"): "Wolf pack (4) $300",
   "Hyena clan (3) $300", "Lion pride (2 lionesses + male) $500", "Buffalo herd (3) $600". The pack
   orbits, flanks and hamstrings as a unit; skip it and the other side gets the whole pack.
@@ -144,6 +148,15 @@ Pick for new roles. Top three for design value: **honey badger, moose, Komodo dr
 - [ ] **Wounds and limping:** crippling hits that read better than raw HP.
 - [ ] **Replays:** time scrubber, per-animal damage graphs, death reasons. Also a debugging tool.
 
+## 7b. Art and presentation
+- [ ] **Portraits for every animal** (in progress: public-domain/CC0 Commons images only, credited in CREDITS.md).
+- [ ] **Credits footer + panel** in the game listing each portrait's source, author and license.
+- [ ] **"Video-game" feel without new art:** animate the tokens — squash-and-stretch on charges, a lunge toward
+  the target on a strike, red flash and shake when hit, dust trails behind chargers, facing flips, a stylized
+  (posterized / cel-shaded) filter on portraits. PD/CC0 images may be modified freely (we still credit);
+  CC BY needs credit, CC BY-SA also needs derivatives shared alike — which is why we only take PD/CC0.
+- [ ] Real frame animation needs drawn sprites: an original art project (don't trace others' photos).
+
 ## 8. Replayability
 - [ ] **Daily challenge** (shared seed, shared map) + **verified leaderboard** (store the config,
   re-simulate to verify the score — cheap because the sim is deterministic).
@@ -176,6 +189,9 @@ Pick for new roles. Top three for design value: **honey badger, moose, Komodo dr
 ## 9. Learned AI (ambition)
 - [ ] **Policy nets.** The sim is pure, deterministic and fast (~40 fights/s on 4 cores in Node), so it can
   serve as an RL environment. Uses, roughly in order of payoff:
+  0. *Predator target selection (owner's pick, Oct 2026):* the cleanest first problem — one decision (whom to
+     hunt, or whether to wait), a clear reward (damage dealt / survival / killing you), and an easy realism check
+     (does it still look like a tiger?). Today it's hand-tuned scoring (`predatorTarget`, `waitForOpening`).
   1. *Learned exploit finder:* train a policy for your side's placement/commands to maximize survival;
      whatever it discovers is a camping/exploit report (stronger than grid search).
   2. *Learned enemy pressure:* train the other side to kill you, then keep the hand-written realistic

@@ -23,9 +23,9 @@ const ANIMALS = [
   traits:['Largest land carnivore, actively hunts humans; 10 cm of fat under dense fur blunts bites and claws','Aquatic stalk: hidden under water until 7 m, then surges out for an ambush strike (x1.7)','Overheats fast anywhere warm, but swimming cools it; dominant in snow, and white on white it is hard to spot until 15 m']},
  {id:'croc', name:'Saltwater Crocodile', abbr:'CRO', price:300, mass:1000, spd:4.5, dmg:220, cd:1.2, armor:.6, reach:2.2, stam:5, heat:1.1, cold:.2, water:1, swim:5, aggr:.8, flee:.15, corner:1.2, pred:true, charge:false, smart:.3, vision:20, lift:0, tags:['deathroll','waterbound','ambush'], prey:{human:1.3},
   traits:['Strongest bite measured: grabs and death-rolls in water','At home in water: almost invisible until 7 m. On land it is slow and tires fast, but the bite is just as deadly','Cold-blooded: never dealt on the tundra']},
- {id:'buffalo', name:'Cape Buffalo', abbr:'BUF', price:300, mass:750, spd:15, dmg:150, cd:1.2, armor:.4, reach:2.3, stam:20, heat:.9, cold:.6, water:.2, swim:1.5, aggr:.7, flee:.25, corner:1.5, pred:false, charge:true, smart:.6, vision:28, lift:0, tags:['vindictive','lionKiller'], rivals:{lion:3, tiger:1.8, hyena:1.6},
+ {id:'buffalo', name:'Cape Buffalo', abbr:'BUF', price:300, mass:750, spd:15, dmg:150, cd:1.2, armor:.4, reach:2.3, stam:20, heat:.9, cold:.6, water:.2, swim:1.5, aggr:.7, flee:.25, corner:1.5, pred:false, charge:true, smart:.6, vision:28, lift:0, tags:['herd','vindictive','lionKiller'], rivals:{lion:3, tiger:1.8, hyena:1.6},
   traits:["'Black death': a wounded buffalo circles back for whoever hurt it, for a long time",'+50% damage against lions, tigers and hyenas','Without a herd, it fights alone']},
- {id:'bison', bluffP:0.3, name:'American Bison', abbr:'BIS', price:300, mass:900, spd:15, dmg:140, cd:1.3, armor:.35, reach:2.3, stam:40, heat:.75, cold:1, water:.2, swim:1.5, aggr:.5, flee:.3, corner:1.8, pred:false, charge:true, smart:.5, vision:28, lift:0, tags:['standsGround','bluff'],
+ {id:'bison', bluffP:0.3, name:'American Bison', abbr:'BIS', price:300, mass:900, spd:15, dmg:140, cd:1.3, armor:.35, reach:2.3, stam:40, heat:.75, cold:1, water:.2, swim:1.5, aggr:.5, flee:.3, corner:1.8, pred:false, charge:true, smart:.5, vision:28, lift:0, tags:['herd','standsGround','bluff'],
   traits:['Injures more Yellowstone visitors than any other animal','Tail up, mock charge, then the real thing; spins on a dime','Huge stamina; at home in snow']},
  {id:'grizzly', name:'Grizzly Bear', abbr:'GRZ', bluffP:.5, price:200, mass:320, spd:15, dmg:125, cd:.9, armor:.35, reach:2, stam:15, heat:.65, cold:.95, water:.3, swim:1.8, aggr:.6, flee:.25, corner:1.3, pred:true, charge:false, smart:.7, vision:30, lift:2.8, hpMul:1.2, tags:['scavenger','bluff'], prey:{human:.5}, rivals:{polar:1.3, wolf:1.3, cougar:1.4},
   traits:['Very hard to kill (+20% durability)','Charges at 56 km/h, often a bluff; if it does not stop, it mauls','Takes kills from cougars and wolves']},
@@ -96,8 +96,8 @@ const STYLE = {
 };
 ANIMALS.forEach(a => Object.assign(a, STYLE[a.id]));
 // Pack items: the same species, but one pick brings several. A board deals a species solo or as a pack, never both.
-for (const [id, n, groupName, price] of [['wolf', 3, 'Wolf pack', 300], ['hyena', 4, 'Hyena clan', 300], ['lion', 2, 'Lion coalition', 400]])
-  ANIMALS.push(Object.assign({}, ANIMALS.find(a => a.id === id), {id: id + 'pack', species: id, group: n, groupName, price}));
+for (const [id, n, groupName, price, suffix] of [['wolf', 3, 'Wolf pack', 300], ['hyena', 4, 'Hyena clan', 300], ['lion', 2, 'Lion coalition', 400], ['buffalo', 3, 'Buffalo herd', 600, 'herd'], ['bison', 3, 'Bison herd', 600, 'herd']])
+  ANIMALS.push(Object.assign({}, ANIMALS.find(a => a.id === id), {id: id + (suffix || 'pack'), species: id, group: n, groupName, price}));
 const HUMAN = {id:'human', name:'You', abbr:'YOU', price:0, mass:75, spd:6.5, dmg:6, cd:1, armor:0, reach:1.2, stam:8, heat:1, cold:.6, water:-.5, aggr:0, flee:0, corner:1, pred:false, charge:false, smart:1, vision:35, lift:0, swim:1, strikeH:1.8, mountH:0, gait:'human', climb:true, tags:[]};
 const BY_ID = {}; ANIMALS.forEach(a => BY_ID[a.id] = a); BY_ID.human = HUMAN;
 
@@ -360,10 +360,11 @@ function hazardHurt(w, u, dmg){
 function wound(u){ return clamp((.5 - u.hp / u.maxhp) / .5, 0, 1); }
 // locked in a fight right now (in contact with its target, or latched)
 function busy(u){ return !!(u.latchOn || u.latchedBy || (u.target && active(u.target) && dist(u, u.target) < u.r + u.target.r + u.s.reach + 1.5)); }
-// pack animals bond only with their own kind (a wolf with wolves, a hyena with its clan)
-function packMate(u, o){ return o !== u && o.side === u.side && has(o, 'pack') && active(o) && sp(o.s) === sp(u.s); }
+// pack (predators) and herd (buffalo, bison) animals bond only with their own kind
+const social = u => has(u, 'pack') || has(u, 'herd');
+function packMate(u, o){ return o !== u && o.side === u.side && social(o) && active(o) && sp(o.s) === sp(u.s); }
 // strength of an animal plus its packmates close by: a pack takes on prey none of them could alone
-function packStrength(w, u){ let s = strength(u); if (has(u, 'pack')) for (const o of w.units) if (packMate(u, o) && dist(u, o) < 15) s += strength(o); return s; }
+function packStrength(w, u){ let s = strength(u); if (social(u)) for (const o of w.units) if (packMate(u, o) && dist(u, o) < 15) s += strength(o); return s; }
 // gives way to: the species in its yieldsTo list (a cougar to bears, and to wolves only when they come as a pack)
 function yieldsTo(w, u, o){ const l = u.s.yieldsTo; if (!l || !l.includes(sp(o.s))) return false; return sp(o.s) !== 'wolf' || packMates(w, o) > 0; }
 function packMates(w, u){ let n = 0; for (const o of w.units) if (packMate(u, o) && dist(u, o) < 15) n++; return n; }
@@ -523,6 +524,7 @@ function herbivoreTarget(w, u){
     if (!reachable(u, t)) continue;
     if (t.s.id === 'elephant' || has(t,'giant')) sc *= 0.3;
     if (u.target === t) sc *= 1.3;
+    if (has(u,'herd')) for (const o of w.units) if (packMate(u, o) && o.target === t && dist(o, u) < 25){ sc *= 1.5; break; } // the herd mobs together
     sc /= (1 + d / 10);
     if (sc > bs){ bs = sc; best = t; }
   }
@@ -560,7 +562,7 @@ function allyTarget(w, u){
     if (has(u,'kicker') && !(dm < 6 || u.grudge === e)) sc *= .1;
     if (!reachable(u, e)) sc *= .05;
     // spread coverage
-    let others = 0; for (const a of w.units) if (a !== u && a.side === 'P' && active(a) && a.target === e && !(has(u,'pack') && packMate(u, a))) others++; // packmates gang up rather than spread
+    let others = 0; for (const a of w.units) if (a !== u && a.side === 'P' && active(a) && a.target === e && !(social(u) && packMate(u, a))) others++; // packmates and herdmates gang up rather than spread
     sc *= Math.pow(.6, others);
     if (u.grudge === e && dm < 6) sc *= 2;
     if (u.target === e) sc *= 1.3;
@@ -851,7 +853,7 @@ function step(w){
       if (o.side === u.side && u.side === 'P' && d < 10) friends++;
     }
     let tgt = 1 - .85 * (1 - u.hp / u.maxhp) - .3 * Math.max(0, fear / my - 1);
-    if (has(u,'pack')){ const m = packMates(w, u); tgt += m ? Math.min(.2, .1 * m) : -.12; } // alone it's nervous; with its pack it's bold
+    if (social(u)){ const m = packMates(w, u); tgt += m ? Math.min(.2, .1 * m) : has(u,'pack') ? -.12 : 0; } // a lone pack hunter is nervous (a lone buffalo is just grumpy); together they're bold
     let fallen = 0; for (const o of units) if (o.side === u.side && o !== u && (o.state === 'dead' || o.escaped)) fallen++;
     tgt -= (u.side === 'E' ? .05 : .03) * fallen;
     if (u.side === 'E' && u.state !== 'flee') tgt += .25 * pressure(w);
