@@ -930,7 +930,7 @@ function step(w){
     if (u.state !== 'flee' && u.cornerT <= 0 && u.morale < u.s.flee && u.fleeT <= 0 && !u.withdrawn){
       u.state = 'flee'; u.fleeT = 4 + R() * 4; release(w, u); u.mv = null;
       u.breaks = (u.breaks || 0) + 1;
-      if (u.rider && R() < .5) throwRider(w, u, 'it panicked and bolted');
+      if (u.rider && R() < (u.state === 'carry' && !u.latchedBy ? .15 : .5)) throwRider(w, u, 'it panicked and bolted'); // a mount already running with you mostly just runs faster; one that's grabbed bucks
       const broken = u.breaks >= (u.side === 'E' ? 2 : 3) || u.hp < u.maxhp * .3;
       if (broken && u.side === 'E' && w.mode === 'wild' && !u.routing){ u.routing = true; log(w, `${capName(u)} is beaten and makes for the edge`, 'flee', u); }
       else if (broken && u.side === 'P'){ u.withdrawn = true; log(w, `${capName(u)} is too badly hurt to fight and falls back`, 'flee', u); }
@@ -1142,6 +1142,11 @@ function step(w){
     }
     if (u.latchOn){
       strike(w, u, u.latchOn, {latch:true}); u.atk = has(u,'pinStab') && u.pinT < 1.2 ? clamp(1.2 - u.pinT, .3, u.s.cd) : u.s.cd; continue; // a sabre-tooth stabs as soon as the prey is pinned
+    }
+    // a kicker carrying you lashes out at anything that gets in close (a giraffe's kick can kill a lion)
+    if (u.state === 'carry' && u.rider && has(u,'kicker')){
+      let e = null, ed = 1e9; for (const o of units) if (o.side === 'E' && active(o) && (o.target === u || o.target === w.human || o.latchOn === u)){ const d = dist(u, o); if (d <= u.r + o.r + u.s.reach && d < ed){ ed = d; e = o; } }
+      if (e){ strike(w, u, e, {}); u.atk = u.s.cd; sig(w, u, 'kicks while carrying you'); continue; }
     }
     // defensive counterattack: anything latching me
     let t = u.target;
