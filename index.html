@@ -460,7 +460,7 @@ function variantFor(cfg){
 function mkUnit(s, side, x, y, id){
   const hp = hpOf(s);
   return { id, s, side, x, y, vx:0, vy:0, hp, maxhp:hp, r:radiusOf(s.mass), stam:1, heat:0, morale:1, state:'idle',
-    target:null, atk:0, stun:0, latchOn:null, latchedBy:null, slow:0, slowT:0, hunger:.45, sated:false,
+    target:null, idleT: side === 'E' ? 6 : 0, atk:0, stun:0, latchOn:null, latchedBy:null, slow:0, slowT:0, hunger:.45, sated:false,
     grudge:null, grudgeT:0, agit:s.aggr*.4, fleeT:0, cornerT:0, ambushReady:has({s},'ambush') || has({s},'aquaStalk'), bluffed:{}, riding:null, rider:null,
     feud:null, feudT:0, mv:null, pounceCd:0, chargeCd:0, dartT:0, strikes:0, orbitDir:1, onTree:null, climbT:0, carcass:null, feedT:0, heatstroke:false, retargetT:0, homeDx:0, homeDy:0, escaped:false,
     st:{dealt:0, foe:0, taken:0, kills:0, protect:0, alive:0}, killedBy:null, deathT:null, lastHitBy:null };
@@ -802,7 +802,7 @@ function herbivoreTarget(w, u){
     const d = dist(u, t);
     let sc = 0;
     if (u.grudge === t) sc = 5;
-    if (sc === 0 && !canSee(w, u, t) && !(d < 30 && Math.hypot(t.vx, t.vy) > 2)) continue; // poor-sighted grazers go by sound and smell
+    if (sc === 0 && !canSee(w, u, t) && !(d < 30 + 50 * dr && (Math.hypot(t.vx, t.vy) > 2 || dr > .5))) continue; // poor-sighted grazers go by sound and smell (and by the noise of the fight, once restless)
     if (d > R && sc === 0){
       if (has(u,'hatesPredators') && t.s.pred && d < 20) sc = 1.5; else continue;
     }
@@ -828,7 +828,7 @@ function nearestPlayer(w,u){ let b=null,bd=1e9; for(const t of w.units) if(t.sid
 
 // battle drive (owner: every animal is here to win the fight): time spent with nothing to do builds up, and the
 // longer an animal has been idle the farther it looks for a fight and the readier it is to start one
-function drive(u){ return clamp(((u.idleT || 0) - 5) / 20, 0, 1); }
+function drive(u){ return clamp(((u.idleT || 0) - 3) / 12, 0, 1); }
 function allyTarget(w, u){
   const H = w.human;
   const anchor = u.post || H;
@@ -1110,7 +1110,7 @@ function step(w){
     u.agit = has(u,'bred') ? 1 : Math.max(u.s.aggr * .3, u.agit - .01 * DT); // a fighting bull is always worked up
     if (u.target && !active(u.target)) u.target = null;
     if (u.latchOn && !active(u.latchOn)) { u.latchOn = null; }
-    if (!u.target && !u.latchOn && !u.latchedBy && (u.state === 'roam' || u.state === 'rest' || u.state === 'guard' || u.state === 'idle')) u.idleT = (u.idleT || 0) + DT; else u.idleT = 0;
+    if (!u.target && !u.latchOn && !u.latchedBy && (u.state === 'roam' || u.state === 'rest' || u.state === 'guard' || u.state === 'idle')) u.idleT = (u.idleT || 0) + DT; else u.idleT = Math.max(0, (u.idleT || 0) - 2 * DT); // a brief scuffle doesn't reset its patience
     if (has(u,'pinStab')){ u.pinT = u.latchOn ? (u.pinT || 0) + DT : 0; u.backT = Math.max(0, (u.backT || 0) - DT); if (u.stabbed && (!active(u.stabbed) || u.stabbed.state === 'flee')) u.backT = 0; if (!u.backT) u.circling = false; }
     if (u.latchOn && has(u,'drowner')){ u.holdT -= DT; if (u.holdT <= 0 || !inWater(w, u.latchOn)) release(w, u); }
     if (has(u,'thumper') && !u.thumped && active(u) && u.state !== 'dead'){ // foot-thump alarm: its side looks sharper for a while
