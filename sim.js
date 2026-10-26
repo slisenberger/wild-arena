@@ -622,6 +622,7 @@ function chooseTarget(w, u){
     if (evasiveMount(u)){ u.target = null; u.state = 'carry'; return; }
     if (u.withdrawn){ u.target = null; u.state = 'withdraw'; return; }
     u.target = allyTarget(w, u);
+    if (u.gT && active(u.gT)) u.target = u.gT; // learned guard intent (policy/, cfg.movePolicy.guard): intercept / help / screen target
     u.state = u.target ? 'engage' : 'guard';
     return;
   }
@@ -977,6 +978,7 @@ function step(w){
       continue;
     }
     if (u.heatstroke){ u.state = 'cool'; u.target = null; continue; }
+    if (u.side === 'P' && w.cfg.movePolicy && w.cfg.movePolicy.guard) guardDecide(w, u); // learned guard intent (policy/), opt-in
     u.retargetT -= DT;
     if (u.retargetT <= 0){ u.retargetT = .5 + R() * .2; chooseTarget(w, u); }
   }
@@ -1056,6 +1058,7 @@ function step(w){
       if (u.rider || w.mount === u){ tx = H.x; ty = H.y; }
       frac = Math.hypot(tx-u.x, ty-u.y) > 6 ? .8 : .35;
       if (Math.hypot(tx-u.x, ty-u.y) < 1) frac = 0;
+      if (u.gIntent && w.cfg.movePolicy){ const m = guardIdleGo(w, u); if (m){ tx = m.tx; ty = m.ty; frac = m.frac; } } // learned guard intent (policy/), opt-in
     } else {
       // roam / rest: drift gently, enemies wander
       if (!u.wander || R() < .01){
@@ -1558,11 +1561,12 @@ function predCandidates(w, u){
 // heuristic. Any other intent returns true with its move in u.intentGo ({tx, ty, frac}, or null if a gait move took
 // over). Archetypes so far: 'harrier' = the other side's orbit-gait pack hunters (wolf, hyena and their packs).
 const INTENTS = ['commit', 'wait', 'flank', 'regroup', 'disengage'];
-function archetypeOf(u){ return u.side === 'E' && u.s.gait === 'orbit' ? 'harrier' : null; }
+function archetypeOf(u){ return u.side === 'E' && u.s.gait === 'orbit' ? 'harrier' : u.side === 'P' && !u.rider ? 'guard' : null; }
 function intentMove(w, u, t, d, touch, vmax){ const m = intentGo(w, u, t, d, touch, vmax); if (m === false) return false; u.intentGo = m; return true; }
 function intentGo(w, u, t, d, touch, vmax){
   const arch = archetypeOf(u), P = arch && w.cfg.movePolicy[arch];
   if (!P) return false;
+  if (arch === 'guard') return guardGo(w, u, t, d, touch);
   if (!INTERNALS.moveChoose) throw new Error('cfg.movePolicy is set but no movement policy is loaded: require policy/move_policy.js');
   if (u.intentFor !== t || !(u.intentT > DT / 2)){ u.intentFor = t; u.intentT = .5; u.intent = INTERNALS.moveChoose(w, u, t, d, P, arch); }
   else u.intentT -= DT;
@@ -1588,8 +1592,81 @@ function intentGo(w, u, t, d, touch, vmax){
   }
   return {tx: t.x + rx * (touch + 10), ty: t.y + ry * (touch + 10), frac: .7}; // disengage: back off to ~10 m out of reach
 }
+// Guard archetype (cfg.movePolicy.guard): your side's animals that aren't carrying you, in 'guard' state or engaged.
+// guardDecide (decisions loop) picks an intent every 0.5 s; 0 hold = the heuristic. screen / intercept / help also set
+// u.gT, which chooseTarget keeps as the target until the next decision; screen / space out / fall back steer
+// (guardGo while engaged, guardIdleGo in guard state). Without cfg.movePolicy.guard none of this runs.
+const GUARD_INTENTS = ['hold', 'screen', 'intercept', 'space', 'help', 'fallback'];
+const GUARD_SPACE = 8, GUARD_SCREEN = 5, GUARD_NEAR = 3;
+function sideSees(w, e){ for (const a of w.units) if (a.side !== 'E' && active(a) && canSee(w, a, e)) return true; return false; } // teamSees without its lookout side effect
+// the most threatening enemy to you: aimed at you or heading your way (within 25 m); unless onlyComing, also anything within 12 m
+function guardThreat(w, u, onlyComing){
+  const H = w.human; let best = null, bs = 0;
+  for (const e of w.units){
+    if (e.side !== 'E' || !active(e) || e.state === 'flee' || e.heatstroke) continue;
+    const dh = dist(e, H); if (dh > 10 && !sideSees(w, e)) continue;
+    const v = Math.hypot(e.vx, e.vy), toward = v > 1.5 && dh < 25 && ((H.x - e.x) * e.vx + (H.y - e.y) * e.vy) / ((dh || 1) * v) > .7;
+    const intent = e.target === H || e.latchOn === H ? 1 : toward ? .5 : !onlyComing && dh < 12 ? .25 : 0;
+    if (!intent || (u && !reachable(u, e))) continue;
+    const sc = intent * strength(e) / (1 + dh / 10);
+    if (sc > bs){ bs = sc; best = e; }
+  }
+  return best;
+}
+// the strongest enemy on the most hurt of your animals that is in a fight
+function guardHelpTarget(w, u){
+  let best = null, bh = 2;
+  for (const a of w.units){
+    if (a === u || a.side !== 'P' || !active(a) || a.withdrawn) continue;
+    let att = null, as = 0;
+    for (const e of w.units) if (e.side === 'E' && active(e) && (e.target === a || e.latchOn === a) && dist(e, a) < e.r + a.r + e.s.reach + 3 && (!u || reachable(u, e))){ const s = strength(e); if (s > as){ as = s; att = e; } }
+    if (att && a.hp / a.maxhp < bh){ bh = a.hp / a.maxhp; best = att; }
+  }
+  return best;
+}
+function guardDecide(w, u){
+  if (u.rider || u.withdrawn || u.latchOn || !(u.state === 'guard' || u.state === 'engage')) return;
+  if (!INTERNALS.moveChoose) throw new Error('cfg.movePolicy is set but no movement policy is loaded: require policy/move_policy.js');
+  u.gIntentT = (u.gIntentT || 0) - DT; if (u.gIntentT > DT / 2) return;
+  u.gIntentT = .5;
+  const t = u.target && active(u.target) ? u.target : null;
+  const k = u.gIntent = INTERNALS.moveChoose(w, u, t, t ? dist(u, t) : 0, w.cfg.movePolicy.guard, 'guard');
+  u.gT = k === 1 ? guardThreat(w, u, false) : k === 2 ? guardThreat(w, u, true) : k === 4 ? guardHelpTarget(w, u) : null;
+  if (u.gT){ u.target = u.gT; u.state = 'engage'; }
+}
+function guardSpot(u, H, dx, dy, r, near){ // a point r m from you in direction (dx, dy); null when already there
+  const m = Math.hypot(dx, dy); if (m < 1e-6){ dx = u.x - H.x; dy = u.y - H.y; } const n = Math.hypot(dx, dy) || 1;
+  const tx = H.x + dx / n * r, ty = H.y + dy / n * r, g = Math.hypot(tx - u.x, ty - u.y);
+  return g < (near || 1) ? {tx: u.x, ty: u.y, frac: 0} : {tx, ty, frac: g > 6 ? .8 : .45};
+}
+function guardGo(w, u, t, d, touch){
+  const k = u.gIntent || 0, H = w.human;
+  if (!k || k === 2 || k === 4) return false; // hold, intercept, help: the heuristic chase of the (possibly re-chosen) target
+  const hd = dist(u, H);
+  if (k === 1){ // screen: stand between you and the threat, ~5 m out; fight it once it arrives
+    if (t !== u.gT || d < touch + 2) return false;
+    return guardSpot(u, H, t.x - H.x, t.y - H.y, GUARD_SCREEN, 1.2);
+  }
+  if (k === 3){ // space out: fight >= 8 m from you, from the far side of the target, so its sweeps and charges point away from you
+    const ex = t.x - H.x, ey = t.y - H.y, em = Math.hypot(ex, ey) || 1, ux = ex / em, uy = ey / em;
+    const rx = (u.x - t.x) / (d || 1), ry = (u.y - t.y) / (d || 1), side = rx * ux + ry * uy;
+    if (hd >= GUARD_SPACE && side > .3) return false;
+    if (side > .3 || d > touch + 6) return guardSpot(u, H, ex, ey, Math.max(GUARD_SPACE + 2, em + touch));
+    let sx = -ry, sy = rx; if (sx * ux + sy * uy < 0){ sx = -sx; sy = -sy; } // swing round it, not through it
+    const g = (touch + 1 - d) * .5, vx = sx + rx * g, vy = sy + ry * g, m = Math.hypot(vx, vy) || 1;
+    return {tx: u.x + vx / m * 5, ty: u.y + vy / m * 5, frac: .8};
+  }
+  if (hd > GUARD_NEAR + 1.5) return guardSpot(u, H, u.x - H.x, u.y - H.y, GUARD_NEAR); // fall back: get back beside you
+  return d < touch + 1 ? false : {tx: u.x, ty: u.y, frac: 0}; // and only fight what is in reach there
+}
+function guardIdleGo(w, u){
+  const k = u.gIntent, H = w.human, hd = Math.hypot(u.homeDx, u.homeDy);
+  if (k === 3) return hd >= GUARD_SPACE + 1 ? null : guardSpot(u, H, u.homeDx, u.homeDy, GUARD_SPACE + 1);
+  if (k === 5) return guardSpot(u, H, u.homeDx, u.homeDy, GUARD_NEAR);
+  return null;
+}
 const INTERNALS = { choose: null, predCandidates, predatorTarget, bestCarcass, guardsAround, packStrength, packMates, packMate, strength, hostile, canSee, reachable, distWater, inWater, busy, yieldsTo, wound, heightOf, pressure, active, has, dist, sp, social };
-Object.assign(INTERNALS, { moveChoose: null, INTENTS, archetypeOf, drive, locked });
+Object.assign(INTERNALS, { moveChoose: null, INTENTS, archetypeOf, drive, locked, GUARD_INTENTS, GUARD_SPACE, guardThreat, guardHelpTarget, sideSees, evasiveMount, zoneAt });
 function policyChoose(w, u){
   if (!INTERNALS.choose) throw new Error('cfg.policy is set but no policy is loaded: require policy/policy.js');
   INTERNALS.choose(w, u, w.cfg.policy);

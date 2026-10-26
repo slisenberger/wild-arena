@@ -1,15 +1,15 @@
-// Milestone 3: movement-intent policy. Logits over the intents (A._internals.INTENTS: commit, wait, flank, regroup,
-// disengage):  logit[a] = margin·[a = commit] + bl[a] + Wl[a]·x + W2[a]·tanh(W1·x + b1);  action = argmax, ties to
+// Milestone 3: movement-intent policy. Logits over an archetype's intents (harrier: A._internals.INTENTS = commit, wait,
+// flank, regroup, disengage; guard: GUARD_INTENTS = hold, screen, intercept, space, help, fallback; intent 0 = heuristic):  logit[a] = margin·[a = commit] + bl[a] + Wl[a]·x + W2[a]·tanh(W1·x + b1);  action = argmax, ties to
 // the earlier intent. With bl = Wl = W2 = 0 every logit except commit's is 0, so the policy always commits = the
 // heuristic, whatever W1/b1 hold (skip/linear parameterisation). `margin` (>= 0) acts as a trust region: a perturbation
 // has to outweigh it before behaviour changes at all. Weights are plain JSON:
 //   {kind:'move-mlp', v:1, nin, nout, nh, margin, bl:[nout], Wl:[nout*nin], W1:[nh*nin], b1:[nh], W2:[nout*nh]}
 // Probe policies: {fixed: k} always picks intent k (no features computed).
-const NOUT = 5;
-function zeros(nin, nh, margin){
-  nh = nh || 0;
-  return {kind: 'move-mlp', v: 1, nin, nout: NOUT, nh, margin: margin === undefined ? 1 : margin,
-    bl: new Array(NOUT).fill(0), Wl: new Array(NOUT * nin).fill(0), W1: new Array(nh * nin).fill(0), b1: new Array(nh).fill(0), W2: new Array(NOUT * nh).fill(0)};
+const NOUT = 5; // harrier default; zeros(nin, nh, margin, nout) for other archetypes (guard: 6)
+function zeros(nin, nh, margin, nout){
+  nh = nh || 0; const no = nout || NOUT;
+  return {kind: 'move-mlp', v: 1, nin, nout: no, nh, margin: margin === undefined ? 1 : margin,
+    bl: new Array(no).fill(0), Wl: new Array(no * nin).fill(0), W1: new Array(nh * nin).fill(0), b1: new Array(nh).fill(0), W2: new Array(no * nh).fill(0)};
 }
 // a fixed random hidden layer (W1, b1) so the MLP path is live once W2 moves; W2 stays 0 = still the heuristic
 function withHidden(P, R, scale){
