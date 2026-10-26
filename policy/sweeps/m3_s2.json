@@ -1,0 +1,37 @@
+{
+ "note": "Milestone 3 sweep 2 (Oct 26): after the headroom probe found 'patient' (+0.06 on 1,200 fresh fights). Warm starts from the rule, and smaller commit margins so exploration flips decisions.",
+ "runs": [
+  {
+   "name": "warm_s1",
+   "args": "--initRule=patient --pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --seed=201"
+  },
+  {
+   "name": "warm_s2",
+   "args": "--initRule=patient --pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --seed=202"
+  },
+  {
+   "name": "warm_big",
+   "args": "--initRule=patient --pairs=16 --gens=60 --sigma=.25 --lr=.15 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --seed=203"
+  },
+  {
+   "name": "warm_m25",
+   "args": "--initRule=patient --margin=.25 --pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --seed=204"
+  },
+  {
+   "name": "m25_s1",
+   "args": "--margin=.25 --pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --seed=205"
+  },
+  {
+   "name": "m25_big",
+   "args": "--margin=.25 --pairs=16 --gens=60 --sigma=.25 --lr=.15 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --seed=206"
+  },
+  {
+   "name": "m0_big",
+   "args": "--margin=0.01 --pairs=16 --gens=60 --sigma=.25 --lr=.15 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --seed=207"
+  },
+  {
+   "name": "warm_full16",
+   "args": "--initRule=patient --mode=full --nh=16 --pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --seed=208"
+  }
+ ]
+}

@@ -367,3 +367,16 @@ What the pilot shows about the problem (more than about the optimiser):
   4 cores, or one GitHub Actions matrix of 16 shards per step (~5–10 min per generation).
 - Consider weighting harrier deaths less (or by HP lost) so the goal is less about self-preservation, and a richer
   style profile per species (hyena vs wolf) before trusting a positive result.
+
+## Milestone 3, round 2 (Oct 26): headroom found
+- **Probe** (`policy/probes/harrier_rules.js`, paired vs the heuristic): hand-written conditional rules for enemy harriers.
+  `patient` (wait while stronger guards block the target and it isn't busy or easy) beat the heuristic: +0.047 ± 0.018
+  on 800 fights, then **+0.061 ± 0.012 on 1,200 fresh fights**, style 1.00, no drift. Variants (wait when guards merely
+  deter; regroup when alone) match. flankBusy, humanOnly lose; packUp, hitRun are neutral.
+- **Why the pilot missed it:** zero weights + commit margin 1 means a σ=.1 perturbation almost never flips a decision in
+  the right states; ES never sees the gain.
+- **Fixes:** `--initRule=patient` warm start (the rule encoded in the linear term: +0.027 ± 0.013 vs zero on 800 fresh
+  test fights) and smaller `--margin`. Sweep 2 (`policy/sweeps/m3_s2.json`) runs these on GitHub Actions next to sweep 1.
+- **Compute:** `.github/workflows/train.yml` (public repo: free); each sweep entry trains on its own 4-core runner for up
+  to 5.5 h and uploads `state.json`, its log and a report as an artifact; `resume_run` continues a sweep.
+

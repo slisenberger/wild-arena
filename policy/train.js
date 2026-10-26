@@ -33,6 +33,7 @@ const DEFAULTS = {
   holdMap: null,             // a map kept out of train/validation (the test always covers every map)
   acceptNoDrift: true,       // validation acceptance also requires no telemetry drift flags
   baseline: true,            // also run zero weights on each generation's train fights: curves relative to the heuristic
+  initRule: null,            // warm start: 'patient' = wait while stronger guards block and the target isn't busy or easy (probe winner, +0.06)
 };
 const DRY = {calibFights: 24, calibPerturb: 1, pairs: 2, fights: 12, gens: 1, valEvery: 1, valFights: 12, testFights: 12};
 
@@ -50,8 +51,14 @@ function logLine(file, line, quiet){ fs.appendFileSync(file + '.log', line + '\n
 function init(opts){
   const cfg = Object.assign({}, DEFAULTS, opts.dry ? DRY : {}, opts.cfg);
   const P0 = M.zeros(F.DIM, cfg.nh, cfg.margin); if (cfg.nh) M.withHidden(P0, R.A.rng(cfg.seed * 31 + 7));
+  const theta0 = M.flat(P0, cfg.mode);
+  if (cfg.initRule){ // encode a hand-written rule in the linear term (the trainable vector starts [bl, Wl], Wl row-major per intent)
+    const IN = R.A._internals.INTENTS, NOUT = IN.length, f = n => F.NAMES.indexOf(n), wl = (a, n, v) => { theta0[NOUT + IN.indexOf(a) * F.DIM + f(n)] = v; };
+    if (cfg.initRule === 'patient'){ const k = 2.5 * Math.max(1, cfg.margin); wl('wait', 'guardsBlock', k); wl('wait', 'tBusy', -k); wl('wait', 'tEasy', -k); }
+    else throw new Error('unknown initRule ' + cfg.initRule);
+  }
   return {format: STATE_FORMAT, version: STATE_VERSION, simHash: R.simHash(), harnessHash: R.harnessHash(), created: new Date().toISOString(),
-    config: cfg, features: F.NAMES, intents: R.A._internals.INTENTS, P0, phase: 'calib', gen: 0, theta: M.flat(P0, cfg.mode),
+    config: cfg, features: F.NAMES, intents: R.A._internals.INTENTS, P0, phase: 'calib', gen: 0, theta: theta0,
     adam: {m: null, v: null, t: 0}, lambda: cfg.lambda0, best: {theta: M.flat(P0, cfg.mode), gen: -1, from: 'zero'}, valIndex: 0,
     calib: null, ref: null, N: null, history: [], val: [], test: null};
 }
