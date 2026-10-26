@@ -1,0 +1,24 @@
+== g_lin_big
+[test] best (after 20 updates) vs zero weights on 1200 held-out fights: +0.107 ± 0.017 (beyond 2 SE) | style 0.994 gates [] drift [pounceRate 0.355→0.506]
+test: 0.107 ± 0.017 (significant), style 0.994
+== g_lin_s1
+[test] best (zero) vs zero weights on 1200 held-out fights: +0.000 ± 0.000 (within 2 SE) | style 1.000 gates [] drift []
+test: 0.000 ± 0.000 (within noise), style 1.000
+== g_lin_s2
+[test] best (zero) vs zero weights on 1200 held-out fights: +0.000 ± 0.000 (within 2 SE) | style 0.885 gates [] drift [bigIdle 0.263→0.086; bigNear 0.256→0.467; sweepRate 0.000→0.002]
+test: 0.000 ± 0.000 (within noise), style 0.885
+== g_lin_s3
+[test] best (zero) vs zero weights on 1200 held-out fights: +0.000 ± 0.000 (within 2 SE) | style 0.874 gates [] drift [bigFight 0.000→0.464; bigIdle 0.000→0.293; bigNear 0.000→0.128; sweepRate 0.000→0.002]
+test: 0.000 ± 0.000 (within noise), style 0.874
+== g_lin_small
+[test] best (after 44 updates) vs zero weights on 1200 held-out fights: +0.101 ± 0.020 (beyond 2 SE) | style 1.000 gates [] drift []
+test: 0.101 ± 0.020 (significant), style 1.000
+== g_mlp16
+[test] best (zero) vs zero weights on 1200 held-out fights: +0.000 ± 0.000 (within 2 SE) | style 0.969 gates [] drift [bigFight 0.300→0.156]
+test: 0.000 ± 0.000 (within noise), style 0.969
+== g_mlp16_big
+[test] best (zero) vs zero weights on 1200 held-out fights: +0.000 ± 0.000 (within 2 SE) | style 0.888 gates [] drift [bigFight 0.207→0.361; bigIdle 0.294→0.071; sweepRate 0.000→0.002]
+test: 0.000 ± 0.000 (within noise), style 0.888
+== g_mlp16_s2
+[test] best (after 20 updates) vs zero weights on 1200 held-out fights: +0.002 ± 0.002 (within 2 SE) | style 0.873 gates [] drift [bigFight 0.000→0.651; bigIdle 0.000→0.151; bigNear 0.000→0.143; sweepRate 0.000→0.000]
+test: 0.002 ± 0.002 (within noise), style 0.873
