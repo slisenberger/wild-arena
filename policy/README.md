@@ -489,3 +489,11 @@ Sweeps on GitHub Actions (each run on its own 4-core runner; results in the `tra
   (help the most hurt ally 55%, hold 45%).
 - **Shipped** as the live default (`policy/live.js`, weights in `policy/weights/`), bundled into index.html.
 
+## Milestone 3 v2 (Oct 26)
+- `train.js` options: `--initWeights=<file>` (continue from shipped weights; `best` starts there and the test compares
+  against it, so a v2 must beat v1), `--thetaClip=<c>` (keep each weight within ±c of the start: the collapse fix),
+  `--withLive=true` (every fight also runs the other archetypes' shipped policies, so guards train against the live
+  wolves and vice versa).
+- Sweep `policy/sweeps/m3_v2.json`: 10 guard + 10 harrier runs (warm from v1 with clip 1/2/none and σ .05/.1/.25;
+  cold starts with the clip to test whether it stops the collapse).
+

@@ -1,0 +1,85 @@
+{
+ "note": "Milestone 3 v2 (Oct 26): guards and harriers continue from the shipped v1 weights against the live opponent policy (--withLive), with a drift cap (--thetaClip) against the collapse; plus cold starts with the cap to test the collapse fix. Test bar for warm runs = the shipped v1 policy.",
+ "runs": [
+  {
+   "name": "g2_c1_s1",
+   "args": "--pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --arch=guard --initWeights=policy/weights/guard_v1.json --thetaClip=1 --seed=401"
+  },
+  {
+   "name": "g2_c1_s2",
+   "args": "--pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --arch=guard --initWeights=policy/weights/guard_v1.json --thetaClip=1 --seed=402"
+  },
+  {
+   "name": "g2_c2_s1",
+   "args": "--pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --arch=guard --initWeights=policy/weights/guard_v1.json --thetaClip=2 --seed=403"
+  },
+  {
+   "name": "g2_c2_s2",
+   "args": "--pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --arch=guard --initWeights=policy/weights/guard_v1.json --thetaClip=2 --seed=404"
+  },
+  {
+   "name": "g2_c2_small",
+   "args": "--pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --arch=guard --initWeights=policy/weights/guard_v1.json --thetaClip=2 --sigma=.05 --lr=.04 --seed=405"
+  },
+  {
+   "name": "g2_c2_big",
+   "args": "--pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --arch=guard --initWeights=policy/weights/guard_v1.json --thetaClip=2 --sigma=.25 --lr=.15 --seed=406"
+  },
+  {
+   "name": "g2_noclip",
+   "args": "--pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --arch=guard --initWeights=policy/weights/guard_v1.json --seed=407"
+  },
+  {
+   "name": "g2_cold_c1",
+   "args": "--pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --arch=guard --thetaClip=1 --seed=408"
+  },
+  {
+   "name": "g2_cold_c2_big",
+   "args": "--pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --arch=guard --thetaClip=2 --sigma=.25 --lr=.15 --seed=409"
+  },
+  {
+   "name": "g2_cold_c1_small",
+   "args": "--pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --arch=guard --thetaClip=1 --sigma=.05 --lr=.04 --seed=410"
+  },
+  {
+   "name": "h2_c1_s1",
+   "args": "--pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --initWeights=policy/weights/harrier_v1.json --thetaClip=1 --seed=501"
+  },
+  {
+   "name": "h2_c1_s2",
+   "args": "--pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --initWeights=policy/weights/harrier_v1.json --thetaClip=1 --seed=502"
+  },
+  {
+   "name": "h2_c2_s1",
+   "args": "--pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --initWeights=policy/weights/harrier_v1.json --thetaClip=2 --seed=503"
+  },
+  {
+   "name": "h2_c2_s2",
+   "args": "--pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --initWeights=policy/weights/harrier_v1.json --thetaClip=2 --seed=504"
+  },
+  {
+   "name": "h2_c2_small",
+   "args": "--pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --initWeights=policy/weights/harrier_v1.json --thetaClip=2 --sigma=.05 --lr=.04 --seed=505"
+  },
+  {
+   "name": "h2_c2_big",
+   "args": "--pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --initWeights=policy/weights/harrier_v1.json --thetaClip=2 --sigma=.25 --lr=.15 --seed=506"
+  },
+  {
+   "name": "h2_noclip",
+   "args": "--pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --initWeights=policy/weights/harrier_v1.json --seed=507"
+  },
+  {
+   "name": "h2_cold_c1",
+   "args": "--pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --thetaClip=1 --seed=508"
+  },
+  {
+   "name": "h2_cold_c2_big",
+   "args": "--pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --thetaClip=2 --sigma=.25 --lr=.15 --seed=509"
+  },
+  {
+   "name": "h2_cold_c1_small",
+   "args": "--pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --thetaClip=1 --sigma=.05 --lr=.04 --seed=510"
+  }
+ ]
+}

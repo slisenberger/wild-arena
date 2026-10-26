@@ -43,7 +43,7 @@ function fightSet(pool, index, n, opts){
     const team = []; let left = A.RULES.budget; for (const id of order) if (A.BY_ID[id].price <= left){ team.push(id); left -= A.BY_ID[id].price; }
     const seed = Math.floor(R() * 2e9) + 1;
     if (!hasArch(board, team, arch)) continue;
-    out.push({pool, index, i: out.length, tr, bseed, board, team, mount: A.defaultMount(team), seed}); k++;
+    out.push({pool, index, i: out.length, tr, bseed, board, team, mount: A.defaultMount(team), seed, live: !!opts.withLive}); k++;
   }
   return out;
 }
@@ -51,11 +51,18 @@ function cfgOf(f){ return {team: f.team, board: f.board, terrain: f.tr, mode: 'w
 
 // ---------- one fight ----------
 // weights: null = no policy at all (engine untouched); otherwise cfg.movePolicy = {[arch]: weights}
+// with f.live, the OTHER archetypes use the shipped policies (policy/live.js), so v2 trains against the live game
+function setPolicy(cfg, f, arch, weights){
+  const mp = {};
+  if (f.live) for (const [k, v] of Object.entries(I.LIVE || {})) if (v && k !== arch) mp[k] = v;
+  if (weights) mp[arch] = weights;
+  if (Object.keys(mp).length){ cfg.movePolicy = mp; cfg.moveStats = {}; }
+}
 function runFight(f, weights, arch){
   arch = arch || 'harrier';
   if (arch === 'guard') return runGuardFight(f, weights);
   const cfg = cfgOf(f);
-  if (weights){ cfg.movePolicy = {[arch]: weights}; cfg.moveStats = {}; }
+  setPolicy(cfg, f, arch, weights);
   const w = A.setup(cfg), H = w.human;
   const us = w.units.filter(u => I.archetypeOf(u) === arch);
   const S = us.map(u => ({foe: 0, dealt: 0, st: null, dart: false, lastC: 0, nc: 0, face: 0, appr: null}));
@@ -101,7 +108,7 @@ const GSIG = {hold: 'hold', knock: 'knockback', dodge: 'dodge', sweep: 'sweep', 
 const GTEL = {near: 8, glued: 4, gluedT: 2, blockT: 3};
 function runGuardFight(f, weights){
   const arch = 'guard', cfg = cfgOf(f);
-  if (weights){ cfg.movePolicy = {[arch]: weights}; cfg.moveStats = {}; }
+  setPolicy(cfg, f, arch, weights);
   const w = A.setup(cfg), H = w.human;
   const us = w.units.filter(u => I.archetypeOf(u) === arch), ids = new Set(us.map(u => u.s.id));
   const S = us.map(u => ({c: guardClass(u.s), cat: !!(u.s.pred && u.s.latch), block: 0, glue: 0, dealt: 0, lastC: 0}));
