@@ -1184,6 +1184,9 @@ $('runPrice').addEventListener('click', () => {
 });
 
 // ---------- migration (the roguelike run: 7 fights, team and wounds carry over; rules in migration.js) ----------
+// owner (Oct 26): the migration mode is switched off until it's properly designed; ?migration=1 in the URL turns it on for testing
+const MIG_ON = (() => { try { return /[?&]migration=1\b/.test(location.search); } catch(e){ return false; } })();
+{ const p = document.querySelector('.migentry'); if (p && !MIG_ON){ p.hidden = true; p.style.display = 'none'; } }
 const MIG_KEY = 'wa-mig', MIG_BEST = 'wa-mig-best', migDailyKey = d => 'wa-mig-daily:' + d;
 const migDailySeed = d => dateSeed('wild-arena:migration:' + d);
 function readJSON(k){ try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch(e){ return null; } }
@@ -1336,7 +1339,7 @@ syncSpeed();
 if (!loadHash()){
   dealNewBoard(); renderAll();
   const run = loadRun(); // a migration in progress picks up where it left off after a reload
-  if (run && !run.over){ S.mig = run; go('mig'); showNotice(`<b>Migration resumed</b> <span>Fight ${run.k + 1} of ${M.MIG.FIGHTS}, $${run.money.toLocaleString()} to spend.</span>`); }
+  if (MIG_ON && run && !run.over){ S.mig = run; go('mig'); showNotice(`<b>Migration resumed</b> <span>Fight ${run.k + 1} of ${M.MIG.FIGHTS}, $${run.money.toLocaleString()} to spend.</span>`); }
   else go('arena');
 }
 requestAnimationFrame(frame);
