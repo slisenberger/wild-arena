@@ -40,6 +40,15 @@ count as 5:00). Live site: GitHub Pages serves `index.html` from `main`.
   fight each; least-squares fit of each animal's swing value (seconds gained by moving it from their side to
   yours), proposed prices ∝ swing ($100 steps, min $100). Note: the older whole-roster tools (`quick.js`,
   `camp.js`, `budget.js`, `tourney.js`) predate the board model and now fight all 22 animals.
+- `migration.js` — the roguelike **Migration** mode's rules (pure JS, bundled by `build.js` after sim.js as
+  `window.Migration`): 7 fights, money, carry-over wounds, trading post, boons, escalation (`MIG` constants).
+  Engine hooks in sim.js `setup` (all opt-in; absent = byte-identical, checked on 80 fixed fights with and without the
+  live policies): `cfg.startHp = {id: fraction | [fraction per surviving pack member]}` (array length = group size),
+  `cfg.humanHp`, `cfg.boons = [ids of BOONS]` (read as `w.bn` in strike/heat/speedOf/canSee/morale/allyTarget), and
+  `dealBoard` `rules.exclude` (ids never dealt). `migration_bot.js [runs] [workers]` = greedy-bot balance probe
+  (env `MIG='{...}'` overrides constants). UI: arena "Migration" panel, `s-mig` run screen, the draft screen doubles as
+  the trading post; the run lives in localStorage `wa-mig` (resumes after reload), best `wa-mig-best`, daily
+  `wa-mig-daily:<date>`. A fight's result is applied the moment it's simulated.
 - `BACKLOG.md` — every idea captured so far (realism, anti-camping, pricing, herds, maps, animals,
   mechanics, replayability) with status and suggested order. Add new ideas there.
 
