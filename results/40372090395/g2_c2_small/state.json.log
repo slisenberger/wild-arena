@@ -1,0 +1,392 @@
+[init] policy/runs/g2_c2_small/state.json: sim ce82d278fcc57c11, harness 4326d1cdcf7e3355, 55 features (guard), 336 trainable, config {"arch":"guard","seed":405,"mode":"linear","nh":0,"margin":1,"sigma":0.05,"lr":0.04,"pairs":16,"gens":60,"fights":"auto","fightsMin":100,"fightsMax":300,"calibFights":400,"calibPerturb":4,"valEvery":4,"valFights":1000,"valMax":1200,"testFights":1200,"testMax":1200,"effect":"auto","styleThr":0.9,"lambda0":1,"lambdaLr":4,"gatePenalty":0.25,"holdMap":null,"acceptNoDrift":true,"baseline":true,"initRule":null,"initWeights":"policy/weights/guard_v1.json","thetaClip":2,"withLive":true}
+[calib] 400 fights × 5 arms, 111 s, 18.0 fights/s
+  heuristic goal 0.269 (sd 0.765); parts surv 0.524±sd0.420, human -0.302±sd0.239, dealt 0.245±sd0.120, deaths -0.157±sd0.099, idle -0.041±sd0.050
+  paired per-fight sd 0.468; perturbation effects 0.004 -0.014 0.008 -0.022 (SE 0.023), true-effect sd 0.000 -> effect 0.076
+  fights for 2 SE: {"effect":150,"effect×2":38,"0.05":350,"0.1":88} -> N train 100, val 1000, test 1200
+[gen 0] goal mean 0.274 best 0.335 (heuristic 0.267: mean +0.007) | style mean 1.000 min 1.000 feasible 100% | λ 1.00→0.60 | non-commit 50.0% | drift-flagged 0/32 | |θ| 14.212 | 3300 fights, 111 s, 29.7/s
+[gen 1] goal mean 0.369 best 0.438 (heuristic 0.210: mean +0.158) | style mean 0.880 min 0.846 feasible 22% | λ 0.60→0.68 | non-commit 57.3% | drift-flagged 32/32 | |θ| 14.226 | 3300 fights, 128 s, 25.9/s
+    flagged: goal 0.367 style 0.864 gates [] drift [bigFight 0.000→0.182; bigIdle 0.000→0.122; bigNear 0.000→0.351; sweepRate 0.000→0.006]
+    flagged: goal 0.363 style 0.885 gates [] drift [bigFight 0.000→0.198; bigNear 0.000→0.738; sweepRate 0.000→0.006]
+    flagged: goal 0.367 style 0.923 gates [] drift [bigFight 0.000→0.291; sweepRate 0.000→0.006]
+    flagged: goal 0.385 style 0.885 gates [] drift [bigFight 0.000→0.198; bigNear 0.000→0.738; sweepRate 0.000→0.006]
+    flagged: goal 0.363 style 0.861 gates [] drift [bigFight 0.000→0.147; bigIdle 0.000→0.200; bigNear 0.000→0.179; sweepRate 0.000→0.006]
+    flagged: goal 0.327 style 0.864 gates [] drift [bigFight 0.000→0.182; bigIdle 0.000→0.122; bigNear 0.000→0.351; sweepRate 0.000→0.006]
+    flagged: goal 0.317 style 0.923 gates [] drift [bigFight 0.000→0.291; sweepRate 0.000→0.006]
+    flagged: goal 0.427 style 0.861 gates [] drift [bigFight 0.000→0.147; bigIdle 0.000→0.200; bigNear 0.000→0.179; sweepRate 0.000→0.006]
+    flagged: goal 0.421 style 0.861 gates [] drift [bigFight 0.000→0.147; bigIdle 0.000→0.200; bigNear 0.000→0.179; sweepRate 0.000→0.006]
+    flagged: goal 0.359 style 0.923 gates [] drift [bigFight 0.000→0.291; sweepRate 0.000→0.006]
+    flagged: goal 0.438 style 0.864 gates [] drift [bigFight 0.000→0.182; bigIdle 0.000→0.122; bigNear 0.000→0.351; sweepRate 0.000→0.006]
+    flagged: goal 0.322 style 0.898 gates [] drift [bigFight 0.000→0.186; bigNear 0.000→0.165; sweepRate 0.000→0.006]
+    flagged: goal 0.354 style 0.846 gates [] drift [bigFight 0.000→0.166; bigIdle 0.000→0.241; bigNear 0.000→0.362; sweepRate 0.000→0.009]
+    flagged: goal 0.426 style 0.864 gates [] drift [bigFight 0.000→0.182; bigIdle 0.000→0.122; bigNear 0.000→0.351; sweepRate 0.000→0.005]
+    flagged: goal 0.374 style 0.885 gates [] drift [bigFight 0.000→0.198; bigNear 0.000→0.738; sweepRate 0.000→0.006]
+    flagged: goal 0.360 style 0.864 gates [] drift [bigFight 0.000→0.182; bigIdle 0.000→0.122; bigNear 0.000→0.351; sweepRate 0.000→0.005]
+    flagged: goal 0.381 style 0.923 gates [] drift [bigFight 0.000→0.291; sweepRate 0.000→0.005]
+    flagged: goal 0.288 style 0.885 gates [] drift [bigFight 0.000→0.198; bigNear 0.000→0.738; sweepRate 0.000→0.006]
+    flagged: goal 0.379 style 0.923 gates [] drift [bigFight 0.000→0.291; sweepRate 0.000→0.005]
+    flagged: goal 0.336 style 0.885 gates [] drift [bigFight 0.000→0.198; bigNear 0.000→0.738; sweepRate 0.000→0.006]
+    flagged: goal 0.371 style 0.864 gates [] drift [bigFight 0.000→0.182; bigIdle 0.000→0.122; bigNear 0.000→0.351; sweepRate 0.000→0.005]
+    flagged: goal 0.356 style 0.846 gates [] drift [bigFight 0.000→0.166; bigIdle 0.000→0.241; bigNear 0.000→0.362; sweepRate 0.000→0.009]
+    flagged: goal 0.367 style 0.923 gates [] drift [bigFight 0.000→0.291; sweepRate 0.000→0.006]
+    flagged: goal 0.375 style 0.846 gates [] drift [bigFight 0.000→0.166; bigIdle 0.000→0.241; bigNear 0.000→0.362; sweepRate 0.000→0.009]
+    flagged: goal 0.407 style 0.864 gates [] drift [bigFight 0.000→0.182; bigIdle 0.000→0.122; bigNear 0.000→0.351; sweepRate 0.000→0.005]
+    flagged: goal 0.338 style 0.885 gates [] drift [bigFight 0.000→0.198; bigNear 0.000→0.738; sweepRate 0.000→0.006]
+    flagged: goal 0.361 style 0.859 gates [] drift [bigFight 0.000→0.133; bigIdle 0.000→0.227; bigNear 0.000→0.220; sweepRate 0.000→0.006]
+    flagged: goal 0.384 style 0.864 gates [] drift [bigFight 0.000→0.182; bigIdle 0.000→0.122; bigNear 0.000→0.351; sweepRate 0.000→0.006]
+    flagged: goal 0.418 style 0.864 gates [] drift [bigFight 0.000→0.182; bigIdle 0.000→0.122; bigNear 0.000→0.351; sweepRate 0.000→0.006]
+    flagged: goal 0.348 style 0.848 gates [] drift [bigFight 0.000→0.249; bigIdle 0.000→0.156; bigNear 0.000→0.498; sweepRate 0.000→0.006]
+    flagged: goal 0.379 style 0.885 gates [] drift [bigFight 0.000→0.198; bigNear 0.000→0.738; sweepRate 0.000→0.006]
+    flagged: goal 0.337 style 0.923 gates [] drift [bigFight 0.000→0.291; sweepRate 0.000→0.006]
+[gen 2] goal mean 0.203 best 0.321 (heuristic 0.095: mean +0.108) | style mean 1.000 min 1.000 feasible 100% | λ 0.68→0.28 | non-commit 56.0% | drift-flagged 0/32 | |θ| 14.239 | 3300 fights, 111 s, 29.7/s
+[gen 3] goal mean 0.302 best 0.371 (heuristic 0.196: mean +0.106) | style mean 0.876 min 0.870 feasible 13% | λ 0.28→0.37 | non-commit 56.7% | drift-flagged 32/32 | |θ| 14.251 | 3300 fights, 112 s, 29.4/s
+    flagged: goal 0.317 style 0.870 gates [] drift [bigFight 0.000→0.299; bigIdle 0.000→0.137; bigNear 0.000→0.168; sweepRate 0.000→0.003]
+    flagged: goal 0.354 style 0.923 gates [] drift [bigFight 0.000→0.372; sweepRate 0.000→0.019]
+    flagged: goal 0.266 style 0.870 gates [] drift [bigFight 0.000→0.299; bigIdle 0.000→0.137; bigNear 0.000→0.168; sweepRate 0.000→0.003]
+    flagged: goal 0.249 style 0.870 gates [] drift [bigFight 0.000→0.299; bigIdle 0.000→0.137; bigNear 0.000→0.168; sweepRate 0.000→0.003]
+    flagged: goal 0.324 style 0.923 gates [] drift [bigFight 0.000→0.372; sweepRate 0.000→0.018]
+    flagged: goal 0.339 style 0.870 gates [] drift [bigFight 0.000→0.299; bigIdle 0.000→0.137; bigNear 0.000→0.168; sweepRate 0.000→0.003]
+    flagged: goal 0.284 style 0.870 gates [] drift [bigFight 0.000→0.299; bigIdle 0.000→0.137; bigNear 0.000→0.168; sweepRate 0.000→0.003]
+    flagged: goal 0.339 style 0.870 gates [] drift [bigFight 0.000→0.299; bigIdle 0.000→0.137; bigNear 0.000→0.168; sweepRate 0.000→0.003]
+    flagged: goal 0.248 style 0.923 gates [] drift [bigFight 0.000→0.372; sweepRate 0.000→0.017]
+    flagged: goal 0.295 style 0.870 gates [] drift [bigFight 0.000→0.299; bigIdle 0.000→0.137; bigNear 0.000→0.168; sweepRate 0.000→0.003]
+    flagged: goal 0.289 style 0.870 gates [] drift [bigFight 0.000→0.299; bigIdle 0.000→0.137; bigNear 0.000→0.168; sweepRate 0.000→0.003]
+    flagged: goal 0.335 style 0.923 gates [] drift [bigFight 0.000→0.372; sweepRate 0.000→0.018]
+    flagged: goal 0.316 style 0.870 gates [] drift [bigFight 0.000→0.299; bigIdle 0.000→0.137; bigNear 0.000→0.168; sweepRate 0.000→0.003]
+    flagged: goal 0.319 style 0.870 gates [] drift [bigFight 0.000→0.299; bigIdle 0.000→0.137; bigNear 0.000→0.168; sweepRate 0.000→0.003]
+    flagged: goal 0.262 style 0.870 gates [] drift [bigFight 0.000→0.299; bigIdle 0.000→0.137; bigNear 0.000→0.168; sweepRate 0.000→0.003]
+    flagged: goal 0.273 style 0.870 gates [] drift [bigFight 0.000→0.299; bigIdle 0.000→0.137; bigNear 0.000→0.168; sweepRate 0.000→0.003]
+    flagged: goal 0.287 style 0.870 gates [] drift [bigFight 0.000→0.299; bigIdle 0.000→0.137; bigNear 0.000→0.168; sweepRate 0.000→0.003]
+    flagged: goal 0.318 style 0.870 gates [] drift [bigFight 0.000→0.299; bigIdle 0.000→0.137; bigNear 0.000→0.168; sweepRate 0.000→0.003]
+    flagged: goal 0.275 style 0.870 gates [] drift [bigFight 0.000→0.299; bigIdle 0.000→0.137; bigNear 0.000→0.168; sweepRate 0.000→0.003]
+    flagged: goal 0.296 style 0.870 gates [] drift [bigFight 0.000→0.299; bigIdle 0.000→0.137; bigNear 0.000→0.168; sweepRate 0.000→0.003]
+    flagged: goal 0.280 style 0.870 gates [] drift [bigFight 0.000→0.299; bigIdle 0.000→0.137; bigNear 0.000→0.168; sweepRate 0.000→0.003]
+    flagged: goal 0.318 style 0.870 gates [] drift [bigFight 0.000→0.299; bigIdle 0.000→0.137; bigNear 0.000→0.168; sweepRate 0.000→0.003]
+    flagged: goal 0.298 style 0.870 gates [] drift [bigFight 0.000→0.299; bigIdle 0.000→0.137; bigNear 0.000→0.168; sweepRate 0.000→0.003]
+    flagged: goal 0.258 style 0.870 gates [] drift [bigFight 0.000→0.299; bigIdle 0.000→0.137; bigNear 0.000→0.168; sweepRate 0.000→0.003]
+    flagged: goal 0.343 style 0.870 gates [] drift [bigFight 0.000→0.299; bigIdle 0.000→0.137; bigNear 0.000→0.168; sweepRate 0.000→0.003]
+    flagged: goal 0.319 style 0.870 gates [] drift [bigFight 0.000→0.299; bigIdle 0.000→0.137; bigNear 0.000→0.168; sweepRate 0.000→0.003]
+    flagged: goal 0.295 style 0.870 gates [] drift [bigFight 0.000→0.299; bigIdle 0.000→0.137; bigNear 0.000→0.168; sweepRate 0.000→0.003]
+    flagged: goal 0.371 style 0.870 gates [] drift [bigFight 0.000→0.299; bigIdle 0.000→0.137; bigNear 0.000→0.168; sweepRate 0.000→0.002]
+    flagged: goal 0.311 style 0.870 gates [] drift [bigFight 0.000→0.299; bigIdle 0.000→0.137; bigNear 0.000→0.168; sweepRate 0.000→0.003]
+    flagged: goal 0.272 style 0.870 gates [] drift [bigFight 0.000→0.299; bigIdle 0.000→0.137; bigNear 0.000→0.168; sweepRate 0.000→0.003]
+    flagged: goal 0.315 style 0.870 gates [] drift [bigFight 0.000→0.299; bigIdle 0.000→0.137; bigNear 0.000→0.168; sweepRate 0.000→0.002]
+    flagged: goal 0.302 style 0.870 gates [] drift [bigFight 0.000→0.299; bigIdle 0.000→0.137; bigNear 0.000→0.168; sweepRate 0.000→0.002]
+[gen 4] goal mean 0.393 best 0.458 (heuristic 0.257: mean +0.136) | style mean 1.000 min 1.000 feasible 100% | λ 0.37→0.00 | non-commit 56.6% | drift-flagged 0/32 | |θ| 14.278 | 5300 fights, 206 s, 25.7/s
+  [val #0] centre (after 4 updates, non-commit 56.8%) vs best (init) on 1000 fresh fights: -0.010 ± 0.017 | style 1.000 gates [] drift [] -> keep best
+[gen 5] goal mean 0.362 best 0.422 (heuristic 0.256: mean +0.107) | style mean 0.846 min 0.846 feasible 0% | λ 0.00→0.22 | non-commit 58.2% | drift-flagged 32/32 | |θ| 14.303 | 3300 fights, 114 s, 29.1/s
+    flagged: goal 0.381 style 0.846 gates [] drift [bigFight 0.000→0.361; bigIdle 0.000→0.453; bigNear 0.000→0.242; sweepRate 0.000→0.021]
+    flagged: goal 0.385 style 0.846 gates [] drift [bigFight 0.000→0.361; bigIdle 0.000→0.453; bigNear 0.000→0.242; sweepRate 0.000→0.022]
+    flagged: goal 0.355 style 0.846 gates [] drift [bigFight 0.000→0.361; bigIdle 0.000→0.453; bigNear 0.000→0.242; sweepRate 0.000→0.023]
+    flagged: goal 0.354 style 0.846 gates [] drift [bigFight 0.000→0.361; bigIdle 0.000→0.453; bigNear 0.000→0.242; sweepRate 0.000→0.021]
+    flagged: goal 0.422 style 0.846 gates [] drift [bigFight 0.000→0.361; bigIdle 0.000→0.453; bigNear 0.000→0.242; sweepRate 0.000→0.021]
+    flagged: goal 0.397 style 0.846 gates [] drift [bigFight 0.000→0.361; bigIdle 0.000→0.453; bigNear 0.000→0.242; sweepRate 0.000→0.022]
+    flagged: goal 0.334 style 0.846 gates [] drift [bigFight 0.000→0.361; bigIdle 0.000→0.453; bigNear 0.000→0.242; sweepRate 0.000→0.023]
+    flagged: goal 0.344 style 0.846 gates [] drift [bigFight 0.000→0.361; bigIdle 0.000→0.453; bigNear 0.000→0.242; sweepRate 0.000→0.022]
+    flagged: goal 0.334 style 0.846 gates [] drift [bigFight 0.000→0.361; bigIdle 0.000→0.453; bigNear 0.000→0.242; sweepRate 0.000→0.023]
+    flagged: goal 0.339 style 0.846 gates [] drift [bigFight 0.000→0.361; bigIdle 0.000→0.453; bigNear 0.000→0.242; sweepRate 0.000→0.021]
+    flagged: goal 0.361 style 0.846 gates [] drift [bigFight 0.000→0.361; bigIdle 0.000→0.453; bigNear 0.000→0.242; sweepRate 0.000→0.023]
+    flagged: goal 0.347 style 0.846 gates [] drift [bigFight 0.000→0.361; bigIdle 0.000→0.453; bigNear 0.000→0.242; sweepRate 0.000→0.022]
+    flagged: goal 0.379 style 0.846 gates [] drift [bigFight 0.000→0.361; bigIdle 0.000→0.453; bigNear 0.000→0.242; sweepRate 0.000→0.021]
+    flagged: goal 0.387 style 0.846 gates [] drift [bigFight 0.000→0.361; bigIdle 0.000→0.453; bigNear 0.000→0.242; sweepRate 0.000→0.023]
+    flagged: goal 0.365 style 0.846 gates [] drift [bigFight 0.000→0.361; bigIdle 0.000→0.453; bigNear 0.000→0.242; sweepRate 0.000→0.023]
+    flagged: goal 0.374 style 0.846 gates [] drift [bigFight 0.000→0.361; bigIdle 0.000→0.453; bigNear 0.000→0.242; sweepRate 0.000→0.023]
+    flagged: goal 0.348 style 0.846 gates [] drift [bigFight 0.000→0.361; bigIdle 0.000→0.453; bigNear 0.000→0.242; sweepRate 0.000→0.022]
+    flagged: goal 0.373 style 0.846 gates [] drift [bigFight 0.000→0.361; bigIdle 0.000→0.453; bigNear 0.000→0.242; sweepRate 0.000→0.022]
+    flagged: goal 0.349 style 0.846 gates [] drift [bigFight 0.000→0.361; bigIdle 0.000→0.453; bigNear 0.000→0.242; sweepRate 0.000→0.023]
+    flagged: goal 0.338 style 0.846 gates [] drift [bigFight 0.000→0.361; bigIdle 0.000→0.453; bigNear 0.000→0.242; sweepRate 0.000→0.022]
+    flagged: goal 0.371 style 0.846 gates [] drift [bigFight 0.000→0.361; bigIdle 0.000→0.453; bigNear 0.000→0.242; sweepRate 0.000→0.022]
+    flagged: goal 0.370 style 0.846 gates [] drift [bigFight 0.000→0.361; bigIdle 0.000→0.453; bigNear 0.000→0.242; sweepRate 0.000→0.021]
+    flagged: goal 0.346 style 0.846 gates [] drift [bigFight 0.000→0.361; bigIdle 0.000→0.453; bigNear 0.000→0.242; sweepRate 0.000→0.023]
+    flagged: goal 0.368 style 0.846 gates [] drift [bigFight 0.000→0.361; bigIdle 0.000→0.453; bigNear 0.000→0.242; sweepRate 0.000→0.022]
+    flagged: goal 0.308 style 0.846 gates [] drift [bigFight 0.000→0.361; bigIdle 0.000→0.453; bigNear 0.000→0.242; sweepRate 0.000→0.023]
+    flagged: goal 0.339 style 0.846 gates [] drift [bigFight 0.000→0.361; bigIdle 0.000→0.453; bigNear 0.000→0.242; sweepRate 0.000→0.022]
+    flagged: goal 0.367 style 0.846 gates [] drift [bigFight 0.000→0.361; bigIdle 0.000→0.453; bigNear 0.000→0.242; sweepRate 0.000→0.021]
+    flagged: goal 0.416 style 0.846 gates [] drift [bigFight 0.000→0.361; bigIdle 0.000→0.453; bigNear 0.000→0.242; sweepRate 0.000→0.022]
+    flagged: goal 0.328 style 0.846 gates [] drift [bigFight 0.000→0.361; bigIdle 0.000→0.453; bigNear 0.000→0.242; sweepRate 0.000→0.022]
+    flagged: goal 0.387 style 0.846 gates [] drift [bigFight 0.000→0.361; bigIdle 0.000→0.453; bigNear 0.000→0.242; sweepRate 0.000→0.022]
+    flagged: goal 0.359 style 0.846 gates [] drift [bigFight 0.000→0.361; bigIdle 0.000→0.453; bigNear 0.000→0.242; sweepRate 0.000→0.021]
+    flagged: goal 0.373 style 0.846 gates [] drift [bigFight 0.000→0.361; bigIdle 0.000→0.453; bigNear 0.000→0.242; sweepRate 0.000→0.020]
+[gen 6] goal mean 0.481 best 0.562 (heuristic 0.342: mean +0.138) | style mean 1.000 min 0.998 feasible 100% | λ 0.22→0.00 | non-commit 54.2% | drift-flagged 3/32 | |θ| 14.317 | 3300 fights, 123 s, 26.9/s
+    flagged: goal 0.480 style 0.998 gates [] drift [canidIdle 0.331→0.474]
+    flagged: goal 0.545 style 0.999 gates [] drift [canidIdle 0.331→0.471]
+    flagged: goal 0.486 style 0.999 gates [] drift [canidIdle 0.331→0.472]
+[gen 7] goal mean 0.301 best 0.359 (heuristic 0.236: mean +0.066) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 55.1% | drift-flagged 0/32 | |θ| 14.322 | 3300 fights, 116 s, 28.4/s
+[gen 8] goal mean 0.285 best 0.349 (heuristic 0.254: mean +0.032) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 56.2% | drift-flagged 0/32 | |θ| 14.336 | 5300 fights, 206 s, 25.7/s
+  [val #1] centre (after 8 updates, non-commit 55.6%) vs best (init) on 1000 fresh fights: +0.002 ± 0.015 | style 0.910 gates [] drift [bigFight 0.000→0.121; bigIdle 0.000→0.143; bigNear 0.000→0.104; sweepRate 0.000→0.000] -> keep best
+[gen 9] goal mean 0.351 best 0.424 (heuristic 0.282: mean +0.070) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 58.5% | drift-flagged 0/32 | |θ| 14.341 | 3300 fights, 111 s, 29.7/s
+[gen 10] goal mean 0.260 best 0.319 (heuristic 0.167: mean +0.092) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 57.0% | drift-flagged 0/32 | |θ| 14.353 | 3300 fights, 114 s, 28.9/s
+[gen 11] goal mean 0.323 best 0.385 (heuristic 0.302: mean +0.021) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 61.3% | drift-flagged 0/32 | |θ| 14.365 | 3300 fights, 117 s, 28.3/s
+[gen 12] goal mean 0.310 best 0.348 (heuristic 0.180: mean +0.130) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 57.3% | drift-flagged 0/32 | |θ| 14.375 | 5300 fights, 188 s, 28.2/s
+  [val #2] centre (after 12 updates, non-commit 58.8%) vs best (init) on 1000 fresh fights: +0.007 ± 0.018 | style 0.882 gates [] drift [bigFight 0.000→0.426; bigIdle 0.000→0.086; bigNear 0.000→1.000; sweepRate 0.000→0.001] -> keep best
+[gen 13] goal mean 0.236 best 0.307 (heuristic 0.106: mean +0.130) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 58.4% | drift-flagged 0/32 | |θ| 14.387 | 3300 fights, 124 s, 26.5/s
+[gen 14] goal mean 0.342 best 0.422 (heuristic 0.223: mean +0.120) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 57.1% | drift-flagged 0/32 | |θ| 14.399 | 3300 fights, 116 s, 28.3/s
+[gen 15] goal mean 0.363 best 0.432 (heuristic 0.264: mean +0.099) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 59.1% | drift-flagged 0/32 | |θ| 14.410 | 3300 fights, 119 s, 27.8/s
+[gen 16] goal mean 0.181 best 0.264 (heuristic 0.172: mean +0.009) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 59.2% | drift-flagged 0/32 | |θ| 14.432 | 5300 fights, 184 s, 28.8/s
+  [val #3] centre (after 16 updates, non-commit 60.6%) vs best (init) on 1000 fresh fights: -0.005 ± 0.017 | style 1.000 gates [] drift [] -> keep best
+[gen 17] goal mean 0.305 best 0.355 (heuristic 0.275: mean +0.030) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 62.2% | drift-flagged 0/32 | |θ| 14.445 | 3300 fights, 121 s, 27.2/s
+[gen 18] goal mean 0.260 best 0.367 (heuristic 0.247: mean +0.014) | style mean 0.846 min 0.846 feasible 0% | λ 0.00→0.22 | non-commit 61.1% | drift-flagged 32/32 | |θ| 14.460 | 3300 fights, 120 s, 27.6/s
+    flagged: goal 0.239 style 0.846 gates [] drift [bigFight 0.000→0.495; bigIdle 0.000→0.206; bigNear 0.000→0.234; sweepRate 0.000→0.003]
+    flagged: goal 0.367 style 0.846 gates [] drift [bigFight 0.000→0.495; bigIdle 0.000→0.206; bigNear 0.000→0.234; sweepRate 0.000→0.003]
+    flagged: goal 0.197 style 0.846 gates [] drift [bigFight 0.000→0.495; bigIdle 0.000→0.206; bigNear 0.000→0.234; sweepRate 0.000→0.003]
+    flagged: goal 0.247 style 0.846 gates [] drift [bigFight 0.000→0.495; bigIdle 0.000→0.206; bigNear 0.000→0.234; sweepRate 0.000→0.003]
+    flagged: goal 0.268 style 0.846 gates [] drift [bigFight 0.000→0.495; bigIdle 0.000→0.206; bigNear 0.000→0.234; sweepRate 0.000→0.003]
+    flagged: goal 0.213 style 0.846 gates [] drift [bigFight 0.000→0.495; bigIdle 0.000→0.206; bigNear 0.000→0.234; sweepRate 0.000→0.003]
+    flagged: goal 0.291 style 0.846 gates [] drift [bigFight 0.000→0.495; bigIdle 0.000→0.206; bigNear 0.000→0.234; sweepRate 0.000→0.003]
+    flagged: goal 0.274 style 0.846 gates [] drift [bigFight 0.000→0.495; bigIdle 0.000→0.206; bigNear 0.000→0.234; sweepRate 0.000→0.003]
+    flagged: goal 0.311 style 0.846 gates [] drift [bigFight 0.000→0.495; bigIdle 0.000→0.206; bigNear 0.000→0.234; sweepRate 0.000→0.003]
+    flagged: goal 0.293 style 0.846 gates [] drift [bigFight 0.000→0.495; bigIdle 0.000→0.206; bigNear 0.000→0.234; sweepRate 0.000→0.003]
+    flagged: goal 0.193 style 0.846 gates [] drift [bigFight 0.000→0.495; bigIdle 0.000→0.206; bigNear 0.000→0.234; sweepRate 0.000→0.003]
+    flagged: goal 0.263 style 0.846 gates [] drift [bigFight 0.000→0.495; bigIdle 0.000→0.206; bigNear 0.000→0.234; sweepRate 0.000→0.003]
+    flagged: goal 0.253 style 0.846 gates [] drift [bigFight 0.000→0.495; bigIdle 0.000→0.206; bigNear 0.000→0.234; sweepRate 0.000→0.003]
+    flagged: goal 0.273 style 0.846 gates [] drift [bigFight 0.000→0.495; bigIdle 0.000→0.206; bigNear 0.000→0.234; sweepRate 0.000→0.003]
+    flagged: goal 0.257 style 0.846 gates [] drift [bigFight 0.000→0.495; bigIdle 0.000→0.206; bigNear 0.000→0.234; sweepRate 0.000→0.003]
+    flagged: goal 0.245 style 0.846 gates [] drift [bigFight 0.000→0.495; bigIdle 0.000→0.206; bigNear 0.000→0.234; sweepRate 0.000→0.003]
+    flagged: goal 0.247 style 0.846 gates [] drift [bigFight 0.000→0.495; bigIdle 0.000→0.206; bigNear 0.000→0.234; sweepRate 0.000→0.003]
+    flagged: goal 0.246 style 0.846 gates [] drift [bigFight 0.000→0.495; bigIdle 0.000→0.206; bigNear 0.000→0.234; sweepRate 0.000→0.003]
+    flagged: goal 0.265 style 0.846 gates [] drift [bigFight 0.000→0.495; bigIdle 0.000→0.206; bigNear 0.000→0.234; sweepRate 0.000→0.003]
+    flagged: goal 0.257 style 0.846 gates [] drift [bigFight 0.000→0.495; bigIdle 0.000→0.206; bigNear 0.000→0.234; sweepRate 0.000→0.003]
+    flagged: goal 0.309 style 0.846 gates [] drift [bigFight 0.000→0.495; bigIdle 0.000→0.206; bigNear 0.000→0.234; sweepRate 0.000→0.003]
+    flagged: goal 0.190 style 0.846 gates [] drift [bigFight 0.000→0.495; bigIdle 0.000→0.206; bigNear 0.000→0.234; sweepRate 0.000→0.003]
+    flagged: goal 0.207 style 0.846 gates [] drift [bigFight 0.000→0.495; bigIdle 0.000→0.206; bigNear 0.000→0.234; sweepRate 0.000→0.003]
+    flagged: goal 0.321 style 0.846 gates [] drift [bigFight 0.000→0.495; bigIdle 0.000→0.206; bigNear 0.000→0.234; sweepRate 0.000→0.003]
+    flagged: goal 0.253 style 0.846 gates [] drift [bigFight 0.000→0.495; bigIdle 0.000→0.206; bigNear 0.000→0.234; sweepRate 0.000→0.003]
+    flagged: goal 0.240 style 0.846 gates [] drift [bigFight 0.000→0.495; bigIdle 0.000→0.206; bigNear 0.000→0.234; sweepRate 0.000→0.003]
+    flagged: goal 0.205 style 0.846 gates [] drift [bigFight 0.000→0.495; bigIdle 0.000→0.206; bigNear 0.000→0.234; sweepRate 0.000→0.003]
+    flagged: goal 0.288 style 0.846 gates [] drift [bigFight 0.000→0.495; bigIdle 0.000→0.206; bigNear 0.000→0.234; sweepRate 0.000→0.003]
+    flagged: goal 0.303 style 0.846 gates [] drift [bigFight 0.000→0.495; bigIdle 0.000→0.206; bigNear 0.000→0.234; sweepRate 0.000→0.003]
+    flagged: goal 0.276 style 0.846 gates [] drift [bigFight 0.000→0.495; bigIdle 0.000→0.206; bigNear 0.000→0.234; sweepRate 0.000→0.003]
+    flagged: goal 0.259 style 0.846 gates [] drift [bigFight 0.000→0.495; bigIdle 0.000→0.206; bigNear 0.000→0.234; sweepRate 0.000→0.003]
+    flagged: goal 0.277 style 0.846 gates [] drift [bigFight 0.000→0.495; bigIdle 0.000→0.206; bigNear 0.000→0.234; sweepRate 0.000→0.003]
+[gen 19] goal mean 0.288 best 0.373 (heuristic 0.205: mean +0.083) | style mean 1.000 min 1.000 feasible 100% | λ 0.22→0.00 | non-commit 65.0% | drift-flagged 0/32 | |θ| 14.481 | 3300 fights, 130 s, 25.4/s
+[gen 20] goal mean 0.261 best 0.316 (heuristic 0.115: mean +0.146) | style mean 0.846 min 0.846 feasible 0% | λ 0.00→0.22 | non-commit 66.3% | drift-flagged 32/32 | |θ| 14.515 | 5300 fights, 204 s, 25.9/s
+    flagged: goal 0.207 style 0.846 gates [] drift [bigFight 0.000→0.394; bigIdle 0.000→0.401; bigNear 0.000→0.237; sweepRate 0.000→0.005]
+    flagged: goal 0.297 style 0.846 gates [] drift [bigFight 0.000→0.394; bigIdle 0.000→0.401; bigNear 0.000→0.237; sweepRate 0.000→0.005]
+    flagged: goal 0.266 style 0.846 gates [] drift [bigFight 0.000→0.394; bigIdle 0.000→0.401; bigNear 0.000→0.237; sweepRate 0.000→0.005]
+    flagged: goal 0.260 style 0.846 gates [] drift [bigFight 0.000→0.394; bigIdle 0.000→0.401; bigNear 0.000→0.237; sweepRate 0.000→0.005]
+    flagged: goal 0.224 style 0.846 gates [] drift [bigFight 0.000→0.394; bigIdle 0.000→0.401; bigNear 0.000→0.237; sweepRate 0.000→0.005]
+    flagged: goal 0.245 style 0.846 gates [] drift [bigFight 0.000→0.394; bigIdle 0.000→0.401; bigNear 0.000→0.237; sweepRate 0.000→0.005]
+    flagged: goal 0.266 style 0.846 gates [] drift [bigFight 0.000→0.394; bigIdle 0.000→0.401; bigNear 0.000→0.237; sweepRate 0.000→0.005]
+    flagged: goal 0.229 style 0.846 gates [] drift [bigFight 0.000→0.394; bigIdle 0.000→0.401; bigNear 0.000→0.237; sweepRate 0.000→0.005]
+    flagged: goal 0.252 style 0.846 gates [] drift [bigFight 0.000→0.394; bigIdle 0.000→0.401; bigNear 0.000→0.237; sweepRate 0.000→0.005]
+    flagged: goal 0.267 style 0.846 gates [] drift [bigFight 0.000→0.394; bigIdle 0.000→0.401; bigNear 0.000→0.237; sweepRate 0.000→0.005]
+    flagged: goal 0.233 style 0.846 gates [] drift [bigFight 0.000→0.394; bigIdle 0.000→0.401; bigNear 0.000→0.237; sweepRate 0.000→0.005]
+    flagged: goal 0.271 style 0.846 gates [] drift [bigFight 0.000→0.394; bigIdle 0.000→0.401; bigNear 0.000→0.237; sweepRate 0.000→0.005]
+    flagged: goal 0.259 style 0.846 gates [] drift [bigFight 0.000→0.394; bigIdle 0.000→0.401; bigNear 0.000→0.237; sweepRate 0.000→0.005]
+    flagged: goal 0.316 style 0.846 gates [] drift [bigFight 0.000→0.394; bigIdle 0.000→0.401; bigNear 0.000→0.237; sweepRate 0.000→0.005]
+    flagged: goal 0.316 style 0.846 gates [] drift [bigFight 0.000→0.394; bigIdle 0.000→0.401; bigNear 0.000→0.237; sweepRate 0.000→0.005]
+    flagged: goal 0.228 style 0.846 gates [] drift [bigFight 0.000→0.394; bigIdle 0.000→0.401; bigNear 0.000→0.237; sweepRate 0.000→0.005]
+    flagged: goal 0.246 style 0.846 gates [] drift [bigFight 0.000→0.394; bigIdle 0.000→0.401; bigNear 0.000→0.237; sweepRate 0.000→0.005]
+    flagged: goal 0.274 style 0.846 gates [] drift [bigFight 0.000→0.394; bigIdle 0.000→0.401; bigNear 0.000→0.237; sweepRate 0.000→0.005]
+    flagged: goal 0.292 style 0.846 gates [] drift [bigFight 0.000→0.394; bigIdle 0.000→0.401; bigNear 0.000→0.237; sweepRate 0.000→0.005]
+    flagged: goal 0.254 style 0.846 gates [] drift [bigFight 0.000→0.394; bigIdle 0.000→0.401; bigNear 0.000→0.237; sweepRate 0.000→0.005]
+    flagged: goal 0.242 style 0.846 gates [] drift [bigFight 0.000→0.394; bigIdle 0.000→0.401; bigNear 0.000→0.237; sweepRate 0.000→0.005]
+    flagged: goal 0.298 style 0.846 gates [] drift [bigFight 0.000→0.394; bigIdle 0.000→0.401; bigNear 0.000→0.237; sweepRate 0.000→0.005]
+    flagged: goal 0.264 style 0.846 gates [] drift [bigFight 0.000→0.394; bigIdle 0.000→0.401; bigNear 0.000→0.237; sweepRate 0.000→0.005]
+    flagged: goal 0.249 style 0.846 gates [] drift [bigFight 0.000→0.394; bigIdle 0.000→0.401; bigNear 0.000→0.237; sweepRate 0.000→0.005]
+    flagged: goal 0.234 style 0.846 gates [] drift [bigFight 0.000→0.394; bigIdle 0.000→0.401; bigNear 0.000→0.237; sweepRate 0.000→0.005]
+    flagged: goal 0.288 style 0.846 gates [] drift [bigFight 0.000→0.394; bigIdle 0.000→0.401; bigNear 0.000→0.237; sweepRate 0.000→0.005]
+    flagged: goal 0.310 style 0.846 gates [] drift [bigFight 0.000→0.394; bigIdle 0.000→0.401; bigNear 0.000→0.237; sweepRate 0.000→0.005]
+    flagged: goal 0.235 style 0.846 gates [] drift [bigFight 0.000→0.394; bigIdle 0.000→0.401; bigNear 0.000→0.237; sweepRate 0.000→0.005]
+    flagged: goal 0.302 style 0.846 gates [] drift [bigFight 0.000→0.394; bigIdle 0.000→0.401; bigNear 0.000→0.237; sweepRate 0.000→0.005]
+    flagged: goal 0.262 style 0.846 gates [] drift [bigFight 0.000→0.394; bigIdle 0.000→0.401; bigNear 0.000→0.237; sweepRate 0.000→0.005]
+    flagged: goal 0.264 style 0.846 gates [] drift [bigFight 0.000→0.394; bigIdle 0.000→0.401; bigNear 0.000→0.237; sweepRate 0.000→0.005]
+    flagged: goal 0.209 style 0.846 gates [] drift [bigFight 0.000→0.394; bigIdle 0.000→0.401; bigNear 0.000→0.237; sweepRate 0.000→0.005]
+  [val #4] centre (after 20 updates, non-commit 65.7%) vs best (init) on 1000 fresh fights: -0.003 ± 0.018 | style 1.000 gates [] drift [] -> keep best
+[gen 21] goal mean 0.245 best 0.307 (heuristic 0.202: mean +0.044) | style mean 1.000 min 1.000 feasible 100% | λ 0.22→0.00 | non-commit 61.1% | drift-flagged 0/32 | |θ| 14.545 | 3300 fights, 107 s, 30.9/s
+[gen 22] goal mean 0.304 best 0.356 (heuristic 0.302: mean +0.002) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 64.0% | drift-flagged 0/32 | |θ| 14.569 | 3300 fights, 114 s, 28.9/s
+[gen 23] goal mean 0.347 best 0.466 (heuristic 0.224: mean +0.123) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 67.5% | drift-flagged 0/32 | |θ| 14.591 | 3300 fights, 120 s, 27.5/s
+[gen 24] goal mean 0.429 best 0.497 (heuristic 0.370: mean +0.059) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 67.5% | drift-flagged 0/32 | |θ| 14.612 | 5300 fights, 195 s, 27.2/s
+  [val #5] centre (after 24 updates, non-commit 67.0%) vs best (init) on 1000 fresh fights: -0.013 ± 0.019 | style 1.000 gates [] drift [] -> keep best
+[gen 25] goal mean 0.360 best 0.423 (heuristic 0.381: mean -0.021) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 67.8% | drift-flagged 0/32 | |θ| 14.632 | 3300 fights, 120 s, 27.5/s
+[gen 26] goal mean 0.249 best 0.302 (heuristic 0.194: mean +0.055) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 64.8% | drift-flagged 0/32 | |θ| 14.654 | 3300 fights, 108 s, 30.6/s
+[gen 27] goal mean 0.381 best 0.460 (heuristic 0.245: mean +0.136) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 65.5% | drift-flagged 0/32 | |θ| 14.672 | 3300 fights, 118 s, 28.0/s
+[gen 28] goal mean 0.384 best 0.535 (heuristic 0.305: mean +0.079) | style mean 0.846 min 0.846 feasible 0% | λ 0.00→0.22 | non-commit 62.7% | drift-flagged 32/32 | |θ| 14.688 | 5300 fights, 202 s, 26.3/s
+    flagged: goal 0.357 style 0.846 gates [] drift [bigFight 0.000→0.743; bigIdle 0.000→0.184; bigNear 0.000→0.228; sweepRate 0.000→0.008]
+    flagged: goal 0.394 style 0.846 gates [] drift [bigFight 0.000→0.743; bigIdle 0.000→0.184; bigNear 0.000→0.228; sweepRate 0.000→0.008]
+    flagged: goal 0.376 style 0.846 gates [] drift [bigFight 0.000→0.743; bigIdle 0.000→0.184; bigNear 0.000→0.228; sweepRate 0.000→0.008]
+    flagged: goal 0.335 style 0.846 gates [] drift [bigFight 0.000→0.743; bigIdle 0.000→0.184; bigNear 0.000→0.228; sweepRate 0.000→0.007]
+    flagged: goal 0.373 style 0.846 gates [] drift [bigFight 0.000→0.743; bigIdle 0.000→0.184; bigNear 0.000→0.228; sweepRate 0.000→0.007]
+    flagged: goal 0.309 style 0.846 gates [] drift [bigFight 0.000→0.743; bigIdle 0.000→0.184; bigNear 0.000→0.228; sweepRate 0.000→0.008]
+    flagged: goal 0.389 style 0.846 gates [] drift [bigFight 0.000→0.743; bigIdle 0.000→0.184; bigNear 0.000→0.228; sweepRate 0.000→0.008]
+    flagged: goal 0.365 style 0.846 gates [] drift [bigFight 0.000→0.743; bigIdle 0.000→0.184; bigNear 0.000→0.228; sweepRate 0.000→0.007]
+    flagged: goal 0.405 style 0.846 gates [] drift [bigFight 0.000→0.743; bigIdle 0.000→0.184; bigNear 0.000→0.228; sweepRate 0.000→0.008]
+    flagged: goal 0.402 style 0.846 gates [] drift [bigFight 0.000→0.743; bigIdle 0.000→0.184; bigNear 0.000→0.228; sweepRate 0.000→0.008]
+    flagged: goal 0.354 style 0.846 gates [] drift [bigFight 0.000→0.743; bigIdle 0.000→0.184; bigNear 0.000→0.228; sweepRate 0.000→0.008]
+    flagged: goal 0.424 style 0.846 gates [] drift [bigFight 0.000→0.743; bigIdle 0.000→0.184; bigNear 0.000→0.228; sweepRate 0.000→0.007]
+    flagged: goal 0.473 style 0.846 gates [] drift [bigFight 0.000→0.743; bigIdle 0.000→0.184; bigNear 0.000→0.228; sweepRate 0.000→0.007]
+    flagged: goal 0.404 style 0.846 gates [] drift [bigFight 0.000→0.743; bigIdle 0.000→0.184; bigNear 0.000→0.228; sweepRate 0.000→0.007]
+    flagged: goal 0.409 style 0.846 gates [] drift [bigFight 0.000→0.743; bigIdle 0.000→0.184; bigNear 0.000→0.228; sweepRate 0.000→0.008]
+    flagged: goal 0.440 style 0.846 gates [] drift [bigFight 0.000→0.743; bigIdle 0.000→0.184; bigNear 0.000→0.228; sweepRate 0.000→0.007]
+    flagged: goal 0.406 style 0.846 gates [] drift [bigFight 0.000→0.743; bigIdle 0.000→0.184; bigNear 0.000→0.228; sweepRate 0.000→0.008]
+    flagged: goal 0.374 style 0.846 gates [] drift [bigFight 0.000→0.743; bigIdle 0.000→0.184; bigNear 0.000→0.228; sweepRate 0.000→0.007]
+    flagged: goal 0.307 style 0.846 gates [] drift [bigFight 0.000→0.743; bigIdle 0.000→0.184; bigNear 0.000→0.228; sweepRate 0.000→0.007]
+    flagged: goal 0.450 style 0.846 gates [] drift [bigFight 0.000→0.743; bigIdle 0.000→0.184; bigNear 0.000→0.228; sweepRate 0.000→0.008]
+    flagged: goal 0.425 style 0.846 gates [] drift [bigFight 0.000→0.743; bigIdle 0.000→0.184; bigNear 0.000→0.228; sweepRate 0.000→0.008]
+    flagged: goal 0.298 style 0.846 gates [] drift [bigFight 0.000→0.743; bigIdle 0.000→0.184; bigNear 0.000→0.228; sweepRate 0.000→0.007]
+    flagged: goal 0.392 style 0.846 gates [] drift [bigFight 0.000→0.743; bigIdle 0.000→0.184; bigNear 0.000→0.228; sweepRate 0.000→0.008]
+    flagged: goal 0.408 style 0.846 gates [] drift [bigFight 0.000→0.743; bigIdle 0.000→0.184; bigNear 0.000→0.228; sweepRate 0.000→0.008]
+    flagged: goal 0.535 style 0.846 gates [] drift [bigFight 0.000→0.743; bigIdle 0.000→0.184; bigNear 0.000→0.228; sweepRate 0.000→0.007]
+    flagged: goal 0.308 style 0.846 gates [] drift [bigFight 0.000→0.743; bigIdle 0.000→0.184; bigNear 0.000→0.228; sweepRate 0.000→0.008]
+    flagged: goal 0.375 style 0.846 gates [] drift [bigFight 0.000→0.743; bigIdle 0.000→0.184; bigNear 0.000→0.228; sweepRate 0.000→0.008]
+    flagged: goal 0.362 style 0.846 gates [] drift [bigFight 0.000→0.743; bigIdle 0.000→0.184; bigNear 0.000→0.228; sweepRate 0.000→0.007]
+    flagged: goal 0.365 style 0.846 gates [] drift [bigFight 0.000→0.743; bigIdle 0.000→0.184; bigNear 0.000→0.228; sweepRate 0.000→0.007]
+    flagged: goal 0.373 style 0.846 gates [] drift [bigFight 0.000→0.743; bigIdle 0.000→0.184; bigNear 0.000→0.228; sweepRate 0.000→0.008]
+    flagged: goal 0.316 style 0.846 gates [] drift [bigFight 0.000→0.743; bigIdle 0.000→0.184; bigNear 0.000→0.228; sweepRate 0.000→0.008]
+    flagged: goal 0.371 style 0.846 gates [] drift [bigFight 0.000→0.743; bigIdle 0.000→0.184; bigNear 0.000→0.228; sweepRate 0.000→0.008]
+  [val #6] centre (after 28 updates, non-commit 63.8%) vs best (init) on 1000 fresh fights: -0.008 ± 0.019 | style 1.000 gates [] drift [] -> keep best
+[gen 29] goal mean 0.278 best 0.345 (heuristic 0.200: mean +0.078) | style mean 1.000 min 0.990 feasible 100% | λ 0.22→0.00 | non-commit 64.4% | drift-flagged 1/32 | |θ| 14.698 | 3300 fights, 120 s, 27.5/s
+    flagged: goal 0.280 style 0.990 gates [] drift [canidIdle 0.331→0.491]
+[gen 30] goal mean 0.309 best 0.389 (heuristic 0.245: mean +0.064) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 63.0% | drift-flagged 0/32 | |θ| 14.712 | 3300 fights, 119 s, 27.7/s
+[gen 31] goal mean 0.330 best 0.410 (heuristic 0.205: mean +0.125) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 62.2% | drift-flagged 0/32 | |θ| 14.726 | 3300 fights, 123 s, 26.7/s
+[gen 32] goal mean 0.353 best 0.441 (heuristic 0.150: mean +0.203) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 58.1% | drift-flagged 0/32 | |θ| 14.747 | 5300 fights, 220 s, 24.1/s
+  [val #7] centre (after 32 updates, non-commit 58.1%) vs best (init) on 1000 fresh fights: -0.000 ± 0.017 | style 0.923 gates [] drift [bigFight 0.000→0.229; bigNear 0.000→0.313] -> keep best
+[gen 33] goal mean 0.348 best 0.420 (heuristic 0.207: mean +0.141) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 56.8% | drift-flagged 0/32 | |θ| 14.766 | 3300 fights, 124 s, 26.6/s
+[gen 34] goal mean 0.245 best 0.315 (heuristic 0.309: mean -0.064) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 52.8% | drift-flagged 0/32 | |θ| 14.780 | 3300 fights, 117 s, 28.1/s
+[gen 35] goal mean 0.204 best 0.254 (heuristic 0.160: mean +0.044) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 50.6% | drift-flagged 0/32 | |θ| 14.793 | 3300 fights, 146 s, 22.6/s
+[gen 36] goal mean 0.339 best 0.400 (heuristic 0.211: mean +0.128) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 49.9% | drift-flagged 0/32 | |θ| 14.811 | 5300 fights, 204 s, 26.0/s
+  [val #8] centre (after 36 updates, non-commit 49.7%) vs best (init) on 1000 fresh fights: -0.003 ± 0.017 | style 1.000 gates [] drift [] -> keep best
+[gen 37] goal mean 0.260 best 0.327 (heuristic 0.229: mean +0.031) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 51.2% | drift-flagged 0/32 | |θ| 14.826 | 3300 fights, 125 s, 26.5/s
+[gen 38] goal mean 0.365 best 0.426 (heuristic 0.377: mean -0.013) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 48.1% | drift-flagged 0/32 | |θ| 14.840 | 3300 fights, 126 s, 26.1/s
+[gen 39] goal mean 0.313 best 0.376 (heuristic 0.177: mean +0.136) | style mean 0.855 min 0.855 feasible 0% | λ 0.00→0.18 | non-commit 44.4% | drift-flagged 32/32 | |θ| 14.849 | 3300 fights, 113 s, 29.2/s
+    flagged: goal 0.338 style 0.855 gates [] drift [bigFight 0.000→0.212; bigIdle 0.000→0.330; bigNear 0.000→0.177; sweepRate 0.000→0.009]
+    flagged: goal 0.311 style 0.855 gates [] drift [bigFight 0.000→0.212; bigIdle 0.000→0.330; bigNear 0.000→0.177; sweepRate 0.000→0.009]
+    flagged: goal 0.295 style 0.855 gates [] drift [bigFight 0.000→0.212; bigIdle 0.000→0.330; bigNear 0.000→0.177; sweepRate 0.000→0.008]
+    flagged: goal 0.345 style 0.855 gates [] drift [bigFight 0.000→0.212; bigIdle 0.000→0.330; bigNear 0.000→0.177; sweepRate 0.000→0.009]
+    flagged: goal 0.286 style 0.855 gates [] drift [bigFight 0.000→0.212; bigIdle 0.000→0.330; bigNear 0.000→0.177; sweepRate 0.000→0.008]
+    flagged: goal 0.249 style 0.855 gates [] drift [bigFight 0.000→0.212; bigIdle 0.000→0.330; bigNear 0.000→0.177; sweepRate 0.000→0.008]
+    flagged: goal 0.320 style 0.855 gates [] drift [bigFight 0.000→0.212; bigIdle 0.000→0.330; bigNear 0.000→0.177; sweepRate 0.000→0.009]
+    flagged: goal 0.345 style 0.855 gates [] drift [bigFight 0.000→0.212; bigIdle 0.000→0.330; bigNear 0.000→0.177; sweepRate 0.000→0.009]
+    flagged: goal 0.351 style 0.855 gates [] drift [bigFight 0.000→0.212; bigIdle 0.000→0.330; bigNear 0.000→0.177; sweepRate 0.000→0.008]
+    flagged: goal 0.318 style 0.855 gates [] drift [bigFight 0.000→0.212; bigIdle 0.000→0.330; bigNear 0.000→0.177; sweepRate 0.000→0.008]
+    flagged: goal 0.271 style 0.855 gates [] drift [bigFight 0.000→0.212; bigIdle 0.000→0.330; bigNear 0.000→0.177; sweepRate 0.000→0.009]
+    flagged: goal 0.345 style 0.855 gates [] drift [bigFight 0.000→0.212; bigIdle 0.000→0.330; bigNear 0.000→0.177; sweepRate 0.000→0.009]
+    flagged: goal 0.376 style 0.855 gates [] drift [bigFight 0.000→0.212; bigIdle 0.000→0.330; bigNear 0.000→0.177; sweepRate 0.000→0.008]
+    flagged: goal 0.290 style 0.855 gates [] drift [bigFight 0.000→0.212; bigIdle 0.000→0.330; bigNear 0.000→0.177; sweepRate 0.000→0.008]
+    flagged: goal 0.331 style 0.855 gates [] drift [bigFight 0.000→0.212; bigIdle 0.000→0.330; bigNear 0.000→0.177; sweepRate 0.000→0.009]
+    flagged: goal 0.292 style 0.855 gates [] drift [bigFight 0.000→0.212; bigIdle 0.000→0.330; bigNear 0.000→0.177; sweepRate 0.000→0.009]
+    flagged: goal 0.329 style 0.855 gates [] drift [bigFight 0.000→0.212; bigIdle 0.000→0.330; bigNear 0.000→0.177; sweepRate 0.000→0.008]
+    flagged: goal 0.283 style 0.855 gates [] drift [bigFight 0.000→0.212; bigIdle 0.000→0.330; bigNear 0.000→0.177; sweepRate 0.000→0.009]
+    flagged: goal 0.279 style 0.855 gates [] drift [bigFight 0.000→0.212; bigIdle 0.000→0.330; bigNear 0.000→0.177; sweepRate 0.000→0.009]
+    flagged: goal 0.304 style 0.855 gates [] drift [bigFight 0.000→0.212; bigIdle 0.000→0.330; bigNear 0.000→0.177; sweepRate 0.000→0.009]
+    flagged: goal 0.339 style 0.855 gates [] drift [bigFight 0.000→0.212; bigIdle 0.000→0.330; bigNear 0.000→0.177; sweepRate 0.000→0.009]
+    flagged: goal 0.269 style 0.855 gates [] drift [bigFight 0.000→0.212; bigIdle 0.000→0.330; bigNear 0.000→0.177; sweepRate 0.000→0.009]
+    flagged: goal 0.310 style 0.855 gates [] drift [bigFight 0.000→0.212; bigIdle 0.000→0.330; bigNear 0.000→0.177; sweepRate 0.000→0.009]
+    flagged: goal 0.302 style 0.855 gates [] drift [bigFight 0.000→0.212; bigIdle 0.000→0.330; bigNear 0.000→0.177; sweepRate 0.000→0.009]
+    flagged: goal 0.288 style 0.855 gates [] drift [bigFight 0.000→0.212; bigIdle 0.000→0.330; bigNear 0.000→0.177; sweepRate 0.000→0.009]
+    flagged: goal 0.312 style 0.855 gates [] drift [bigFight 0.000→0.212; bigIdle 0.000→0.330; bigNear 0.000→0.177; sweepRate 0.000→0.008]
+    flagged: goal 0.316 style 0.855 gates [] drift [bigFight 0.000→0.212; bigIdle 0.000→0.330; bigNear 0.000→0.177; sweepRate 0.000→0.009]
+    flagged: goal 0.332 style 0.855 gates [] drift [bigFight 0.000→0.212; bigIdle 0.000→0.330; bigNear 0.000→0.177; sweepRate 0.000→0.008]
+    flagged: goal 0.284 style 0.855 gates [] drift [bigFight 0.000→0.212; bigIdle 0.000→0.330; bigNear 0.000→0.177; sweepRate 0.000→0.008]
+    flagged: goal 0.343 style 0.855 gates [] drift [bigFight 0.000→0.212; bigIdle 0.000→0.330; bigNear 0.000→0.177; sweepRate 0.000→0.009]
+    flagged: goal 0.287 style 0.855 gates [] drift [bigFight 0.000→0.212; bigIdle 0.000→0.330; bigNear 0.000→0.177; sweepRate 0.000→0.009]
+    flagged: goal 0.372 style 0.855 gates [] drift [bigFight 0.000→0.212; bigIdle 0.000→0.330; bigNear 0.000→0.177; sweepRate 0.000→0.009]
+[gen 40] goal mean 0.219 best 0.298 (heuristic 0.147: mean +0.073) | style mean 1.000 min 1.000 feasible 100% | λ 0.18→0.00 | non-commit 46.3% | drift-flagged 0/32 | |θ| 14.867 | 5300 fights, 208 s, 25.5/s
+  [val #9] centre (after 40 updates, non-commit 44.1%) vs best (init) on 1000 fresh fights: -0.011 ± 0.016 | style 1.000 gates [] drift [] -> keep best
+[gen 41] goal mean 0.295 best 0.351 (heuristic 0.171: mean +0.124) | style mean 0.998 min 0.962 feasible 100% | λ 0.00→0.00 | non-commit 41.9% | drift-flagged 2/32 | |θ| 14.886 | 3300 fights, 115 s, 28.6/s
+    flagged: goal 0.291 style 0.962 gates [] drift [dodgeRate 0.697→1.477]
+    flagged: goal 0.351 style 0.962 gates [] drift [dodgeRate 0.697→1.473]
+[gen 42] goal mean 0.285 best 0.339 (heuristic 0.241: mean +0.043) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 40.6% | drift-flagged 0/32 | |θ| 14.909 | 3300 fights, 118 s, 28.1/s
+[gen 43] goal mean 0.148 best 0.242 (heuristic 0.101: mean +0.048) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 41.9% | drift-flagged 0/32 | |θ| 14.928 | 3300 fights, 127 s, 26.1/s
+[gen 44] goal mean 0.313 best 0.365 (heuristic 0.217: mean +0.096) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 38.2% | drift-flagged 0/32 | |θ| 14.946 | 5300 fights, 201 s, 26.4/s
+  [val #10] centre (after 44 updates, non-commit 38.6%) vs best (init) on 1000 fresh fights: -0.004 ± 0.017 | style 0.846 gates [] drift [bigFight 0.000→0.342; bigIdle 0.000→0.319; bigNear 0.000→0.256; sweepRate 0.000→0.002] -> keep best
+[gen 45] goal mean 0.278 best 0.330 (heuristic 0.202: mean +0.076) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 40.7% | drift-flagged 0/32 | |θ| 14.966 | 3300 fights, 115 s, 28.7/s
+[gen 46] goal mean 0.314 best 0.383 (heuristic 0.226: mean +0.088) | style mean 0.846 min 0.846 feasible 0% | λ 0.00→0.22 | non-commit 37.3% | drift-flagged 32/32 | |θ| 14.989 | 3300 fights, 120 s, 27.6/s
+    flagged: goal 0.309 style 0.846 gates [] drift [bigFight 0.000→0.303; bigIdle 0.000→0.390; bigNear 0.000→0.281; sweepRate 0.000→0.013]
+    flagged: goal 0.293 style 0.846 gates [] drift [bigFight 0.000→0.290; bigIdle 0.000→0.513; bigNear 0.000→0.361; sweepRate 0.000→0.015]
+    flagged: goal 0.315 style 0.846 gates [] drift [bigFight 0.000→0.303; bigIdle 0.000→0.390; bigNear 0.000→0.281; sweepRate 0.000→0.012]
+    flagged: goal 0.299 style 0.846 gates [] drift [bigFight 0.000→0.290; bigIdle 0.000→0.513; bigNear 0.000→0.361; sweepRate 0.000→0.014]
+    flagged: goal 0.269 style 0.846 gates [] drift [bigFight 0.000→0.290; bigIdle 0.000→0.513; bigNear 0.000→0.361; sweepRate 0.000→0.015]
+    flagged: goal 0.357 style 0.846 gates [] drift [bigFight 0.000→0.303; bigIdle 0.000→0.390; bigNear 0.000→0.281; sweepRate 0.000→0.013]
+    flagged: goal 0.383 style 0.846 gates [] drift [bigFight 0.000→0.303; bigIdle 0.000→0.390; bigNear 0.000→0.281; sweepRate 0.000→0.012]
+    flagged: goal 0.317 style 0.846 gates [] drift [bigFight 0.000→0.290; bigIdle 0.000→0.513; bigNear 0.000→0.361; sweepRate 0.000→0.015]
+    flagged: goal 0.315 style 0.846 gates [] drift [bigFight 0.000→0.303; bigIdle 0.000→0.390; bigNear 0.000→0.281; sweepRate 0.000→0.013]
+    flagged: goal 0.303 style 0.846 gates [] drift [bigFight 0.000→0.290; bigIdle 0.000→0.513; bigNear 0.000→0.361; sweepRate 0.000→0.015]
+    flagged: goal 0.314 style 0.846 gates [] drift [bigFight 0.000→0.303; bigIdle 0.000→0.390; bigNear 0.000→0.281; sweepRate 0.000→0.012]
+    flagged: goal 0.319 style 0.846 gates [] drift [bigFight 0.000→0.290; bigIdle 0.000→0.513; bigNear 0.000→0.361; sweepRate 0.000→0.015]
+    flagged: goal 0.308 style 0.846 gates [] drift [bigFight 0.000→0.303; bigIdle 0.000→0.390; bigNear 0.000→0.281; sweepRate 0.000→0.013]
+    flagged: goal 0.300 style 0.846 gates [] drift [bigFight 0.000→0.303; bigIdle 0.000→0.390; bigNear 0.000→0.281; sweepRate 0.000→0.013]
+    flagged: goal 0.278 style 0.846 gates [] drift [bigFight 0.000→0.303; bigIdle 0.000→0.390; bigNear 0.000→0.281; sweepRate 0.000→0.013]
+    flagged: goal 0.291 style 0.846 gates [] drift [bigFight 0.000→0.290; bigIdle 0.000→0.513; bigNear 0.000→0.361; sweepRate 0.000→0.016]
+    flagged: goal 0.345 style 0.846 gates [] drift [bigFight 0.000→0.303; bigIdle 0.000→0.390; bigNear 0.000→0.281; sweepRate 0.000→0.013]
+    flagged: goal 0.305 style 0.846 gates [] drift [bigFight 0.000→0.303; bigIdle 0.000→0.390; bigNear 0.000→0.281; sweepRate 0.000→0.012]
+    flagged: goal 0.354 style 0.846 gates [] drift [bigFight 0.000→0.290; bigIdle 0.000→0.513; bigNear 0.000→0.361; sweepRate 0.000→0.015]
+    flagged: goal 0.319 style 0.846 gates [] drift [bigFight 0.000→0.303; bigIdle 0.000→0.390; bigNear 0.000→0.281; sweepRate 0.000→0.012]
+    flagged: goal 0.296 style 0.846 gates [] drift [bigFight 0.000→0.303; bigIdle 0.000→0.390; bigNear 0.000→0.281; sweepRate 0.000→0.013]
+    flagged: goal 0.292 style 0.846 gates [] drift [bigFight 0.000→0.290; bigIdle 0.000→0.513; bigNear 0.000→0.361; sweepRate 0.000→0.015]
+    flagged: goal 0.316 style 0.846 gates [] drift [bigFight 0.000→0.290; bigIdle 0.000→0.513; bigNear 0.000→0.361; sweepRate 0.000→0.016]
+    flagged: goal 0.286 style 0.846 gates [] drift [bigFight 0.000→0.303; bigIdle 0.000→0.390; bigNear 0.000→0.281; sweepRate 0.000→0.013]
+    flagged: goal 0.328 style 0.846 gates [] drift [bigFight 0.000→0.290; bigIdle 0.000→0.513; bigNear 0.000→0.361; sweepRate 0.000→0.015]
+    flagged: goal 0.290 style 0.846 gates [] drift [bigFight 0.000→0.303; bigIdle 0.000→0.390; bigNear 0.000→0.281; sweepRate 0.000→0.012]
+    flagged: goal 0.350 style 0.846 gates [] drift [bigFight 0.000→0.303; bigIdle 0.000→0.390; bigNear 0.000→0.281; sweepRate 0.000→0.012]
+    flagged: goal 0.312 style 0.846 gates [] drift [bigFight 0.000→0.303; bigIdle 0.000→0.390; bigNear 0.000→0.281; sweepRate 0.000→0.012]
+    flagged: goal 0.341 style 0.846 gates [] drift [bigFight 0.000→0.303; bigIdle 0.000→0.390; bigNear 0.000→0.281; sweepRate 0.000→0.012]
+    flagged: goal 0.331 style 0.846 gates [] drift [bigFight 0.000→0.303; bigIdle 0.000→0.390; bigNear 0.000→0.281; sweepRate 0.000→0.012]
+    flagged: goal 0.283 style 0.846 gates [] drift [bigFight 0.000→0.303; bigIdle 0.000→0.390; bigNear 0.000→0.281; sweepRate 0.000→0.012]
+    flagged: goal 0.320 style 0.846 gates [] drift [bigFight 0.000→0.290; bigIdle 0.000→0.513; bigNear 0.000→0.361; sweepRate 0.000→0.015]
+[gen 47] goal mean 0.342 best 0.412 (heuristic 0.160: mean +0.182) | style mean 1.000 min 1.000 feasible 100% | λ 0.22→0.00 | non-commit 36.5% | drift-flagged 0/32 | |θ| 15.017 | 3300 fights, 129 s, 25.6/s
+[gen 48] goal mean 0.285 best 0.379 (heuristic 0.187: mean +0.098) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 39.6% | drift-flagged 0/32 | |θ| 15.047 | 5300 fights, 204 s, 25.9/s
+  [val #11] centre (after 48 updates, non-commit 34.8%) vs best (init) on 1000 fresh fights: +0.003 ± 0.018 | style 1.000 gates [] drift [] -> keep best
+[gen 49] goal mean 0.204 best 0.270 (heuristic 0.109: mean +0.095) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 36.9% | drift-flagged 0/32 | |θ| 15.080 | 3300 fights, 111 s, 29.8/s
+[gen 50] goal mean 0.278 best 0.351 (heuristic 0.157: mean +0.120) | style mean 0.873 min 0.851 feasible 0% | λ 0.00→0.11 | non-commit 37.5% | drift-flagged 32/32 | |θ| 15.104 | 3300 fights, 121 s, 27.4/s
+    flagged: goal 0.261 style 0.874 gates [] drift [bigFight 0.000→0.435; bigIdle 0.000→0.164; bigNear 0.000→0.127; sweepRate 0.000→0.016]
+    flagged: goal 0.267 style 0.874 gates [] drift [bigFight 0.000→0.435; bigIdle 0.000→0.164; bigNear 0.000→0.127; sweepRate 0.000→0.016]
+    flagged: goal 0.239 style 0.874 gates [] drift [bigFight 0.000→0.435; bigIdle 0.000→0.164; bigNear 0.000→0.127; sweepRate 0.000→0.015]
+    flagged: goal 0.301 style 0.874 gates [] drift [bigFight 0.000→0.435; bigIdle 0.000→0.164; bigNear 0.000→0.127; sweepRate 0.000→0.015]
+    flagged: goal 0.274 style 0.874 gates [] drift [canidIdle 0.331→0.471; bigFight 0.000→0.435; bigIdle 0.000→0.164; bigNear 0.000→0.127; sweepRate 0.000→0.016]
+    flagged: goal 0.252 style 0.870 gates [] drift [canidIdle 0.331→0.478; bigFight 0.000→0.435; bigIdle 0.000→0.164; bigNear 0.000→0.127; sweepRate 0.000→0.016]
+    flagged: goal 0.323 style 0.874 gates [] drift [bigFight 0.000→0.435; bigIdle 0.000→0.164; bigNear 0.000→0.127; sweepRate 0.000→0.014]
+    flagged: goal 0.320 style 0.874 gates [] drift [bigFight 0.000→0.435; bigIdle 0.000→0.164; bigNear 0.000→0.127; sweepRate 0.000→0.015]
+    flagged: goal 0.269 style 0.874 gates [] drift [bigFight 0.000→0.435; bigIdle 0.000→0.164; bigNear 0.000→0.127; sweepRate 0.000→0.015]
+    flagged: goal 0.247 style 0.874 gates [] drift [bigFight 0.000→0.435; bigIdle 0.000→0.164; bigNear 0.000→0.127; sweepRate 0.000→0.015]
+    flagged: goal 0.303 style 0.874 gates [] drift [bigFight 0.000→0.435; bigIdle 0.000→0.164; bigNear 0.000→0.127; sweepRate 0.000→0.015]
+    flagged: goal 0.273 style 0.874 gates [] drift [bigFight 0.000→0.435; bigIdle 0.000→0.164; bigNear 0.000→0.127; sweepRate 0.000→0.015]
+    flagged: goal 0.288 style 0.874 gates [] drift [bigFight 0.000→0.435; bigIdle 0.000→0.164; bigNear 0.000→0.127; sweepRate 0.000→0.017]
+    flagged: goal 0.269 style 0.874 gates [] drift [bigFight 0.000→0.435; bigIdle 0.000→0.164; bigNear 0.000→0.127; sweepRate 0.000→0.016]
+    flagged: goal 0.281 style 0.874 gates [] drift [bigFight 0.000→0.435; bigIdle 0.000→0.164; bigNear 0.000→0.127; sweepRate 0.000→0.016]
+    flagged: goal 0.269 style 0.874 gates [] drift [bigFight 0.000→0.435; bigIdle 0.000→0.164; bigNear 0.000→0.127; sweepRate 0.000→0.015]
+    flagged: goal 0.276 style 0.874 gates [] drift [bigFight 0.000→0.435; bigIdle 0.000→0.164; bigNear 0.000→0.127; sweepRate 0.000→0.016]
+    flagged: goal 0.256 style 0.874 gates [] drift [bigFight 0.000→0.435; bigIdle 0.000→0.164; bigNear 0.000→0.127; sweepRate 0.000→0.016]
+    flagged: goal 0.304 style 0.874 gates [] drift [bigFight 0.000→0.435; bigIdle 0.000→0.164; bigNear 0.000→0.127; sweepRate 0.000→0.015]
+    flagged: goal 0.274 style 0.874 gates [] drift [bigFight 0.000→0.435; bigIdle 0.000→0.164; bigNear 0.000→0.127; sweepRate 0.000→0.015]
+    flagged: goal 0.227 style 0.874 gates [] drift [bigFight 0.000→0.435; bigIdle 0.000→0.164; bigNear 0.000→0.127; sweepRate 0.000→0.015]
+    flagged: goal 0.269 style 0.874 gates [] drift [bigFight 0.000→0.435; bigIdle 0.000→0.164; bigNear 0.000→0.127; sweepRate 0.000→0.016]
+    flagged: goal 0.290 style 0.851 gates [] drift [canidIdle 0.331→0.519; bigFight 0.000→0.435; bigIdle 0.000→0.164; bigNear 0.000→0.127; sweepRate 0.000→0.016]
+    flagged: goal 0.262 style 0.874 gates [] drift [bigFight 0.000→0.435; bigIdle 0.000→0.164; bigNear 0.000→0.127; sweepRate 0.000→0.015]
+    flagged: goal 0.308 style 0.874 gates [] drift [bigFight 0.000→0.435; bigIdle 0.000→0.164; bigNear 0.000→0.127; sweepRate 0.000→0.016]
+    flagged: goal 0.248 style 0.874 gates [] drift [bigFight 0.000→0.435; bigIdle 0.000→0.164; bigNear 0.000→0.127; sweepRate 0.000→0.016]
+    flagged: goal 0.277 style 0.874 gates [] drift [bigFight 0.000→0.435; bigIdle 0.000→0.164; bigNear 0.000→0.127; sweepRate 0.000→0.016]
+    flagged: goal 0.270 style 0.874 gates [] drift [bigFight 0.000→0.435; bigIdle 0.000→0.164; bigNear 0.000→0.127; sweepRate 0.000→0.015]
+    flagged: goal 0.351 style 0.874 gates [] drift [bigFight 0.000→0.435; bigIdle 0.000→0.164; bigNear 0.000→0.127; sweepRate 0.000→0.016]
+    flagged: goal 0.274 style 0.874 gates [] drift [bigFight 0.000→0.435; bigIdle 0.000→0.164; bigNear 0.000→0.127; sweepRate 0.000→0.014]
+    flagged: goal 0.277 style 0.874 gates [] drift [bigFight 0.000→0.435; bigIdle 0.000→0.164; bigNear 0.000→0.127; sweepRate 0.000→0.016]
+    flagged: goal 0.293 style 0.874 gates [] drift [bigFight 0.000→0.435; bigIdle 0.000→0.164; bigNear 0.000→0.127; sweepRate 0.000→0.016]
+[gen 51] goal mean 0.156 best 0.223 (heuristic 0.109: mean +0.047) | style mean 1.000 min 0.997 feasible 100% | λ 0.11→0.00 | non-commit 37.6% | drift-flagged 2/32 | |θ| 15.131 | 3300 fights, 116 s, 28.4/s
+    flagged: goal 0.194 style 0.998 gates [] drift [canidIdle 0.331→0.474]
+    flagged: goal 0.138 style 0.997 gates [] drift [canidIdle 0.331→0.475]
+[gen 52] goal mean 0.382 best 0.426 (heuristic 0.187: mean +0.194) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 36.1% | drift-flagged 0/32 | |θ| 15.154 | 5300 fights, 195 s, 27.2/s
+  [val #12] centre (after 52 updates, non-commit 37.7%) vs best (init) on 1000 fresh fights: -0.002 ± 0.019 | style 0.846 gates [] drift [bigFight 0.000→0.284; bigIdle 0.000→0.180; bigNear 0.000→0.222; sweepRate 0.000→0.003] -> keep best
+[gen 53] goal mean 0.274 best 0.359 (heuristic 0.237: mean +0.037) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 36.0% | drift-flagged 0/32 | |θ| 15.168 | 3300 fights, 123 s, 26.9/s
+[gen 54] goal mean 0.389 best 0.448 (heuristic 0.269: mean +0.121) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 39.6% | drift-flagged 0/32 | |θ| 15.180 | 3300 fights, 133 s, 24.7/s
+[gen 55] goal mean 0.280 best 0.339 (heuristic 0.229: mean +0.051) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 37.8% | drift-flagged 0/32 | |θ| 15.192 | 3300 fights, 124 s, 26.5/s
+[gen 56] goal mean 0.243 best 0.314 (heuristic 0.111: mean +0.132) | style mean 1.000 min 0.993 feasible 100% | λ 0.00→0.00 | non-commit 41.4% | drift-flagged 3/32 | |θ| 15.201 | 5300 fights, 210 s, 25.3/s
+    flagged: goal 0.242 style 0.996 gates [] drift [canidNear 0.453→0.617]
+    flagged: goal 0.290 style 0.993 gates [] drift [canidNear 0.453→0.624]
+    flagged: goal 0.202 style 0.999 gates [] drift [canidIdle 0.331→0.473]
+  [val #13] centre (after 56 updates, non-commit 38.0%) vs best (init) on 1000 fresh fights: -0.018 ± 0.018 | style 1.000 gates [] drift [] -> keep best
+[gen 57] goal mean 0.315 best 0.382 (heuristic 0.338: mean -0.022) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 36.7% | drift-flagged 0/32 | |θ| 15.210 | 3300 fights, 128 s, 25.7/s
+[gen 58] goal mean 0.327 best 0.382 (heuristic 0.282: mean +0.045) | style mean 1.000 min 0.997 feasible 100% | λ 0.00→0.00 | non-commit 39.0% | drift-flagged 1/32 | |θ| 15.220 | 3300 fights, 120 s, 27.4/s
+    flagged: goal 0.334 style 0.997 gates [] drift [canidIdle 0.331→0.475]
+[gen 59] goal mean 0.353 best 0.423 (heuristic 0.272: mean +0.080) | style mean 0.988 min 0.962 feasible 100% | λ 0.00→0.00 | non-commit 38.8% | drift-flagged 10/32 | |θ| 15.232 | 3300 fights, 117 s, 28.2/s
+    flagged: goal 0.355 style 0.962 gates [] drift [dodgeRate 0.697→2.083]
+    flagged: goal 0.405 style 0.962 gates [] drift [dodgeRate 0.697→2.042]
+    flagged: goal 0.376 style 0.962 gates [] drift [dodgeRate 0.697→2.178]
+    flagged: goal 0.359 style 0.962 gates [] drift [dodgeRate 0.697→2.080]
+    flagged: goal 0.423 style 0.962 gates [] drift [dodgeRate 0.697→2.163]
+    flagged: goal 0.404 style 0.962 gates [] drift [dodgeRate 0.697→2.192]
+    flagged: goal 0.423 style 0.962 gates [] drift [dodgeRate 0.697→2.073]
+    flagged: goal 0.347 style 0.962 gates [] drift [dodgeRate 0.697→2.069]
+    flagged: goal 0.347 style 0.962 gates [] drift [dodgeRate 0.697→2.143]
+    flagged: goal 0.397 style 0.962 gates [] drift [dodgeRate 0.697→2.190]
+  [val #14] centre (after 60 updates, non-commit 36.7%) vs best (init) on 1000 fresh fights: -0.027 ± 0.018 | style 0.885 gates [] drift [bigFight 0.000→0.525; bigIdle 0.000→0.208; sweepRate 0.000→0.001] -> keep best
+[test] best (init) vs the start (policy/weights/guard_v1.json) on 1200 held-out fights: +0.000 ± 0.000 (within 2 SE) | style 0.874 gates [] drift [bigFight 0.000→0.761; bigIdle 0.000→0.101; bigNear 0.000→0.207; sweepRate 0.000→0.002]
+  per map: savanna 0.000±0.000 (n 300), river 0.000±0.000 (n 300), forest 0.000±0.000 (n 300), tundra 0.000±0.000 (n 300); your win% 45.3 -> 45.3

@@ -1,0 +1,60 @@
+== g2_c1_s1
+[test] best (init) vs the start (policy/weights/guard_v1.json) on 1200 held-out fights: +0.000 ± 0.000 (within 2 SE) | style 0.885 gates [] drift [bigFight 0.206→0.000; bigIdle 0.543→0.000; bigNear 0.302→0.000]
+test: 0.000 ± 0.000 (within noise), style 0.885
+== g2_c1_s2
+[test] best (init) vs the start (policy/weights/guard_v1.json) on 1200 held-out fights: +0.000 ± 0.000 (within 2 SE) | style 1.000 gates [] drift []
+test: 0.000 ± 0.000 (within noise), style 1.000
+== g2_c2_big
+[test] best (init) vs the start (policy/weights/guard_v1.json) on 1200 held-out fights: +0.000 ± 0.000 (within 2 SE) | style 0.962 gates [] drift [bigFight 0.231→0.000]
+test: 0.000 ± 0.000 (within noise), style 0.962
+== g2_c2_s1
+[test] best (after 48 updates) vs the start (policy/weights/guard_v1.json) on 1200 held-out fights: +0.030 ± 0.022 (within 2 SE) | style 0.885 gates [] drift [bigFight 0.000→0.496; bigIdle 0.000→0.080; bigNear 0.000→0.244; sweepRate 0.000→0.001]
+test: 0.030 ± 0.022 (within noise), style 0.885
+== g2_c2_s2
+[test] best (init) vs the start (policy/weights/guard_v1.json) on 1200 held-out fights: +0.000 ± 0.000 (within 2 SE) | style 0.846 gates [] drift [bigFight 0.000→0.444; bigIdle 0.000→0.220; bigNear 0.000→0.216; sweepRate 0.000→0.002]
+test: 0.000 ± 0.000 (within noise), style 0.846
+== g2_c2_small
+[test] best (init) vs the start (policy/weights/guard_v1.json) on 1200 held-out fights: +0.000 ± 0.000 (within 2 SE) | style 0.874 gates [] drift [bigFight 0.000→0.761; bigIdle 0.000→0.101; bigNear 0.000→0.207; sweepRate 0.000→0.002]
+test: 0.000 ± 0.000 (within noise), style 0.874
+== g2_cold_c1
+[test] best (zero) vs zero weights on 1200 held-out fights: +0.000 ± 0.000 (within 2 SE) | style 0.921 gates [] drift [bigFight 0.213→0.386; bigIdle 0.640→0.323; bigNear 0.591→0.266]
+test: 0.000 ± 0.000 (within noise), style 0.921
+== g2_cold_c1_small
+[test] best (after 16 updates) vs zero weights on 1200 held-out fights: +0.065 ± 0.021 (beyond 2 SE) | style 0.838 gates [] drift [bigFight 0.000→0.246; bigIdle 0.000→0.156; bigNear 0.000→0.286; otherIdle 0.404→0.296; otherNear 0.500→0.386; sweepRate 0.000→0.001; pounceRate 0.335→0.469]
+test: 0.065 ± 0.021 (significant), style 0.838
+== g2_cold_c2_big
+[test] best (zero) vs zero weights on 1200 held-out fights: +0.000 ± 0.000 (within 2 SE) | style 0.900 gates [] drift [bigFight 0.267→0.365; bigIdle 0.041→0.232; bigNear 0.064→0.202; sweepRate 0.000→0.001]
+test: 0.000 ± 0.000 (within noise), style 0.900
+== g2_noclip
+[test] best (init) vs the start (policy/weights/guard_v1.json) on 1200 held-out fights: +0.000 ± 0.000 (within 2 SE) | style 0.879 gates [] drift [bigFight 0.000→0.273; bigIdle 0.000→0.091; bigNear 0.000→0.318; sweepRate 0.000→0.004]
+test: 0.000 ± 0.000 (within noise), style 0.879
+== h2_c1_s1
+[test] best (after 20 updates) vs the start (policy/weights/harrier_v1.json) on 1200 held-out fights: +0.033 ± 0.016 (beyond 2 SE) | style 1.000 gates [] drift []
+test: 0.033 ± 0.016 (significant), style 1.000
+== h2_c1_s2
+[test] best (init) vs the start (policy/weights/harrier_v1.json) on 1200 held-out fights: +0.000 ± 0.000 (within 2 SE) | style 1.000 gates [] drift []
+test: 0.000 ± 0.000 (within noise), style 1.000
+== h2_c2_big
+[test] best (after 36 updates) vs the start (policy/weights/harrier_v1.json) on 1200 held-out fights: +0.035 ± 0.019 (within 2 SE) | style 1.000 gates [] drift []
+test: 0.035 ± 0.019 (within noise), style 1.000
+== h2_c2_s1
+[test] best (after 28 updates) vs the start (policy/weights/harrier_v1.json) on 1200 held-out fights: +0.037 ± 0.019 (within 2 SE) | style 1.000 gates [] drift []
+test: 0.037 ± 0.019 (within noise), style 1.000
+== h2_c2_s2
+[test] best (after 36 updates) vs the start (policy/weights/harrier_v1.json) on 1200 held-out fights: +0.028 ± 0.018 (within 2 SE) | style 1.000 gates [] drift []
+test: 0.028 ± 0.018 (within noise), style 1.000
+== h2_c2_small
+[test] best (init) vs the start (policy/weights/harrier_v1.json) on 1200 held-out fights: +0.000 ± 0.000 (within 2 SE) | style 1.000 gates [] drift []
+test: 0.000 ± 0.000 (within noise), style 1.000
+== h2_cold_c1
+[test] best (after 44 updates) vs zero weights on 1200 held-out fights: +0.052 ± 0.013 (beyond 2 SE) | style 1.000 gates [] drift []
+test: 0.052 ± 0.013 (significant), style 1.000
+== h2_cold_c1_small
+[test] best (after 32 updates) vs zero weights on 1200 held-out fights: +0.099 ± 0.016 (beyond 2 SE) | style 1.000 gates [] drift [dmgPerFight 186.884→250.207]
+test: 0.099 ± 0.016 (significant), style 1.000
+== h2_cold_c2_big
+[test] best (zero) vs zero weights on 1200 held-out fights: +0.000 ± 0.000 (within 2 SE) | style 1.000 gates [] drift []
+test: 0.000 ± 0.000 (within noise), style 1.000
+== h2_noclip
+[test] best (init) vs the start (policy/weights/harrier_v1.json) on 1200 held-out fights: +0.000 ± 0.000 (within 2 SE) | style 1.000 gates [] drift []
+test: 0.000 ± 0.000 (within noise), style 1.000
