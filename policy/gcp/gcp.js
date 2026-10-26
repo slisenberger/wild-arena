@@ -41,10 +41,10 @@ function auth(){
 // ---------- state ----------
 function manifest(id){ const m = S.get(`sweeps/${id}/manifest.json`); if (!m) throw new Error('no such sweep: ' + id); return JSON.parse(m); }
 function statuses(id){ const out = {}; for (const k of S.list(`sweeps/${id}/status/`)){ const t = S.get(k); if (t) try { const s = JSON.parse(t); out[s.run] = s; } catch (e){} } return out; }
-function view(id){
-  const m = manifest(id), st = statuses(id), now = Date.now() / 1000;
+function view(id, vms){ // vms (optional, from vmsOf): a 'running' run whose VM is gone (preempted) is lost at once, not after STALE_S
+  const m = manifest(id), st = statuses(id), now = Date.now() / 1000, up = vms && new Set(vms.filter(x => x.status !== 'TERMINATED').map(x => x.name));
   return m.runs.map(r => { const s = st[r.name], tries = (m.tries || {})[r.name] || 0;
-    let state = s ? s.state : 'pending'; if (state === 'running' && now - s.t > STALE_S) state = 'lost';
+    let state = s ? s.state : 'pending'; if (state === 'running' && (now - s.t > STALE_S || (up && s.host && !up.has(s.host)))) state = 'lost';
     if (state === 'running' && /time budget used/.test(s.note || '')) state = 'paused';
     return {name: r.name, state, tries, age: s ? Math.round(now - s.t) : null, host: s && s.host, note: s ? s.note : ''}; });
 }
@@ -127,11 +127,12 @@ const [cmd, arg] = pos;
     if (!opt['dry-run']) S.putText(`sweeps/${id}/manifest.json`, JSON.stringify(m, null, 1));
     log(`sweep ${id} @ ${commit.slice(0, 10)} -> ${BUCKET}/sweeps/${id}/`); launchRuns(id, m, sweep.runs.map(r => r.name));
   } else if (cmd === 'status'){
-    const v = view(arg), vms = vmsOf(arg), c = {};
+    const vms = vmsOf(arg), v = view(arg, vms), c = {};
     for (const r of v){ c[r.state] = (c[r.state] || 0) + 1; log(`${r.name.padEnd(18)} ${r.state.padEnd(8)} tries ${r.tries}  ${r.age == null ? '' : r.age + ' s ago'}  ${String(r.note || '').split('\n')[0].slice(0, 110)}`); }
     log(`summary: ${Object.entries(c).map(([k, n]) => k + ' ' + n).join(', ')} | VMs alive: ${LOCAL ? 'n/a (local)' : vms.map(x => x.name + ':' + x.status).join(' ') || 'none'}`);
   } else if (cmd === 'resume'){
-    const m = manifest(arg), v = view(arg), max = +(opt.maxRetries || 3), alive = new Set(vmsOf(arg).length ? Object.values(statuses(arg)).filter(s => Date.now() / 1000 - s.t < STALE_S).map(s => s.run) : []);
+    const m = manifest(arg), vms = vmsOf(arg), v = view(arg, LOCAL ? null : vms), max = +(opt.maxRetries || 3), up = new Set(vms.filter(x => x.status !== 'TERMINATED').map(x => x.name)),
+      alive = new Set(vms.length ? Object.values(statuses(arg)).filter(s => Date.now() / 1000 - s.t < STALE_S && (!s.host || up.has(s.host))).map(s => s.run) : []); // fresh heartbeat on a VM that still exists
     const todo = v.filter(r => r.state !== 'done' && !alive.has(r.name) && (r.state !== 'failed' || r.tries < max)).map(r => r.name);
     const skipped = v.filter(r => r.state === 'failed' && r.tries >= max).map(r => r.name);
     if (skipped.length) log(`not retried (failed ${max}×): ${skipped.join(', ')}`);
