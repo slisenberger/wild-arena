@@ -221,7 +221,11 @@ round. Report ± standard errors.
   Idle (audit, $1,200): yours 53.5% → ~40%, theirs 33.8% → ~23%. Cost: cats' value on your side fell (~+5–15 s).
   Ridden-mount experiments: evading with a non-giant mount made riding worse (reverted); giraffe/ostrich getaway ride
   (rarely throws you unless grabbed, kicks while carrying) is neutral within noise.
-- **Current prices (`abs_r9`, after the battle drive):** 22 s of swing per $100, board total $2,600, budget $1,200,
+- **Current prices (`abs_r12`, with the learned harrier + guard policies live):** 22 s of swing per $100, board total
+  $2,600, budget $1,200, rares 30%. Validation: median board's best team 92% (min 38, p25 83), typical full-spend team
+  173 s, 15 distinct best teams over 16 boards. Changes: rhino $300, croc $100, bull $100, triceratops $800.
+  (20 s/$100 → $2,700: 83%, 164 s.)
+- *Previous* prices (`abs_r9`, after the battle drive): 22 s of swing per $100, board total $2,600, budget $1,200,
   rares 30%. Validation: median board's best team 96% (min 46, p25 83), typical full-spend team 184 s, 15 distinct best
   teams over 16 boards. (24 s/$100 → $2,500: 100%, 210 s; 20 s/$100 before targets: 79%, 109 s.)
 - *Previous* prices (`abs_r6` after the cat pass, giant kangaroo, sabre-toothed cat; rares on 30% of boards):
