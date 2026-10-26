@@ -16,13 +16,14 @@ const fs = require('fs');
 const path = require('path');
 const R = require('./move_run.js');
 const M = require('./move_model.js');
-const F = require('./move_features.js');
+const { arch: archOf } = require('./move_arch.js');
 const RW = require('./move_reward.js');
 const WK = require('./train_worker.js');
 
 const STATE_FORMAT = 'wild-arena/move-state', STATE_VERSION = 1;
 const DEFAULTS = {
-  arch: 'harrier', seed: 1, mode: 'linear', nh: 0, margin: 1,
+  arch: 'harrier',           // 'harrier' (the other side's pack hunters) or 'guard' (your guards); see move_arch.js
+  seed: 1, mode: 'linear', nh: 0, margin: 1,
   sigma: .1, lr: .08, pairs: 8, gens: 8,
   fights: 'auto',            // fights per candidate per generation; 'auto' = from calibration (see calibN)
   fightsMin: 100, fightsMax: 300,
@@ -49,9 +50,10 @@ function save(file, s){ const tmp = file + '.tmp'; fs.writeFileSync(tmp, JSON.st
 function logLine(file, line, quiet){ fs.appendFileSync(file + '.log', line + '\n'); if (!quiet) console.log(line); }
 function init(opts){
   const cfg = Object.assign({}, DEFAULTS, opts.dry ? DRY : {}, opts.cfg);
-  const P0 = M.zeros(F.DIM, cfg.nh, cfg.margin); if (cfg.nh) M.withHidden(P0, R.A.rng(cfg.seed * 31 + 7));
+  const AR = archOf(cfg.arch), F = AR.F;
+  const P0 = M.zeros(F.DIM, cfg.nh, cfg.margin, AR.nout); if (cfg.nh) M.withHidden(P0, R.A.rng(cfg.seed * 31 + 7));
   return {format: STATE_FORMAT, version: STATE_VERSION, simHash: R.simHash(), harnessHash: R.harnessHash(), created: new Date().toISOString(),
-    config: cfg, features: F.NAMES, intents: R.A._internals.INTENTS, P0, phase: 'calib', gen: 0, theta: M.flat(P0, cfg.mode),
+    config: cfg, features: F.NAMES, intents: AR.intents, P0, phase: 'calib', gen: 0, theta: M.flat(P0, cfg.mode),
     adam: {m: null, v: null, t: 0}, lambda: cfg.lambda0, best: {theta: M.flat(P0, cfg.mode), gen: -1, from: 'zero'}, valIndex: 0,
     calib: null, ref: null, N: null, history: [], val: [], test: null};
 }
@@ -102,9 +104,11 @@ function collect(jobs, outs){
   // recs[set][candIdxInSet] = fight records in fight order
   return jobs.sets.map((st, si) => st.cands.map(c => tasks.filter(t => t.s === si && t.c === c).map(t => got[t.k])));
 }
+// decisions per intent summed over a fight set (records from a no-policy run count nothing)
+function intentSums(recs, s){ const z = () => new Array(archOf(s.config.arch).nout).fill(0); return recs.reduce((a, r) => (r.intents || z()).map((v, k) => a[k] + v), z()); }
 function candSummary(s, recs, N){
   const m = RW.metrics(recs), g = RW.grade(m, s.ref, N), goals = recs.map(RW.goal);
-  const it = recs.reduce((a, r) => (r.intents || [0, 0, 0, 0, 0]).map((v, k) => a[k] + v), [0, 0, 0, 0, 0]), tot = it.reduce((a, b) => a + b, 0) || 1;
+  const it = intentSums(recs, s), tot = it.reduce((a, b) => a + b, 0) || 1;
   const styleEff = g.style - s.config.gatePenalty * g.failed.length;
   return {goal: RW.mean(goals), goalSE: RW.se(goals), style: g.style, styleEff, gates: g.failed, drift: RW.drift(m, s.ref, N),
     intents: it.map(v => +(v / tot).toFixed(3)), tel: Object.fromEntries(Object.entries(m).map(([k, v]) => [k, +v.toFixed(4)]))};
@@ -143,7 +147,7 @@ function validate(s, vs, recs, theta, out){
   const ok = P.diff > 2 * P.se, styleOk = P.styleB.style >= c.styleThr && P.styleB.gatesPass, driftOk = !c.acceptNoDrift || !P.driftB.length;
   const accept = ok && styleOk && driftOk, label = `after ${s.phase === "train" ? s.gen : s.history.length} updates`;
   s.val.push({gen: s.gen, phase: s.phase, valIndex: vs.valIndex, n: P.n, diff: P.diff, se: P.se, goalBest: P.goalA, goalCenter: P.goalB, style: P.styleB.style, gates: P.styleB.failed, drift: P.driftB, accept, vsBest: s.best.from, center: label});
-  const nc = recs.map(a => { const it = a.reduce((q, r) => (r.intents || [0, 0, 0, 0, 0]).map((v, k) => q[k] + v), [0, 0, 0, 0, 0]), n = it.reduce((x, y) => x + y, 0); return n ? 1 - it[0] / n : 0; });
+  const nc = recs.map(a => { const it = intentSums(a, s), n = it.reduce((x, y) => x + y, 0); return n ? 1 - it[0] / n : 0; });
   s.val[s.val.length - 1].nonCommit = {best: nc[0], center: nc[1]};
   out(`  [val #${vs.valIndex}] centre (${label}, non-commit ${(100 * nc[1]).toFixed(1)}%) vs best (${s.best.from}) on ${P.n} fresh fights: ${P.diff >= 0 ? '+' : ''}${P.diff.toFixed(3)} ± ${P.se.toFixed(3)} | style ${P.styleB.style.toFixed(3)} gates [${P.styleB.failed}] drift [${P.driftB.join('; ')}] -> ${accept ? 'ACCEPT' : 'keep best'}`);
   if (accept) s.best = {theta: theta.slice(), gen: s.gen, from: label};
@@ -232,7 +236,7 @@ async function retest(file, opts){
   const jobs = {format: WK.JOBS_FORMAT, version: WK.VERSION, simHash: s.simHash, harnessHash: s.harnessHash, arch: s.config.arch, phase: 'retest', gen: s.gen, seed: s.config.seed, config: s.config, cands, sets: [{name: 'retest', cands: [0, 1], fights}]};
   const t0 = Date.now(), res = await WK.runShard(jobs, 0, 1, opts.threads || 4), wall = (Date.now() - t0) / 1000;
   const rz = res.slice(0, n).map(r => r.rec), rc = res.slice(n).map(r => r.rec), P = RW.paired(rz, rc, s.ref);
-  const it = rc.reduce((q, r) => (r.intents || [0, 0, 0, 0, 0]).map((v, k) => q[k] + v), [0, 0, 0, 0, 0]), tot = it.reduce((a, b) => a + b, 0) || 1;
+  const it = intentSums(rc, s), tot = it.reduce((a, b) => a + b, 0) || 1;
   const tel = k => `${k} ${P.mA[k].toFixed(3)}→${P.mB[k].toFixed(3)}`;
   logLine(file, `[retest #${index}] ${opts.which === 'best' ? 'best' : 'centre'} vs zero on ${n} fresh test fights (${wall.toFixed(0)} s): ${P.diff >= 0 ? '+' : ''}${P.diff.toFixed(3)} ± ${P.se.toFixed(3)} (${Math.abs(P.diff) > 2 * P.se ? 'beyond' : 'within'} 2 SE) | style ${P.styleB.style.toFixed(3)} gates [${P.styleB.failed}] | intents ${it.map(v => (100 * v / tot).toFixed(1) + '%').join(' ')} | ${['dartRate', 'meanDist', 'noContact', 'deathRate', 'humanShare'].map(tel).join(', ')} | drift [${P.driftB.join('; ')}]`);
   return P;
@@ -255,7 +259,7 @@ if (require.main === module){
     if (cmd === 'init'){
       const cfg = {}; for (const [k, v] of Object.entries(opt)) if (k in DEFAULTS) cfg[k] = num(v);
       const s = init({dry: !!opt['dry-run'], cfg}); save(file, s);
-      logLine(file, `[init] ${file}: sim ${s.simHash}, harness ${s.harnessHash}, ${F.DIM} features, ${s.theta.length} trainable, config ${JSON.stringify(s.config)}`);
+      logLine(file, `[init] ${file}: sim ${s.simHash}, harness ${s.harnessHash}, ${s.features.length} features (${s.config.arch}), ${s.theta.length} trainable, config ${JSON.stringify(s.config)}`);
     } else if (cmd === 'jobs'){
       const s = load(file), jobs = makeJobs(s); fs.writeFileSync(pos[2], JSON.stringify(jobs));
       console.log(`${s.phase} gen ${s.gen}: ${WK.tasksOf(jobs).length} fights -> ${pos[2]} (jobs ${jobs.id})`);

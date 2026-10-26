@@ -7,6 +7,7 @@ const fs = require('fs');
 const SIM = process.env.SIM ? path.resolve(process.env.SIM) : path.join(__dirname, '..', 'sim.js');
 const A = require(SIM);
 require('./move_policy.js');
+const { arch: archOf } = require('./move_arch.js');
 const I = A._internals;
 const TERR = Object.keys(A.TERRAINS);
 const DT = A.DT;
@@ -28,7 +29,7 @@ const TEL = {contactWindow: 10, longIdle: 30, faceOn: 3, near: 10};
 // Each pool is its own stream; a set is (pool, index). Fights: boards dealt with A.dealBoard per map, a player-like
 // team (shuffle the board, take what fits the budget), kept only when the archetype is on the other side.
 const POOL = {train: 1, val: 2, test: 3, calib: 4, probe: 5};
-function hasArch(board, team, arch){ return board.some(id => !team.includes(id) && arch === 'harrier' && A.BY_ID[id].gait === 'orbit'); }
+function hasArch(board, team, arch){ return archOf(arch).has(board, team, A.defaultMount(team)); }
 function fightSet(pool, index, n, opts){
   opts = opts || {};
   const arch = opts.arch || 'harrier', base = opts.seed || 1;
@@ -52,6 +53,7 @@ function cfgOf(f){ return {team: f.team, board: f.board, terrain: f.tr, mode: 'w
 // weights: null = no policy at all (engine untouched); otherwise cfg.movePolicy = {[arch]: weights}
 function runFight(f, weights, arch){
   arch = arch || 'harrier';
+  if (arch === 'guard') return runGuardFight(f, weights);
   const cfg = cfgOf(f);
   if (weights){ cfg.movePolicy = {[arch]: weights}; cfg.moveStats = {}; }
   const w = A.setup(cfg), H = w.human;
@@ -91,6 +93,55 @@ function runFight(f, weights, arch){
   r.fp = fingerprint(w);
   return r;
 }
+// ---------- guard archetype telemetry ----------
+// species classes for the per-class style profile
+function guardClass(s){ return s.pred && s.latch ? 'cat' : s.gait === 'orbit' ? 'canid' : s.gait === 'charge' ? 'charger' : s.mass >= 2000 ? 'big' : 'other'; }
+const GCLASS = ['cat', 'canid', 'charger', 'big', 'other'];
+const GSIG = {hold: 'hold', knock: 'knockback', dodge: 'dodge', sweep: 'sweep', pounce: 'pounce'};
+const GTEL = {near: 8, glued: 4, gluedT: 2, blockT: 3};
+function runGuardFight(f, weights){
+  const arch = 'guard', cfg = cfgOf(f);
+  if (weights){ cfg.movePolicy = {[arch]: weights}; cfg.moveStats = {}; }
+  const w = A.setup(cfg), H = w.human;
+  const us = w.units.filter(u => I.archetypeOf(u) === arch), ids = new Set(us.map(u => u.s.id));
+  const S = us.map(u => ({c: guardClass(u.s), cat: !!(u.s.pred && u.s.latch), block: 0, glue: 0, dealt: 0, lastC: 0}));
+  const r = {arch, n: us.length, life: 0, fight: 0, close: 0, idle: 0, flee: 0, feed: 0, heat: 0, carry: 0, distH: 0,
+    standbyT: 0, catLife: 0, catBlockT: 0, gluedT: 0, dmgHuman: 0, dmgCollateral: 0};
+  for (const c of GCLASS){ r[c + 'Life'] = 0; r[c + 'Fight'] = 0; r[c + 'Idle'] = 0; r[c + 'Near'] = 0; }
+  let hp0 = H.hp;
+  while (!w.over){
+    A.step(w);
+    const hDrop = Math.max(0, hp0 - H.hp); hp0 = H.hp;
+    if (hDrop > 0){ r.dmgHuman += hDrop; const a = H.lastHitBy; if (a && a.side === 'E' && a.target !== H && a.latchOn !== H) r.dmgCollateral += hDrop; }
+    let fightOn = false, hContact = !!H.latchedBy;
+    for (const e of w.units) if (e.side === 'E' && I.active(e)){ if (I.locked(e) || e.target === H) fightOn = true; if (e.target === H && I.dist(e, H) <= e.r + H.r + e.s.reach + .5) hContact = true; }
+    us.forEach((u, i) => {
+      if (!I.active(u) || u.rider) return;
+      const s = S[i], st = stateOf(u), dH = I.dist(u, H);
+      r.life += DT; r[st] += DT; r.distH += dH * DT;
+      r[s.c + 'Life'] += DT; if (st === 'fight') r[s.c + 'Fight'] += DT; if (st === 'idle') r[s.c + 'Idle'] += DT; if (dH < GTEL.near) r[s.c + 'Near'] += DT;
+      const dd = u.st.dealt - s.dealt; s.dealt = u.st.dealt; if (st === 'fight' || dd > 0 || u.latchedBy || u.latchOn) s.lastC = w.t;
+      // standing by while the fight goes on: idle, or 'closing in' without touching anything for > 10 s (holding a spot)
+      if (fightOn && (st === 'idle' || (st === 'close' && w.t - s.lastC > TEL.contactWindow))) r.standbyT += DT;
+      // a cat body-blocking a big herbivore that is fighting it back, face to face (not holding on, not held) for > 3 s
+      if (s.cat){
+        r.catLife += DT; const t = u.target;
+        const blk = st === 'fight' && t && !t.s.pred && t.s.mass > 3 * u.s.mass && t.target === u && !u.latchOn && !u.latchedBy;
+        if (blk){ s.block += DT; if (s.block > GTEL.blockT) r.catBlockT += DT; } else s.block = 0;
+      }
+      // glued to you, not fighting, while something is on you (> 2 s)
+      const glue = hContact && dH < GTEL.glued && st !== 'fight';
+      if (glue){ s.glue += DT; if (s.glue > GTEL.gluedT) r.gluedT += DT; } else s.glue = 0;
+    });
+  }
+  r.deaths = us.filter(u => u.state === 'dead').length; r.withdrawn = us.filter(u => u.withdrawn).length;
+  r.dealt = us.reduce((a, u) => a + u.st.dealt, 0); r.protect = us.reduce((a, u) => a + u.st.protect, 0);
+  for (const [k, name] of Object.entries(GSIG)){ let n = 0; for (const id of ids) n += w.sig[id + ':' + name] || 0; r['sig_' + k] = n; }
+  r.hmax = H.maxhp; r.t = +w.result.t.toFixed(1); r.survived = w.result.survived ? 1 : 0; r.why = w.result.why || null; r.killer = w.result.killer || null;
+  r.intents = weights && cfg.moveStats[arch] ? cfg.moveStats[arch] : null;
+  r.fp = fingerprint(w);
+  return r;
+}
 // a compact fingerprint of the whole fight (event log + final positions) for identity checks
 function fingerprint(w){
   const h = crypto.createHash('sha1');
@@ -101,7 +152,7 @@ function fingerprint(w){
 function runTasks(tasks, cands, fights, arch){ return tasks.map(k => ({k: k.k, rec: runFight(fights[k.f], cands[k.c], arch)})); }
 
 function fileHash(files){ const h = crypto.createHash('sha256'); for (const f of files) h.update(fs.readFileSync(f)); return h.digest('hex').slice(0, 16); }
-const HARNESS_FILES = ['move_features.js', 'move_model.js', 'move_policy.js', 'move_run.js', 'move_reward.js'].map(f => path.join(__dirname, f));
+const HARNESS_FILES = ['move_features.js', 'move_guard_features.js', 'move_arch.js', 'move_model.js', 'move_policy.js', 'move_run.js', 'move_reward.js'].map(f => path.join(__dirname, f));
 const simHash = () => fileHash([SIM]);
 const harnessHash = () => fileHash(HARNESS_FILES);
-module.exports = { A, SIM, TERR, TEL, POOL, stateOf, fightSet, cfgOf, runFight, runTasks, fingerprint, simHash, harnessHash };
+module.exports = { A, SIM, TERR, TEL, GTEL, GCLASS, GSIG, guardClass, POOL, stateOf, fightSet, cfgOf, runFight, runTasks, fingerprint, simHash, harnessHash };
