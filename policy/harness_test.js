@@ -39,7 +39,7 @@ const f3 = v => (v >= 0 ? '+' : '') + v.toFixed(3);
 function plainFP(simPath, fights, mp){
   const code = `const {parentPort, workerData} = require('worker_threads'); const crypto = require('crypto'); const A = require(workerData.sim);
     if (workerData.mp){ process.env.SIM = workerData.sim; require(workerData.pol); }
-    parentPort.postMessage(workerData.fights.map(f => { const c = {team: f.team, board: f.board, terrain: f.tr, mode: 'wild', mount: f.mount, seed: f.seed}; if (workerData.mp) c.movePolicy = workerData.mp;
+    parentPort.postMessage(workerData.fights.map(f => { const c = {team: f.team, board: f.board, terrain: f.tr, mode: 'wild', mount: f.mount, seed: f.seed, livePolicy: false}; if (workerData.mp) c.movePolicy = workerData.mp;
       const w = A.simulate(c), h = crypto.createHash('sha1'); h.update(JSON.stringify(w.events)); h.update(JSON.stringify(w.units.map(u => [u.x, u.y, u.hp, u.state]))); return h.digest('hex').slice(0, 16) + '|' + w.result.t; }));`;
   return new Promise((res, rej) => { const w = new Worker(code, {eval: true, workerData: {sim: simPath, fights, mp, pol: path.join(here, 'move_policy.js')}}); w.on('message', res); w.on('error', rej); });
 }

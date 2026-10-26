@@ -17,7 +17,7 @@ function boardJobs(nBoards, nSeeds, seedBase){
   }
   return jobs;
 }
-function cfgOf(j){ return {team: j.team, board: j.board, terrain: j.tr, mode: 'wild', mount: j.mount, seed: j.seed}; }
+function cfgOf(j){ return {team: j.team, board: j.board, terrain: j.tr, mode: 'wild', mount: j.mount, seed: j.seed, livePolicy: false}; }
 
 // run jobs on NW workers: the worker script gets workerData {jobs, ...extra} and posts back an array
 function pool(script, jobs, extra, NW){

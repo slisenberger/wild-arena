@@ -47,7 +47,7 @@ function fightSet(pool, index, n, opts){
   }
   return out;
 }
-function cfgOf(f){ return {team: f.team, board: f.board, terrain: f.tr, mode: 'wild', mount: f.mount, seed: f.seed}; }
+function cfgOf(f){ return {team: f.team, board: f.board, terrain: f.tr, mode: 'wild', mount: f.mount, seed: f.seed, livePolicy: false}; } // livePolicy:false: the baseline is the heuristic, not the shipped policy
 
 // ---------- one fight ----------
 // weights: null = no policy at all (engine untouched); otherwise cfg.movePolicy = {[arch]: weights}

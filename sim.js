@@ -189,6 +189,8 @@ function mkUnit(s, side, x, y, id){
 
 // ---------- world setup ----------
 function setup(cfg){
+  // the live game's learned policies (policy/live.js) apply unless the cfg brings its own movePolicy or sets livePolicy:false
+  if (cfg.movePolicy === undefined && cfg.livePolicy !== false && INTERNALS.moveChoose && INTERNALS.LIVE.harrier) cfg = Object.assign({}, cfg, {movePolicy: {harrier: INTERNALS.LIVE.harrier}});
   // cfg: {team:[ids], placements:{id:{dx,dy}}, terrain, mode:'wild'|'allout', ride:bool, seed, board:[ids] (optional: only these animals are in the game)}
   const R = rng(cfg.seed || 1);
   const T = TERRAINS[cfg.terrain] || TERRAINS.savanna;
@@ -1666,12 +1668,15 @@ function guardIdleGo(w, u){
   return null;
 }
 const INTERNALS = { choose: null, predCandidates, predatorTarget, bestCarcass, guardsAround, packStrength, packMates, packMate, strength, hostile, canSee, reachable, distWater, inWater, busy, yieldsTo, wound, heightOf, pressure, active, has, dist, sp, social };
-Object.assign(INTERNALS, { moveChoose: null, INTENTS, archetypeOf, drive, locked, GUARD_INTENTS, GUARD_SPACE, guardThreat, guardHelpTarget, sideSees, evasiveMount, zoneAt });
+Object.assign(INTERNALS, { moveChoose: null, LIVE: {harrier: null}, INTENTS, archetypeOf, drive, locked, GUARD_INTENTS, GUARD_SPACE, guardThreat, guardHelpTarget, sideSees, evasiveMount, zoneAt });
 function policyChoose(w, u){
   if (!INTERNALS.choose) throw new Error('cfg.policy is set but no policy is loaded: require policy/policy.js');
   INTERNALS.choose(w, u, w.cfg.policy);
 }
 
 const API = { _internals: INTERNALS, MEASURED, RULES, dealBoard, defaultMount, mapVariant, baseVariant, ESCORT_R, POST_R, zoneAt, ZONE_T0, ZONE_T1, HAZARD_NAME, zoneFor, homeFor, placeOK, clampPlace, defaultPost, snowFactor, heatLoad, QUIET_T, STYLE, ANIMALS, HUMAN, BY_ID, TERRAINS, W, H, DT, MATCH_T, setup, step, simulate, snapshot, summarize, randomDraft, defaultPlacement, rng, hpOf, radiusOf };
-if (typeof module !== 'undefined' && module.exports) module.exports = API; else root.Arena = API;
+if (typeof module !== 'undefined' && module.exports){
+  module.exports = API;
+  try { require('./policy/live.js'); } catch (e){ if (e.code !== 'MODULE_NOT_FOUND') throw e; } // learned policies (absent next to a stray copy of sim.js)
+} else root.Arena = API;
 })(typeof window !== 'undefined' ? window : globalThis);
