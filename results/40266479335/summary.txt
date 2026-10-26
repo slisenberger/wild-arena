@@ -1,0 +1,24 @@
+== m0_big
+[test] best (zero) vs zero weights on 1200 held-out fights: +0.000 ± 0.000 (within 2 SE) | style 1.000 gates [] drift []
+test: 0.000 ± 0.000 (within noise), style 1.000
+== m25_big
+[test] best (zero) vs zero weights on 1200 held-out fights: +0.000 ± 0.000 (within 2 SE) | style 1.000 gates [] drift []
+test: 0.000 ± 0.000 (within noise), style 1.000
+== m25_s1
+[test] best (zero) vs zero weights on 1200 held-out fights: +0.000 ± 0.000 (within 2 SE) | style 1.000 gates [] drift []
+test: 0.000 ± 0.000 (within noise), style 1.000
+== warm_big
+[test] best (zero) vs zero weights on 1200 held-out fights: +0.000 ± 0.000 (within 2 SE) | style 1.000 gates [] drift []
+test: 0.000 ± 0.000 (within noise), style 1.000
+== warm_full16
+[test] best (after 44 updates) vs zero weights on 1200 held-out fights: +0.078 ± 0.014 (beyond 2 SE) | style 1.000 gates [] drift []
+test: 0.078 ± 0.014 (significant), style 1.000
+== warm_m25
+[test] best (after 20 updates) vs zero weights on 1200 held-out fights: +0.041 ± 0.012 (beyond 2 SE) | style 1.000 gates [] drift []
+test: 0.041 ± 0.012 (significant), style 1.000
+== warm_s1
+[test] best (after 40 updates) vs zero weights on 1200 held-out fights: +0.136 ± 0.015 (beyond 2 SE) | style 1.000 gates [] drift []
+test: 0.136 ± 0.015 (significant), style 1.000
+== warm_s2
+[test] best (after 52 updates) vs zero weights on 1200 held-out fights: +0.075 ± 0.014 (beyond 2 SE) | style 1.000 gates [] drift []
+test: 0.075 ± 0.014 (significant), style 1.000
