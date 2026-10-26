@@ -40,7 +40,7 @@ count as 5:00). Live site: GitHub Pages serves `index.html` from `main`.
   fight each; least-squares fit of each animal's swing value (seconds gained by moving it from their side to
   yours), proposed prices ∝ swing ($100 steps, min $100). Note: the older whole-roster tools (`quick.js`,
   `camp.js`, `budget.js`, `tourney.js`) predate the board model and now fight all 22 animals.
-- `migration.js` — the roguelike **Migration** mode's rules (pure JS, bundled by `build.js` after sim.js as
+- `migration.js` — the roguelike **Migration** mode (**switched off in the UI by the owner, Oct 26, until properly designed**; `?migration=1` shows it; `MIG_ON` in ui.js)'s rules (pure JS, bundled by `build.js` after sim.js as
   `window.Migration`): 7 fights, money, carry-over wounds, trading post, boons, escalation (`MIG` constants).
   Engine hooks in sim.js `setup` (all opt-in; absent = byte-identical, checked on 80 fixed fights with and without the
   live policies): `cfg.startHp = {id: fraction | [fraction per surviving pack member]}` (array length = group size),
