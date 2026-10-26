@@ -62,7 +62,9 @@ function createVM(id, idx, runs, m, hours){
       '--scopes', 'cloud-platform', ...(process.env.GCP_VM_SA ? ['--service-account', process.env.GCP_VM_SA] : []), '--labels', `wa-sweep=${id}`, '--metadata', Object.entries(meta).map(([k, v]) => `${k}=${v}`).join(','), '--metadata-from-file', `startup-script=${startup}`, '--quiet'];
     if (opt['dry-run']){ log('  [dry-run] gcloud ' + a.join(' ')); return {name, zone, machine}; }
     try { sh('gcloud', a); log(`  ${name}: ${machine} in ${zone}, runs ${runs.join(', ')}`); return {name, zone, machine}; }
-    catch (e){ const msg = String(e.stderr || e.message); errors.push(`${machine}@${zone}: ${msg.split('\n').find(l => /ERROR/.test(l)) || msg.slice(0, 200)}`); if (!RETRYABLE.test(msg)) break; }
+    catch (e){ const msg = String(e.stderr || e.message); errors.push(`${machine}@${zone}: ${msg.split('\n').find(l => /ERROR/.test(l)) || msg.slice(0, 200)}`);
+      if (/CPUS_ALL_REGIONS/.test(msg)){ log(`  project-wide CPU quota full: runs ${runs.join(', ')} left pending`); return 'quota'; } // no zone or region can help
+      if (!RETRYABLE.test(msg)) break; }
   }
   log(`  could not create a VM for runs ${runs.join(', ')} (left pending; 'resume' retries):\n    ` + errors.slice(-4).join('\n    ')); return null;
 }
@@ -75,7 +77,7 @@ function launchRuns(id, m, names){
     return;
   }
   if (!opt.yes && !opt['dry-run']){ log('not launched: add --yes to launch (or --dry-run to see the commands)'); return; }
-  const launched = []; groups.forEach((g, i) => { if (createVM(id, i, g, m, m.hours)) launched.push(...g); });
+  const launched = []; let full = false; groups.forEach((g, i) => { if (full) return; const v = createVM(id, i, g, m, m.hours); if (v === 'quota') full = true; else if (v) launched.push(...g); });
   log(`${groups.filter(g => launched.includes(g[0])).length}/${groups.length} VMs created`); return launched;
 }
 // ---------- check: is the GCP setup usable? (each step says what to fix) ----------
