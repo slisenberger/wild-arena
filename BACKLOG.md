@@ -188,6 +188,13 @@ Pick for new roles. Top three for design value: **honey badger, moose, Komodo dr
 - [ ] Real frame animation needs drawn sprites: an original art project (don't trace others' photos).
 
 ## 8. Replayability
+- [ ] **Roguelike "migration" mode (owner, Oct 26):** 7 sequential fights. Start ~$600; survive to earn money (time
+  alive + kills); team carries over: survivors keep wounds (partial heal), dead animals are gone, your own HP carries
+  (death ends the run). Between fights: a trading post (draft from a fresh board, sell animals) and 1-of-3 realistic
+  boons (spear: you hit harder; waterskin: less heat; snowshoes; ranger's whistle: guards regroup on you; smoke: enemy
+  morale). Escalation: richer, nastier boards; rares later; fight 4 a megafauna fight, fight 7 "the herd" (elephants).
+  Score = fights survived + total time; a daily roguelike seed. Engine: opt-in carry-over HP + boons as cfg modifiers.
+  Start after the Pick-N / share-link UI work lands (both are heavy ui.js changes).
 - [ ] **Daily challenge** (shared seed, shared map) + **verified leaderboard** (store the config,
   re-simulate to verify the score — cheap because the sim is deterministic).
 - [ ] **Mutators / rules cards:** drought, night, double predators, no mounts, half budget, random prices.
