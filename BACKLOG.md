@@ -217,6 +217,11 @@ Pick for new roles. Top three for design value: **honey badger, moose, Komodo dr
 - [ ] Per-map score-attack leaderboards; shareable seed + team links.
 
 ## 9. Learned AI (ambition)
+- [ ] **Per-animal policies (owner, Oct 26):** archetype nets (in progress) → species-aware archetype nets (a species
+  one-hot input) → per-species fine-tunes warm-started from the archetype net (`--initWeights` + `--thetaClip`), each
+  graded against its own species' style profile, shipped only if it beats the archetype net on held-out fights. Rare
+  species need fight sets that deal them in deliberately. Compute: ~30–50 nets × ~5 h on 4 cores = ~3 rounds on free
+  GitHub Actions (15 h wall); a 96-core GCP spot VM (~$1–2/h) would do a species in ~15 min (~$10–20 for the roster).
 - [ ] **Long-term architecture (owner, Oct 2026):** per-archetype policy nets with two rewards: goal (win the fight)
   and style (grade against the animal's intended behaviour from `sig`/audit telemetry, as a constraint). Plan in
   `policy/README.md` (Milestone 3). Replaces piecemeal heuristics like the battle drive and contextual targets.
