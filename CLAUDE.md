@@ -178,6 +178,18 @@ round. Report ± standard errors.
   regroup / disengage for enemy orbit-gait packs; zero weights = heuristic), goal + style rewards with a Lagrangian, a
   sharded ES trainer (`policy/train.js` + `train_worker.js`, plain JSON, resumable) and `policy/harness_test.js`.
   Usage, sharding and pilot results: `policy/README.md` "Milestone 3 harness".
+- **Milestone 3 shipped (Oct 26): the live game uses learned movement policies by default** (`policy/live.js` loads
+  `policy/weights/harrier_v1.json` + `guard_v1.json`; `setup` applies them unless the cfg sets `movePolicy` or
+  `livePolicy:false`; `build.js` bundles the modules + weights into index.html). Opting out is byte-identical to the
+  heuristic engine; the harness and Milestone 2 tools opt out so their baseline stays the heuristic.
+  - Enemy wolves/hyenas (`harrier_v1`, warm-started from the 'patient' rule): +0.118 ± 0.016 goal vs heuristic on fresh
+    fights (+0.073 vs 'patient'); they regroup before going in (44% of decisions), die less, kill you +2.3 pts.
+  - Your guards (`guard_v1`): survival +13.3 ± 2.9 s, win +7.5 ± 1.2 pts (1,200 fights, live engine); they pile in to
+    help the most hurt ally (55%). Hand-written guard rules found nothing; the learner did.
+  - Training runs on GitHub Actions (`.github/workflows/train.yml`, sweeps in `policy/sweeps/`); `collect.yml` copies
+    results to the `training-results` branch (artifact storage isn't reachable from the dev container).
+  - Lesson: ES from zero collapsed (the style penalty drove every candidate back to "always commit", then exploration
+    died: |θ| grew, non-commit 0%). Warm starts and small σ work; big σ collapses.
 
 ## Pricing findings (Oct 2026)
 - The regression in `price_board.js` is biased in board mode: with budget-fill teams, a cheap animal left on
@@ -209,7 +221,11 @@ round. Report ± standard errors.
   Idle (audit, $1,200): yours 53.5% → ~40%, theirs 33.8% → ~23%. Cost: cats' value on your side fell (~+5–15 s).
   Ridden-mount experiments: evading with a non-giant mount made riding worse (reverted); giraffe/ostrich getaway ride
   (rarely throws you unless grabbed, kicks while carrying) is neutral within noise.
-- **Current prices (`abs_r9`, after the battle drive):** 22 s of swing per $100, board total $2,600, budget $1,200,
+- **Current prices (`abs_r12`, with the learned harrier + guard policies live):** 22 s of swing per $100, board total
+  $2,600, budget $1,200, rares 30%. Validation: median board's best team 92% (min 38, p25 83), typical full-spend team
+  173 s, 15 distinct best teams over 16 boards. Changes: rhino $300, croc $100, bull $100, triceratops $800.
+  (20 s/$100 → $2,700: 83%, 164 s.)
+- *Previous* prices (`abs_r9`, after the battle drive): 22 s of swing per $100, board total $2,600, budget $1,200,
   rares 30%. Validation: median board's best team 96% (min 46, p25 83), typical full-spend team 184 s, 15 distinct best
   teams over 16 boards. (24 s/$100 → $2,500: 100%, 210 s; 20 s/$100 before targets: 79%, 109 s.)
 - *Previous* prices (`abs_r6` after the cat pass, giant kangaroo, sabre-toothed cat; rares on 30% of boards):

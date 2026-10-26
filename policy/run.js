@@ -17,7 +17,7 @@ function cat(u){
   if (u.latchOn) return u.latchOn.side === 'H' ? 'you' : 'animals';
   return 'none';
 }
-function cfgOf(j){ return {team: j.team, board: j.board, terrain: j.tr, mode: 'wild', mount: j.mount, seed: j.seed}; }
+function cfgOf(j){ return {team: j.team, board: j.board, terrain: j.tr, mode: 'wild', mount: j.mount, seed: j.seed, livePolicy: false}; }
 function fight(j, P, prof){
   const c = cfgOf(j); if (P){ c.policy = P; c.policyStats = {}; }
   const w = A.setup(c), T = prof ? {} : null;
