@@ -27,6 +27,29 @@ Audit pass 1 is merged (polar bear, elephant, white rhino, swim-speed bug). Stil
 - [ ] Hippo stamina 8 s (probably fine: its land threat is the charge).
 - Checked and left alone: lion 20 m/s, polar land speed/heat/mass/health, most masses and land speeds.
 
+**Behavior-spec review (Oct 26, GCP session; doc "Wild Arena: archetype behavior specs", every claim checked against an
+opened source).** Engine changes the evidence supports. Each changes the heuristic and the live game, so rebuild, re-verify
+the shipped policies and reprice after:
+- [ ] Elephant/mammoth bluff .6 has no source; real attacks on people are mostly sudden and unprovoked (Das &
+  Chattopadhyay 2011: 14 autopsies; Mohanty 2024: 84% of 45 survivors). Lower it, or tie bluffing to the elephant's state.
+- [ ] Grizzly bluff .5 is low: ~90% of aggressive grizzly reactions end without contact (Gunther et al. 2024, 7,090
+  Yellowstone interactions). Try .7–.8. Black bear .7: split by mode (defensive high, predatory low; Herrero et al. 2011).
+- [ ] Honey badger `fearless` overstates it: wary, bolts from lion tracks, attacks mostly when surprised (Begg). Keep
+  unbreakable morale once fighting; drop "takes on anything".
+- [ ] Gorilla "always bluffs first" is too strict: when surprised or cornered it bites without the display (Betsem 2011,
+  74 bitten hunters). Give it its own contact model (bite, several bites possible) instead of the elephant's.
+- [ ] Wolves: a standing moose was never killed (0 of 36), a running one sometimes (5 of 41; Mech 1966). Gate commits
+  on the target fleeing; test with close lunges and short retreats, not circling at ~30 m (no source for that distance).
+- [ ] Stalking cats break cover and run prey down from any distance once it runs; a spotted tiger doesn't pursue
+  (Schaller 1967) and stalkers need 15–20 m (Laundré & Hernández 2003). Lions do hunt buffalo (54% success in Queen
+  Elizabeth NP), so don't gate group lions off dangerous prey.
+- [ ] Moose and bison renew the attack on a downed target that moves (Alaska Fish & Game; Mech et al. 2004); bison press
+  predators for minutes to hours. Buffalo face lions backed into thickets.
+- [ ] Ostrich kicks only forward (a rear approach is safe); giraffe safer standing than running (lions trip a galloping
+  giraffe); big male kangaroos challenge an upright person as a rival (Coulson).
+- [ ] No source for: jaguar 7 m and cougar 12 m horizontal pounces (cougar: 5.5 m vertical documented), hippo ~30 km/h
+  (never measured), any rhino or boar bluff share.
+
 ## 2. Camping, stalling and other anti-patterns
 **Goal: low camping.** Tool: `camp.js` (telemetry + start-position exploit search, verified on fresh seeds).
 

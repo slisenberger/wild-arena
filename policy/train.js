@@ -38,6 +38,7 @@ const DEFAULTS = {
   initRule: null,            // warm start from a hand-written rule encoded in the linear term (INIT_RULES below)
   initWeights: null,         // warm start from a weights file (e.g. policy/weights/guard_v1.json); 'best' starts there too, so validation must beat it
   thetaClip: 0,              // > 0: keep every weight within ±thetaClip of the start (stops the collapse into 'never deviate')
+  spec: false,               // true: add the behavior-spec metrics (move_reward.js SPEC_X / SPEC_INFO)
   goal: null,                // 'checkmate': side-level goal (kill the human, sooner is better; move_reward.js goalPartsCheckmate)
   withLive: false,           // the other archetypes use the shipped policies in every fight (train against the live game)
             // warm start: 'patient' = wait while stronger guards block and the target isn't busy or easy (probe winner, +0.06)
@@ -99,7 +100,7 @@ const weightsOf = (s, theta) => M.unflat(s.P0, theta, s.config.mode);
 // ES noise for generation g: deterministic from (seed, g), so a resumed run draws the same perturbations
 function gauss(R0){ let u = 0; while (!u) u = R0(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * R0()); }
 function noise(s, g, salt){ const R0 = R.A.rng((s.config.seed * 1000003 + g * 7919 + (salt || 0)) >>> 0); return [...Array(s.config.pairs)].map(() => s.theta.map(() => gauss(R0))); }
-const fopts = s => ({seed: s.config.seed, arch: s.config.arch, holdMap: s.config.holdMap, withLive: !!s.config.withLive, goal: s.config.goal || null});
+const fopts = s => ({seed: s.config.seed, arch: s.config.arch, holdMap: s.config.holdMap, withLive: !!s.config.withLive, goal: s.config.goal || null, spec: !!s.config.spec});
 
 // ---------- jobs ----------
 // validation: the current centre vs the best so far, on a fresh draw from the validation pool (each check its own draw)

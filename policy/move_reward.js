@@ -110,33 +110,46 @@ const METRICS_X = {
     farHunt:    {num: r => r.farHuntT, den: r => r.life, kind: 'up', tol: .02, gate: true}}),
 };
 const DEFS = Object.assign({harrier: METRICS, guard: METRICS_G}, METRICS_X);
-const defsOf = arch => { const d = DEFS[arch || 'harrier']; if (!d) throw new Error('no reward metrics for archetype ' + arch); return d; };
-const archOfRecs = recs => (recs[0] && recs[0].arch) || 'harrier';
+// spec metrics (opt-in, --spec; behavior-spec doc reviewed Oct 26): absolute targets only where an opened source supports
+// them ('abs': penalised above cap), plus 'info' telemetry the spec cares about but has no number for
+const SPEC_INFO = {
+  rearShare:   {num: r => r.rearHits, den: r => r.hitsOnMoving, kind: 'info'},   // hits from behind a moving target
+  fleeContact: {num: r => r.fleeContactT, den: r => r.fight, kind: 'info'},     // contact while the target flees
+  farSprint:   {num: r => r.farSprintT, den: r => r.life, kind: 'info'},        // sprinting at a target > 30 m off
+};
+const SPEC_X = {
+  // cats: the rush starts within ~15-30 m; a spotted cat doesn't run prey down from range (Laundre & Hernandez 2003; Schaller
+  // 1967). Cap = the heuristic's own level (~2% of life, 80 fights), so learning can't add long-range sprints
+  cat: {farSprint: {num: r => r.farSprintT, den: r => r.life, kind: 'abs', cap: .02, tol: .01}},
+};
+const DEFS_SPEC = Object.fromEntries(Object.keys(DEFS).filter(a => a !== 'guard').map(a => [a, Object.assign({}, DEFS[a], SPEC_INFO, SPEC_X[a] || {})]));
+const defsOf = (arch, spec) => { const d = (spec ? DEFS_SPEC : DEFS)[arch || 'harrier'] || (spec && DEFS[arch || 'harrier']); if (!d) throw new Error('no reward metrics for archetype ' + arch); return d; };
+const archOfRecs = recs => (recs[0] && recs[0].arch) || 'harrier', specOfRecs = recs => !!(recs[0] && recs[0].spec);
 function metrics(recs){
   const m = {};
-  for (const [k, d] of Object.entries(defsOf(archOfRecs(recs)))){ let a = 0, b = 0; for (const r of recs){ a += d.num(r); b += d.den(r); } m[k] = b > 0 ? a / b : 0; }
+  for (const [k, d] of Object.entries(defsOf(archOfRecs(recs), specOfRecs(recs)))){ let a = 0, b = 0; for (const r of recs){ a += d.num(r); b += d.den(r); } m[k] = b > 0 ? a / b : 0; }
   return m;
 }
 // ratio-estimator standard error of each pooled metric over these fights
 function metricSE(recs){
   const m = metrics(recs), out = {};
-  for (const [k, d] of Object.entries(defsOf(archOfRecs(recs)))){
+  for (const [k, d] of Object.entries(defsOf(archOfRecs(recs), specOfRecs(recs)))){
     let b = 0, s = 0; for (const r of recs) b += d.den(r);
     for (const r of recs) s += (d.num(r) - m[k] * d.den(r)) ** 2;
     out[k] = b > 0 ? Math.sqrt(s) / b : 0;
   }
   return out;
 }
-function tolOf(k, ref){ const d = defsOf(ref.arch)[k]; return d.rel ? Math.max(1e-9, d.rel * Math.abs(ref.m[k])) : d.tol; }
+function tolOf(k, ref){ const d = defsOf(ref.arch, ref.spec)[k]; return d.rel ? Math.max(1e-9, d.rel * Math.abs(ref.m[k])) : d.tol; }
 // the heuristic's own sampling noise at N fights (2 SE, scaled from the calibration set) is added to every tolerance, so
 // the zero-weight policy scores ~1 on any fresh fight set of that size instead of being marked down for luck
 function noiseOf(k, ref, N){ return N ? 2 * (ref.se[k] || 0) * Math.sqrt(ref.n / Math.max(1, N)) : 0; }
-function excess(k, m, ref, N){ const d = defsOf(ref.arch)[k], R = ref.m, dev = d.kind === 'up' ? m[k] - R[k] : d.kind === 'down' ? R[k] - m[k] : Math.abs(m[k] - R[k]); return Math.max(0, dev - tolOf(k, ref) - noiseOf(k, ref, N)); }
+function excess(k, m, ref, N){ const d = defsOf(ref.arch, ref.spec)[k], R = ref.m, dev = d.kind === 'abs' ? m[k] - d.cap : d.kind === 'up' ? m[k] - R[k] : d.kind === 'down' ? R[k] - m[k] : Math.abs(m[k] - R[k]); return Math.max(0, dev - tolOf(k, ref) - noiseOf(k, ref, N)); }
 // ref: reference(heuristic records); N: fights behind m. style = mean metric score over the 'two' and 'up' metrics
 // (1 within tolerance, falling linearly to 0 at twice it); gates = the hard 'gate' metrics, which must score 1
 function grade(m, ref, N){
   const per = {}, R = ref.m; let s = 0, n = 0; const failed = [];
-  for (const [k, d] of Object.entries(defsOf(ref.arch))){
+  for (const [k, d] of Object.entries(defsOf(ref.arch, ref.spec))){
     if (d.kind === 'tel' || d.kind === 'info') continue;
     const sc = Math.max(0, 1 - excess(k, m, ref, N) / tolOf(k, ref)); per[k] = sc; s += sc; n++;
     if (d.gate && sc < 1) failed.push(k);
@@ -146,10 +159,10 @@ function grade(m, ref, N){
 // drift: any metric (telemetry included) beyond tolerance + 2 SE of the heuristic at N fights (SE scaled from calibration)
 function drift(m, ref, N){
   const flags = [];
-  for (const [k, d] of Object.entries(defsOf(ref.arch))) if (d.kind !== 'info' && excess(k, m, ref, N) > 0) flags.push(`${k} ${ref.m[k].toFixed(3)}→${m[k].toFixed(3)}`);
+  for (const [k, d] of Object.entries(defsOf(ref.arch, ref.spec))) if (d.kind !== 'info' && excess(k, m, ref, N) > 0) flags.push(`${k} ${ref.m[k].toFixed(3)}→${m[k].toFixed(3)}`);
   return flags;
 }
-function reference(recs){ const a = archOfRecs(recs), ref = {n: recs.length, m: metrics(recs), se: metricSE(recs)}; if (a !== 'harrier') ref.arch = a; return ref; }
+function reference(recs){ const a = archOfRecs(recs), ref = {n: recs.length, m: metrics(recs), se: metricSE(recs)}; if (a !== 'harrier') ref.arch = a; if (specOfRecs(recs)) ref.spec = true; return ref; }
 const mean = a => a.length ? a.reduce((p, q) => p + q, 0) / a.length : 0;
 const sd = a => a.length > 1 ? Math.sqrt(a.reduce((p, q) => p + (q - mean(a)) ** 2, 0) / (a.length - 1)) : 0;
 const se = a => a.length > 1 ? sd(a) / Math.sqrt(a.length) : 0;
