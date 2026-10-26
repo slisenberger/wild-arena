@@ -217,6 +217,10 @@ Pick for new roles. Top three for design value: **honey badger, moose, Komodo dr
 - [ ] Per-map score-attack leaderboards; shareable seed + team links.
 
 ## 9. Learned AI (ambition)
+- [ ] **Cat headroom (owner: "no headroom, so far"):** rules over the generic intents found nothing for cats, but the guards
+  also showed nothing from rules and then learned +13 s. Next: (1) the cold cat runs in m3_arch_s1; (2) cat-specific
+  intents (pounce now vs creep closer, abandon the stalk, switch to softer prey, re-set the ambush, wait in cover, take
+  the blind side); (3) species-aware / per-species cat nets (60 kg cougar vs 260 kg sabre-tooth); (4) your-side cats.
 - [ ] **Per-animal policies (owner, Oct 26):** archetype nets (in progress) → species-aware archetype nets (a species
   one-hot input) → per-species fine-tunes warm-started from the archetype net (`--initWeights` + `--thetaClip`), each
   graded against its own species' style profile, shipped only if it beats the archetype net on held-out fights. Rare

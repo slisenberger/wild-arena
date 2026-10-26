@@ -193,7 +193,7 @@ round. Report ± standard errors.
   - Other-side archetypes (Oct 26, opt-in, not live): `cat` (stalk/rush), `charger`, `bulldozer` (lumbering herbivores),
     `brawler` (lumbering predators), `kicker` (keepaway); croc heuristic. Per-gait intent geometry `INTENT_GEO` in sim.js,
     `policy/move_arch_features.js`, `probes/arch_rules.js`. Probe winners confirmed on a fresh draw: bulldozer flankBusy
-    +0.170 ± 0.030, brawler patient +0.067 ± 0.021; cats have no headroom. Sweep `policy/sweeps/m3_arch_s1.json`.
+    +0.170 ± 0.030, brawler patient +0.067 ± 0.021; cats: no headroom found so far (generic intents, hand-written rules only). Sweep `policy/sweeps/m3_arch_s1.json`.
   - Lesson: ES from zero collapsed (the style penalty drove every candidate back to "always commit", then exploration
     died: |θ| grew, non-commit 0%). Warm starts and small σ work; big σ collapses.
 

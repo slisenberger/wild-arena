@@ -68,7 +68,7 @@ realism, ship them as `policy/weights/<archetype>_v1.json`, and reprice.
     - bulldozer flankBusy +0.170 ± 0.030
     - brawler patient +0.067 ± 0.021
     - kicker and charger rules unconfirmed
-    - cats have no headroom
+    - cats: no headroom found so far (rules only; the cold cat runs in this sweep are the first learned look)
 - **Collapse.** A run that ends at exactly `0.000 ± 0.000` collapsed into "never deviate". That's a known failure
   mode, not a bug. The `--thetaClip` runs test the fix.
 - **Opponents.** `--withLive=true`: the other archetypes use the shipped policies (harrier_v1, guard_v1) in every

@@ -607,7 +607,7 @@ The rules:
 - Bulldozer always-flank scored +0.079 ± 0.031, but it drifts (no contact 23% → 31%).
 - Not confirmed, though positive in both draws: kicker patient +0.035 ± 0.020, kicker flankBusy +0.013 ± 0.019,
   charger patient +0.042 ± 0.027.
-- **The cat has no headroom with these intents**: the stalk-and-pounce heuristic already waits for its moment.
+- **No cat headroom found so far** (hand-written rules over the generic intents; the guards also showed none from rules, yet learned +13 s): the stalk-and-pounce heuristic already waits for its moment.
 
 ### Training
 `node policy/train.js init run/x.json --arch=<cat|charger|bulldozer|brawler|kicker> [--initRule=patient|flankBusy|onlyOnMe|hurtBack] [--initWeights=file] [--thetaClip=1] [--withLive=true] ...`,
