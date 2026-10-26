@@ -1,0 +1,85 @@
+{
+ "note": "Milestone 3, other-side archetypes (Oct 26): warm starts from the probe winners confirmed on a fresh draw (bulldozer flankBusy +0.170 ± 0.030 and hurtBack +0.028 ± 0.013, brawler patient +0.067 ± 0.021) and from the directional ones (kicker patient, charger patient / flankBusy), plus cold starts with the drift cap (--thetaClip=1) at sigma .1 / .05; the cat had no headroom (2 cold runs). All --withLive=true (shipped harrier + guard policies in every fight); val/test sizes as m3_v2. Priority: bulldozer 7, brawler 5, kicker 3, charger 3, cat 2.",
+ "runs": [
+  {
+   "name": "bd_fb_c1_s1",
+   "args": "--pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --arch=bulldozer --initRule=flankBusy --thetaClip=1 --seed=601"
+  },
+  {
+   "name": "bd_fb_c1_s2",
+   "args": "--pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --arch=bulldozer --initRule=flankBusy --thetaClip=1 --seed=602"
+  },
+  {
+   "name": "bd_fb_c2",
+   "args": "--pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --arch=bulldozer --initRule=flankBusy --thetaClip=2 --seed=603"
+  },
+  {
+   "name": "bd_fb_c1_small",
+   "args": "--pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --arch=bulldozer --initRule=flankBusy --thetaClip=1 --sigma=.05 --lr=.04 --seed=604"
+  },
+  {
+   "name": "bd_hb_c1",
+   "args": "--pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --arch=bulldozer --initRule=hurtBack --thetaClip=1 --seed=605"
+  },
+  {
+   "name": "bd_cold_c1",
+   "args": "--pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --arch=bulldozer --thetaClip=1 --seed=606"
+  },
+  {
+   "name": "bd_cold_c1_small",
+   "args": "--pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --arch=bulldozer --thetaClip=1 --sigma=.05 --lr=.04 --seed=607"
+  },
+  {
+   "name": "br_pat_c1_s1",
+   "args": "--pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --arch=brawler --initRule=patient --thetaClip=1 --seed=608"
+  },
+  {
+   "name": "br_pat_c1_s2",
+   "args": "--pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --arch=brawler --initRule=patient --thetaClip=1 --seed=609"
+  },
+  {
+   "name": "br_pat_c2",
+   "args": "--pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --arch=brawler --initRule=patient --thetaClip=2 --seed=610"
+  },
+  {
+   "name": "br_cold_c1",
+   "args": "--pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --arch=brawler --thetaClip=1 --seed=611"
+  },
+  {
+   "name": "br_cold_c1_small",
+   "args": "--pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --arch=brawler --thetaClip=1 --sigma=.05 --lr=.04 --seed=612"
+  },
+  {
+   "name": "ki_pat_c1",
+   "args": "--pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --arch=kicker --initRule=patient --thetaClip=1 --seed=613"
+  },
+  {
+   "name": "ki_fb_c1",
+   "args": "--pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --arch=kicker --initRule=flankBusy --thetaClip=1 --seed=614"
+  },
+  {
+   "name": "ki_cold_c1_small",
+   "args": "--pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --arch=kicker --thetaClip=1 --sigma=.05 --lr=.04 --seed=615"
+  },
+  {
+   "name": "ch_pat_c1",
+   "args": "--pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --arch=charger --initRule=patient --thetaClip=1 --seed=616"
+  },
+  {
+   "name": "ch_fb_c1",
+   "args": "--pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --arch=charger --initRule=flankBusy --thetaClip=1 --seed=617"
+  },
+  {
+   "name": "ch_cold_c1",
+   "args": "--pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --arch=charger --thetaClip=1 --seed=618"
+  },
+  {
+   "name": "cat_cold_c1",
+   "args": "--pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --arch=cat --thetaClip=1 --seed=619"
+  },
+  {
+   "name": "cat_cold_c1_small",
+   "args": "--pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --arch=cat --thetaClip=1 --sigma=.05 --lr=.04 --seed=620"
+  }
+ ]
+}

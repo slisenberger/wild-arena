@@ -188,6 +188,12 @@ round. Report ± standard errors.
     help the most hurt ally (55%). Hand-written guard rules found nothing; the learner did.
   - Training runs on GitHub Actions (`.github/workflows/train.yml`, sweeps in `policy/sweeps/`); `collect.yml` copies
     results to the `training-results` branch (artifact storage isn't reachable from the dev container).
+  - GCP spot training: `policy/gcp/gcp.js` (launch/status/resume/stop/collect, failure handling in `policy/gcp/README.md`);
+    needs GCP_PROJECT + GCP_SA_KEY in the environment.
+  - Other-side archetypes (Oct 26, opt-in, not live): `cat` (stalk/rush), `charger`, `bulldozer` (lumbering herbivores),
+    `brawler` (lumbering predators), `kicker` (keepaway); croc heuristic. Per-gait intent geometry `INTENT_GEO` in sim.js,
+    `policy/move_arch_features.js`, `probes/arch_rules.js`. Probe winners confirmed on a fresh draw: bulldozer flankBusy
+    +0.170 ± 0.030, brawler patient +0.067 ± 0.021; cats: no headroom found so far (generic intents, hand-written rules only). Sweep `policy/sweeps/m3_arch_s1.json`.
   - Lesson: ES from zero collapsed (the style penalty drove every candidate back to "always commit", then exploration
     died: |θ| grew, non-commit 0%). Warm starts and small σ work; big σ collapses.
 
@@ -243,6 +249,14 @@ round. Report ± standard errors.
   With full teams, 38% of your damage is collateral (charges and sweeps aimed at your animals hit you). Of 11 ideas only
   a stale-dodge bug fix survived on the current engine.
 
+## In flight (Oct 26, for a new session)
+- GitHub Actions run 40372090395 (sweep `policy/sweeps/m3_v2.json`, guards + harriers v2): when done, run the `collect`
+  workflow with that run id and read `results/40372090395/summary.txt` on the `training-results` branch; verify winners
+  with `policy/probes/eval_guard.js` / `eval_state.js` before shipping as `policy/weights/*_v2.json`.
+- GCP: run `node policy/gcp/gcp.js check` (then `check --vm`) to confirm the credentials, then launch sweeps there.
+- Archetype policies (cats, chargers, bulldozers, brawlers, kickers) are being built in the original session's worktree;
+  if that work isn't on the branch yet, it hasn't been merged.
+
 ## Open threads (full list in BACKLOG.md)
 1. Realism: owner decision on a more fragile human. (Done Oct 2026: lion coalitions encircle — the second lion swings to
    the far side of a shared target, `sig 'encircles'` ~1.5/fight, value neutral.)
@@ -250,6 +264,11 @@ round. Report ± standard errors.
 3. Movement policy pilot for pack harriers (wolves/hyenas) with an idle penalty.
 4. Identity: keep strengthening the light picks (ROSTER.md). (Done: counters 'lookout spots a threat' ~3/fight,
    'chases movement' (bull) ~2, 'charges blind at a sound' (black rhino) ~3 — telemetry only.)
-5. Replayability: verified leaderboard, fixed-animal-count mode, rotating rosters, new animals. (Done: daily challenge —
+5. Replayability: verified leaderboard, rotating rosters, new animals. (Done: daily challenge —
    `Daily challenge` button; the UTC date hashes to the map, board and fight seed; rematch keeps the seed; today's best in
    localStorage `wa-daily:<date>`; a share line in the result banner.)
+   - Done (Oct 2026, ui.js only): **Pick N** draft mode (`S.draft`/`S.pickN`, exactly 2–5 picks, prices ignored; bests
+     keyed `|pickN`; **Daily Pick-3** seeds `wild-arena:pick3:<date>`, best `wa-daily-pick3:<date>`), **game links**
+     `#g=1,m:,b:,s:,d:b|pN[,t:,r:,p:][,sc:]` (`gameLink`/`parseLink`/`applyLink`; positions are stored to the cm at drag
+     time and encoded exactly, so a link replays the same fight; bad links fall back to a fresh board with a notice),
+     and a **daily streak** (`wa-streak`).

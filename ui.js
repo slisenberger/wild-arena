@@ -12,13 +12,17 @@ const MAXV = {mine: Math.max(1, ...Object.values(A.MEASURED).map(m => m.mine)), 
 
 const S = window.__wa = {
   team: new Set(), boardSeed: newBoardSeed(), board: [], focus:'elephant', terrain:'savanna', mode:'wild', mount:'', pos:{}, youPos:null, seed: (Math.random()*1e6|0) + 1,
-  screen:'draft', world:null, playT:0, playing:true, speed:2, sel:0, lastTs:0, dur:120
+  draft:'budget', pickN:3, daily:null, dailyKind:null, shared:null, played:null, screen:'draft', world:null, playT:0, playing:true, speed:2, sel:0, lastTs:0, dur:120
 };
 
 // ---------- helpers ----------
 const spent = () => [...S.team].reduce((s, id) => s + A.BY_ID[id].price, 0);
 const fmtT = t => { t = Math.max(0, t); const m = Math.floor(t/60), s = Math.floor(t%60); return m + ':' + String(s).padStart(2,'0'); };
 const kmh = v => Math.round(v * 3.6);
+// draft modes: 'budget' (spend up to the budget) or 'pick' (exactly S.pickN animals, prices ignored); the engine doesn't care
+const isPick = () => S.draft === 'pick';
+const canAdd = a => isPick() ? S.team.size < S.pickN : a.price <= BUDGET - spent();
+const draftReady = () => !isPick() || S.team.size === S.pickN;
 function strengthOf(a){ return Math.sqrt(A.hpOf(a) * a.dmg / a.cd); }
 function tok(a, size){ const d = document.createElement('span'); d.className = 'tok'; d.style.cssText = tokStyle(a); d.title = a.name; if (size) { d.style.width = d.style.height = size + 'px'; } if (!faceOf(a)) d.textContent = a.abbr; return d; }
 const faceOf = a => FACES[a.species || a.id]; // pack items share their species' portrait
@@ -43,7 +47,7 @@ const groupOf = a => a.group || 1;
 const itemName = a => groupOf(a) > 1 ? `${a.groupName} (${groupOf(a)})` : a.name;
 const boardTotal = () => S.board.reduce((t, id) => t + A.BY_ID[id].price, 0);
 function dealNewBoard(seed){
-  S.daily = null; // a fresh board (or a different map) is no longer today's challenge
+  S.daily = null; S.dailyKind = null; S.shared = null; hideNotice(); // a fresh board (or a different map) is no longer today's challenge or a shared game
   S.boardSeed = seed || newBoardSeed(); S.board = A.dealBoard(S.boardSeed, {terrain: S.terrain});
   S.team.clear(); S.pos = {}; S.youPos = null; S.mount = ''; S.world = null; S.focus = S.board[0];
 }
@@ -59,12 +63,20 @@ function go(screen){
   window.scrollTo({top:0});
 }
 document.querySelectorAll('#steps button[data-s]').forEach(b => b.addEventListener('click', () => {
+  if ((b.dataset.s === 'deploy' || b.dataset.s === 'fight') && !draftReady()) { go('draft'); return; } // Pick N: the team must be full first
   if (b.dataset.s === 'fight' && !S.world) { startBattle(); return; }
   go(b.dataset.s);
 }));
 
 // ---------- draft ----------
 function renderBudget(){
+  if (isPick()){ // picks left instead of dollars
+    const n = S.team.size, left = S.pickN - n;
+    $('spent').textContent = left > 0 ? `${left} pick${left === 1 ? '' : 's'} left` : 'Team full';
+    const m = $('meter'); m.innerHTML = '';
+    for (let i = 0; i < S.pickN; i++){ const x = document.createElement('i'); if (i < n) x.className = 'on'; m.appendChild(x); }
+    $('budgetMax').textContent = 'Pick ' + S.pickN; return;
+  }
   const sp = spent();
   $('spent').textContent = '$' + sp.toLocaleString();
   const m = $('meter'); m.innerHTML = '';
@@ -75,14 +87,20 @@ function renderDraft(){
   const tiers = $('tiers'); tiers.innerHTML = '';
   const left = BUDGET - spent();
   const onBoard = S.board.map(id => A.BY_ID[id]);
-  $('boardLede').textContent = (S.daily ? `Daily challenge ${S.daily} (${A.TERRAINS[S.terrain].name}): the same board, map and fight seed for everyone today. ` : '') + `This game's board: ${onBoard.length} animals worth $${boardTotal().toLocaleString()}. Spend up to $${BUDGET.toLocaleString()}; every board animal you don't pick ends up on the other side. Tap a card to draft it; the panel below shows the full stat line.`;
-  for (const p of [...new Set(onBoard.map(a => a.price))].sort((x, y) => y - x)){
-    const row = document.createElement('div'); row.className = 'tier';
-    const tag = document.createElement('div'); tag.className = 'tierTag'; tag.style.background = tierHex(p); tag.textContent = '$' + p; row.appendChild(tag);
+  const daily = S.daily ? `${S.dailyKind === 'pick3' ? 'Daily Pick-3' : 'Daily challenge'} ${S.daily} (${A.TERRAINS[S.terrain].name}): the same board, map and fight seed for everyone today. ` : '';
+  $('boardLede').textContent = daily + (isPick()
+    ? `This game's board: ${onBoard.length} animals. Pick exactly ${S.pickN}, whatever they cost; every board animal you don't pick ends up on the other side. Tap a card to draft it; the panel below shows the full stat line.`
+    : `This game's board: ${onBoard.length} animals worth $${boardTotal().toLocaleString()}. Spend up to $${BUDGET.toLocaleString()}; every board animal you don't pick ends up on the other side. Tap a card to draft it; the panel below shows the full stat line.`);
+  // budget mode groups the cards by price; Pick N ignores prices, so it's one grid (pricier first)
+  const groups = isPick() ? [[null, onBoard.slice().sort((x, y) => y.price - x.price)]]
+    : [...new Set(onBoard.map(a => a.price))].sort((x, y) => y - x).map(p => [p, onBoard.filter(x => x.price === p)]);
+  for (const [p, items] of groups){
+    const row = document.createElement('div'); row.className = 'tier' + (p == null ? ' flat' : '');
+    if (p != null){ const tag = document.createElement('div'); tag.className = 'tierTag'; tag.style.background = tierHex(p); tag.textContent = '$' + p; row.appendChild(tag); }
     const cards = document.createElement('div'); cards.className = 'cards';
-    for (const a of onBoard.filter(x => x.price === p)){
+    for (const a of items){
       const picked = S.team.has(a.id);
-      const c = document.createElement('button'); c.className = 'card' + (picked ? ' picked' : '') + (!picked && a.price > left ? ' cant' : '');
+      const c = document.createElement('button'); c.className = 'card' + (picked ? ' picked' : '') + (!picked && !canAdd(a) ? ' cant' : '');
       c.setAttribute('aria-pressed', picked);
       const r1 = document.createElement('div'); r1.className = 'row1'; r1.appendChild(tok(a, 46));
       const nm = document.createElement('div'); nm.className = 'nm'; nm.textContent = itemName(a); r1.appendChild(nm);
@@ -100,7 +118,7 @@ function renderDraft(){
       c.addEventListener('click', () => {
         S.focus = a.id;
         if (S.team.has(a.id)) S.team.delete(a.id);
-        else if (a.price <= BUDGET - spent()) S.team.add(a.id);
+        else if (canAdd(a)) S.team.add(a.id);
         S.world = null;
         if (S.mount && !S.team.has(S.mount)) S.mount = bestMount();
         if (!S.mount) S.mount = bestMount();
@@ -113,17 +131,19 @@ function renderDraft(){
   // team line
   const tl = $('teamline'); tl.innerHTML = '';
   if (!S.team.size){ const s = document.createElement('span'); s.className = 'label'; s.textContent = 'No animals drafted yet. You can fight alone, but you will not like it.'; tl.appendChild(s); }
-  for (const id of S.team){ const a = A.BY_ID[id]; const ch = document.createElement('span'); ch.className = 'chip'; ch.appendChild(tok(a)); ch.append(itemName(a) + ' $' + a.price); tl.appendChild(ch); }
+  for (const id of S.team){ const a = A.BY_ID[id]; const ch = document.createElement('span'); ch.className = 'chip'; ch.appendChild(tok(a)); ch.append(itemName(a) + (isPick() ? '' : ' $' + a.price)); tl.appendChild(ch); }
   const foes = S.board.filter(id => !S.team.has(id));
   const fl = document.createElement('span'); fl.className = 'label'; fl.style.marginLeft = '6px';
-  fl.textContent = `Against you: ${foes.length} animals, $${foes.reduce((t, id) => t + A.BY_ID[id].price, 0).toLocaleString()}`; tl.appendChild(fl);
+  fl.textContent = `Against you: ${foes.length} animals` + (isPick() ? '' : `, $${foes.reduce((t, id) => t + A.BY_ID[id].price, 0).toLocaleString()}`); tl.appendChild(fl);
+  const need = S.pickN - S.team.size, btn = $('toDeployD');
+  btn.disabled = !draftReady(); btn.textContent = draftReady() ? 'Set formation' : need > 0 ? `Pick ${need} more` : `Drop ${-need}`;
   renderDetail();
 }
 function renderDetail(){
   const a = A.BY_ID[S.focus]; const d = $('detail');
   const hp = A.hpOf(a);
   const stats = [
-    ['Price', '$' + a.price], ...(A.MEASURED[a.id] ? [['Helps you', '+' + Math.max(0, Math.round(A.MEASURED[a.id].mine)) + ' s'], ['Threat if left', Math.max(0, Math.round(-A.MEASURED[a.id].theirs)) + ' s']] : []), ['Mass', a.mass.toLocaleString() + ' kg'], ['Top speed', kmh(a.spd) + ' km/h'],
+    ...(isPick() ? [] : [['Price', '$' + a.price]]), ...(A.MEASURED[a.id] ? [['Helps you', '+' + Math.max(0, Math.round(A.MEASURED[a.id].mine)) + ' s'], ['Threat if left', Math.max(0, Math.round(-A.MEASURED[a.id].theirs)) + ' s']] : []), ['Mass', a.mass.toLocaleString() + ' kg'], ['Top speed', kmh(a.spd) + ' km/h'],
     ['Durability', hp.toLocaleString() + ' hp'], ['Strike', a.dmg + ' / ' + a.cd + ' s'], ['Armor', Math.round(a.armor*100) + '%'],
     ['Reach', a.reach + ' m'], ['Sprint', a.stam + ' s'], ['Breaks at', Math.round(a.flee*100) + '% morale'],
     ['Heat tolerance', a.heat.toFixed(2)], ['Cold tolerance', a.cold.toFixed(2)], ['Strikes up to', a.strikeH + ' m'], ['Carries you at', a.mountH ? a.mountH + ' m' : 'too small'],
@@ -133,7 +153,7 @@ function renderDetail(){
     <div><div class="styleTag" style="font-size:15px">${esc(a.style)}</div><p style="margin:4px 0 10px">${esc(a.how)}</p>${badgesHTML(a) ? `<div class="badges" style="margin-bottom:10px">${badgesHTML(a)} <span class="notes" style="font-size:12px">in the ${esc(A.TERRAINS[S.terrain].name.toLowerCase())}</span></div>` : ''}<div class="label" style="margin-bottom:6px">Traits</div><ul class="traits">${a.traits.map(t => `<li>${esc(t)}</li>`).join('')}</ul>
     <p class="notes" style="margin-top:10px">${a.pred ? 'Predator: hunts by weighing meat against risk, and gets hungrier as the fight goes on.' : 'Herbivore: fights intruders, predators and anything that wounds it.'}</p></div>`;
 }
-$('toDeployD').addEventListener('click', () => go('deploy'));
+$('toDeployD').addEventListener('click', () => { if (draftReady()) go('deploy'); });
 $('clearTeam').addEventListener('click', () => { S.team.clear(); S.world = null; S.pos = {}; renderAll(); });
 $('newBoard').addEventListener('click', () => { dealNewBoard(); renderAll(); });
 // image credits panel (rows built from CREDITS.md at build time)
@@ -143,6 +163,7 @@ $('creditsBtn').addEventListener('click', () => {
 });
 $('creditsClose').addEventListener('click', () => $('creditsDlg').close());
 // start over: fresh board and fight seed, empty team, default formation, back to the map screen
+$('copyDraft').addEventListener('click', () => copyLink(gameLink(currentGame()), $('copyDraftOut')));
 $('startOver').addEventListener('click', () => { S.seed = newBoardSeed(); $('seedLbl').textContent = S.seed; dealNewBoard(); S.playing = false; renderAll(); go('arena'); });
 
 // ---------- arena setup ----------
@@ -165,17 +186,132 @@ function renderArenaOpts(){
     b.addEventListener('click', () => { S.mode = id; S.world = null; renderArenaOpts(); });
     mo.appendChild(b);
   }
+  const dopt = $('draftOpts'); dopt.innerHTML = '';
+  for (const [id, nm, desc] of [['budget', 'Budget', `Spend up to $${BUDGET.toLocaleString()} on the board. Big animals cost big money.`], ['pick', 'Pick N', 'Pick exactly N animals from the board, whatever they cost. A different puzzle: which few do you want on your side?']]){
+    const b = document.createElement('button'); b.className = 'opt'; b.setAttribute('aria-pressed', S.draft === id); b.dataset.draft = id;
+    b.innerHTML = `<h3>${nm}</h3><p>${esc(desc)}</p>`;
+    b.addEventListener('click', () => setDraft(id, S.pickN));
+    dopt.appendChild(b);
+  }
+  $('pickRow').hidden = !isPick();
+  document.querySelectorAll('#pickSeg button').forEach(b => b.setAttribute('aria-pressed', +b.dataset.n === S.pickN));
+  renderStreak();
 }
+// switch draft mode (or N): a team that no longer fits is trimmed, and it's no longer today's daily
+function setDraft(mode, n){
+  if (S.draft === mode && S.pickN === n) return;
+  S.draft = mode; S.pickN = n; S.daily = null; S.dailyKind = null; S.world = null;
+  const team = [...S.team]; S.team.clear();
+  for (const id of team) if (canAdd(A.BY_ID[id])) S.team.add(id);
+  if (S.mount && !S.team.has(S.mount)) S.mount = bestMount();
+  renderAll();
+}
+document.querySelectorAll('#pickSeg button').forEach(b => b.addEventListener('click', () => setDraft('pick', +b.dataset.n)));
 $('toDraft').addEventListener('click', () => go('draft'));
 // daily challenge: today's date (UTC) picks the map, the board and the fight seed, so everyone plays the same game
 const todayUTC = () => new Date().toISOString().slice(0, 10);
 function dateSeed(s){ let h = 2166136261; for (const c of s){ h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); } return (h >>> 0) % 1e6 + 1; }
-function startDaily(){
-  const d = todayUTC(), h = dateSeed('wild-arena:' + d), terr = Object.keys(A.TERRAINS);
-  S.daily = d; S.terrain = terr[h % terr.length]; S.seed = h; $('seedLbl').textContent = S.seed;
-  dealNewBoard(h); S.daily = d; renderAll(); go('draft');
+// kind 'budget' (the original daily, unchanged) or 'pick3' (Daily Pick-3: its own map, board and seed)
+const dailySeed = (kind, d) => dateSeed(kind === 'pick3' ? 'wild-arena:pick3:' + d : 'wild-arena:' + d);
+const dailyKey = (kind, d) => (kind === 'pick3' ? 'wa-daily-pick3:' : 'wa-daily:') + d;
+function startDaily(kind){
+  const d = todayUTC(), h = dailySeed(kind, d), terr = Object.keys(A.TERRAINS);
+  S.draft = kind === 'pick3' ? 'pick' : 'budget'; if (kind === 'pick3') S.pickN = 3;
+  S.terrain = terr[h % terr.length]; S.seed = h; $('seedLbl').textContent = S.seed;
+  dealNewBoard(h); S.daily = d; S.dailyKind = kind; renderAll(); go('draft');
 }
-$('daily').addEventListener('click', startDaily);
+$('daily').addEventListener('click', () => startDaily('budget'));
+$('dailyPick').addEventListener('click', () => startDaily('pick3'));
+// daily streak: consecutive UTC days with at least one daily run (either kind)
+function prevDay(d){ const t = new Date(d + 'T00:00:00Z'); t.setUTCDate(t.getUTCDate() - 1); return t.toISOString().slice(0, 10); }
+function readStreak(){ try { const s = JSON.parse(localStorage.getItem('wa-streak') || 'null'); if (s && typeof s.last === 'string' && s.n >= 1) return s; } catch(e){} return null; }
+function bumpStreak(day){
+  const s = readStreak(); if (s && s.last === day) return;
+  const n = s && s.last === prevDay(day) ? s.n + 1 : 1;
+  try { localStorage.setItem('wa-streak', JSON.stringify({last: day, n})); } catch(e){}
+  renderStreak();
+}
+function renderStreak(){
+  const s = readStreak(), d = todayUTC(), live = s && (s.last === d || s.last === prevDay(d)), el = $('streak');
+  el.hidden = !live; el.textContent = live ? `Streak: ${s.n} day${s.n === 1 ? '' : 's'}${s.last === d ? '' : ' (play today to keep it)'}` : '';
+}
+
+// ---------- notices and shareable game links ----------
+function showNotice(html, warn){ $('noticeText').innerHTML = html; $('notice').className = 'notice' + (warn ? ' warn' : ''); $('notice').hidden = false; }
+function hideNotice(){ $('notice').hidden = true; }
+$('noticeClose').addEventListener('click', hideNotice);
+// #g=1,m:<map>,b:<board seed>,s:<fight seed>,d:<b|p2..p5>[,t:<id+id>,r:<mount|->,p:you=x_y;id=x_y][,sc:<score s>]
+// Version first; fields are key:value, so old links with fields missing (or newer links with unknown keys) still load.
+const LINK_V = 1;
+function currentGame(){ return {terrain:S.terrain, boardSeed:S.boardSeed, seed:S.seed, draft:S.draft, pickN:S.pickN, team:[...S.team], mount:(S.mount && S.team.has(S.mount)) ? S.mount : '', pos:S.pos, you:S.youPos}; }
+function gameLink(o, score){
+  const f = [LINK_V, 'm:' + o.terrain, 'b:' + o.boardSeed, 's:' + o.seed, 'd:' + (o.draft === 'pick' ? 'p' + o.pickN : 'b')];
+  if (o.team.length){
+    f.push('t:' + o.team.join('+'), 'r:' + (o.mount || '-'));
+    const ps = o.team.filter(id => o.pos && o.pos[id]).map(id => id + '=' + o.pos[id].x + '_' + o.pos[id].y); // String(number) round-trips exactly
+    if (o.you) ps.unshift('you=' + o.you.x + '_' + o.you.y);
+    if (ps.length) f.push('p:' + ps.join(';'));
+  }
+  if (score != null) f.push('sc:' + score.toFixed(1));
+  return location.href.split('#')[0] + '#g=' + f.join(',');
+}
+// returns null (no hash), {bad:true} (unreadable) or the game; lenient about anything missing
+function parseLink(hash){
+  if (!hash || hash === '#') return null;
+  const m = /^#g=([\s\S]*)$/.exec(hash); if (!m) return {bad:true};
+  let raw; try { raw = decodeURIComponent(m[1]); } catch(e){ return {bad:true}; }
+  const parts = raw.split(','), v = parseInt(parts[0], 10); if (!(v >= 1)) return {bad:true};
+  const kv = {}; for (const p of parts.slice(1)){ const i = p.indexOf(':'); if (i > 0) kv[p.slice(0, i)] = p.slice(i + 1); }
+  const seedOf = x => { const n = Number(x); return Number.isInteger(n) && n >= 1 && n < 2 ** 32 ? n : null; };
+  const num = x => { const n = Number(x); return x !== '' && isFinite(n) ? n : null; };
+  if ('m' in kv && !Object.prototype.hasOwnProperty.call(A.TERRAINS, kv.m)) return {bad:true, why:'map'};
+  if (('b' in kv && !seedOf(kv.b)) || ('s' in kv && !seedOf(kv.s))) return {bad:true};
+  const d = /^p([2-5])$/.exec(kv.d || ''), g = {v, terrain: kv.m || 'savanna', boardSeed: seedOf(kv.b), seed: seedOf(kv.s), draft: d ? 'pick' : 'budget', pickN: d ? +d[1] : 3};
+  const known = id => Object.prototype.hasOwnProperty.call(A.BY_ID, id);
+  g.team = [...new Set((kv.t || '').split('+'))].filter(known);
+  g.mount = 'r' in kv ? (known(kv.r) ? kv.r : '') : null; // null: not in the link, ride the default
+  g.pos = {}; g.you = null;
+  for (const e of (kv.p || '').split(';')){
+    const q = /^([a-z0-9]+)=([^_]+)_(.+)$/.exec(e); if (!q) continue;
+    const x = num(q[2]), y = num(q[3]); if (x == null || y == null) continue;
+    if (q[1] === 'you') g.you = {x, y}; else if (known(q[1])) g.pos[q[1]] = {x, y};
+  }
+  const sc = num(kv.sc); g.score = sc != null && sc >= 0 && sc <= A.MATCH_T ? sc : null;
+  return g;
+}
+function applyLink(g){
+  S.terrain = g.terrain; S.draft = g.draft; S.pickN = g.pickN;
+  S.seed = g.seed || newBoardSeed(); $('seedLbl').textContent = S.seed;
+  dealNewBoard(g.boardSeed || undefined);
+  for (const id of g.team) if (S.board.includes(id) && canAdd(A.BY_ID[id])) S.team.add(id); // drop anything not on this board or over the limit
+  const team = [...S.team];
+  S.mount = g.mount === null ? bestMount() : (g.mount && S.team.has(g.mount) && A.BY_ID[g.mount].mountH ? g.mount : '');
+  for (const id of team) if (g.pos[id]) S.pos[id] = A.clampPlace(S.terrain, A.BY_ID[id], g.pos[id].x, g.pos[id].y, curVar());
+  if (g.you) S.youPos = A.clampPlace(S.terrain, A.HUMAN, g.you.x, g.you.y, curVar());
+  S.shared = g.score;
+  const what = `Same map, board${g.seed ? ' and fight seed' : ''}${team.length ? ', with their team loaded' : ''}${isPick() ? ` (Pick-${S.pickN})` : ''}.`;
+  showNotice(g.score == null ? `<b>Shared game</b> <span>${what}</span>` : g.score >= A.MATCH_T - .05 ? `<b>Shared game: they survived the full ${fmtT(A.MATCH_T)}. Can you?</b> <span>${what}</span>` : `<b>Shared game: can you beat ${fmtT(g.score)}?</b> <span>${what}</span>`);
+}
+// load a game link from the URL (on start, or pasted into this tab); anything unreadable gets a fresh board and a short note
+function loadHash(){
+  const g = parseLink(location.hash);
+  if (!g) return false;
+  try { history.replaceState(null, '', location.href.split('#')[0]); } catch(e){}
+  if (g.bad){ dealNewBoard(); renderAll(); go('arena'); showNotice(g.why === 'map' ? "That game link names a map this version doesn't have, so here's a fresh board." : "That game link couldn't be read, so here's a fresh board.", true); return true; }
+  applyLink(g); renderAll(); go('draft'); return true;
+}
+window.addEventListener('hashchange', loadHash);
+// copy: the Clipboard API where allowed; otherwise (or if it fails) the link selected in a field, to copy by hand
+function copyLink(url, out){
+  out.dataset.link = url; out.innerHTML = '';
+  const say = t => { const s = document.createElement('span'); s.className = 'label'; s.textContent = t; out.appendChild(s); };
+  const fallback = () => {
+    out.innerHTML = ''; const i = document.createElement('input'); i.readOnly = true; i.value = url; i.setAttribute('aria-label', 'Game link'); out.appendChild(i);
+    i.focus(); i.select(); let ok = false; try { ok = document.execCommand('copy'); } catch(e){}
+    say(ok ? 'Copied' : 'Copy this link');
+  };
+  if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(url).then(() => say('Link copied'), fallback); else fallback();
+}
 
 // ---------- mount picker ----------
 function bestMount(team){ return A.defaultMount(team || [...S.team]) || ''; } // ride a giant if you have one; otherwise on foot
@@ -331,7 +467,8 @@ function drawDeploy(){
 }
 (function deployDrag(){
   const cv = $('deployCanvas'); let drag = null;
-  const pos = e => { const r = cv.getBoundingClientRect(); return { x:(e.clientX - r.left) / r.width * A.W, y:(e.clientY - r.top) / r.height * A.H }; };
+  const r2 = v => Math.round(v * 100) / 100; // centimetres: keeps shared links short (they carry positions exactly)
+  const pos = e => { const r = cv.getBoundingClientRect(); return { x:r2((e.clientX - r.left) / r.width * A.W), y:r2((e.clientY - r.top) / r.height * A.H) }; };
   cv.addEventListener('pointerdown', e => {
     if (!deployWorld) return; const p = pos(e);
     let best = null, bd = 4;
@@ -350,6 +487,8 @@ function drawDeploy(){
     } else {
       S.pos = absPlacements(); S.pos[drag] = A.clampPlace(S.terrain, A.BY_ID[drag], p.x, p.y, curVar());
     }
+    for (const id in S.pos) S.pos[id] = {x: r2(S.pos[id].x), y: r2(S.pos[id].y)}; // the fight re-clamps, so this is safe
+    if (S.youPos) S.youPos = {x: r2(S.youPos.x), y: r2(S.youPos.y)};
     drawDeploy();
   });
   const end = () => { drag = null; };
@@ -361,7 +500,9 @@ $('startFight').addEventListener('click', () => startBattle());
 
 // ---------- battle ----------
 function startBattle(){
+  if (!draftReady()){ go('draft'); return; }
   const w = A.simulate(makeCfg(), true);
+  const cg = currentGame(); S.played = Object.assign(cg, {pos: Object.assign({}, S.pos), you: S.youPos && Object.assign({}, S.youPos), daily: S.daily, dailyKind: S.dailyKind}); // what the result banner's link replays
   S.world = w; S.dur = w.result.t; S.playT = 0; S.playing = true; S.sel = 0;
   $('scrub').max = S.dur.toFixed(1); $('scrub').value = 0;
   renderMarks(); $('report').hidden = true; $('banner').innerHTML = '';
@@ -592,10 +733,11 @@ function renderSide(){
   }
   if (S.playT >= S.dur - 1e-6 && $('report').hidden){ renderReport(true); }
 }
+$('banner').addEventListener('click', e => { if (e.target.id === 'copyResult' && S.world && S.played) copyLink(gameLink(S.played, S.world.result.score), $('copyResultOut')); });
 $('log').addEventListener('click', e => { const d = e.target.closest('[data-t]'); if (d){ S.playT = Math.max(0, +d.dataset.t - 1.5); S.playing = false; } });
 
 const HZ = A.MATCH_T;
-function bestKey(){ return 'wa-best:' + [S.terrain, S.mode, S.board.join('+'), [...S.team].sort().join('+'), S.mount || 'foot'].join('|'); }
+function bestKey(){ return 'wa-best:' + [S.terrain, S.mode, S.board.join('+'), [...S.team].sort().join('+'), S.mount || 'foot'].join('|') + (isPick() ? '|pick' + S.pickN : ''); } // budget keys unchanged
 function readBest(){ try { return +localStorage.getItem(bestKey()) || 0; } catch(e){ return 0; } }
 function writeBest(v){ try { localStorage.setItem(bestKey(), String(v)); } catch(e){} }
 function renderReport(show){
@@ -605,19 +747,24 @@ function renderReport(show){
   const score = res.score, prev = readBest(), isBest = score > prev + .05;
   if (isBest) writeBest(score);
   let dailyLine = '';
-  if (S.daily && S.seed === dateSeed('wild-arena:' + S.daily)){
-    const k = 'wa-daily:' + S.daily; let db = 0; try { db = +localStorage.getItem(k) || 0; } catch(e){}
+  const P = S.played || {};
+  if (P.daily && P.seed === dailySeed(P.dailyKind, P.daily) && (P.dailyKind === 'pick3') === (P.draft === 'pick' && P.pickN === 3)){
+    const k = dailyKey(P.dailyKind, P.daily), nm = P.dailyKind === 'pick3' ? 'Daily Pick-3' : 'Daily'; let db = 0; try { db = +localStorage.getItem(k) || 0; } catch(e){}
     if (score > db + .05){ try { localStorage.setItem(k, String(score)); } catch(e){} }
-    const team = [...S.team].map(id => A.BY_ID[id].abbr).join('+') || 'no animals';
-    dailyLine = ` Daily ${S.daily}: ${score > db + .05 ? 'your best today' : 'best today ' + fmtT(db)} · share: “Wild Arena daily ${S.daily}: ${fmtT(score)}${res.survived && res.why === 'cleared' ? ', cleared the board at ' + fmtT(res.t) : ''} with ${team} ($${spent().toLocaleString()})”.`;
+    bumpStreak(P.daily);
+    const team = P.team.map(id => A.BY_ID[id].abbr).join('+') || 'no animals';
+    dailyLine = ` ${nm} ${P.daily}: ${score > db + .05 ? 'your best today' : 'best today ' + fmtT(db)} · share: “Wild Arena ${nm.toLowerCase()} ${P.daily}: ${fmtT(score)}${res.survived && res.why === 'cleared' ? ', cleared the board at ' + fmtT(res.t) : ''} with ${team} (${P.dailyKind === 'pick3' ? 'Pick-3' : '$' + spent().toLocaleString()})”.`;
   }
-  const bestLine = isBest ? (prev ? `New best for this draft here (was ${fmtT(prev)}).` : 'First run of this draft here.') : `Best for this draft here: ${fmtT(prev)}.`;
+  const draftWord = isPick() ? `this Pick-${S.pickN} draft` : 'this draft';
+  const bestLine = isBest ? (prev ? `New best for ${draftWord} here (was ${fmtT(prev)}).` : `First run of ${draftWord} here.`) : `Best for ${draftWord} here: ${fmtT(prev)}.`;
+  const sharedLine = S.shared != null ? ` Shared score to beat: ${fmtT(S.shared)}${score > S.shared + .05 ? ', and you beat it.' : score >= S.shared - .05 ? ', and you matched it.' : '.'}` : '';
+  const shareRow = `<div class="btnrow"><button class="btn" id="copyResult">Copy link</button><span class="copyOut" id="copyResultOut"></span></div>`;
   if (res.survived){
     const why = res.why === 'cleared' ? `The other side was dead, routed or full by ${fmtT(res.t)}.` : res.why === 'quiet' ? `Nothing came at you for ${A.QUIET_T} s, so the other side gave up at ${fmtT(res.t)}.` : `You held out the full ${fmtT(HZ)}.`;
-    b.innerHTML = `<div class="banner win"><span class="big">Survived · ${fmtT(HZ)}</span><span>${why} Full score. ${bestLine}${dailyLine}</span></div>`;
+    b.innerHTML = `<div class="banner win"><span class="big">Survived · ${fmtT(HZ)}</span><span>${why} Full score. ${bestLine}${sharedLine}${dailyLine}</span>${shareRow}</div>`;
   } else {
     const k = A.BY_ID[res.killer];
-    b.innerHTML = `<div class="banner lose"><span class="big">You lasted ${fmtT(score)}</span><span>Killed by the ${esc(k ? k.name : 'unknown')}. ${bestLine}${dailyLine}</span></div>`;
+    b.innerHTML = `<div class="banner lose"><span class="big">You lasted ${fmtT(score)}</span><span>Killed by the ${esc(k ? k.name : 'unknown')}. ${bestLine}${sharedLine}${dailyLine}</span>${shareRow}</div>`;
   }
   const mine = sum.units.filter(u => u.side === 'P');
   const mvp = mine.slice().sort((a, b) => (b.protect*1.5 + b.dealt) - (a.protect*1.5 + a.dealt))[0];
@@ -733,7 +880,8 @@ $('runPrice').addEventListener('click', () => {
 function renderAll(){ renderBudget(); renderDraft(); renderArenaOpts(); }
 window.addEventListener('resize', () => { if (S.screen === 'deploy'){ sizeCanvas($('deployCanvas')); drawDeploy(); } if (S.screen === 'fight') sizeCanvas($('fightCanvas')); });
 $('seedLbl').textContent = S.seed;
-dealNewBoard(); syncSpeed(); renderAll(); go('arena');
+syncSpeed();
+if (!loadHash()){ dealNewBoard(); renderAll(); go('arena'); }
 requestAnimationFrame(frame);
 if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { if (S.screen === 'deploy') drawDeploy(); });
 })();

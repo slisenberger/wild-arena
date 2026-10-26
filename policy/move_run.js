@@ -24,6 +24,8 @@ function stateOf(u){
 }
 // thresholds for the telemetry (seconds)
 const TEL = {contactWindow: 10, longIdle: 30, faceOn: 3, near: 10};
+// the other archetypes' gate telemetry: a long chase = closing in above 60% of top speed for > 8 s; far = > 20 m away
+const XTEL = {chaseSpd: .6, longChase: 8, far: 20};
 
 // ---------- fight sets (seed pools) ----------
 // Each pool is its own stream; a set is (pool, index). Fights: boards dealt with A.dealBoard per map, a player-like
@@ -43,7 +45,7 @@ function fightSet(pool, index, n, opts){
     const team = []; let left = A.RULES.budget; for (const id of order) if (A.BY_ID[id].price <= left){ team.push(id); left -= A.BY_ID[id].price; }
     const seed = Math.floor(R() * 2e9) + 1;
     if (!hasArch(board, team, arch)) continue;
-    out.push({pool, index, i: out.length, tr, bseed, board, team, mount: A.defaultMount(team), seed}); k++;
+    out.push({pool, index, i: out.length, tr, bseed, board, team, mount: A.defaultMount(team), seed, live: !!opts.withLive}); k++;
   }
   return out;
 }
@@ -51,16 +53,26 @@ function cfgOf(f){ return {team: f.team, board: f.board, terrain: f.tr, mode: 'w
 
 // ---------- one fight ----------
 // weights: null = no policy at all (engine untouched); otherwise cfg.movePolicy = {[arch]: weights}
+// with f.live, the OTHER archetypes use the shipped policies (policy/live.js), so v2 trains against the live game
+function setPolicy(cfg, f, arch, weights){
+  const mp = {};
+  if (f.live) for (const [k, v] of Object.entries(I.LIVE || {})) if (v && k !== arch) mp[k] = v;
+  if (weights) mp[arch] = weights;
+  if (Object.keys(mp).length){ cfg.movePolicy = mp; cfg.moveStats = {}; }
+}
 function runFight(f, weights, arch){
   arch = arch || 'harrier';
   if (arch === 'guard') return runGuardFight(f, weights);
   const cfg = cfgOf(f);
-  if (weights){ cfg.movePolicy = {[arch]: weights}; cfg.moveStats = {}; }
+  setPolicy(cfg, f, arch, weights);
   const w = A.setup(cfg), H = w.human;
   const us = w.units.filter(u => I.archetypeOf(u) === arch);
   const S = us.map(u => ({foe: 0, dealt: 0, st: null, dart: false, lastC: 0, nc: 0, face: 0, appr: null}));
   const r = {n: us.length, life: 0, fight: 0, close: 0, idle: 0, flee: 0, feed: 0, heat: 0, carry: 0, engT: 0, nearT: 0, distSum: 0,
     darts: 0, hits: 0, dmgHuman: 0, dmgFoe: 0, noContactT: 0, longIdleT: 0, faceOnT: 0, faceOnStints: 0, appr: 0, fruitless: 0};
+  // the other non-harrier archetypes (records tagged with arch): signature-move starts and the realism-gate telemetry
+  const X = arch !== 'harrier';
+  if (X) Object.assign(r, {arch, charges: 0, pounces: 0, longChaseT: 0, farHuntT: 0, badgerLife: 0, badgerBackT: 0});
   let hp0 = H.hp;
   while (!w.over){
     A.step(w);
@@ -74,6 +86,13 @@ function runFight(f, weights, arch){
       const t = u.target, eng = (st === 'fight' || st === 'close') && t;
       if (eng){ const d = I.dist(u, t); r.engT += DT; r.distSum += d * DT; if (d <= TEL.near) r.nearT += DT; }
       const dart = !!(u.mv && u.mv.k === 'dart'); if (dart && !s.dart) r.darts++; s.dart = dart;
+      if (X){
+        const mk = u.mv ? u.mv.k : null; if (mk !== s.mk){ if (mk === 'charge') r.charges++; else if (mk === 'pounce') r.pounces++; s.mk = mk; }
+        // long chase: closing in at > 60% of its top speed for > 8 s on end
+        if (st === 'close' && Math.hypot(u.vx, u.vy) > XTEL.chaseSpd * u.s.spd){ s.chase = (s.chase || 0) + DT; if (s.chase > XTEL.longChase) r.longChaseT += DT; } else s.chase = 0;
+        if (st === 'close' && I.dist(u, t) > XTEL.far) r.farHuntT += DT;   // hunting something far across the field
+        if (u.s.id === 'honeybadger'){ r.badgerLife += DT; if (eng && (u.intent === 1 || u.intent === 3 || u.intent === 4)) r.badgerBackT += DT; } // fearless: never waits, regroups or backs off
+      }
       if (dd > 0) r.hits++;
       if (st === 'fight' || dd > 0 || u.latchedBy) s.lastC = w.t;
       // no contact: hunting (idle or closing in) without touching anything for > contactWindow s; pointless motion counts too
@@ -101,7 +120,7 @@ const GSIG = {hold: 'hold', knock: 'knockback', dodge: 'dodge', sweep: 'sweep', 
 const GTEL = {near: 8, glued: 4, gluedT: 2, blockT: 3};
 function runGuardFight(f, weights){
   const arch = 'guard', cfg = cfgOf(f);
-  if (weights){ cfg.movePolicy = {[arch]: weights}; cfg.moveStats = {}; }
+  setPolicy(cfg, f, arch, weights);
   const w = A.setup(cfg), H = w.human;
   const us = w.units.filter(u => I.archetypeOf(u) === arch), ids = new Set(us.map(u => u.s.id));
   const S = us.map(u => ({c: guardClass(u.s), cat: !!(u.s.pred && u.s.latch), block: 0, glue: 0, dealt: 0, lastC: 0}));
@@ -152,7 +171,7 @@ function fingerprint(w){
 function runTasks(tasks, cands, fights, arch){ return tasks.map(k => ({k: k.k, rec: runFight(fights[k.f], cands[k.c], arch)})); }
 
 function fileHash(files){ const h = crypto.createHash('sha256'); for (const f of files) h.update(fs.readFileSync(f)); return h.digest('hex').slice(0, 16); }
-const HARNESS_FILES = ['move_features.js', 'move_guard_features.js', 'move_arch.js', 'move_model.js', 'move_policy.js', 'move_run.js', 'move_reward.js'].map(f => path.join(__dirname, f));
+const HARNESS_FILES = ['move_features.js', 'move_guard_features.js', 'move_arch_features.js', 'move_arch.js', 'move_model.js', 'move_policy.js', 'move_run.js', 'move_reward.js'].map(f => path.join(__dirname, f));
 const simHash = () => fileHash([SIM]);
 const harnessHash = () => fileHash(HARNESS_FILES);
-module.exports = { A, SIM, TERR, TEL, GTEL, GCLASS, GSIG, guardClass, POOL, stateOf, fightSet, cfgOf, runFight, runTasks, fingerprint, simHash, harnessHash };
+module.exports = { A, SIM, TERR, TEL, XTEL, GTEL, GCLASS, GSIG, guardClass, POOL, stateOf, fightSet, cfgOf, runFight, runTasks, fingerprint, simHash, harnessHash };

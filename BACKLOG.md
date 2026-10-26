@@ -188,6 +188,13 @@ Pick for new roles. Top three for design value: **honey badger, moose, Komodo dr
 - [ ] Real frame animation needs drawn sprites: an original art project (don't trace others' photos).
 
 ## 8. Replayability
+- [ ] **Roguelike "migration" mode (owner, Oct 26):** 7 sequential fights. Start ~$600; survive to earn money (time
+  alive + kills); team carries over: survivors keep wounds (partial heal), dead animals are gone, your own HP carries
+  (death ends the run). Between fights: a trading post (draft from a fresh board, sell animals) and 1-of-3 realistic
+  boons (spear: you hit harder; waterskin: less heat; snowshoes; ranger's whistle: guards regroup on you; smoke: enemy
+  morale). Escalation: richer, nastier boards; rares later; fight 4 a megafauna fight, fight 7 "the herd" (elephants).
+  Score = fights survived + total time; a daily roguelike seed. Engine: opt-in carry-over HP + boons as cfg modifiers.
+  Start after the Pick-N / share-link UI work lands (both are heavy ui.js changes).
 - [ ] **Daily challenge** (shared seed, shared map) + **verified leaderboard** (store the config,
   re-simulate to verify the score — cheap because the sim is deterministic).
 - [ ] **Mutators / rules cards:** drought, night, double predators, no mounts, half budget, random prices.
@@ -210,13 +217,31 @@ Pick for new roles. Top three for design value: **honey badger, moose, Komodo dr
   Engine: `cfg.board` (done). Probe: `board.js` (how winnable random boards are by K). Open: group items
   (multiple units per species), a winnability check when dealing a board (offline-verified daily boards, or a
   fast value model), UI for the board, and pricing measured in board mode.
-- [ ] **Fixed animal-count choices:** a rules option where you pick exactly N animals (e.g. 3 or 4)
-  instead of spending a budget — simpler, and a different puzzle. Can coexist with budget mode.
+- [x] **Fixed animal-count choices** (done Oct 2026, UI only): a "Pick N" draft mode on the arena screen next to
+  Budget — pick exactly N (2–5, default 3) board animals whatever they cost; everything unpicked is still the other
+  side. Header shows picks left, prices are hidden, bests are kept per mode (`|pickN` key suffix), and there's a
+  **Daily Pick-3** with its own seed and best key (`wa-daily-pick3:<date>`). Open: price-free winnability check
+  (some boards may be lopsided with 3 picks; not measured yet).
 - [ ] **Rotating sets with rare choices:** each day/week/seed offers a rotating roster; some animals are
   rare (appear in few rotations), so a game with the honey badger or an orca-in-the-river is an event.
-- [ ] Per-map score-attack leaderboards; shareable seed + team links.
+- [x] **Shareable game links** (done Oct 2026): `#g=1,m:<map>,b:<board seed>,s:<fight seed>,d:<b|pN>[,t:<ids>,r:<mount|->,p:you=x_y;id=x_y][,sc:<score>]`.
+  "Copy link" on the draft screen and in the result banner (Clipboard API, falls back to a selected field). Opening one
+  restores map, board, seed, mode and team/formation, shows "Shared game: can you beat 3:12?", and replays the same fight.
+  Versioned and lenient (missing fields default; unreadable links or unknown maps get a fresh board and a note).
+- [x] **Daily streak** (done Oct 2026): consecutive UTC days with a daily run (either kind), `wa-streak` in localStorage,
+  shown next to the Daily buttons.
+- [ ] Per-map score-attack leaderboards.
 
 ## 9. Learned AI (ambition)
+- [ ] **Cat headroom (owner: "no headroom, so far"):** rules over the generic intents found nothing for cats, but the guards
+  also showed nothing from rules and then learned +13 s. Next: (1) the cold cat runs in m3_arch_s1; (2) cat-specific
+  intents (pounce now vs creep closer, abandon the stalk, switch to softer prey, re-set the ambush, wait in cover, take
+  the blind side); (3) species-aware / per-species cat nets (60 kg cougar vs 260 kg sabre-tooth); (4) your-side cats.
+- [ ] **Per-animal policies (owner, Oct 26):** archetype nets (in progress) → species-aware archetype nets (a species
+  one-hot input) → per-species fine-tunes warm-started from the archetype net (`--initWeights` + `--thetaClip`), each
+  graded against its own species' style profile, shipped only if it beats the archetype net on held-out fights. Rare
+  species need fight sets that deal them in deliberately. Compute: ~30–50 nets × ~5 h on 4 cores = ~3 rounds on free
+  GitHub Actions (15 h wall); a 96-core GCP spot VM (~$1–2/h) would do a species in ~15 min (~$10–20 for the roster).
 - [ ] **Long-term architecture (owner, Oct 2026):** per-archetype policy nets with two rewards: goal (win the fight)
   and style (grade against the animal's intended behaviour from `sig`/audit telemetry, as a constraint). Plan in
   `policy/README.md` (Milestone 3). Replaces piecemeal heuristics like the battle drive and contextual targets.

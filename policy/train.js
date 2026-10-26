@@ -22,7 +22,8 @@ const WK = require('./train_worker.js');
 
 const STATE_FORMAT = 'wild-arena/move-state', STATE_VERSION = 1;
 const DEFAULTS = {
-  arch: 'harrier',           // 'harrier' (the other side's pack hunters) or 'guard' (your guards); see move_arch.js
+  arch: 'harrier',           // 'harrier' (the other side's pack hunters), 'guard' (your guards), or the other side's
+                             // 'cat' / 'charger' / 'bulldozer' / 'brawler' / 'kicker'; see move_arch.js
   seed: 1, mode: 'linear', nh: 0, margin: 1,
   sigma: .1, lr: .08, pairs: 8, gens: 8,
   fights: 'auto',            // fights per candidate per generation; 'auto' = from calibration (see calibN)
@@ -34,7 +35,26 @@ const DEFAULTS = {
   holdMap: null,             // a map kept out of train/validation (the test always covers every map)
   acceptNoDrift: true,       // validation acceptance also requires no telemetry drift flags
   baseline: true,            // also run zero weights on each generation's train fights: curves relative to the heuristic
-  initRule: null,            // warm start: 'patient' = wait while stronger guards block and the target isn't busy or easy (probe winner, +0.06)
+  initRule: null,            // warm start from a hand-written rule encoded in the linear term (INIT_RULES below)
+  initWeights: null,         // warm start from a weights file (e.g. policy/weights/guard_v1.json); 'best' starts there too, so validation must beat it
+  thetaClip: 0,              // > 0: keep every weight within ±thetaClip of the start (stops the collapse into 'never deviate')
+  withLive: false,           // the other archetypes use the shipped policies in every fight (train against the live game)
+            // warm start: 'patient' = wait while stronger guards block and the target isn't busy or easy (probe winner, +0.06)
+};
+// warm-start rules (probes/harrier_rules.js, probes/arch_rules.js) as linear terms: [intent, feature, weight × k] with
+// k = 2.5·max(1, margin), so the intent's logit beats commit's margin exactly when the rule fires. Any archetype whose
+// features and intents include the names can use a rule; for the brawlers (the honey badger is fearless) every row also
+// gets fearless −2k, so the badger keeps committing.
+//   patient   = wait while stronger guards block the target and it isn't busy or easy (harrier probe winner)
+//   flankBusy = flank a target that is busy fighting something else, unless it is easy
+//   onlyOnMe  = wait unless the target is coming for me or easy (a kicker only kicks what comes at it)
+//   hurtBack  = disengage when below half HP with something on me, unless the target is easy (bulldozer probe winner;
+//               linear approximation: exact with one attacker, earlier with more). A weight can be a function (k, margin).
+const INIT_RULES = {
+  hurtBack: [['disengage', 'bias', (k, m) => m], ['disengage', 'attackersOnMe', 4], ['disengage', 'hp', -8], ['disengage', 'tEasy', -8]],
+  patient: [['wait', 'guardsBlock', 1], ['wait', 'tBusy', -1], ['wait', 'tEasy', -1]],
+  flankBusy: [['flank', 'tBusy', 1], ['flank', 'tEasy', -1]],
+  onlyOnMe: [['wait', 'bias', 1], ['wait', 'tOnMe', -2], ['wait', 'tEasy', -2]],
 };
 const DRY = {calibFights: 24, calibPerturb: 1, pairs: 2, fights: 12, gens: 1, valEvery: 1, valFights: 12, testFights: 12};
 
@@ -52,16 +72,24 @@ function logLine(file, line, quiet){ fs.appendFileSync(file + '.log', line + '\n
 function init(opts){
   const cfg = Object.assign({}, DEFAULTS, opts.dry ? DRY : {}, opts.cfg);
   const AR = archOf(cfg.arch), F = AR.F;
-  const P0 = M.zeros(F.DIM, cfg.nh, cfg.margin, AR.nout); if (cfg.nh) M.withHidden(P0, R.A.rng(cfg.seed * 31 + 7));
-  const theta0 = M.flat(P0, cfg.mode);
+  let P0 = M.zeros(F.DIM, cfg.nh, cfg.margin, AR.nout); if (cfg.nh) M.withHidden(P0, R.A.rng(cfg.seed * 31 + 7));
+  let theta0 = M.flat(P0, cfg.mode);
+  if (cfg.initWeights){ // v2: continue from shipped weights (same shape: features, intents, hidden size)
+    const W = JSON.parse(fs.readFileSync(cfg.initWeights, 'utf8'));
+    if (W.nin !== F.DIM || W.nout !== AR.nout || (W.nh || 0) !== (cfg.nh || 0)) throw new Error(`initWeights ${cfg.initWeights}: shape ${W.nin}/${W.nout}/${W.nh} does not match ${F.DIM}/${AR.nout}/${cfg.nh || 0}`);
+    P0 = Object.assign({}, W); delete P0.meta; P0.margin = W.margin; theta0 = M.flat(P0, cfg.mode);
+  }
   if (cfg.initRule){ // encode a hand-written rule in the linear term (the trainable vector starts [bl, Wl], Wl row-major per intent)
     const IN = AR.intents, NOUT = IN.length, f = n => F.NAMES.indexOf(n), wl = (a, n, v) => { theta0[NOUT + IN.indexOf(a) * F.DIM + f(n)] = v; };
-    if (cfg.initRule === 'patient' && cfg.arch === 'harrier'){ const k = 2.5 * Math.max(1, cfg.margin); wl('wait', 'guardsBlock', k); wl('wait', 'tBusy', -k); wl('wait', 'tEasy', -k); }
-    else throw new Error('unknown initRule ' + cfg.initRule + ' for ' + cfg.arch);
+    const rows = INIT_RULES[cfg.initRule];
+    if (!rows || rows.some(([a, n]) => !IN.includes(a) || f(n) < 0)) throw new Error('unknown initRule ' + cfg.initRule + ' for ' + cfg.arch + ' (known: ' + Object.keys(INIT_RULES).join(', ') + '; needs its intents and features)');
+    const k = 2.5 * Math.max(1, cfg.margin);
+    for (const [a, n, v] of rows) wl(a, n, typeof v === 'function' ? v(k, cfg.margin) : v * k);
+    if (cfg.arch === 'brawler') for (const a of new Set(rows.map(r => r[0]))) wl(a, 'fearless', -2 * k);
   }
   return {format: STATE_FORMAT, version: STATE_VERSION, simHash: R.simHash(), harnessHash: R.harnessHash(), created: new Date().toISOString(),
     config: cfg, features: F.NAMES, intents: AR.intents, P0, phase: 'calib', gen: 0, theta: theta0,
-    adam: {m: null, v: null, t: 0}, lambda: cfg.lambda0, best: {theta: M.flat(P0, cfg.mode), gen: -1, from: 'zero'}, valIndex: 0,
+    adam: {m: null, v: null, t: 0}, lambda: cfg.lambda0, best: {theta: theta0.slice(), gen: -1, from: cfg.initWeights ? 'init' : cfg.initRule ? 'rule ' + cfg.initRule : 'zero'}, theta0: theta0.slice(), valIndex: 0,
     calib: null, ref: null, N: null, history: [], val: [], test: null};
 }
 const weightsOf = (s, theta) => M.unflat(s.P0, theta, s.config.mode);
@@ -69,7 +97,7 @@ const weightsOf = (s, theta) => M.unflat(s.P0, theta, s.config.mode);
 // ES noise for generation g: deterministic from (seed, g), so a resumed run draws the same perturbations
 function gauss(R0){ let u = 0; while (!u) u = R0(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * R0()); }
 function noise(s, g, salt){ const R0 = R.A.rng((s.config.seed * 1000003 + g * 7919 + (salt || 0)) >>> 0); return [...Array(s.config.pairs)].map(() => s.theta.map(() => gauss(R0))); }
-const fopts = s => ({seed: s.config.seed, arch: s.config.arch, holdMap: s.config.holdMap});
+const fopts = s => ({seed: s.config.seed, arch: s.config.arch, holdMap: s.config.holdMap, withLive: !!s.config.withLive});
 
 // ---------- jobs ----------
 // validation: the current centre vs the best so far, on a fresh draw from the validation pool (each check its own draw)
@@ -92,7 +120,7 @@ function makeJobs(s){
   } else if (s.phase === 'val'){ // the final centre (after the last update) gets its own validation check
     sets.push(valSet(s, add));
   } else if (s.phase === 'test'){
-    sets.push({name: 'test', cands: [add(weightsOf(s, s.theta.map(() => 0))), add(weightsOf(s, s.best.theta))], fights: R.fightSet('test', 0, s.N.test, fopts(s))});
+    sets.push({name: 'test', cands: [add(weightsOf(s, s.config.initWeights ? s.theta0 : s.theta.map(() => 0))), add(weightsOf(s, s.best.theta))], fights: R.fightSet('test', 0, s.N.test, fopts(s))}); // v2 (initWeights): the bar is the shipped policy
   } else throw new Error('nothing to do: phase ' + s.phase);
   const body = {format: WK.JOBS_FORMAT, version: WK.VERSION, simHash: s.simHash, harnessHash: s.harnessHash, arch: c.arch, phase: s.phase, gen: s.gen, seed: c.seed, config: c, cands, sets};
   body.id = require('crypto').createHash('sha1').update(JSON.stringify(body)).digest('hex').slice(0, 16);
@@ -192,6 +220,7 @@ function merge(s, jobs, outs, wall, file, quiet){
     for (let i = 0; i < g.length; i++){ A0.m[i] = b1 * A0.m[i] + (1 - b1) * g[i]; A0.v[i] = b2 * A0.v[i] + (1 - b2) * g[i] * g[i]; }
     const theta0 = s.theta.slice();
     s.theta = s.theta.map((v, i) => v + c.lr * (A0.m[i] / (1 - b1 ** A0.t)) / (Math.sqrt(A0.v[i] / (1 - b2 ** A0.t)) + 1e-8));
+    if (c.thetaClip > 0 && s.theta0) s.theta = s.theta.map((v, i) => Math.max(s.theta0[i] - c.thetaClip, Math.min(s.theta0[i] + c.thetaClip, v)));
     const styleMean = RW.mean(sum.map(q => q.styleEff));
     const lambda0 = s.lambda; s.lambda = Math.max(0, s.lambda + c.lambdaLr * (c.styleThr - styleMean));
     const ib = fit.indexOf(Math.max(...fit));
@@ -215,7 +244,7 @@ function merge(s, jobs, outs, wall, file, quiet){
     const surv = a => RW.mean(a.map(r => r.survived)), kill = a => RW.mean(a.map(r => r.killedYou));
     s.test = {n: P.n, best: s.best.from, diff: P.diff, se: P.se, sig: Math.abs(P.diff) > 2 * P.se, goalZero: P.goalA, goalBest: P.goalB, style: P.styleB.style, gates: P.styleB.failed, drift: P.driftB, perMap,
       yourWin: {zero: surv(rz), best: surv(rb)}, killedYou: {zero: kill(rz), best: kill(rb)}, holdMap: c.holdMap};
-    out(`[test] best (${s.best.from}) vs zero weights on ${P.n} held-out fights: ${P.diff >= 0 ? '+' : ''}${P.diff.toFixed(3)} ± ${P.se.toFixed(3)} (${s.test.sig ? 'beyond' : 'within'} 2 SE) | style ${P.styleB.style.toFixed(3)} gates [${P.styleB.failed}] drift [${P.driftB.join('; ')}]`);
+    out(`[test] best (${s.best.from}) vs ${s.config.initWeights ? 'the start (' + s.config.initWeights + ')' : 'zero weights'} on ${P.n} held-out fights: ${P.diff >= 0 ? '+' : ''}${P.diff.toFixed(3)} ± ${P.se.toFixed(3)} (${s.test.sig ? 'beyond' : 'within'} 2 SE) | style ${P.styleB.style.toFixed(3)} gates [${P.styleB.failed}] drift [${P.driftB.join('; ')}]`);
     out(`  per map: ${Object.entries(perMap).map(([k, v]) => `${k} ${v.diff.toFixed(3)}±${v.se.toFixed(3)} (n ${v.n})`).join(', ')}; your win% ${(100 * s.test.yourWin.zero).toFixed(1)} -> ${(100 * s.test.yourWin.best).toFixed(1)}`);
     s.phase = 'done';
   }
@@ -244,8 +273,8 @@ async function retest(file, opts){
   const t0 = Date.now(), res = await WK.runShard(jobs, 0, 1, opts.threads || 4), wall = (Date.now() - t0) / 1000;
   const rz = res.slice(0, n).map(r => r.rec), rc = res.slice(n).map(r => r.rec), P = RW.paired(rz, rc, s.ref);
   const it = intentSums(rc, s), tot = it.reduce((a, b) => a + b, 0) || 1;
-  const tel = k => `${k} ${P.mA[k].toFixed(3)}→${P.mB[k].toFixed(3)}`;
-  logLine(file, `[retest #${index}] ${opts.which === 'best' ? 'best' : 'centre'} vs zero on ${n} fresh test fights (${wall.toFixed(0)} s): ${P.diff >= 0 ? '+' : ''}${P.diff.toFixed(3)} ± ${P.se.toFixed(3)} (${Math.abs(P.diff) > 2 * P.se ? 'beyond' : 'within'} 2 SE) | style ${P.styleB.style.toFixed(3)} gates [${P.styleB.failed}] | intents ${it.map(v => (100 * v / tot).toFixed(1) + '%').join(' ')} | ${['dartRate', 'meanDist', 'noContact', 'deathRate', 'humanShare'].map(tel).join(', ')} | drift [${P.driftB.join('; ')}]`);
+  const tel = k => k in P.mA ? `${k} ${P.mA[k].toFixed(3)}→${P.mB[k].toFixed(3)}` : null;
+  logLine(file, `[retest #${index}] ${opts.which === 'best' ? 'best' : 'centre'} vs zero on ${n} fresh test fights (${wall.toFixed(0)} s): ${P.diff >= 0 ? '+' : ''}${P.diff.toFixed(3)} ± ${P.se.toFixed(3)} (${Math.abs(P.diff) > 2 * P.se ? 'beyond' : 'within'} 2 SE) | style ${P.styleB.style.toFixed(3)} gates [${P.styleB.failed}] | intents ${it.map(v => (100 * v / tot).toFixed(1) + '%').join(' ')} | ${['dartRate', 'chargeRate', 'pounceRate', 'meanDist', 'noContact', 'deathRate', 'humanShare'].map(tel).filter(Boolean).join(', ')} | drift [${P.driftB.join('; ')}]`);
   return P;
 }
 function report(s){
@@ -255,7 +284,7 @@ function report(s){
   for (const v of s.val) console.log(`val gen ${v.gen} (#${v.valIndex}): ${v.diff.toFixed(3)} ± ${v.se.toFixed(3)} style ${v.style.toFixed(3)} ${v.accept ? 'ACCEPT' : ''}`);
   if (s.test) console.log(`test: ${s.test.diff.toFixed(3)} ± ${s.test.se.toFixed(3)} (${s.test.sig ? 'significant' : 'within noise'}), style ${s.test.style.toFixed(3)}`);
 }
-module.exports = { DEFAULTS, DRY, init, load, save, makeJobs, merge, runLocal, retest, report, weightsOf, noise };
+module.exports = { DEFAULTS, DRY, INIT_RULES, init, load, save, makeJobs, merge, runLocal, retest, report, weightsOf, noise };
 
 if (require.main === module){
   const args = process.argv.slice(2), pos = args.filter(a => !a.startsWith('--'));

@@ -489,3 +489,166 @@ Sweeps on GitHub Actions (each run on its own 4-core runner; results in the `tra
   (help the most hurt ally 55%, hold 45%).
 - **Shipped** as the live default (`policy/live.js`, weights in `policy/weights/`), bundled into index.html.
 
+## Milestone 3 v2 (Oct 26)
+- `train.js` options: `--initWeights=<file>` (continue from shipped weights; `best` starts there and the test compares
+  against it, so a v2 must beat v1), `--thetaClip=<c>` (keep each weight within ±c of the start: the collapse fix),
+  `--withLive=true` (every fight also runs the other archetypes' shipped policies, so guards train against the live
+  wolves and vice versa).
+- Sweep `policy/sweeps/m3_v2.json`: 10 guard + 10 harrier runs (warm from v1 with clip 1/2/none and σ .05/.1/.25;
+  cold starts with the clip to test whether it stops the collapse).
+
+
+## Milestone 3, the rest of the other side: five more archetypes (Oct 26)
+The movement-intent harness now covers every enemy gait except the croc. It is opt-in in the same way as the harriers:
+`cfg.movePolicy = {<archetype>: weights}` affects only that archetype's units. Without its weights the engine is
+byte-identical (checks below). The live game is unchanged: there are no shipped weights for these archetypes yet.
+
+| archetype | gait (sim.js `archetypeOf`, side E) | species |
+|---|---|---|
+| harrier (existing) | orbit | wolf, hyena, wolfpack, wolfpack6, hyenapack |
+| `cat` | stalk, rush | tiger, jaguar, cougar, leopard, smilodon, lion, lionpack |
+| `charger` | charge | rhino, blackrhino, hippo, buffalo, buffaloherd, bison, bisonherd, bull, moose, boar, triceratops |
+| `bulldozer` | lumber, herbivore | elephant, mammoth, gorilla |
+| `brawler` | lumber, predator | grizzly, polar, blackbear, honeybadger |
+| `kicker` | keepaway | giraffe, ostrich, giantkangaroo |
+| (none) | lunge | croc stays heuristic |
+
+### Engine (sim.js, next to the harrier hook)
+- `archetypeOf` maps side-E units by gait (`ARCH_GAIT`; lumber splits on `pred`).
+- `intentGo` reuses the five generic intents. `INTENT_GEO` gives each archetype its geometry; the harrier values are
+  unchanged (wait 16 m, flank 3.2 m, back off 10 m):
+  - **wait** circles at a distance that fits the gait:
+    - cat: max(12, pounce + 4) m, at a 30% creep so its tall-grass cover holds;
+    - charger: 20 m, which leaves room to start a charge (5–32 m);
+    - bulldozer 12 m, brawler 10 m, kicker 14 m.
+  - **flank** goes to a point behind the target, then runs the usual gait move from there, so a cat pounces and a
+    charger charges from behind. The point is pounce − 1.5 m (clamped to 2.5–6 m) for a cat, 12 m for a charger and
+    3 m for the others.
+  - **regroup** closes on same-species allies (`kinOf`: herd members, the lion coalition). It falls back to waiting when
+    there are none. Harriers keep using `packMate`.
+  - **disengage** backs off to reach + 10–14 m; a charger backs off far enough to charge again.
+  - **commit** is still `return false`, so zero weights give the heuristic for every archetype.
+- Decisions run only in the engage branch, after `if (u.mv) commitMove`. A charge, pounce or lunge in progress is never
+  interrupted.
+- `setup`'s live default now takes any archetype in `INTERNALS.LIVE`, not only the harrier and guard keys.
+- Checks against origin/ccr-56c298de-g7h5w0's sim.js, on 820 fixed board fights (3 board sets). The comparison is
+  exact: event log, final positions, HP and states, and end time. All three cases are identical:
+  - `livePolicy:false`;
+  - the live default (harrier_v1 + guard_v1);
+  - `livePolicy:false` plus zero weights for all five new archetypes.
+
+### Features (`move_arch_features.js`, 61)
+The first 41 are the harrier's (`move_features.js`, unchanged, so harrier_v1 still loads). The 20 extras:
+- charge: charge ready, in charging range (5–32 m);
+- pounce: pounce ready, within pounce range, ambush ready;
+- the target: can I reach it (a rider up on a giant), log of its mass over mine, is it sweeping, is it charging, is it
+  locked in a fight, does it weigh 2 t or more;
+- me: log of my own mass, predator, fearless, grudge, agitation, battle drive;
+- same-species allies: alive, within 15 m, on the same target.
+
+### Rewards (`move_reward.js`, telemetry in `move_run.js`; records carry `arch`)
+- **Goal**: the harrier's goal. Damage to you / your max HP, + 1 for killing you, + damage to your animals / scale,
+  − 0.1 per death, − 0.05 per minute without contact. The animal scale is 10,000 for chargers and bulldozers and 1,000
+  for the rest: chargers and bulldozers deal 3–4k HP a fight, so at 1,000 that term would swamp killing you.
+- **Style**: the harrier profile without the dart rhythm (time shares, near share, distance, no contact, fruitless
+  approaches; long idle is a gate). A new metric kind, `down`, penalises only a decrease. Per archetype:
+  - cat: pounce rate per engaged minute (±30%). Gates: no long chases (closing above 60% of top speed for more than
+    8 s) and no face-on brawls.
+  - charger: gate that the charge rate per engaged minute does not fall by more than 25%.
+  - brawler: gate that the honey badger stays fearless, meaning no time spent waiting, regrouping or backing off while
+    engaged (the heuristic has none).
+  - kicker: gate against hunting across the field (closing on something more than 20 m away).
+  - Face-on is a gate only for cats and kickers; trading blows is what the others do.
+- **Fights**: `move_arch.js` `has` keeps the fights where an animal of the archetype is on the other side.
+
+### Headroom probe (`node policy/probes/arch_rules.js 800`; `logs/m3_arch_headroom.txt`)
+The run took 32,000 fights, 12 min on 4 threads. Each arm got 800 paired fights against the heuristic, from probe
+pool 7. The table gives the goal difference ± SE (* = beyond 2 SE), the style grade, the gates that failed, and the
+change in kills of you (points). The fixed intents wait, regroup and disengage lose clearly for every archetype, fail
+the long-idle gate and drift (full rows in the log). The table shows fixed flank and the conditional rules:
+
+| archetype | arm | goal ± SE | style | gates | kills of you |
+|---|---|---|---|---|---|
+| cat | flank | −0.171 ± 0.027 * | 0.94 | – | −5.0 |
+| cat | patient | −0.005 ± 0.027 | 0.87 | longIdle | −2.1 |
+| cat | flankBusy | −0.016 ± 0.022 | 1.00 | – | −0.6 |
+| cat | hurtBack | +0.000 ± 0.007 | 1.00 | – | +0.3 |
+| charger | flank | −0.074 ± 0.039 | 0.70 | chargeRate | +0.9 |
+| charger | patient | +0.046 ± 0.032 | 1.00 | – | +1.1 |
+| charger | flankBusy | +0.010 ± 0.031 | 1.00 | – | +0.8 |
+| charger | backForRoom | +0.019 ± 0.023 | 1.00 | – | +0.6 |
+| bulldozer | flank | +0.157 ± 0.037 * | 0.95 | longIdle | +8.8 |
+| bulldozer | patient | +0.006 ± 0.029 | 1.00 | – | +0.4 |
+| bulldozer | **flankBusy** | **+0.127 ± 0.033 *** | 1.00 | – | +4.9 |
+| bulldozer | **hurtBack** | **+0.059 ± 0.017 *** | 1.00 | – | +2.8 |
+| brawler | flank | −0.147 ± 0.022 * | 1.00 | – | −1.5 |
+| brawler | **patient** | **+0.055 ± 0.024 *** | 1.00 | – | +0.6 |
+| brawler | flankBusy | +0.022 ± 0.024 | 1.00 | – | +2.8 |
+| brawler | hurtBack | +0.009 ± 0.013 | 1.00 | – | +0.4 |
+| kicker | flank | −0.031 ± 0.020 | 1.00 | – | +0.4 |
+| kicker | patient | +0.086 ± 0.024 * | 1.00 | – | +2.0 |
+| kicker | flankBusy | +0.049 ± 0.022 * | 1.00 | – | +2.4 |
+| kicker | onlyOnMe | −0.087 ± 0.023 * | 0.59 | longIdle | +0.0 |
+
+The rules:
+- `patient`: wait while stronger guards block the target and it isn't busy or easy.
+- `flankBusy`: flank a target that is busy fighting something else.
+- `hurtBack`: disengage when below half HP with something on me.
+- `backForRoom`: back off for charging room when too close and the charge isn't ready.
+- `onlyOnMe`: wait unless the target is coming for me.
+- The brawler rules never apply to the fearless honey badger.
+
+**Fresh draw** (probe pool 8, 1,200 fights per arm; `logs/m3_arch_confirm.txt`):
+- Confirmed winners:
+  - **bulldozer flankBusy +0.170 ± 0.030**, kills of you +7.5 pts: elephants, mammoths and gorillas come at a busy
+    target from behind;
+  - bulldozer hurtBack +0.028 ± 0.013;
+  - **brawler patient +0.067 ± 0.021**.
+- Bulldozer always-flank scored +0.079 ± 0.031, but it drifts (no contact 23% → 31%).
+- Not confirmed, though positive in both draws: kicker patient +0.035 ± 0.020, kicker flankBusy +0.013 ± 0.019,
+  charger patient +0.042 ± 0.027.
+- **No cat headroom found so far** (hand-written rules over the generic intents; the guards also showed none from rules, yet learned +13 s): the stalk-and-pounce heuristic already waits for its moment.
+
+### Training
+`node policy/train.js init run/x.json --arch=<cat|charger|bulldozer|brawler|kicker> [--initRule=patient|flankBusy|onlyOnMe|hurtBack] [--initWeights=file] [--thetaClip=1] [--withLive=true] ...`,
+then `run` as before.
+- `--initRule` is generic. `INIT_RULES` encodes each rule in the linear term, for any archetype whose features and
+  intents include the rule's names. For the brawler, those rows also get fearless −2k.
+- patient and flankBusy reproduce the hand-written rules exactly: 40 of 40 fights identical for bulldozer flankBusy,
+  and for brawler, kicker and charger patient. hurtBack is a linear approximation that also fires earlier when more
+  than one animal is on it.
+- `retest` reports charge and pounce rates where an archetype has them.
+
+**Sweep** `policy/sweeps/m3_arch_s1.json`: 20 runs, all `--withLive=true`, with m3_v2's validation and test sizes.
+
+| archetype | runs | warm starts | cold starts (clip 1) |
+|---|---|---|---|
+| bulldozer | 7 | flankBusy at clip 1 (×2), clip 2, and clip 1 with σ .05; hurtBack | σ .1, σ .05 |
+| brawler | 5 | patient at clip 1 (×2) and clip 2 | σ .1, σ .05 |
+| kicker | 3 | patient, flankBusy | σ .05 |
+| charger | 3 | patient, flankBusy | σ .1 |
+| cat | 2 | none | σ .1, σ .05 |
+
+Run it with the `train` workflow, `sweep: policy/sweeps/m3_arch_s1.json`.
+
+### Tests (`node policy/harness_test.js`, 176/176 pass, 19 min on 4 cores; `logs/m3_harness_test_arch.txt`)
+- **Every archetype** runs section 1's zero = heuristic and determinism checks:
+  - zero weights (margin 1 and margin 0), always-commit, and a zero output layer over a random hidden layer are each
+    identical to no policy on 160 fights;
+  - serial = 4 threads = 4 shards, on full records;
+  - a non-zero policy changes fights.
+- **harrier, guard and a sample (cat, charger, brawler)** also run the slow checks: whole dry runs (serial = threads =
+  CLI shards), resume, probe sanity, seed pools and drift. `--full` runs them for every archetype; `--arch=a,b` runs
+  them for the archetypes named.
+- Probe sanity for the new archetypes:
+  - always disengage is clearly worse than the heuristic;
+  - always wait and always disengage fall below the style threshold, fail the long-idle gate and drift;
+  - circling counts as no contact;
+  - charger: always wait fails the charge-rate gate;
+  - brawler: always disengage fails the fearless gate;
+  - cat: always wait pounces less.
+- Section 0 adds two checks:
+  - zero weights for all five new archetypes next to the shipped harrier + guard weights give the same fights as the
+    shipped weights alone;
+  - a cat-only policy is unaffected by zero weights for the other archetypes.
+- Section 5 runs a dry run per archetype.

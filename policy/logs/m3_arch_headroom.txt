@@ -1,0 +1,56 @@
+archetype rule probe: 32000 fights, 715 s (probe pool index 7, seed 26); goal diff vs the heuristic on the same fights, * = beyond 2 SE
+
+cat: 800 fights, 1.77 units per fight, heuristic goal 0.356, kills of you 12.0%
+| arm | goal ± SE | style | gates | drift | kills of you (pts) | non-commit |
+|---|---|---|---|---|---|---|
+| wait | -0.330 ± 0.027 * | 0.61 | longIdle | closeShare 0.518→0.716; longIdle 0.010→0.196; noContact 0.275→0.528; fruitless 0.568→0.757; humanShare 0.180→0.048; dmgPerFight 241.663→111.852; pounceRate 2.930→0.095 | -10.1 ± 1.2 | 100% |
+| flank | -0.171 ± 0.027 * | 0.94 | - | dmgPerFight 241.663→151.000; pounceRate 2.930→1.233 | -5.0 ± 1.3 | 100% |
+| regroup | -0.338 ± 0.028 * | 0.59 | longIdle | closeShare 0.518→0.795; longIdle 0.010→0.310; noContact 0.275→0.660; fruitless 0.568→0.782; humanShare 0.180→0.048; dmgPerFight 241.663→119.969; pounceRate 2.930→0.062 | -9.9 ± 1.2 | 100% |
+| disengage | -0.401 ± 0.027 * | 0.58 | longIdle | closeShare 0.518→0.722; nearShare 0.144→0.031; longIdle 0.010→0.308; noContact 0.275→0.602; fruitless 0.568→0.810; humanShare 0.180→0.028; dmgPerFight 241.663→80.353; pounceRate 2.930→0.095 | -11.4 ± 1.2 | 100% |
+| patient | -0.005 ± 0.027 | 0.87 | longIdle | longIdle 0.010→0.112; noContact 0.275→0.370 | -2.1 ± 1.3 | 66% |
+| flankBusy | -0.016 ± 0.022 | 1.00 | - | - | -0.6 ± 1.1 | 13% |
+| hurtBack | +0.000 ± 0.007 | 1.00 | - | - | +0.3 ± 0.4 | 2% |
+
+charger: 800 fights, 2.74 units per fight, heuristic goal 0.833, kills of you 30.6%
+| arm | goal ± SE | style | gates | drift | kills of you (pts) | non-commit |
+|---|---|---|---|---|---|---|
+| wait | -0.754 ± 0.038 * | 0.47 | longIdle, chargeRate | fightShare 0.211→0.088; closeShare 0.455→0.772; idleShare 0.238→0.113; nearShare 0.347→0.121; longIdle 0.067→0.332; noContact 0.244→0.622; fruitless 0.623→0.745; dmgPerFight 3645.391→2287.177; chargeRate 10.359→0.000 | -24.5 ± 1.7 | 100% |
+| flank | -0.074 ± 0.039 | 0.70 | chargeRate | closeShare 0.455→0.679; idleShare 0.238→0.140; nearShare 0.347→0.172; noContact 0.244→0.351; chargeRate 10.359→2.741 | +0.9 ± 1.9 | 100% |
+| regroup | -0.749 ± 0.039 * | 0.44 | longIdle, chargeRate | fightShare 0.211→0.081; closeShare 0.455→0.772; idleShare 0.238→0.120; nearShare 0.347→0.111; longIdle 0.067→0.363; noContact 0.244→0.652; fruitless 0.623→0.769; dmgPerFight 3645.391→2415.377; chargeRate 10.359→0.000 | -23.6 ± 1.8 | 100% |
+| disengage | -0.863 ± 0.039 * | 0.38 | longIdle, chargeRate | fightShare 0.211→0.053; closeShare 0.455→0.834; idleShare 0.238→0.088; nearShare 0.347→0.073; longIdle 0.067→0.399; noContact 0.244→0.681; fruitless 0.623→0.760; dmgPerFight 3645.391→2192.190; chargeRate 10.359→0.000 | -27.4 ± 1.7 | 100% |
+| patient | +0.046 ± 0.032 | 1.00 | - | - | +1.1 ± 1.6 | 26% |
+| flankBusy | +0.010 ± 0.031 | 1.00 | - | - | +0.8 ± 1.6 | 42% |
+| backForRoom | +0.019 ± 0.023 | 1.00 | - | - | +0.6 ± 1.2 | 3% |
+
+bulldozer: 800 fights, 1.13 units per fight, heuristic goal 0.815, kills of you 31.4%
+| arm | goal ± SE | style | gates | drift | kills of you (pts) | non-commit |
+|---|---|---|---|---|---|---|
+| wait | -0.432 ± 0.037 * | 0.56 | longIdle | fightShare 0.271→0.144; closeShare 0.477→0.753; nearShare 0.333→0.106; longIdle 0.023→0.227; noContact 0.221→0.541 | -16.3 ± 1.9 | 100% |
+| flank | +0.157 ± 0.037 **\*** | 0.95 | longIdle | closeShare 0.477→0.583; longIdle 0.023→0.051; noContact 0.221→0.302 | +8.8 ± 1.9 | 100% |
+| regroup | -0.432 ± 0.037 * | 0.56 | longIdle | fightShare 0.271→0.144; closeShare 0.477→0.753; nearShare 0.333→0.106; longIdle 0.023→0.227; noContact 0.221→0.541 | -16.3 ± 1.9 | 100% |
+| disengage | -0.693 ± 0.036 * | 0.50 | longIdle | fightShare 0.271→0.075; closeShare 0.477→0.844; nearShare 0.333→0.069; longIdle 0.023→0.392; noContact 0.221→0.654 | -29.8 ± 1.7 | 100% |
+| patient | +0.006 ± 0.029 | 1.00 | - | - | +0.4 ± 1.4 | 6% |
+| flankBusy | +0.127 ± 0.033 **\*** | 1.00 | - | - | +4.9 ± 1.7 | 25% |
+| hurtBack | +0.059 ± 0.017 **\*** | 1.00 | - | - | +2.8 ± 0.9 | 5% |
+
+brawler: 800 fights, 1.41 units per fight, heuristic goal 0.366, kills of you 4.4%
+| arm | goal ± SE | style | gates | drift | kills of you (pts) | non-commit |
+|---|---|---|---|---|---|---|
+| wait | -0.205 ± 0.025 * | 0.52 | longIdle, badgerBack | closeShare 0.281→0.519; nearShare 0.366→0.180; longIdle 0.000→0.046; noContact 0.191→0.366; fruitless 0.512→0.690; dmgPerFight 376.471→229.857; badgerBack 0.000→0.393 | -3.3 ± 0.8 | 100% |
+| flank | -0.147 ± 0.022 * | 1.00 | - | - | -1.5 ± 0.8 | 100% |
+| regroup | -0.205 ± 0.025 * | 0.52 | longIdle, badgerBack | closeShare 0.281→0.519; nearShare 0.366→0.180; longIdle 0.000→0.046; noContact 0.191→0.366; fruitless 0.512→0.690; dmgPerFight 376.471→229.857; badgerBack 0.000→0.393 | -3.3 ± 0.8 | 100% |
+| disengage | -0.295 ± 0.025 * | 0.41 | longIdle, badgerBack | fightShare 0.129→0.022; closeShare 0.281→0.593; idleShare 0.287→0.168; nearShare 0.366→0.051; longIdle 0.000→0.094; noContact 0.191→0.538; fruitless 0.512→0.845; dmgPerFight 376.471→172.638; badgerBack 0.000→0.485 | -4.4 ± 0.7 | 100% |
+| patient | +0.055 ± 0.024 **\*** | 1.00 | - | - | +0.6 ± 0.9 | 29% |
+| flankBusy | +0.022 ± 0.024 | 1.00 | - | - | +2.8 ± 1.0 | 22% |
+| hurtBack | +0.009 ± 0.013 | 1.00 | - | - | +0.4 ± 0.6 | 5% |
+
+kicker: 800 fights, 1.14 units per fight, heuristic goal 0.431, kills of you 3.1%
+| arm | goal ± SE | style | gates | drift | kills of you (pts) | non-commit |
+|---|---|---|---|---|---|---|
+| wait | -0.191 ± 0.022 * | 0.51 | longIdle | fightShare 0.208→0.075; closeShare 0.450→0.779; fleeShare 0.180→0.043; nearShare 0.354→0.102; longIdle 0.012→0.249; noContact 0.185→0.568; fruitless 0.506→0.658; escapeRate 0.452→0.308; dmgPerFight 417.714→271.169 | -1.3 ± 0.8 | 100% |
+| flank | -0.031 ± 0.020 | 1.00 | - | - | +0.4 ± 0.8 | 100% |
+| regroup | -0.191 ± 0.022 * | 0.51 | longIdle | fightShare 0.208→0.075; closeShare 0.450→0.779; fleeShare 0.180→0.043; nearShare 0.354→0.102; longIdle 0.012→0.249; noContact 0.185→0.568; fruitless 0.506→0.658; escapeRate 0.452→0.308; dmgPerFight 417.714→271.169 | -1.3 ± 0.8 | 100% |
+| disengage | -0.280 ± 0.022 * | 0.29 | longIdle, farHunt | fightShare 0.208→0.028; closeShare 0.450→0.904; idleShare 0.162→0.049; fleeShare 0.180→0.019; nearShare 0.354→0.039; longIdle 0.012→0.501; noContact 0.185→0.759; fruitless 0.506→0.698; deathRate 0.338→0.204; escapeRate 0.452→0.255; dmgPerFight 417.714→231.490; farHunt 0.278→0.333 | -2.6 ± 0.7 | 100% |
+| patient | +0.086 ± 0.024 **\*** | 1.00 | - | - | +2.0 ± 0.9 | 21% |
+| flankBusy | +0.049 ± 0.022 **\*** | 1.00 | - | - | +2.4 ± 0.9 | 34% |
+| onlyOnMe | -0.087 ± 0.023 * | 0.59 | longIdle | fightShare 0.208→0.097; closeShare 0.450→0.723; fleeShare 0.180→0.067; nearShare 0.354→0.135; longIdle 0.012→0.243; noContact 0.185→0.513 | +0.0 ± 0.9 | 80% |
