@@ -172,6 +172,11 @@ Pick for new roles. Top three for design value: **honey badger, moose, Komodo dr
 - [ ] Identity check in audit.js: per-fight counts of each signature (sweeps, mock charges, stomps, tree drops,
   death rolls, holds, grudge kills, lookout spots).
 - [x] Decided against: leopard dragging kills up a tree (it would leave the fight: a liability on your side).
+- [x] **Light-pick signatures (Oct 26):** musk (honey badger), claw kick (ostrich), nape bite (cougar), swims in unseen
+  (jaguar), tester/leads a chase (lone wolf), cracks bone (hyena), repeat bluffs that run things off (black bear),
+  chest-beat (gorilla), upends (boar), leaps on its back (lion), hidden guard (leopard). ROSTER.md has rates and values.
+- [ ] Follow-ups: musk rarely fires (predators skip badgers); lone hyena lost value (−7 ± 5); black bear and ostrich
+  still barely move the score; jaguar needs a dry-map hook; reprice (big enemies' threat fell 4–10 s).
 
 ## 7b. Art and presentation
 - [ ] **Portraits for every animal** (in progress: public-domain/CC0 Commons images only, credited in CREDITS.md).
