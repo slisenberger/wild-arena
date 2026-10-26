@@ -1,0 +1,7 @@
+cat intent probe: 3200 fights, 179 s (probe pool index 7, seed 26, live harrier/guard policies on); goal diff vs the heuristic on the same fights, * = beyond 2 SE
+800 fights, 1.77 cats per fight, heuristic goal 0.377, kills of you 12.8%; fights per species: tiger 284, lion 276, leopard 213, jaguar 209, cougar 206, smilodon 36
+| arm | goal ± SE | style | gates | drift | kills of you (pts) | non-commit | tiger | lion | leopard | jaguar | cougar | smilodon |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| hurtLieLow | +0.002 ± 0.009 | 1.00 | - | - | +0.0 ± 0.4 | 2% | -0.000 ± 0.021 | -0.012 ± 0.023 | +0.017 ± 0.017 | +0.026 ± 0.026 | +0.004 ± 0.017 | -0.000 ± 0.079 |
+| cougarPounce | +0.008 ± 0.005 | 1.00 | - | - | +0.4 ± 0.2 | 0% | +0.006 ± 0.003 | +0.003 ± 0.002 | -0.002 ± 0.005 | +0.012 ± 0.010 | +0.031 ± 0.018 | +0.000 ± 0.000 |
+| stalkerPounce | +0.008 ± 0.015 | 1.00 | - | - | +0.0 ± 0.8 | 2% | -0.000 ± 0.029 | +0.017 ± 0.024 | +0.020 ± 0.033 | -0.004 ± 0.036 | +0.059 ± 0.030 | -0.031 ± 0.079 |
