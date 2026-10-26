@@ -213,8 +213,8 @@ function merge(s, jobs, outs, wall, file, quiet){
 
 // ---------- local driver ----------
 async function runLocal(file, opts){
-  let s = load(file); const steps = opts.steps || Infinity;
-  for (let k = 0; k < steps && s.phase !== 'done' && s.phase !== opts.until; k++){
+  let s = load(file); const steps = opts.steps || Infinity, stopAt = opts.hours ? Date.now() + opts.hours * 3600e3 : Infinity;
+  for (let k = 0; k < steps && s.phase !== 'done' && s.phase !== opts.until && Date.now() < stopAt; k++){ // --hours: wall-clock budget (CI job limits); the state is saved after every step
     const jobs = makeJobs(s), t0 = Date.now();
     const res = await WK.runShard(jobs, 0, 1, opts.serial ? 1 : (opts.threads || 4));
     const wall = (Date.now() - t0) / 1000;
@@ -263,7 +263,7 @@ if (require.main === module){
       const s = load(file), jobs = JSON.parse(fs.readFileSync(pos[2], 'utf8')), outs = pos.slice(3).map(f => JSON.parse(fs.readFileSync(f, 'utf8')));
       const wall = Math.max(...outs.map(o => o.wall || 0)); merge(s, jobs, outs, wall, file); save(file, s);
     } else if (cmd === 'run'){
-      await runLocal(file, {threads: +(opt.threads || 4), serial: !!opt.serial, steps: opt.steps ? +opt.steps : Infinity, until: opt.until});
+      await runLocal(file, {threads: +(opt.threads || 4), serial: !!opt.serial, steps: opt.steps ? +opt.steps : Infinity, until: opt.until, hours: opt.hours ? +opt.hours : 0});
     } else if (cmd === 'report'){ report(load(file)); }
     else if (cmd === 'retest'){ await retest(file, {which: opt.which, fights: opt.fights ? +opt.fights : 400, index: opt.index ? +opt.index : 1, threads: +(opt.threads || 4)}); }
     else { console.error('usage: node policy/train.js init|jobs|merge|run|report|retest state.json ...'); process.exit(2); }
