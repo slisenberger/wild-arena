@@ -470,3 +470,22 @@ the way the heuristic does. Guard per-fight noise: goal sd 0.75, paired sd ~0.4 
 Linear ×3 seeds, linear σ .25 / lr .15 and σ .05 / lr .04, MLP nh 16 ×2 seeds and nh 16 σ .25 / lr .15; 16 pairs × 60
 generations, validation every 4 at 1,000 fights, test 1,200. Run with the `train` workflow, `sweep:
 policy/sweeps/m3_guard_s1.json`. Locally: `node policy/train.js init run/g.json --arch=guard [...]` then `run`.
+
+## Milestone 3, round 3 (Oct 26): it works, shipped
+Sweeps on GitHub Actions (each run on its own 4-core runner; results in the `training-results` branch):
+
+| sweep | runs | significant gains on 1,200 held-out fights (goal vs heuristic) |
+|---|---|---|
+| m3_s1 (harriers, cold start) | 12 | 5: lin_small +0.083, mlp16 +0.053, mlp8 +0.053, lin_s2 +0.049, lin_s3 +0.028; 6 collapsed to 0 |
+| m3_s2 (harriers, warm start / margins) | 8 | 4: **warm_s1 +0.136 ± 0.015**, warm_full16 +0.078, warm_s2 +0.075, warm_m25 +0.041; big σ and m≤.25 collapsed |
+| m3_guard_s1 (guards) | 8 | 2: **g_lin_big +0.107 ± 0.017**, g_lin_small +0.101 ± 0.020; the rest collapsed |
+
+- **Collapse:** a run whose early candidates drift in style gets pushed by λ toward "always commit/hold"; the weights
+  grow until no perturbation flips a decision (non-commit 0%, val 0.000 ± 0.000 forever). Warm starts and small σ
+  avoid it. Fix to try next: clip |θ| / decay toward the start, or a stochastic policy during training.
+- **Independent checks** (`policy/probes/eval_state.js`, `eval_guard.js`, current engine, fresh seeds):
+  harrier_v1 +0.118 ± 0.016 vs heuristic, +0.073 ± 0.016 vs 'patient' (style 0.96; drift: they keep ~30 m instead of
+  22 m and close more — a pack regrouping, 44% of decisions); guard_v1 survival +13.3 ± 2.9 s, win +7.5 ± 1.2 pts
+  (help the most hurt ally 55%, hold 45%).
+- **Shipped** as the live default (`policy/live.js`, weights in `policy/weights/`), bundled into index.html.
+

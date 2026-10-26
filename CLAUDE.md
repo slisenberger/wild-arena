@@ -178,6 +178,18 @@ round. Report ± standard errors.
   regroup / disengage for enemy orbit-gait packs; zero weights = heuristic), goal + style rewards with a Lagrangian, a
   sharded ES trainer (`policy/train.js` + `train_worker.js`, plain JSON, resumable) and `policy/harness_test.js`.
   Usage, sharding and pilot results: `policy/README.md` "Milestone 3 harness".
+- **Milestone 3 shipped (Oct 26): the live game uses learned movement policies by default** (`policy/live.js` loads
+  `policy/weights/harrier_v1.json` + `guard_v1.json`; `setup` applies them unless the cfg sets `movePolicy` or
+  `livePolicy:false`; `build.js` bundles the modules + weights into index.html). Opting out is byte-identical to the
+  heuristic engine; the harness and Milestone 2 tools opt out so their baseline stays the heuristic.
+  - Enemy wolves/hyenas (`harrier_v1`, warm-started from the 'patient' rule): +0.118 ± 0.016 goal vs heuristic on fresh
+    fights (+0.073 vs 'patient'); they regroup before going in (44% of decisions), die less, kill you +2.3 pts.
+  - Your guards (`guard_v1`): survival +13.3 ± 2.9 s, win +7.5 ± 1.2 pts (1,200 fights, live engine); they pile in to
+    help the most hurt ally (55%). Hand-written guard rules found nothing; the learner did.
+  - Training runs on GitHub Actions (`.github/workflows/train.yml`, sweeps in `policy/sweeps/`); `collect.yml` copies
+    results to the `training-results` branch (artifact storage isn't reachable from the dev container).
+  - Lesson: ES from zero collapsed (the style penalty drove every candidate back to "always commit", then exploration
+    died: |θ| grew, non-commit 0%). Warm starts and small σ work; big σ collapses.
 
 ## Pricing findings (Oct 2026)
 - The regression in `price_board.js` is biased in board mode: with budget-fill teams, a cheap animal left on
