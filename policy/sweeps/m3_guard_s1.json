@@ -1,0 +1,13 @@
+{
+ "note": "Milestone 3 guard sweep 1 (Oct 26): your side's guards (--arch=guard), linear vs MLP (nh 16), step sizes, seeds. Each run trains on its own 4-core runner.",
+ "runs": [
+  {"name": "g_lin_s1",     "args": "--arch=guard --pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --seed=201"},
+  {"name": "g_lin_s2",     "args": "--arch=guard --pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --seed=202"},
+  {"name": "g_lin_s3",     "args": "--arch=guard --pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --seed=203"},
+  {"name": "g_lin_big",    "args": "--arch=guard --pairs=16 --gens=60 --sigma=.25 --lr=.15 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --seed=204"},
+  {"name": "g_lin_small",  "args": "--arch=guard --pairs=16 --gens=60 --sigma=.05 --lr=.04 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --seed=205"},
+  {"name": "g_mlp16",      "args": "--arch=guard --mode=full --nh=16 --pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --seed=206"},
+  {"name": "g_mlp16_s2",   "args": "--arch=guard --mode=full --nh=16 --pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --seed=207"},
+  {"name": "g_mlp16_big",  "args": "--arch=guard --mode=full --nh=16 --pairs=16 --gens=60 --sigma=.25 --lr=.15 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --seed=208"}
+ ]
+}

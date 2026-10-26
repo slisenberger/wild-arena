@@ -1,0 +1,25 @@
+guard headroom probe: 800 paired fights per arm (savanna/river/forest/tundra, probe pool #7), 10 arms, 184 s
+heuristic: survival 143.5 s, win 35.1%, damage to you 198/fight (collateral 80), guard deaths 5.49/fight, goal 0.143
+heuristic                                        survival +0.0 ± 0.0 s | win +0.0 ± 0.0 pts | dmg to you +0 ± 0 (collateral +0 ± 0) | guard deaths +0.00 | goal +0.000 ± 0.000 | style 1.00 gates [] drift 0
+always screen                                    survival +2.3 ± 4.1 s | win +2.0 ± 1.7 pts | dmg to you -3 ± 5 (collateral +2 ± 5) | guard deaths -0.12 | goal +0.005 ± 0.024 | style 0.96 gates [] drift 3 | non-hold 100%
+    drift: otherIdle 0.405→0.301; closeShare 0.149→0.345; holdRate 0.153→0.085
+always intercept                                 survival -19.6 ± 4.1 s | win -7.5 ± 1.6 pts | dmg to you +23 ± 5 (collateral -19 ± 5) | guard deaths +0.54 | goal -0.123 ± 0.024 | style 1.00 gates [] drift 1 | non-hold 100%
+    drift: otherIdle 0.405→0.298
+always space                                     survival -12.3 ± 4.1 s | win -6.1 ± 1.7 pts | dmg to you +20 ± 5 (collateral -15 ± 5) | guard deaths +0.22 | goal -0.109 ± 0.024 | style 0.85 gates [] drift 7 | non-hold 100%
+    drift: catNear 0.296→0.108; canidNear 0.554→0.235; chargerNear 0.401→0.256; otherNear 0.513→0.231; meanDistH 13.056→17.018; dodgeRate 0.589→0.892; pounceRate 0.362→0.170
+always help                                      survival -16.1 ± 4.7 s | win -1.4 ± 1.8 pts | dmg to you +6 ± 5 (collateral -33 ± 5) | guard deaths -0.69 | goal -0.033 ± 0.027 | style 0.98 gates [] drift 2 | non-hold 100%
+    drift: closeShare 0.149→0.248; pounceRate 0.362→0.540
+always fallback                                  survival -69.4 ± 4.3 s | win -22.6 ± 1.7 pts | dmg to you +69 ± 5 (collateral +85 ± 5) | guard deaths -0.84 | goal -0.444 ± 0.025 | style 0.66 gates [] drift 12 | non-hold 100%
+    drift: catNear 0.296→0.409; canidNear 0.554→0.855; chargerNear 0.401→0.825; otherNear 0.513→0.823; closeShare 0.149→0.443; fleeShare 0.308→0.083; meanDistH 13.056→6.563; holdRate 0.153→0.089; knockRate 0.438→0.103; pounceRate 0.362→0.045; standby 0.275→0.381; withdrawRate 0.393→0.247
+space unless targeted, then intercept            survival -24.5 ± 4.1 s | win -10.0 ± 1.6 pts | dmg to you +30 ± 5 (collateral -16 ± 5) | guard deaths +0.59 | goal -0.169 ± 0.024 | style 0.89 gates [] drift 5 | non-hold 100%
+    drift: catNear 0.296→0.136; canidNear 0.554→0.330; chargerNear 0.401→0.270; otherNear 0.513→0.268; meanDistH 13.056→17.383
+screen when a predator targets you               survival -0.7 ± 3.9 s | win +0.4 ± 1.6 pts | dmg to you +2 ± 5 (collateral +3 ± 5) | guard deaths -0.04 | goal -0.016 ± 0.023 | style 0.96 gates [] drift 1 | non-hold 50%
+    drift: closeShare 0.149→0.315
+space out when a sweeper/charger fights near you survival -0.7 ± 1.9 s | win -0.9 ± 0.8 pts | dmg to you +3 ± 2 (collateral -1 ± 3) | guard deaths +0.03 | goal -0.008 ± 0.010 | style 1.00 gates [] drift 0 | non-hold 2%
+intercept whatever targets you                   survival -22.3 ± 4.0 s | win -8.1 ± 1.6 pts | dmg to you +24 ± 4 (collateral -10 ± 5) | guard deaths +0.51 | goal -0.138 ± 0.023 | style 1.00 gates [] drift 0 | non-hold 39%
+guard headroom probe: 2400 paired fights per arm (savanna/river/forest/tundra, probe pool #8), 3 arms, 184 s
+heuristic: survival 148.3 s, win 36.7%, damage to you 194/fight (collateral 75), guard deaths 5.40/fight, goal 0.175
+heuristic                                        survival +0.0 ± 0.0 s | win +0.0 ± 0.0 pts | dmg to you +0 ± 0 (collateral +0 ± 0) | guard deaths +0.00 | goal +0.000 ± 0.000 | style 1.00 gates [] drift 0
+always screen                                    survival -3.8 ± 2.6 s | win -1.2 ± 1.0 pts | dmg to you +3 ± 3 (collateral +6 ± 3) | guard deaths -0.07 | goal -0.031 ± 0.015 | style 0.93 gates [] drift 4 | non-hold 100%
+    drift: bigIdle 0.215→0.067; otherIdle 0.398→0.298; closeShare 0.143→0.346; holdRate 0.165→0.092
+space out when a sweeper/charger fights near you survival -0.9 ± 1.1 s | win -0.5 ± 0.4 pts | dmg to you +1 ± 1 (collateral -3 ± 2) | guard deaths -0.00 | goal -0.005 ± 0.005 | style 1.00 gates [] drift 0 | non-hold 2%

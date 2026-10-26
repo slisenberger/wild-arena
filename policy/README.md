@@ -367,3 +367,106 @@ What the pilot shows about the problem (more than about the optimiser):
   4 cores, or one GitHub Actions matrix of 16 shards per step (~5–10 min per generation).
 - Consider weighting harrier deaths less (or by HP lost) so the goal is less about self-preservation, and a richer
   style profile per species (hyena vs wolf) before trusting a positive result.
+
+## Milestone 3, round 2 (Oct 26): headroom found
+- **Probe** (`policy/probes/harrier_rules.js`, paired vs the heuristic): hand-written conditional rules for enemy harriers.
+  `patient` (wait while stronger guards block the target and it isn't busy or easy) beat the heuristic: +0.047 ± 0.018
+  on 800 fights, then **+0.061 ± 0.012 on 1,200 fresh fights**, style 1.00, no drift. Variants (wait when guards merely
+  deter; regroup when alone) match. flankBusy, humanOnly lose; packUp, hitRun are neutral.
+- **Why the pilot missed it:** zero weights + commit margin 1 means a σ=.1 perturbation almost never flips a decision in
+  the right states; ES never sees the gain.
+- **Fixes:** `--initRule=patient` warm start (the rule encoded in the linear term: +0.027 ± 0.013 vs zero on 800 fresh
+  test fights) and smaller `--margin`. Sweep 2 (`policy/sweeps/m3_s2.json`) runs these on GitHub Actions next to sweep 1.
+- **Compute:** `.github/workflows/train.yml` (public repo: free); each sweep entry trains on its own 4-core runner for up
+  to 5.5 h and uploads `state.json`, its log and a report as an artifact; `resume_run` continues a sweep.
+
+
+## Milestone 3, second archetype: your guards (Oct 2026)
+
+Why guards: with full teams ~40% of the damage to you is collateral (an enemy elephant's sweep while it fights your
+escort, then herd charges), and your guards idle ~40% of the time. The harness now takes `--arch=guard`; `harrier` is
+unchanged (same features, intents, rewards and fight sets; existing state files load as before).
+
+### Engine hook (sim.js, opt-in: `cfg.movePolicy.guard = weights`)
+- `archetypeOf(u)` = `'guard'` for your side's animals that aren't carrying you (`!u.rider`; a ridden mount is never a
+  guard, evasive mounts included). It applies in `'guard'` state and while engaged.
+- `guardDecide` (decisions loop, before retargeting) asks `moveChoose` for an intent every 0.5 s (`GUARD_INTENTS`):
+  0 **hold** = the heuristic; 1 **screen** = target the most threatening enemy (`guardThreat`: aimed at you, heading your
+  way within 25 m, or within 12 m) and stand ~5 m from you on its line, fighting it once it arrives; 2 **intercept** =
+  target the most threatening enemy aimed at / heading for you, chased with the usual gait; 3 **space out** = fight
+  ≥ 8 m from you and from the far side of the target, so its sweeps and charges point away from you (in guard state:
+  wait ≥ 9 m out); 4 **help ally** = target the strongest enemy on the most hurt of your animals in a fight
+  (`guardHelpTarget`); 5 **fall back** = get back within ~3 m of you and only fight what is in reach there.
+- Screen / intercept / help set `u.gT`, which `chooseTarget` keeps as the target until the next decision; screen / space /
+  fall back steer through `guardGo` (engage branch, via the existing `intentMove` call) and `guardIdleGo` (guard state).
+  Four call sites (one line each) plus the helpers next to the harrier hook; threat helpers use `sideSees` (teamSees
+  without its lookout side effect) so features and decisions never change the fight.
+- Checks (`harness_test.js` section 0): without `movePolicy`, 640 fights (160 guard + 160 harrier board fights + 320
+  `check_identical.js` fights) identical to the pre-guard-hook engine (git 8f90345: event log, final positions / HP /
+  states, end time); a harrier-only policy gives the same fights on both engines (guards untouched); a zero guard policy
+  next to a harrier policy changes nothing. Zero weights (margin 1 and 0), always-hold and a zero output layer over a
+  random hidden layer = no policy on every fight.
+
+### Features (`move_guard_features.js`, 55)
+Own HP / wound / stamina / morale / heat / battle drive, species class (cat, charger, big, small, pack), distance to
+you, attackers on me; my target (distance, on me, on you, log strength ratio, sweeper, charging, locked in a fight);
+you (HP, riding, targeted, how many on you, in contact, held), the main threat (distance to you and to me, strength ratio,
+aimed vs coming); collateral risk (sweepers and chargers fighting within 12–15 m of you, enemies and fights within
+10 m); allies near you / alive, enemies alive, the most hurt ally under attack (HP, distance); time, zone progress and
+edge, in water, map one-hot, previous intent one-hot. Model: `move_model.js` with `nout` 6 (`zeros(nin, nh, margin,
+nout)`); `move_arch.js` is the archetype registry (features, intents, which fights qualify).
+
+### Rewards (`move_reward.js`, records from `move_run.js runGuardFight`, tagged `arch: 'guard'`)
+- **Goal** (per fight): survival time / 300 (1 if you survive) − 0.5 · damage to you / your max HP + guards' damage dealt /
+  20,000 − 0.03 per guard death − 0.05 per guard-minute standing by while the fight is on (idle, or "closing in" for
+  > 10 s without contact = holding a spot). Heuristic per fight: 0.16 (sd 0.75): surv 0.49, human −0.33, dealt 0.22,
+  deaths −0.17, idle −0.05.
+- **Style**: per species class (cat / canid / charger / big / other) fight and idle shares and share of time within 8 m
+  of you; pooled close / flee shares, mean distance from you; signature rates per guard-minute (hold, knockback, dodge,
+  sweep, pounce). **Gates**: a cat body-blocking a big herbivore (> 3× its mass) face to face for > 3 s; a guard glued to
+  you (< 4 m, not fighting) for > 2 s while something is on you. Up-only: standby share. Drift-only: death and withdraw
+  rates. Reported, never graded or flagged (`kind: 'info'`, what the goal is meant to move): survival, damage to you,
+  collateral damage and share, damage dealt. Same Lagrangian, thresholds and acceptance rules as the harriers.
+- Fights: player-like budget-fill teams ($1,200) on `A.dealBoard` boards, default mount, the policy on every guard;
+  same seed pools, paired seeds and `holdMap` as the harriers (a fight qualifies if your team has a guard).
+
+### Headroom probe first (`node policy/guard_probe.js 800`; `logs/m3_guard_headroom.txt`, ~3 min on 3 threads)
+800 paired fights per arm vs the heuristic (survival 143.5 s, win 35.1%, damage to you 198 per fight of which 80
+collateral, 5.5 guard deaths):
+
+| arm | survival (s) | win (pts) | dmg to you | collateral | goal | style |
+|---|---|---|---|---|---|---|
+| always screen | +2.3 ± 4.1 | +2.0 ± 1.7 | −3 ± 5 | +2 ± 5 | +0.005 ± 0.024 | 0.96 |
+| always intercept | −19.6 ± 4.1 | −7.5 ± 1.6 | +23 ± 5 | −19 ± 5 | −0.123 ± 0.024 | 1.00 |
+| always space out | −12.3 ± 4.1 | −6.1 ± 1.7 | +20 ± 5 | **−15 ± 5** | −0.109 ± 0.024 | 0.85 |
+| always help | −16.1 ± 4.7 | −1.4 ± 1.8 | +6 ± 5 | −33 ± 5 | −0.033 ± 0.027 | 0.98 |
+| always fall back | −69.4 ± 4.3 | −22.6 ± 1.7 | +69 ± 5 | +85 ± 5 | −0.444 ± 0.025 | 0.66 |
+| space unless targeted, then intercept | −24.5 ± 4.1 | −10.0 ± 1.6 | +30 ± 5 | −16 ± 5 | −0.169 ± 0.024 | 0.89 |
+| screen when a predator targets you | −0.7 ± 3.9 | +0.4 ± 1.6 | +2 ± 5 | +3 ± 5 | −0.016 ± 0.023 | 0.96 |
+| space out when a sweeper/charger fights near you | −0.7 ± 1.9 | −0.9 ± 0.8 | +3 ± 2 | −1 ± 3 | −0.008 ± 0.010 | 1.00 |
+| intercept whatever targets you | −22.3 ± 4.0 | −8.1 ± 1.6 | +24 ± 4 | −10 ± 5 | −0.138 ± 0.023 | 1.00 |
+
+The only positive arm, always screen, did not hold up on 2,400 fresh fights: −3.8 ± 2.6 s, win −1.2 ± 1.0 pts.
+**Nothing simple beats the heuristic.** Spacing out does cut collateral damage (−15 ± 5 HP per fight, about −19%), but
+the hits it saves come back as direct attacks on you (+35) because the guards are no longer between you and the threat.
+Intercept and help trade collateral for direct damage the same way. Collateral damage is a symptom of guards fighting
+next to you, and that is also what keeps things off you. A learned policy would have to time these intents (space out
+only when nothing is coming for you, screen only when the threat is a predator and nobody is on it); the conditional
+rules tried here were neutral at best. Treat the sweep as a long shot unless the features expose something the rules
+missed.
+
+### Tests (`node policy/harness_test.js`, 65/65 pass, ~9 min on 4 cores; `--quick` ~4 min; `--arch=guard` for one)
+Every check in sections 1–4 runs for both archetypes: zero = heuristic (4 variants), the hook is live for a non-zero
+policy, serial = 4 threads = 4 shards (full records), whole dry runs serial = threads = CLI jobs/workers/merge, resume =
+no resume, fresh validation draws, the model shape in the state, probes, style symmetry, variance and N, disjoint seed
+pools, `holdMap`, player-like teams within budget, the heuristic not drift-flagged. Guard-specific: always space out cuts
+collateral damage to you (160 fights: 65 → 54 per fight, −11 ± 12; survival −23 ± 10 s, beyond 2 SE, so it **hurts**
+survival), always fall back is clearly worse and fails style (0.66), holding a spot beside you counts as standing by
+(standby share 25% → 39%), and screen / space / fall back get drift flags. Intercept gets none: it only re-picks targets,
+the way the heuristic does. Guard per-fight noise: goal sd 0.75, paired sd ~0.4 → ~280 fights for a 2 SE detection of
+0.05 and ~1,700 for 0.02.
+
+### Sweep (`policy/sweeps/m3_guard_s1.json`, 8 runs)
+Linear ×3 seeds, linear σ .25 / lr .15 and σ .05 / lr .04, MLP nh 16 ×2 seeds and nh 16 σ .25 / lr .15; 16 pairs × 60
+generations, validation every 4 at 1,000 fights, test 1,200. Run with the `train` workflow, `sweep:
+policy/sweeps/m3_guard_s1.json`. Locally: `node policy/train.js init run/g.json --arch=guard [...]` then `run`.
