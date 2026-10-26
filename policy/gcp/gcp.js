@@ -75,8 +75,8 @@ function launchRuns(id, m, names){
     return;
   }
   if (!opt.yes && !opt['dry-run']){ log('not launched: add --yes to launch (or --dry-run to see the commands)'); return; }
-  let ok = 0; groups.forEach((g, i) => { if (createVM(id, i, g, m, m.hours)) ok++; });
-  log(`${ok}/${groups.length} VMs created`);
+  const launched = []; groups.forEach((g, i) => { if (createVM(id, i, g, m, m.hours)) launched.push(...g); });
+  log(`${groups.filter(g => launched.includes(g[0])).length}/${groups.length} VMs created`); return launched;
 }
 // ---------- check: is the GCP setup usable? (each step says what to fix) ----------
 function check(){
@@ -138,8 +138,9 @@ const [cmd, arg] = pos;
     if (!todo.length){ log('nothing to resume'); return; }
     if (opt.hours) m.hours = +opt.hours;
     if (opt.machine || opt.machines) m.machines = MACHINES; else if (m.machines) MACHINES = m.machines; // resume keeps the launch's machine choice
-    todo.forEach(n => m.tries[n] = (m.tries[n] || 0) + 1); if (!opt['dry-run'] && (opt.yes || LOCAL)) S.putText(`sweeps/${arg}/manifest.json`, JSON.stringify(m, null, 1));
-    log(`resuming ${todo.length}: ${todo.join(', ')}`); launchRuns(arg, m, todo);
+    log(`resuming ${todo.length}: ${todo.join(', ')}`); const launched = launchRuns(arg, m, todo) || (LOCAL ? todo : []);
+    launched.forEach(n => m.tries[n] = (m.tries[n] || 0) + 1); // count an attempt only when a VM was created (a full quota isn't a failure)
+    if (!opt['dry-run'] && (opt.yes || LOCAL)) S.putText(`sweeps/${arg}/manifest.json`, JSON.stringify(m, null, 1));
   } else if (cmd === 'stop'){
     const vms = vmsOf(arg); if (!vms.length){ log('no VMs alive for ' + arg); return; }
     if (!opt.yes){ log(`would delete ${vms.length} VMs: ${vms.map(x => x.name).join(' ')} (add --yes)`); return; }
