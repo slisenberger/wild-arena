@@ -1,6 +1,8 @@
 // Milestone 3 rewards, from move_run.js fight records.
 //  goal(rec)            per fight, for the archetype's units (collectively); harrier records have no `arch`, guard
-//                       records carry arch: 'guard' (move_run.js), and every function below dispatches on that
+//                       records carry arch: 'guard' (move_run.js), and every function below dispatches on that;
+//                       cat / charger / bulldozer / brawler / kicker records carry their arch and use the harrier goal
+//                       (pressure on you and your side, small self-death weight, idle penalty) with their own style
 //  metrics(recs)        pooled style/telemetry metrics over a fight set (ratio of sums, so every fight is weighted by
 //                       how long the units were in it); the same function for every arm of a paired comparison
 //  grade(m, ref)        style grade in [0,1] against the heuristic's own measured profile, plus realism gates
@@ -13,9 +15,12 @@ function goalPartsGuard(r){
   return {surv: r.survived ? 1 : Math.min(1, r.t / 300), human: -GOAL_G.human * r.dmgHuman / r.hmax, dealt: r.dealt / GOAL_G.dealtScale,
     deaths: -GOAL_G.death * r.deaths, idle: -GOAL_G.idlePerMin * r.standbyT / 60};
 }
+// damage to your animals per goal unit, per archetype: chargers and bulldozers deal ~10× what a harrier does (3-4k HP a
+// fight), so at 1,000 the animals term would swamp killing you; at 10,000 it is ~0.3-0.4 a fight like the others'
+const ANIMAL_SCALE = {charger: 10000, bulldozer: 10000};
 function goalParts(r){
   if (r.arch === 'guard') return goalPartsGuard(r);
-  return {human: r.dmgHuman / r.hmax, kill: GOAL.kill * r.killedYou, animals: (r.dmgFoe - r.dmgHuman) / GOAL.animalScale,
+  return {human: r.dmgHuman / r.hmax, kill: GOAL.kill * r.killedYou, animals: (r.dmgFoe - r.dmgHuman) / (ANIMAL_SCALE[r.arch] || GOAL.animalScale),
     deaths: -GOAL.death * r.deaths, idle: -GOAL.idlePerMin * r.noContactT / 60};
 }
 function goal(r){ const p = goalParts(r); let g = 0; for (const v of Object.values(p)) g += v; return g; } // parts in insertion order (harrier: human + kill + animals + deaths + idle)
@@ -23,6 +28,7 @@ function goal(r){ const p = goalParts(r); let g = 0; for (const v of Object.valu
 // metric = num/den over the pooled records. kind: 'two' (either way is a deviation), 'up' (only an increase is
 // penalised: realism gates and anti-gaming checks), 'tel' (telemetry only: drift flags, not in the grade), 'info'
 // (reported only: neither graded nor drift-flagged).
+// 'down' (only a decrease is penalised: a signature move that must not disappear).
 // tol: allowed deviation (abs, or rel × the reference when rel is set) before the grade drops; at 2·tol it scores 0.
 const METRICS = {
   fightShare:  {num: r => r.fight, den: r => r.life, kind: 'two', tol: .08},
@@ -72,8 +78,28 @@ Object.assign(METRICS_G, {
   humanDmgPerFight: {num: r => r.dmgHuman, den: () => 1, kind: 'info'},
   dealtPerFight: {num: r => r.dealt, den: () => 1, kind: 'info'},
 });
-const DEFS = {harrier: METRICS, guard: METRICS_G};
-const defsOf = arch => DEFS[arch || 'harrier'];
+// the other side's other archetypes (cat, charger, bulldozer, brawler, kicker): the harrier profile without the dart
+// rhythm, plus per-archetype signature rates and realism gates (kind 'down': only a decrease is penalised):
+//   cat: pounce rhythm; gates: no long chases (a stalker doesn't run prey down for > 8 s at speed) and no face-on brawls
+//   charger: gate: the charge rate (charges per engaged minute) must not collapse
+//   brawler: gate: the honey badger stays fearless (no time spent waiting, regrouping or backing off while engaged)
+//   kicker: gate: no hunting across the field (closing on something > 20 m away)
+const BASE_X = Object.fromEntries(Object.entries(METRICS).filter(([k]) => k !== 'dartRate'));
+const nogate = d => Object.assign({}, d, {gate: false});
+const METRICS_X = {
+  cat: Object.assign({}, BASE_X, {
+    pounceRate: {num: r => r.pounces * 60, den: r => r.engT, kind: 'two', rel: .3},
+    longChase:  {num: r => r.longChaseT, den: r => r.life, kind: 'up', tol: .02, gate: true}}),
+  charger: Object.assign({}, BASE_X, {faceOn: nogate(BASE_X.faceOn),
+    chargeRate: {num: r => r.charges * 60, den: r => r.engT, kind: 'down', rel: .25, gate: true}}),
+  bulldozer: Object.assign({}, BASE_X, {faceOn: nogate(BASE_X.faceOn)}),
+  brawler: Object.assign({}, BASE_X, {faceOn: nogate(BASE_X.faceOn),
+    badgerBack: {num: r => r.badgerBackT, den: r => r.badgerLife, kind: 'up', tol: .02, gate: true}}),
+  kicker: Object.assign({}, BASE_X, {
+    farHunt:    {num: r => r.farHuntT, den: r => r.life, kind: 'up', tol: .02, gate: true}}),
+};
+const DEFS = Object.assign({harrier: METRICS, guard: METRICS_G}, METRICS_X);
+const defsOf = arch => { const d = DEFS[arch || 'harrier']; if (!d) throw new Error('no reward metrics for archetype ' + arch); return d; };
 const archOfRecs = recs => (recs[0] && recs[0].arch) || 'harrier';
 function metrics(recs){
   const m = {};
@@ -94,7 +120,7 @@ function tolOf(k, ref){ const d = defsOf(ref.arch)[k]; return d.rel ? Math.max(1
 // the heuristic's own sampling noise at N fights (2 SE, scaled from the calibration set) is added to every tolerance, so
 // the zero-weight policy scores ~1 on any fresh fight set of that size instead of being marked down for luck
 function noiseOf(k, ref, N){ return N ? 2 * (ref.se[k] || 0) * Math.sqrt(ref.n / Math.max(1, N)) : 0; }
-function excess(k, m, ref, N){ const d = defsOf(ref.arch)[k], R = ref.m, dev = d.kind === 'up' ? m[k] - R[k] : Math.abs(m[k] - R[k]); return Math.max(0, dev - tolOf(k, ref) - noiseOf(k, ref, N)); }
+function excess(k, m, ref, N){ const d = defsOf(ref.arch)[k], R = ref.m, dev = d.kind === 'up' ? m[k] - R[k] : d.kind === 'down' ? R[k] - m[k] : Math.abs(m[k] - R[k]); return Math.max(0, dev - tolOf(k, ref) - noiseOf(k, ref, N)); }
 // ref: reference(heuristic records); N: fights behind m. style = mean metric score over the 'two' and 'up' metrics
 // (1 within tolerance, falling linearly to 0 at twice it); gates = the hard 'gate' metrics, which must score 1
 function grade(m, ref, N){
@@ -123,4 +149,4 @@ function paired(recsA, recsB, ref){
   return {n: d.length, goalA: mean(recsA.map(goal)), goalB: mean(recsB.map(goal)), diff: mean(d), se: se(d),
     styleA: grade(ma, ref, d.length), styleB: grade(mb, ref, d.length), mA: ma, mB: mb, driftB: drift(mb, ref, d.length)};
 }
-module.exports = { GOAL, GOAL_G, METRICS, METRICS_G, defsOf, goal, goalParts, metrics, metricSE, grade, drift, reference, paired, mean, sd, se };
+module.exports = { GOAL, GOAL_G, ANIMAL_SCALE, METRICS, METRICS_G, METRICS_X, defsOf, goal, goalParts, metrics, metricSE, grade, drift, reference, paired, mean, sd, se };

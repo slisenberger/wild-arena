@@ -8,7 +8,7 @@ const credits = r('CREDITS.md').split('\n').map(l => l.match(/^\| `([^`]+)` \| (
 t = t.replace('/*CREDITS*/', () => JSON.stringify(credits));
 // the learned policies (policy/live.js + its modules + weights), wrapped as tiny CommonJS modules after the engine:
 // require('path')/process.env/__dirname are shimmed and any require of sim.js resolves to window.Arena
-const POLICY = ['move_model.js', 'move_features.js', 'move_guard_features.js', 'move_arch.js', 'move_policy.js', 'live.js'];
+const POLICY = ['move_model.js', 'move_features.js', 'move_guard_features.js', 'move_arch_features.js', 'move_arch.js', 'move_policy.js', 'live.js'];
 const policyBundle = `;(function(){ var A = window.Arena, M = {}, C = {}, process = {env: {}}, path = {join: function(){ return arguments[arguments.length - 1]; }, resolve: function(x){ return x; }};
   function req(n){ n = String(n).split('/').pop(); if (n === 'path') return path; if (n === 'sim.js') return A; if (!(n in C)){ var m = {exports: {}}; C[n] = m.exports; M[n](m, m.exports); C[n] = m.exports; } return C[n]; }
   M['harrier_v1.json'] = function(module){ module.exports = ${r('policy/weights/harrier_v1.json')}; };

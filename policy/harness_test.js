@@ -1,6 +1,8 @@
-// Milestone 3 harness checks. node policy/harness_test.js [--quick] [--arch=harrier|guard]   (~15 min on 4 cores for both
-// archetypes; --quick ~4 min). Sections 1-4 run once per archetype (harrier = the other side's pack hunters, guard = your
-// guards), section 0 and 5 once.
+// Milestone 3 harness checks. node policy/harness_test.js [--quick] [--full] [--arch=harrier|guard|cat|...[,more]]
+// Sections 1-4 run per archetype (harrier = the other side's pack hunters, guard = your guards, and the other side's cat /
+// charger / bulldozer / brawler / kicker); section 0 and 5 once. Every archetype gets section 1's zero = heuristic and
+// determinism checks; whole dry runs / resume and sections 2-4 run for harrier, guard and SAMPLE (cat, charger, brawler),
+// or for every archetype with --full (or the ones named with --arch).
 // 0 engine: without cfg.movePolicy, fights identical to the engine before the newest hook (REF_SIM=path, else the newest
 //   git revision of sim.js without `guardDecide`); a harrier-only policy leaves your guards untouched and vice versa.
 // 1 determinism & plumbing: zero weights / intent-0 probe / zero output layer over a random hidden layer identical to no
@@ -23,7 +25,9 @@ const T = require('./train.js');
 const { arch: archOf } = require('./move_arch.js');
 
 const QUICK = process.argv.includes('--quick');
-const ONLY = (process.argv.find(a => a.startsWith('--arch=')) || '').slice(7) || null;
+const ONLY = (process.argv.find(a => a.startsWith('--arch=')) || '').slice(7) || null; // one archetype, or a comma list
+const FULL = process.argv.includes('--full');
+const SAMPLE = ['cat', 'charger', 'brawler'];
 const NF = QUICK ? 40 : 160;
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'm3test-'));
 const node = process.execPath, here = __dirname;
@@ -53,6 +57,28 @@ function refSim(){
   return null;
 }
 
+// the other side's other archetypes (cat, charger, bulldozer, brawler, kicker): same intents as the harriers
+const XARCH = ['cat', 'charger', 'bulldozer', 'brawler', 'kicker'];
+const ALL = ['harrier', 'guard', ...XARCH];
+const gateOf = (r, g) => r.P.styleB.failed.includes(g);
+function xprobe(arch){
+  return {names: ['commit', 'wait', 'flank', 'regroup', 'disengage'], check(rows, arms){
+    const [hc, hw, , , hd] = rows;
+    ok(hd.P.diff < -2 * hd.P.se, `${arch}: always disengage: goal clearly worse (beyond 2 SE)`);
+    ok(hw.P.styleB.style < T.DEFAULTS.styleThr && hd.P.styleB.style < T.DEFAULTS.styleThr, `${arch}: always wait / always disengage: style ${hw.P.styleB.style.toFixed(2)} / ${hd.P.styleB.style.toFixed(2)} below the ${T.DEFAULTS.styleThr} threshold`);
+    ok(hw.P.mB.noContact > hc.P.mB.noContact + .1, `${arch}: circling without contact counts as idle (no-contact share ${(100 * hc.P.mB.noContact).toFixed(0)}% -> ${(100 * hw.P.mB.noContact).toFixed(0)}% for always-wait)`);
+    ok(gateOf(hw, 'longIdle') && gateOf(hd, 'longIdle'), `${arch}: always wait / always disengage fail the long-idle gate`);
+    ok(hw.P.driftB.length > 0 && hd.P.driftB.length > 0, `${arch}: always wait / disengage get telemetry drift flags: ` + rows.slice(1).map(r => `${r.name} ${r.P.driftB.length}`).join(', '));
+    if (arch === 'charger') ok(gateOf(hw, 'chargeRate') && hw.P.mB.chargeRate < .5 * hc.P.mB.chargeRate, `charger: always wait fails the charge-rate gate (charges per engaged minute ${hc.P.mB.chargeRate.toFixed(1)} -> ${hw.P.mB.chargeRate.toFixed(1)})`);
+    if (arch === 'brawler'){
+      const nb = arms[0].filter(r => r.badgerLife > 0).length;
+      if (nb) ok(gateOf(hd, 'badgerBack') && hc.P.mB.badgerBack === 0, `brawler: the heuristic honey badger never backs off; always disengage fails the fearless gate (${nb} fights with a badger; ${(100 * hd.P.mB.badgerBack).toFixed(0)}% of its time)`);
+      else console.log('  SKIP fearless gate: no honey badger in these fights');
+    }
+    if (arch === 'cat') ok(hw.P.mB.pounceRate < hc.P.mB.pounceRate, `cat: always wait pounces less (${hc.P.mB.pounceRate.toFixed(2)} -> ${hw.P.mB.pounceRate.toFixed(2)} per engaged minute)`);
+  }};
+}
+
 // per-archetype expectations for the probe section
 const PROBES = {
   harrier: {names: ['commit', 'wait', 'flank', 'regroup', 'disengage'], check(rows){
@@ -76,8 +102,9 @@ const PROBES = {
     ok(moving.every(r => r.P.driftB.length > 0), 'every movement probe gets telemetry drift flags: ' + rows.slice(1).map(r => `${r.name} ${r.P.driftB.length}`).join(', '));
   }},
 };
+for (const a of XARCH) PROBES[a] = xprobe(a);
 
-async function suite(arch, rs){
+async function suite(arch, slow){
   const AR = archOf(arch), F = AR.F, NO = AR.nout;
   console.log(`\n==================== archetype: ${arch} (${F.DIM} features, ${NO} intents: ${AR.intents.join(' / ')})`);
   const fights = R.fightSet('probe', 0, NF, {seed: 1, arch});
@@ -100,6 +127,7 @@ async function suite(arch, rs){
   ok(JSON.stringify(ser) === JSON.stringify(thr), 'serial = 4 worker threads (full records)');
   ok(JSON.stringify(ser) === JSON.stringify(sh), 'serial = 4 shards merged (full records)');
   ok(!same(ser.slice(0, sub.length).map(x => x.rec), ser.slice(sub.length).map(x => x.rec)), 'a non-zero policy changes fights (the hook is live)');
+  if (!slow){ console.log(`  (whole runs, resume and sections 2-4 sampled out for ${arch}: --full runs them)`); return {fA: null}; }
 
   // whole runs: local serial vs local threads vs CLI shards (jobs -> 3 worker processes -> merge), and resume
   const dry = {arch, calibFights: 16, calibPerturb: 1, pairs: 2, fights: 8, gens: 2, valEvery: 1, valFights: 8, testFights: 8};
@@ -160,7 +188,8 @@ async function suite(arch, rs){
   for (const [p, ss] of Object.entries(sets)) ss.forEach((s, i) => s.forEach(f => { const k = key(f); if (all[k] && all[k] !== p + i) clash++; all[k] = p + i; const b = bkey(f); if (ball[b] && ball[b] !== p + i) bclash++; ball[b] = p + i; }));
   ok(clash === 0 && bclash === 0, 'train / val / test / calib pools (and each generation\'s / check\'s draw) share no fight seeds or boards');
   ok(![...sets.train, ...sets.val].flat().some(f => f.tr === 'forest') && sets.test[0].some(f => f.tr === 'forest'), 'held-out map (holdMap) never in train/val, present in test');
-  ok(fights.every(f => AR.has(f.board, f.team, f.mount)), arch === 'guard' ? 'every fight has at least one guard on your side' : 'every fight has harriers on the other side');
+  ok(fights.every(f => AR.has(f.board, f.team, f.mount)), arch === 'guard' ? 'every fight has at least one guard on your side' : `every fight has ${arch === 'harrier' ? 'harriers' : 'a ' + arch} on the other side`);
+  if (arch !== 'guard'){ const n = rz.map(r => r.n); ok(n.every(v => v > 0), `every ${arch} fight records at least one ${arch} unit (mean ${RW.mean(n).toFixed(2)} per fight)`); }
   ok(fights.every(f => { let left = R.A.RULES.budget; for (const id of f.team) left -= R.A.BY_ID[id].price; return left >= 0 && f.team.every(id => f.board.includes(id)); }), `every team is a player-like draft from its dealt board within the $${R.A.RULES.budget} budget`);
 
   console.log(`\n4. Reward-hacking checks [${arch}]`);
@@ -184,9 +213,19 @@ async function suite(arch, rs){
   } else console.log('  SKIP pre-hook comparison (set REF_SIM=path/to/pre-hook/sim.js)');
   const gOnly = await plainFP(R.SIM, fh, {guard: {fixed: 0}, harrier: {fixed: 2}}), hOnly = await plainFP(R.SIM, fh, {harrier: {fixed: 2}});
   ok(gOnly.every((x, i) => x === hOnly[i]), 'adding a zero (always-hold) guard policy next to a harrier policy changes nothing');
+  // the other archetypes: zero weights for all five next to the live game's shipped harrier + guard weights = those alone
+  // (so the live default is untouched by the new hooks), and each archetype's policy only moves its own units
+  const LV = R.A._internals.LIVE, fxs = R.fightSet('probe', 0, QUICK ? 20 : 60, {seed: 3, arch: 'cat'}).concat(R.fightSet('probe', 0, QUICK ? 20 : 60, {seed: 3, arch: 'charger'}));
+  const zx = {}; for (const a of XARCH) zx[a] = M.zeros(archOf(a).F.DIM, 0, 1, archOf(a).nout);
+  const live = {harrier: LV.harrier, guard: LV.guard}, l0 = await plainFP(R.SIM, fxs, live), l1 = await plainFP(R.SIM, fxs, Object.assign({}, live, zx));
+  ok(LV.harrier && LV.guard && l0.every((x, i) => x === l1[i]), `zero weights for ${XARCH.join(' / ')} next to the shipped harrier + guard policies: ${fxs.length} fights identical to the shipped policies alone`);
+  const c1 = await plainFP(R.SIM, fxs, {cat: {fixed: 2}}), c2 = await plainFP(R.SIM, fxs, Object.assign({cat: {fixed: 2}}, zx, {cat: {fixed: 2}}));
+  ok(c1.every((x, i) => x === c2[i]), `a cat-only policy (always flank) gives the same fights with zero weights for every other archetype next to it`);
 
   let fA = null;
-  for (const a of ['harrier', 'guard']) if (!ONLY || ONLY === a){ const r = await suite(a); fA = fA || r.fA; }
+  // every archetype gets section 1's zero = heuristic and determinism checks; the slow ones (whole dry runs, resume, probe
+  // sanity, seed pools, drift) run for harrier, guard and a sample of the others (SAMPLE, or every one with --full)
+  for (const a of ALL) if (!ONLY || ONLY.split(',').includes(a)){ const r = await suite(a, FULL || !XARCH.includes(a) || SAMPLE.includes(a) || !!ONLY); fA = fA || r.fA; }
 
   console.log('\n5. Engineering');
   const sv = JSON.parse(fs.readFileSync(fA, 'utf8'));
@@ -198,7 +237,7 @@ async function suite(arch, rs){
   const jx = JSON.parse(fs.readFileSync(path.join(tmp, jfile), 'utf8')); jx.simHash = 'deadbeef'; threw = false; try { WK.checkJobs(jx); } catch (e) { threw = true; } ok(threw, 'a worker refuses jobs built for a different engine');
   ok(jx.seed === 1 && jx.config && jx.sets[0].fights.every(f => f.seed && f.bseed), 'jobs record seed, config and every fight\'s board/fight seed');
   threw = false; try { T.init({cfg: {arch: 'nope'}}); } catch (e) { threw = /unknown archetype/.test(e.message); } ok(threw, 'an unknown archetype is refused at init');
-  for (const a of ['harrier', 'guard']) if (!ONLY || ONLY === a){
+  for (const a of ALL) if (!ONLY || ONLY.split(',').includes(a)){
     const fdry = path.join(tmp, `dry_${a}.json`), t2 = Date.now();
     execFileSync(node, [path.join(here, 'train.js'), 'init', fdry, '--dry-run', '--arch=' + a]); execFileSync(node, [path.join(here, 'train.js'), 'run', fdry]);
     const dt = (Date.now() - t2) / 1000; ok(T.load(fdry).phase === 'done' && T.load(fdry).config.arch === a && dt < 60, `${a} dry run (init --arch=${a} + calib + 1 gen + val + test) finished in ${dt.toFixed(1)} s`);
