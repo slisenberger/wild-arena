@@ -144,6 +144,17 @@ th.n{text-align:right}
 .hbar .track b{position:absolute;top:0;bottom:0;border-radius:2px}
 .hbar .track .zero{position:absolute;top:-2px;bottom:-2px;width:1px;background:var(--muted)}
 .notes{color:var(--muted);font-size:13px;margin:0;max-width:72ch}
+/* notices (shared game links, unreadable links), copy-link output, daily streak */
+.notice{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;justify-content:space-between;background:color-mix(in srgb, var(--gold) 9%, var(--panel));border:1px solid color-mix(in srgb, var(--gold) 55%, var(--line));border-radius:var(--r);padding:10px 14px;margin-bottom:16px}
+.notice.warn{background:color-mix(in srgb, var(--red) 10%, var(--panel));border-color:color-mix(in srgb, var(--red) 60%, var(--line))}
+.notice b{font-family:var(--display);font-weight:800;font-size:18px;letter-spacing:.04em;text-transform:uppercase}
+.notice .btn{padding:5px 11px}
+.copyOut{display:inline-flex;gap:8px;align-items:center;min-width:0;flex:1 1 200px}
+.copyOut:empty{display:none}
+.copyOut input{flex:1;min-width:0;max-width:420px;background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:7px 8px;font-family:var(--mono);font-size:12px}
+.banner .btnrow{flex-basis:100%}
+.streak{font-size:12px;color:var(--gold)}
+.tier.flat{grid-template-columns:1fr}
 @media (max-width:820px){
   .fightgrid{grid-template-columns:1fr}
   .opts{grid-template-columns:repeat(2, minmax(0,1fr))}
@@ -179,6 +190,7 @@ th.n{text-align:right}
 </header>
 
 <main>
+<div class="notice" id="notice" role="status" hidden><span id="noticeText"></span><button class="btn" id="noticeClose">Dismiss</button></div>
 <!-- DRAFT -->
 <section class="screen" id="s-draft">
   <div style="display:flex;flex-direction:column;gap:6px">
@@ -188,7 +200,7 @@ th.n{text-align:right}
   <div class="teamline" id="teamline"></div>
   <div id="tiers" style="display:flex;flex-direction:column;gap:12px"></div>
   <div class="detail" id="detail"></div>
-  <div class="btnrow"><button class="btn primary" id="toDeployD">Set formation</button><button class="btn" id="clearTeam">Clear team</button><button class="btn" id="newBoard">Deal a new board</button></div>
+  <div class="btnrow"><button class="btn primary" id="toDeployD">Set formation</button><button class="btn" id="clearTeam">Clear team</button><button class="btn" id="newBoard">Deal a new board</button><button class="btn" id="copyDraft" title="A link to this board, map, fight seed and team">Copy link</button><span class="copyOut" id="copyDraftOut"></span></div>
 </section>
 
 <!-- ARENA -->
@@ -198,8 +210,11 @@ th.n{text-align:right}
   <div class="label">Terrain</div>
   <div class="opts" id="terrainOpts"></div>
   <div id="modeOpts" hidden></div>
+  <div class="label">Draft</div>
+  <div class="opts two" id="draftOpts"></div>
+  <div class="btnrow" id="pickRow" hidden><span class="label">Animals to pick</span><span class="seg" id="pickSeg"><button data-n="2">2</button><button data-n="3">3</button><button data-n="4">4</button><button data-n="5">5</button></span></div>
   <p class="notes">The other side is one team, and the pressure builds over time. Predators hunt you and your guards; herbivores charge intruders. Break their morale and animals bolt out of the arena. After 30 seconds a fire, flood or blizzard closes in from the edges and pushes everyone together. You score by how long you stay alive, up to five minutes.</p>
-  <div class="btnrow"><button class="btn primary" id="toDraft">Draft your team</button><button class="btn" id="daily" title="Same board, map and fight seed for everyone today">Daily challenge</button></div>
+  <div class="btnrow"><button class="btn primary" id="toDraft">Draft your team</button><button class="btn" id="daily" title="Same board, map and fight seed for everyone today">Daily challenge</button><button class="btn" id="dailyPick" title="Today's Pick-3: same board, map and fight seed for everyone; pick exactly 3">Daily Pick-3</button><span class="streak mono" id="streak" hidden></span></div>
 </section>
 
 <!-- DEPLOY -->
