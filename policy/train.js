@@ -76,8 +76,9 @@ function init(opts){
   let theta0 = M.flat(P0, cfg.mode);
   if (cfg.initWeights){ // v2: continue from shipped weights (same shape: features, intents, hidden size)
     const W = JSON.parse(fs.readFileSync(cfg.initWeights, 'utf8'));
-    if (W.nin !== F.DIM || W.nout !== AR.nout || (W.nh || 0) !== (cfg.nh || 0)) throw new Error(`initWeights ${cfg.initWeights}: shape ${W.nin}/${W.nout}/${W.nh} does not match ${F.DIM}/${AR.nout}/${cfg.nh || 0}`);
-    P0 = Object.assign({}, W); delete P0.meta; P0.margin = W.margin; theta0 = M.flat(P0, cfg.mode);
+    const grow = !(W.nh || 0) && cfg.nh > 0; // linear weights into an MLP: keep bl/Wl, fresh random W1/b1, W2 = 0 (same behaviour)
+    if (W.nin !== F.DIM || W.nout !== AR.nout || (!grow && (W.nh || 0) !== (cfg.nh || 0))) throw new Error(`initWeights ${cfg.initWeights}: shape ${W.nin}/${W.nout}/${W.nh} does not match ${F.DIM}/${AR.nout}/${cfg.nh || 0}`);
+    P0 = grow ? Object.assign(P0, {bl: W.bl.slice(), Wl: W.Wl.slice(), margin: W.margin}) : Object.assign({}, W); delete P0.meta; P0.margin = W.margin; theta0 = M.flat(P0, cfg.mode);
   }
   if (cfg.initRule){ // encode a hand-written rule in the linear term (the trainable vector starts [bl, Wl], Wl row-major per intent)
     const IN = AR.intents, NOUT = IN.length, f = n => F.NAMES.indexOf(n), wl = (a, n, v) => { theta0[NOUT + IN.indexOf(a) * F.DIM + f(n)] = v; };

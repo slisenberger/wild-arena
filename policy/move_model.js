@@ -33,11 +33,13 @@ function act(P, x){
   if (P.fixed !== undefined) return P.fixed;
   const l = logits(P, x); let b = 0; for (let k = 1; k < l.length; k++) if (l[k] > l[b]) b = k; return b;
 }
-// the trainable vector: mode 'linear' = [bl, Wl]; mode 'full' = [bl, Wl, W2] (W1/b1 stay fixed random features)
-function flat(P, mode){ return mode === 'full' ? [...P.bl, ...P.Wl, ...P.W2] : [...P.bl, ...P.Wl]; }
+// the trainable vector: mode 'linear' = [bl, Wl]; mode 'full' = [bl, Wl, W2] (W1/b1 stay fixed random features);
+// mode 'deep' = [bl, Wl, W2, W1, b1] (the hidden layer trains too). [bl, Wl] always lead, so warm-start rules index the same.
+function flat(P, mode){ return mode === 'deep' ? [...P.bl, ...P.Wl, ...P.W2, ...P.W1, ...P.b1] : mode === 'full' ? [...P.bl, ...P.Wl, ...P.W2] : [...P.bl, ...P.Wl]; }
 function unflat(P, v, mode){
-  const Q = JSON.parse(JSON.stringify(P)), a = P.nout, b = a + P.nout * P.nin;
-  Q.bl = v.slice(0, a); Q.Wl = v.slice(a, b); if (mode === 'full') Q.W2 = v.slice(b, b + P.nout * P.nh);
+  const Q = JSON.parse(JSON.stringify(P)), a = P.nout, b = a + P.nout * P.nin, c = b + P.nout * P.nh, d = c + P.nh * P.nin;
+  Q.bl = v.slice(0, a); Q.Wl = v.slice(a, b); if (mode === 'full' || mode === 'deep') Q.W2 = v.slice(b, c);
+  if (mode === 'deep'){ Q.W1 = v.slice(c, d); Q.b1 = v.slice(d, d + P.nh); }
   return Q;
 }
 function isZero(P){ return P.fixed === undefined && [...P.bl, ...P.Wl, ...P.W2].every(v => v === 0); }
