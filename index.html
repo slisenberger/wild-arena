@@ -248,6 +248,7 @@ th.n{text-align:right}
         <button class="btn" id="rematch">Rematch, new seed</button>
         <button class="btn" id="replaySame">Replay</button>
         <label class="mono" style="font-size:12px;color:var(--muted);display:flex;gap:6px;align-items:center"><input type="checkbox" id="intentBox" checked> intent lines</label>
+        <label class="mono" style="font-size:12px;color:var(--muted);display:flex;gap:6px;align-items:center"><input type="checkbox" id="calloutBox" checked> callouts</label>
       </div>
       <div class="legend">
         <span><i style="background:var(--you)"></i>your team</span><span><i style="background:var(--foe)"></i>other side</span><span><i style="background:#fff"></i>you</span><span><i style="background:transparent;border:2px solid var(--orange)"></i>heat glow</span><span><i style="background:transparent;border:2px dashed var(--slate)"></i>fleeing</span><span><i style="background:var(--bone);border-radius:2px"></i>carcass</span>
@@ -2618,7 +2619,7 @@ function sizeCanvas(cv){
 function groundFor(terrain, trees, w, h, shade, variant){
   shade = shade || [];
   const V = variant || A.baseVariant(terrain);
-  const key = terrain + w + 'x' + h + ':' + V.key + ':' + trees.map(t => t.x.toFixed(1)).join(',') + ':' + shade.map(t => t.x.toFixed(1)).join(',');
+  const key = terrain + w + 'x' + h + ':' + V.key + (FX.terrain ? ':t' : '') + ':' + trees.map(t => t.x.toFixed(1)).join(',') + ':' + shade.map(t => t.x.toFixed(1)).join(',');
   if (groundCache[key]) return groundCache[key];
   const c = document.createElement('canvas'); c.width = w; c.height = h; const g = c.getContext('2d');
   const sc = w / A.W;
@@ -2629,6 +2630,7 @@ function groundFor(terrain, trees, w, h, shade, variant){
   for (let i = 0; i < 2600; i++){ g.fillStyle = speck[i % 3]; const x = R()*w, y = R()*h, s = (R()*2 + .6) * sc * .25; g.fillRect(x, y, s, s); }
   if (terrain === 'savanna'){ g.strokeStyle = 'rgba(120,100,50,.25)'; g.lineWidth = sc*.12; for (let i = 0; i < 140; i++){ const x = R()*w, y = R()*h; g.beginPath(); g.moveTo(x, y); g.lineTo(x + (R()-.5)*sc*.8, y - sc*(.6+R()*.6)); g.stroke(); } }
   if (terrain === 'tundra'){ g.fillStyle = 'rgba(230,238,245,.05)'; for (let i = 0; i < 40; i++){ g.beginPath(); g.ellipse(R()*w, R()*h, sc*(4+R()*8), sc*(1.5+R()*3), R()*3, 0, 7); g.fill(); } }
+  if (FX.terrain) groundDetail(g, terrain, w, h, sc);
   // a forest clearing: lighter, grassy ground
   if (V.clearing){ const c = V.clearing, grd = g.createRadialGradient(c.x*sc, c.y*sc, 0, c.x*sc, c.y*sc, c.r*sc); grd.addColorStop(0, 'rgba(92,110,58,.45)'); grd.addColorStop(.75, 'rgba(80,98,52,.3)'); grd.addColorStop(1, 'rgba(80,98,52,0)'); g.fillStyle = grd; g.beginPath(); g.arc(c.x*sc, c.y*sc, c.r*sc, 0, 7); g.fill(); }
   // ponds: waterhole (muddy rim), forest pool, half-frozen lake (ice rim)
@@ -2658,6 +2660,7 @@ function groundFor(terrain, trees, w, h, shade, variant){
     }
     g.strokeStyle = 'rgba(160,210,225,.18)'; g.lineWidth = sc*.15;
     for (let i = 0; i < 40; i++){ const x = x0 + R()*(x1 - x0 - sc*3), y = R()*h; if (B.fords.some(([a, b]) => y >= a*sc && y <= b*sc)) continue; g.beginPath(); g.moveTo(x, y); g.quadraticCurveTo(x + sc*1.5, y - sc*.5, x + sc*3, y); g.stroke(); }
+    if (FX.terrain) riverReeds(g, B, h, sc);
   }
   if (T.snow){ g.fillStyle = 'rgba(240,245,250,' + (V.snow > 1 ? .14 : V.snow < 1 ? .05 : .09) + ')'; for (let i = 0; i < 70; i++){ const x = R()*w, y = R()*h, rx = sc*(3+R()*9), ry = sc*(1+R()*2.5), a = R()*.6 - .3; if (V.ponds.some(p => Math.hypot((x/sc - p.x) / (p.rx + 6), (y/sc - p.y) / (p.ry + 4)) < 1)) continue; g.beginPath(); g.ellipse(x, y, rx, ry, a, 0, 7); g.fill(); } }
   for (const t of shade){
@@ -2683,6 +2686,81 @@ function groundFor(terrain, trees, w, h, shade, variant){
   g.font = `600 ${Math.max(10, sc*1.6)}px JetBrains Mono, monospace`; g.fillText('10 m', sc*2, h - sc*3);
   groundCache[key] = c;
   return c;
+}
+
+// ground texture (FX.terrain), painted once into the cached ground canvas: grass tufts, leaf litter and dapples, snow drifts
+function groundDetail(g, terrain, w, h, sc){
+  const R = A.rng(11);
+  if (terrain === 'savanna' || terrain === 'river'){
+    const cols = terrain === 'savanna' ? ['rgba(168,142,70,.32)', 'rgba(128,116,52,.32)', 'rgba(198,172,98,.24)'] : ['rgba(96,128,64,.34)', 'rgba(74,104,52,.34)', 'rgba(126,150,80,.26)'];
+    if (terrain === 'savanna') for (let n = 0; n < 16; n++){ // sun-bleached patches of bare earth
+      const x = R()*w, y = R()*h, r = sc*(3 + R()*6), grd = g.createRadialGradient(x, y, 0, x, y, r); grd.addColorStop(0, 'rgba(120,100,58,.2)'); grd.addColorStop(1, 'rgba(120,100,58,0)');
+      g.fillStyle = grd; g.beginPath(); g.ellipse(x, y, r * 1.5, r, R()*.6 - .3, 0, 7); g.fill(); }
+    g.lineWidth = Math.max(1, sc*.11); g.lineCap = 'round';
+    for (let c = 0; c < 3; c++){
+      g.strokeStyle = cols[c]; g.beginPath();
+      for (let n = 0; n < (terrain === 'savanna' ? 50 : 28); n++){
+        const x = R()*w, y = R()*h, nb = 3 + (R()*4 | 0);
+        for (let b = 0; b < nb; b++){ const a = -Math.PI/2 + (b - (nb - 1) / 2) * .34 + (R() - .5) * .2, L = sc*(.5 + R()*.7), bx = x + (b - nb / 2) * sc * .09;
+          g.moveTo(bx, y); g.quadraticCurveTo(bx + Math.cos(a)*L*.3, y + Math.sin(a)*L*.6, bx + Math.cos(a)*L, y + Math.sin(a)*L); }
+      }
+      g.stroke();
+    }
+    g.lineCap = 'butt';
+  }
+  if (terrain === 'forest'){
+    for (let n = 0; n < 60; n++){ // sunlight through the canopy
+      const x = R()*w, y = R()*h, r = sc*(1.5 + R()*3.5), grd = g.createRadialGradient(x, y, 0, x, y, r); grd.addColorStop(0, 'rgba(206,214,140,.13)'); grd.addColorStop(1, 'rgba(206,214,140,0)');
+      g.fillStyle = grd; g.beginPath(); g.arc(x, y, r, 0, 7); g.fill(); }
+    const leaf = ['rgba(98,74,40,.5)', 'rgba(70,86,42,.45)', 'rgba(118,90,46,.4)'];
+    for (let n = 0; n < 700; n++){ g.fillStyle = leaf[n % 3]; g.beginPath(); g.ellipse(R()*w, R()*h, sc*(.18 + R()*.18), sc*(.08 + R()*.06), R()*3.2, 0, 7); g.fill(); }
+    g.strokeStyle = 'rgba(70,52,30,.35)'; g.lineWidth = Math.max(1, sc*.12); g.beginPath(); // fallen twigs
+    for (let n = 0; n < 45; n++){ const x = R()*w, y = R()*h, a = R()*3.2, L = sc*(.8 + R()*1.6); g.moveTo(x, y); g.lineTo(x + Math.cos(a)*L, y + Math.sin(a)*L); g.lineTo(x + Math.cos(a)*L*.6 + Math.cos(a + .7)*L*.35, y + Math.sin(a)*L*.6 + Math.sin(a + .7)*L*.35); }
+    g.stroke();
+  }
+  if (terrain === 'tundra'){
+    for (let n = 0; n < 14; n++){ // wind-packed drifts: a lit crest and a blue shadow on the lee side
+      const x = R()*w, y = R()*h, rx = sc*(4 + R()*8), ry = sc*(.8 + R()*1.4), a = -.22 + (R() - .5)*.15;
+      g.fillStyle = 'rgba(110,135,165,.09)'; g.beginPath(); g.ellipse(x, y + ry*.7, rx, ry, a, 0, 7); g.fill();
+      g.fillStyle = 'rgba(246,249,252,.09)'; g.beginPath(); g.ellipse(x, y, rx*.95, ry*.8, a, 0, 7); g.fill(); }
+    g.strokeStyle = 'rgba(240,245,250,.09)'; g.lineWidth = Math.max(1, sc*.1); g.beginPath(); // wind streaks
+    for (let n = 0; n < 50; n++){ const x = R()*w, y = R()*h, L = sc*(2 + R()*5); g.moveTo(x, y); g.quadraticCurveTo(x + L*.5, y - L*.16, x + L, y - L*.2); }
+    g.stroke();
+  }
+}
+function riverReeds(g, B, h, sc){ // reed beds along both banks, not on the fords
+  const R = A.rng(13); g.lineWidth = Math.max(1, sc*.12); g.lineCap = 'round';
+  for (let c = 0; c < 2; c++){
+    g.strokeStyle = c ? 'rgba(150,160,84,.55)' : 'rgba(92,124,60,.6)'; g.beginPath();
+    for (let n = 0; n < 34; n++){
+      const side = R() < .5, y = R()*h, x = (side ? B.x0 - .4 - R()*1.2 : B.x1 + .4 + R()*1.2) * sc, lean = side ? -.25 : .25;
+      if (B.fords.some(([a, b]) => y >= (a - 1)*sc && y <= (b + 1)*sc)) continue;
+      for (let b = 0; b < 5; b++){ const bx = x + (b - 2) * sc*.18, L = sc*(.9 + R()*.9), a = -Math.PI/2 + lean + (b - 2) * .14; g.moveTo(bx, y); g.quadraticCurveTo(bx, y - L*.5, bx + Math.cos(a)*L, y + Math.sin(a)*L); }
+    }
+    g.stroke();
+  }
+  g.lineCap = 'butt';
+}
+// animated but cheap (FX.weather): one pattern fill each, from a small tile made once per scale
+const WXC = {};
+function wxTile(kind, sc, g){
+  const key = kind + sc; if (WXC[key]) return WXC[key];
+  const T = Math.max(32, Math.round(sc * (kind === 'snow' ? 16 : 10))), c = document.createElement('canvas'); c.width = c.height = T; const q = c.getContext('2d'), R = A.rng(kind === 'snow' ? 17 : 19);
+  if (kind === 'snow'){ for (let n = 0; n < 12; n++){ const r = sc * (.07 + R() * .13); q.fillStyle = `rgba(250,252,255,${.45 + R()*.4})`; q.beginPath(); q.arc(R()*T, R()*T, r, 0, 7); q.fill(); } }
+  else { q.strokeStyle = 'rgba(196,232,244,.5)'; q.lineWidth = Math.max(1, sc*.12); q.lineCap = 'round'; for (let n = 0; n < 7; n++){ const x = R()*T, y = R()*T, L = sc*(.8 + R()*1.8); q.beginPath(); q.moveTo(x, y); q.quadraticCurveTo(x + L*.5, y - sc*.25, x + L, y); q.stroke(); } }
+  return (WXC[key] = {T, pat: g.createPattern(c, 'repeat')});
+}
+function drawWater(g, sc, w, wall){ // a slow shimmer drifting downstream on the river and the ponds
+  const B = w.variant && w.variant.band, ponds = w.variant ? w.variant.ponds : null; if (!B && !(ponds && ponds.length)) return;
+  const X = wxTile('water', sc, g), off = (wall * .8 * sc) % X.T;
+  g.save(); g.globalAlpha = .5 + .22 * Math.sin(wall * 1.6); g.fillStyle = X.pat; g.translate(0, off); g.beginPath();
+  if (B) g.rect(B.x0 * sc, -off, (B.x1 - B.x0) * sc, A.H * sc);
+  if (ponds) for (const p of ponds){ g.moveTo((p.x + p.rx * .9) * sc, p.y * sc - off); g.ellipse(p.x * sc, p.y * sc - off, p.rx * .9 * sc, p.ry * .9 * sc, 0, 0, 7); }
+  g.fill(); g.restore();
+}
+function drawSnowfall(g, sc, W, H, wall){ // light snow falling across the tundra, over everything
+  const X = wxTile('snow', sc, g), ox = (wall * .5 * sc) % X.T, oy = (wall * 1.3 * sc) % X.T;
+  g.save(); g.globalAlpha = .7; g.fillStyle = X.pat; g.translate(ox, oy); g.fillRect(-ox, -oy, W, H); g.restore();
 }
 
 // ---------- deploy ----------
@@ -2765,7 +2843,7 @@ $('startFight').addEventListener('click', () => startBattle());
 // ---------- battle ----------
 function startBattle(){
   if (!draftReady()){ go('draft'); return; }
-  const w = A.simulate(makeCfg(), true);
+  const w = recordFight(makeCfg()); // = A.simulate(cfg, true), plus timed signature moves for the callouts
   const cg = currentGame(); S.played = Object.assign(cg, {pos: Object.assign({}, S.pos), you: S.youPos && Object.assign({}, S.youPos), daily: S.daily, dailyKind: S.dailyKind}); // what the result banner's link replays
   S.world = w; S.dur = w.result.t; S.playT = 0; S.playing = true; S.sel = 0;
   $('scrub').max = S.dur.toFixed(1); $('scrub').value = 0;
@@ -2810,6 +2888,171 @@ const REDUCED = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce
 // visual effects: kept deliberately calm for now; flip one on to bring it back
 const FX = {fades: true, bursts: true, flash: false, stretch: false, breath: false, dust: false, shake: false};
 const BURST = {kill:'#ef6b4b', death:'#ef6b4b', maul:'#ef6b4b', crash:'#ec7a2c', sweep:'#ec7a2c'}; // big moments only
+// motion cues and callouts (render only). Everything here is derived once per fight from the recorded frames, events
+// and timed signature moves (cuesFor), then looked up at time t, so scrubbing backwards and forwards stays exact.
+// FX.facing: heading notch; pounceArc: pounce lift + arc + ground shadow; chargeCue: dust + streaks behind a charge;
+// sweepArc: the elephant/mammoth front sweep; roll: croc death-roll spin; knockback: ease-out slide; puff: mock-charge
+// stop; callouts: signature-move labels (at most 2 on screen); terrain: textured ground; weather: river shimmer and
+// falling snow; slowmo: playback dips around a kill (off by default).
+Object.assign(FX, {facing: true, pounceArc: true, chargeCue: true, sweepArc: true, roll: true, knockback: true, puff: true, callouts: true, terrain: true, weather: true, slowmo: false});
+try { const v = localStorage.getItem('wa-fx-callouts'); if (v != null) FX.callouts = v === '1'; } catch(e){}
+{ const b = $('calloutBox'); if (b){ b.checked = FX.callouts; b.addEventListener('change', () => { FX.callouts = b.checked; try { localStorage.setItem('wa-fx-callouts', b.checked ? '1' : '0'); } catch(e){} }); } }
+S.FX = FX; S.perf = new Float32Array(240); S.perfN = 0; // canvas time per fight frame (ms), for profiling
+// the fight, recorded exactly like A.simulate(cfg, true), plus when each signature move happened (w.sig only counts them)
+function recordFight(cfg){
+  const w = A.setup(cfg), frames = [A.snapshot(w)], sigEv = [], seen = {};
+  let k = 0;
+  while (!w.over){
+    A.step(w);
+    for (const key in w.sig){
+      const n = w.sig[key]; if (n === seen[key]) continue; seen[key] = n;
+      const c = key.indexOf(':'), sp = key.slice(0, c), name = key.slice(c + 1), i = sigUnit(w, sp, name);
+      if (i >= 0) sigEv.push({t: w.t, name, i, x: w.units[i].x, y: w.units[i].y});
+    }
+    if (++k % 2 === 0 || w.over) frames.push(A.snapshot(w));
+  }
+  w.frames = frames; w.sigEv = sigEv;
+  return w;
+}
+function sigUnit(w, sp, name){ // which unit of that species just did it: the one in the matching state, else the busiest
+  let best = -1, bs = -1;
+  for (let i = 0; i < w.units.length; i++){
+    const u = w.units[i]; if (u.side === 'H' || u.s.id !== sp) continue;
+    let sc = (u.state !== 'dead' ? 1 : 0) + (u.target ? 1 : 0) + (u.mv ? 1 : 0) + (u.latchOn ? 2 : 0);
+    if (name === 'encircles' && u.encircling) sc += 5; if (name === 'drags into water' && u.dragging) sc += 5;
+    if ((name === 'holds it under' || name === 'death roll') && u.latchOn) sc += 5;
+    if (sc > bs){ bs = sc; best = i; }
+  }
+  return best;
+}
+const SIGLABEL = {'killing stab':'Killing stab', 'snaps a canine':'Snaps a sabre', 'mock charge':'Mock charge', 'holds it under':'Holds it under',
+  'death roll':'Death roll', 'drags into water':'Drags it in', 'encircles':'Encircles', 'stomp':'Stomp', 'maul':'Maul', 'sweep':'Sweep',
+  'two-footed kick':'Two-footed kick', 'clinch and kick':'Clinch and kick', 'tree drop':'Drops from the tree', 'skull bite on a croc':'Skull bite',
+  'lion killer':'Lion killer', 'grudge hit':'Grudge', 'foot-thump alarm':'Thump alarm', 'lookout spots a threat':'Lookout spots it',
+  'charges blind at a sound':'Charges blind', 'chases movement':'Chases movement', 'rider knocked off':'Rider thrown', 'knockback':'Knocked back',
+  'twists free':'Twists free', 'lets it bleed':'Lets it bleed', 'tree escape':'Up a tree'};
+const SIGPRI = {'killing stab':3, 'death roll':3, 'holds it under':3, 'maul':2, 'sweep':2, 'mock charge':2, 'stomp':2, 'encircles':2, 'two-footed kick':2, 'snaps a canine':2};
+const CALLOUT_LIFE = 1.6, CUE_MAX = 2;
+function cuesFor(w){
+  if (w._cues) return w._cues;
+  const F = w.frames, NF = F.length, N = w.units.length, U = w.units;
+  const head = new Float32Array(NF * N), seg0 = new Int32Array(NF * N), seg1 = new Int32Array(NF * N);
+  for (let i = 0; i < N; i++){
+    let h = U[i].side === 'E' ? Math.PI : 0;
+    for (let k = 0; k < NF; k++){
+      const a = F[k].u[i], b = F[k < NF - 1 ? k + 1 : k].u[i], p = F[k > 0 ? k - 1 : 0].u[i];
+      const dx = k < NF - 1 ? b[0] - a[0] : a[0] - p[0], dy = k < NF - 1 ? b[1] - a[1] : a[1] - p[1];
+      if (a[7] === 1){
+        if (dx * dx + dy * dy > .0144) h = Math.atan2(dy, dx); // moving > .6 m/s: face the way it goes
+        else if (a[5] >= 0){ const tg = F[k].u[a[5]]; if (tg && tg[7] === 1 && Math.abs(tg[0] - a[0]) + Math.abs(tg[1] - a[1]) > .1) h = Math.atan2(tg[1] - a[1], tg[0] - a[0]); } // nearly still: face its target
+      }
+      head[k * N + i] = h;
+    }
+    let s0 = 0; for (let k = 0; k < NF; k++){ if (k === 0 || F[k].u[i][15] !== F[k - 1].u[i][15]) s0 = k; seg0[k * N + i] = s0; } // runs of one committed move
+    let e0 = NF - 1; for (let k = NF - 1; k >= 0; k--){ if (k === NF - 1 || F[k].u[i][15] !== F[k + 1].u[i][15]) e0 = k; seg1[k * N + i] = e0; }
+  }
+  const nearest = (k, x, y, tag) => { let best = -1, bd = 1e9; const fu = F[k].u; for (let i = 0; i < N; i++){ if (fu[i][7] !== 1 || (tag && !U[i].s.tags.includes(tag))) continue; const d = (fu[i][0] - x) ** 2 + (fu[i][1] - y) ** 2; if (d < bd){ bd = d; best = i; } } return best; };
+  const faceTo = (k, i) => { const u = F[k].u[i], tg = u[5] >= 0 ? F[k].u[u[5]] : null; return tg ? Math.atan2(tg[1] - u[1], tg[0] - u[0]) : head[k * N + i]; };
+  const fx = [], kills = [];
+  for (const e of w.events){
+    if (e.kind === 'kill' || e.kind === 'death') kills.push(e.t);
+    if (e.x == null) continue;
+    const k = clampI(Math.round(e.t / .2), 0, NF - 1);
+    if (e.kind === 'sweep'){ const i = nearest(k, e.x, e.y, 'sweep'); if (i >= 0) fx.push({type:'sweep', t:e.t, dur:.5, i, ang:faceTo(k, i), R:U[i].r + U[i].s.reach}); }
+    else if (e.kind === 'bluff'){ const i = nearest(k, e.x, e.y); if (i >= 0) fx.push({type:'puff', t:e.t, dur:.8, i, ang:faceTo(k, i), x:e.x, y:e.y, R:U[i].r}); }
+    else if (e.kind === 'charge' && /knocking/.test(e.text)){ // the knocked animal slides out over 0.4 s instead of jumping
+      const k0 = clampI(Math.floor(e.t / .2 - 1e-6), 0, NF - 1), k1 = Math.min(NF - 1, k0 + 2), i = nearest(Math.min(NF - 1, k0 + 1), e.x, e.y);
+      if (i >= 0 && k1 > k0) fx.push({type:'kb', t:F[k0].t, dur:F[k1].t - F[k0].t, i, k0, k1});
+    }
+  }
+  const calls = [], lastLabel = {};
+  for (const s of (w.sigEv || [])){
+    const k = clampI(Math.round(s.t / .2), 0, NF - 1);
+    if (s.name === 'death roll'){ let k1 = k; while (k1 < NF - 1 && F[k1 + 1].u[s.i][6] >= 0 && F[k1 + 1].u[s.i][7] === 1) k1++; fx.push({type:'roll', t:s.t, dur:Math.max(.6, F[k1].t - s.t + .2), i:s.i}); }
+    const label = SIGLABEL[s.name]; if (!label) continue;
+    // rate limit, decided once so a scrubbed replay shows the same labels: at most CUE_MAX on screen, the same move
+    // not again within 5 s, minor moves only when the screen is empty
+    let live = 0, used = 0;
+    for (let j = calls.length - 1; j >= 0 && calls[j].t > s.t - CALLOUT_LIFE; j--){ live++; used |= 1 << calls[j].slot; }
+    if (live >= CUE_MAX || (live && !SIGPRI[s.name]) || (lastLabel[label] != null && s.t - lastLabel[label] < 5)) continue;
+    lastLabel[label] = s.t;
+    calls.push({t:s.t, i:s.i, x:s.x, y:s.y, label, side:U[s.i].side, slot:(used & 1) ? 1 : 0});
+  }
+  fx.sort((a, b) => a.t - b.t);
+  return (w._cues = {N, NF, head, seg0, seg1, fx, calls, kills, kx:new Float32Array(N), ky:new Float32Array(N), spin:new Float32Array(N), widths:{}});
+}
+function firstAfter(arr, t){ let lo = 0, hi = arr.length; while (lo < hi){ const m = (lo + hi) >> 1; if (arr[m].t < t) lo = m + 1; else hi = m; } return lo; }
+function headingAt(CU, F, i, t){ // interpolated heading between the recorded frames around t
+  const k = clampI(Math.floor(t / .2), 0, CU.NF - 1), k1 = Math.min(CU.NF - 1, k + 1), a = CU.head[k * CU.N + i], b = CU.head[k1 * CU.N + i];
+  let d = b - a; if (d > Math.PI) d -= 2 * Math.PI; else if (d < -Math.PI) d += 2 * Math.PI;
+  return a + d * clamp01((t - F[k].t) / .2);
+}
+// a kill slows playback for ~0.6 s of real time (FX.slowmo, off by default)
+const SLOW = .35;
+function slowAt(w, t, speed){
+  if (!FX.slowmo || REDUCED || !w || !w.frames) return 1;
+  const ks = cuesFor(w).kills, win = .6 * speed * SLOW; let lo = 0, hi = ks.length; while (lo < hi){ const m = (lo + hi) >> 1; if (ks[m] <= t) lo = m + 1; else hi = m; }
+  return lo > 0 && t - ks[lo - 1] < win ? SLOW : 1;
+}
+// cue overlays for one frame: per-unit overrides (knockback slide, roll spin) and the ground-level effects under the tokens
+function prepCues(g, sc, w, fr, t, CU){
+  CU.kx.fill(NaN); CU.spin.fill(0);
+  const F = w.frames, fx = CU.fx, DUSTC = DUSTOF[w.T.id] || DUSTOF.savanna;
+  for (let n = firstAfter(fx, t - 1.2); n < fx.length && fx[n].t <= t; n++){
+    const c = fx[n], p = (t - c.t) / c.dur; if (p < 0 || p >= 1) continue;
+    const u = fr.u[c.i];
+    if (c.type === 'kb' && FX.knockback){ const a = F[c.k0].u[c.i], b = F[c.k1].u[c.i], e = 1 - (1 - p) * (1 - p) * (1 - p); CU.kx[c.i] = a[0] + (b[0] - a[0]) * e; CU.ky[c.i] = a[1] + (b[1] - a[1]) * e;
+      // skid marks behind the slide
+      const ang = Math.atan2(b[1] - a[1], b[0] - a[0]), r = w.units[c.i].r * sc * .5, ox = -Math.sin(ang) * r, oy = Math.cos(ang) * r;
+      g.strokeStyle = DUSTC; g.globalAlpha = .45 * (1 - p); g.lineWidth = Math.max(1, sc * .18); g.beginPath();
+      g.moveTo(a[0] * sc + ox, a[1] * sc + oy); g.lineTo(CU.kx[c.i] * sc + ox, CU.ky[c.i] * sc + oy); g.moveTo(a[0] * sc - ox, a[1] * sc - oy); g.lineTo(CU.kx[c.i] * sc - ox, CU.ky[c.i] * sc - oy); g.stroke(); g.globalAlpha = 1; }
+    else if (c.type === 'roll' && FX.roll && !REDUCED && u[7] === 1){ CU.spin[c.i] = (t - c.t) * 9 * (p < .85 ? 1 : (1 - p) / .15 * .5 + .5); }
+    else if (c.type === 'puff' && FX.puff && !REDUCED){ // the mock charge stops short: a little dust kicked up in front
+      const q = 1 - p, x = c.x * sc + Math.cos(c.ang) * (c.R + .6) * sc, y = c.y * sc + Math.sin(c.ang) * (c.R + .6) * sc;
+      g.fillStyle = DUSTC;
+      for (let d = 0; d < 5; d++){ const an = c.ang + (d - 2) * .5, rd = (.4 + p * 2.2) * sc; g.globalAlpha = .38 * q; g.beginPath(); g.arc(x + Math.cos(an) * rd, y + Math.sin(an) * rd, (.5 + p * 1.1) * sc, 0, 7); g.fill(); }
+      g.globalAlpha = 1; }
+  }
+}
+function drawSweeps(g, sc, w, fr, t, CU){ // the trunk-and-tusk sweep across the front half, drawn over the tokens
+  if (!FX.sweepArc || REDUCED) return; const fx = CU.fx;
+  for (let n = firstAfter(fx, t - 1.2); n < fx.length && fx[n].t <= t; n++){
+    const c = fx[n]; if (c.type !== 'sweep') continue; const p = (t - c.t) / c.dur; if (p < 0 || p >= 1) continue;
+    const u = fr.u[c.i]; if (u[7] !== 1) continue;
+    const x = (isNaN(CU.kx[c.i]) ? u[0] : CU.kx[c.i]) * sc, y = (isNaN(CU.kx[c.i]) ? u[1] : CU.ky[c.i]) * sc, R = Math.max(c.R * sc, w.units[c.i].r * sc * 1.1 * 1.45 + 6), e = 1 - (1 - Math.min(1, p * 1.6)) ** 2;
+    const a0 = c.ang - 1.3, a1 = a0 + 2.6 * e;
+    g.strokeStyle = '#ec7a2c'; g.lineCap = 'round';
+    g.globalAlpha = .55 * (1 - p); g.lineWidth = Math.max(3, sc * .9); g.beginPath(); g.arc(x, y, R, a0, a1); g.stroke();
+    g.globalAlpha = .22 * (1 - p); g.lineWidth = Math.max(5, sc * 1.6); g.beginPath(); g.arc(x, y, R + Math.max(4, sc * 1.1), Math.max(a0, a1 - .9), a1); g.stroke();
+    g.globalAlpha = 1; g.lineCap = 'butt';
+  }
+}
+// signature callouts: a small pill above the animal, rising a little and fading
+function drawCallouts(g, sc, w, fr, t, CU){
+  if (!FX.callouts) return; const cs = CU.calls, fs = Math.max(11, Math.round(sc * 1.45));
+  g.font = `700 ${fs}px Barlow, sans-serif`; g.textAlign = 'center'; g.textBaseline = 'middle';
+  for (let n = firstAfter(cs, t - CALLOUT_LIFE); n < cs.length && cs[n].t <= t; n++){
+    const c = cs[n], age = t - c.t; if (age < 0 || age >= CALLOUT_LIFE) continue;
+    const u = fr.u[c.i], alive = u[7] === 1, x0 = (alive ? u[0] : c.x) * sc, rr = Math.max(10, w.units[c.i].r * sc * 1.1);
+    const a = Math.min(1, age / .15) * Math.min(1, (CALLOUT_LIFE - age) / .5), y0 = (alive ? u[1] : c.y) * sc - rr - Math.max(6, rr * .5) - fs * 1.5 - age * sc * .5 - c.slot * fs * 1.7;
+    const key = c.label + fs; let tw = CU.widths[key]; if (tw == null) tw = CU.widths[key] = g.measureText(c.label).width;
+    const pw = tw + fs * 1.1, ph = fs * 1.5, x = Math.min(Math.max(x0, pw / 2 + 2), A.W * sc - pw / 2 - 2), y = Math.max(ph / 2 + 2, y0);
+    g.globalAlpha = a * .85; g.fillStyle = '#0d110e'; g.beginPath(); g.roundRect ? g.roundRect(x - pw / 2, y - ph / 2, pw, ph, ph / 2) : g.rect(x - pw / 2, y - ph / 2, pw, ph); g.fill();
+    g.globalAlpha = a; g.strokeStyle = c.side === 'P' ? C.you : c.side === 'E' ? C.foe : '#fff'; g.lineWidth = Math.max(1.5, sc * .14); g.stroke();
+    g.fillStyle = C.fg; g.fillText(c.label, x, y + 1);
+  }
+  g.globalAlpha = 1; g.textAlign = 'left'; g.textBaseline = 'alphabetic';
+}
+const DUSTOF = {savanna:'rgb(217,190,140)', river:'rgb(150,128,92)', forest:'rgb(120,105,75)', tundra:'rgb(240,244,250)'};
+// pounce: lift along an arc from take-off to landing, with a ground shadow and a faint dashed path
+function pounceLift(g, sc, F, CU, i, t){
+  const k = clampI(Math.floor(t / .2), 0, CU.NF - 1), s0 = CU.seg0[k * CU.N + i], s1 = CU.seg1[k * CU.N + i];
+  const ka = Math.max(0, s0 - 1), kb = Math.min(CU.NF - 1, s1 + 1), ta = F[s0].t - .1, tb = F[kb].t;
+  const p = clamp01((t - ta) / Math.max(.2, tb - ta)), A0 = F[ka].u[i], B0 = F[kb].u[i];
+  const d = Math.hypot(B0[0] - A0[0], B0[1] - A0[1]), H = Math.min(3.6, .9 + d * .3) * sc;
+  if (H > 0 && d > .5){ g.strokeStyle = 'rgba(240,180,41,.6)'; g.lineWidth = Math.max(1.2, sc * .18); g.setLineDash([sc * .5, sc * .45]); g.beginPath(); g.moveTo(A0[0] * sc, A0[1] * sc); g.quadraticCurveTo((A0[0] + B0[0]) / 2 * sc, (A0[1] + B0[1]) / 2 * sc - H * 2, B0[0] * sc, B0[1] * sc); g.stroke(); g.setLineDash([]); }
+  return Math.sin(Math.PI * p) * H;
+}
 function drawUnits(g, sc, w, fr, events, t, opts){
   opts = opts || {};
   // carcasses
@@ -2832,7 +3075,7 @@ function drawUnits(g, sc, w, fr, events, t, opts){
     const F = S.world.frames, k = clampI(Math.floor(t / 0.2), 0, F.length - 1);
     fr.u.forEach((u, i) => {
       if (u[7] !== 1) return; const kind = u[15];
-      if (!['charge','pounce','lunge','dart'].includes(kind)) return;
+      if (!['charge','pounce','lunge','dart'].includes(kind) || (kind === 'charge' && FX.chargeCue && !REDUCED) || (kind === 'pounce' && FX.pounceArc && !REDUCED)) return;
       g.strokeStyle = kind === 'charge' ? 'rgba(236,122,44,.55)' : kind === 'dart' ? 'rgba(217,207,180,.45)' : 'rgba(240,180,41,.7)';
       g.lineWidth = Math.max(2, U[i].r * sc * (kind === 'charge' ? .9 : .5)); g.lineCap = 'round';
       g.beginPath(); g.moveTo(u[0]*sc, u[1]*sc);
@@ -2860,12 +3103,32 @@ function drawUnits(g, sc, w, fr, events, t, opts){
     if (im && im.complete && im.naturalWidth){ g.filter = 'grayscale(1)'; g.drawImage(im, u[0] * sc - rr, u[1] * sc - rr, rr * 2, rr * 2); g.filter = 'none'; } else { g.fillStyle = '#444'; g.fill(); }
     g.restore();
   });
+  const CU = F && F.length ? cuesFor(w) : null;
+  if (CU) prepCues(g, sc, w, fr, t, CU);
+  if (CU && FX.chargeCue && !REDUCED){ // a charge: light dust behind it and three speed streaks
+    g.fillStyle = DUSTOF[w.T.id] || DUSTOF.savanna;
+    for (let i = 0; i < fr.u.length; i++){
+      const u = fr.u[i]; if (u[7] !== 1 || u[15] !== 'charge') continue; const v = speedOf(i); if (v < 3) continue;
+      const hd = headingAt(CU, F, i, t), c = Math.cos(hd), s = Math.sin(hd), r = U[i].r * sc, x = (isNaN(CU.kx[i]) ? u[0] : CU.kx[i]) * sc, y = (isNaN(CU.kx[i]) ? u[1] : CU.ky[i]) * sc;
+      for (let j = 1; j <= 4; j++){ const p = prevOf(i, j); if (!p || p[7] !== 1) break; const age = t - F[kf - j].t, jit = (((i * 7 + (kf - j) * 13) % 5) - 2) * .22 * r;
+        g.globalAlpha = Math.max(0, .2 - age * .16); g.beginPath(); g.arc(p[0] * sc - s * jit, p[1] * sc + c * jit, r * .5 + age * 1.6 * sc, 0, 7); g.fill(); }
+      g.globalAlpha = Math.min(1, v / 10) * .55; g.strokeStyle = C.fg; g.lineWidth = Math.max(1, sc * .13); g.lineCap = 'round'; g.beginPath();
+      const L = r * (.7 + Math.min(1.1, v / 12));
+      for (let m = -1; m <= 1; m++){ const k = m ? .75 : 1, bx = x - c * r * (1.3 + (m ? 0 : .15)) - s * m * r * .55, by = y - s * r * (1.3 + (m ? 0 : .15)) + c * m * r * .55; g.moveTo(bx, by); g.lineTo(bx - c * L * k, by - s * L * k); }
+      g.stroke(); g.globalAlpha = 1; g.lineCap = 'butt';
+    }
+  }
   // draw order: big first, riders last
   const order = fr.u.map((u, i) => i).sort((a, b) => (fr.u[a][9] - fr.u[b][9]) || (U[b].s.mass - U[a].s.mass));
   for (const i of order){
     const u = fr.u[i]; if (u[7] !== 1) continue;
     const unit = U[i]; const s = unit.s; const isH = unit.side === 'H';
     let x = u[0]*sc, y = u[1]*sc; const rr0 = Math.max(isH ? 8 : 10, unit.r * sc * 1.1) * (u[9] > 0 && isH ? .85 : 1);
+    if (CU && !isNaN(CU.kx[i])){ x = CU.kx[i] * sc; y = CU.ky[i] * sc; } // knocked back: an ease-out slide
+    if (CU && FX.pounceArc && !REDUCED && u[15] === 'pounce'){ // in the air: shadow stays on the ground, the token rises along the arc
+      const lift = pounceLift(g, sc, F, CU, i, t);
+      if (lift > .5){ const k = 1 - Math.min(.4, lift / (sc * 7)); g.fillStyle = 'rgba(0,0,0,.45)'; g.beginPath(); g.ellipse(x, y + rr0 * .2, rr0 * k, rr0 * .5 * k, 0, 0, 7); g.fill(); y -= lift; }
+    }
     // hit flash and shake (health dropped at the last recorded frame), stretch along a charge/pounce, breathing at rest
     let flash = 0, stretch = 0, ang = 0, breath = 1;
     if (F && kf > 0){
@@ -2887,13 +3150,17 @@ function drawUnits(g, sc, w, fr, events, t, opts){
     g.fillStyle = isH ? '#f5f2ea' : unit.side === 'P' ? '#1e5c53' : '#6b2a1d';
     g.beginPath(); g.arc(0, 0, rr, 0, 7); g.fill();
     const im = !isH && FACEIMG[s.species || s.id];
-    if (im && im.complete && im.naturalWidth){ g.save(); g.beginPath(); g.arc(0, 0, rr, 0, 7); g.clip(); g.globalAlpha = u[4] === 'flee' ? .55 : u[15] === 'stalk' ? .6 : 1; g.drawImage(im, -rr, -rr, rr*2, rr*2); g.restore(); }
+    if (im && im.complete && im.naturalWidth){ g.save(); g.beginPath(); g.arc(0, 0, rr, 0, 7); g.clip(); g.globalAlpha = u[4] === 'flee' ? .55 : u[15] === 'stalk' ? .6 : 1; if (CU && CU.spin[i]) g.rotate(CU.spin[i]); g.drawImage(im, -rr, -rr, rr*2, rr*2); g.restore(); }
     if (flash){ g.fillStyle = `rgba(255,70,45,${.55 * flash})`; g.beginPath(); g.arc(0, 0, rr, 0, 7); g.fill(); }
     // tier ring
     g.lineWidth = Math.max(2.5, rr*.22);
     g.strokeStyle = isH ? '#ffffff' : unit.side === 'P' ? C.you : C.foe;
     if (u[4] === 'flee') g.setLineDash([3, 3]);
     g.beginPath(); g.arc(0, 0, rr, 0, 7); g.stroke(); g.setLineDash([]);
+    if (FX.facing && !(isH && u[9] > 0)){ // heading notch: which way it's going (or facing its target when still)
+      const hd = CU ? headingAt(CU, F, i, t) + (CU.spin[i] || 0) : (unit.side === 'E' ? Math.PI : 0), R1 = rr * 1.4 + 5, R0 = rr * .9, wa = .34;
+      g.fillStyle = isH ? '#ffffff' : unit.side === 'P' ? C.you : C.foe; g.beginPath(); g.moveTo(Math.cos(hd) * R1, Math.sin(hd) * R1); g.lineTo(Math.cos(hd + wa) * R0, Math.sin(hd + wa) * R0); g.lineTo(Math.cos(hd - wa) * R0, Math.sin(hd - wa) * R0); g.closePath(); g.fill();
+    }
     g.restore();
     // hp arc
     if (!opts.deploy){ g.strokeStyle = u[2] > .5 ? '#d5f2cf' : u[2] > .25 ? C.gold : C.red; g.lineWidth = Math.max(1.5, rr*.16); g.beginPath(); g.arc(x, y, rr + Math.max(2.5, rr*.22), -Math.PI/2, -Math.PI/2 + Math.PI*2*u[2]); g.stroke(); }
@@ -2923,6 +3190,7 @@ function drawUnits(g, sc, w, fr, events, t, opts){
     if (i === S.sel && !opts.deploy){ g.strokeStyle = '#fff'; g.lineWidth = 1; g.setLineDash([2, 2]); g.beginPath(); g.arc(x, y, rr + 7, 0, 7); g.stroke(); g.setLineDash([]); }
   }
   g.textAlign = 'left'; g.textBaseline = 'alphabetic';
+  if (CU) drawSweeps(g, sc, w, fr, t, CU);
   // floating notes
   if (events){
     g.font = `600 ${Math.max(10, sc*1.5)}px Barlow, sans-serif`;
@@ -2938,6 +3206,7 @@ function drawUnits(g, sc, w, fr, events, t, opts){
         g.globalAlpha = 1;
       }
       if (e.kind === 'charge' || e.kind === 'pounce' || e.kind === 'lunge' || e.kind === 'ambush') continue;
+      if (FX.callouts && CU && (e.kind === 'maul' || e.kind === 'sweep' || e.kind === 'bluff')) continue; // a callout names these
       const short = ({kill:'DOWN', death:'KILLED', charge:'CHARGE', latch:'GRAB', flee:'BREAKS', heat:'OVERHEAT', feed:'FEEDING', corner:'CORNERED', ambush:'AMBUSH', pounce:'POUNCE', lunge:'LUNGE', maul:'MAUL', sweep:'SWEEP', gate:'GATE', crash:'CRASH', flank:'FLANK', feud:'RIVALRY', rout:'ROUTED', danger:'!', bluff:'BLUFF', win:''})[e.kind];
       if (!short) continue;
       g.globalAlpha = 1 - age / 1.8; g.fillStyle = KINDCOL[e.kind];
@@ -2946,6 +3215,7 @@ function drawUnits(g, sc, w, fr, events, t, opts){
       g.globalAlpha = 1; g.textAlign = 'left';
     }
   }
+  if (CU) drawCallouts(g, sc, w, fr, t, CU);
 }
 function drawFight(){
   const w = S.world; if (!w) return;
@@ -2958,9 +3228,12 @@ function drawFight(){
   const standing = w.fallen ? w.trees.concat(w.fallen.filter(f => f.t > S.playT)) : w.trees; // trees an elephant shoved over stay up until they fall
   g.drawImage(groundFor(S.terrain_used || w.T.id, standing, cv.width, cv.height, w.shade, w.variant), 0, 0);
   if (w.mode === 'allout'){ g.fillStyle = C.foe; for (let i = 0; i < 6; i++) g.fillRect((A.W-1.2)*sc, (6 + i*10.8 - 2)*sc, sc*1.2, sc*4); }
+  const wall = REDUCED ? 0 : performance.now() / 1000;
+  if (FX.weather) drawWater(g, sc, w, wall);
   drawHazard(g, sc, w, S.playT);
   const fr = frameAt(S.playT);
   drawUnits(g, sc, w, fr, w.events, S.playT, {});
+  if (FX.weather && w.T.id === 'tundra') drawSnowfall(g, sc, cv.width, cv.height, wall);
   g.setTransform(1, 0, 0, 1, 0, 0);
 }
 // closing arena: tint everything outside the safe box, with a bright edge
@@ -3045,8 +3318,8 @@ function renderReport(show){
 // ---------- loop ----------
 function frame(ts){
   if (S.screen === 'fight' && S.world){
-    if (S.lastTs && S.playing){ S.playT = Math.min(S.dur, S.playT + (ts - S.lastTs) / 1000 * S.speed); if (S.playT >= S.dur) S.playing = false; }
-    drawFight(); renderSide();
+    if (S.lastTs && S.playing){ S.playT = Math.min(S.dur, S.playT + (ts - S.lastTs) / 1000 * S.speed * slowAt(S.world, S.playT, S.speed)); if (S.playT >= S.dur) S.playing = false; }
+    const t0 = performance.now(); drawFight(); S.perf[S.perfN++ % S.perf.length] = performance.now() - t0; renderSide();
   }
   S.lastTs = ts;
   requestAnimationFrame(frame);
