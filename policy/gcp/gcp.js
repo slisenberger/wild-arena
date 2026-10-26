@@ -14,10 +14,10 @@
 const fs = require('fs'), path = require('path'), os = require('os'), { execFileSync, spawn } = require('child_process');
 const ROOT = path.join(__dirname, '..', '..');
 const args = process.argv.slice(2), pos = args.filter(a => !a.startsWith('--')), opt = Object.fromEntries(args.filter(a => a.startsWith('--')).map(a => { const [k, v] = a.slice(2).split('='); return [k, v === undefined ? true : v]; }));
-const PROJECT = process.env.GCP_PROJECT, REGION = process.env.GCP_REGION || 'us-central1';
+const PROJECT = process.env.GCP_PROJECT, REGIONS = (process.env.GCP_REGION || 'us-central1').split(','), REGION = REGIONS[0]; // a list spills VMs into the next region (e.g. 8 external IPs per region)
 const BUCKET = opt.bucket || process.env.GCP_BUCKET || (PROJECT ? `gs://${PROJECT}-wild-arena-runs` : null);
 const LOCAL = !!opt.local || (BUCKET && !BUCKET.startsWith('gs://'));
-const MACHINES = (opt.machines || opt.machine || 'c2d-highcpu-112,c2d-highcpu-56,n2d-highcpu-64,n2d-highcpu-32').split(',');
+let MACHINES = (opt.machines || opt.machine || 'c2d-highcpu-112,c2d-highcpu-56,n2d-highcpu-64,n2d-highcpu-32').split(',');
 const CORES = m => +(m.match(/-(\d+)$/) || [0, 8])[1];
 const PRICE_PER_CORE_H = {c2d: .0072, n2d: .0062, c3d: .0080, e2: .0050}; // rough spot $/vCPU-hour (estimate only; check your region)
 const STALE_S = +(opt.staleMinutes || 20) * 60;
@@ -50,7 +50,7 @@ function view(id){
 }
 // ---------- VMs ----------
 function vmsOf(id){ if (LOCAL) return []; try { return JSON.parse(sh('gcloud', ['compute', 'instances', 'list', '--filter', `labels.wa-sweep=${id}`, '--format', 'json(name,zone,status)'])); } catch (e){ return []; } }
-function zones(){ if (opt.zones) return opt.zones.split(','); try { return sh('gcloud', ['compute', 'zones', 'list', '--filter', `region:${REGION} AND status:UP`, '--format', 'value(name)']).split('\n').filter(Boolean); } catch (e){ return ['b', 'c', 'a', 'f'].map(z => `${REGION}-${z}`); } }
+function zones(){ if (opt.zones) return opt.zones.split(','); return REGIONS.flatMap(R => { try { return sh('gcloud', ['compute', 'zones', 'list', '--filter', `region:${R} AND status:UP`, '--format', 'value(name)']).split('\n').filter(Boolean); } catch (e){ return ['b', 'c', 'a', 'f'].map(z => `${R}-${z}`); } }); }
 const RETRYABLE = /ZONE_RESOURCE_POOL_EXHAUSTED|RESOURCE_EXHAUSTED|QUOTA_EXCEEDED|Quota .* exceeded|does not have enough resources|not available in zone|UNSUPPORTED_OPERATION|was not found/i;
 function createVM(id, idx, runs, m, hours){
   const name = `wa-${id}-${idx}-${Date.now().toString(36).slice(-4)}`.toLowerCase().replace(/[^a-z0-9-]/g, '-').slice(0, 62);
@@ -84,12 +84,12 @@ function check(){
   let fails = 0;
   log('environment');
   PROJECT ? ok('GCP_PROJECT = ' + PROJECT) : bad('GCP_PROJECT not set', 'add it in the environment settings, then start a new session');
-  let key = null; if (!process.env.GCP_SA_KEY) bad('GCP_SA_KEY not set', 'add the service-account JSON key as a secret, then start a new session');
+  let key = null; if (!process.env.GCP_SA_KEY) log("  note  GCP_SA_KEY not set: using gcloud's current login (e.g. a proxy-injected token)");
   else { try { key = JSON.parse(process.env.GCP_SA_KEY); key.type === 'service_account' && key.client_email && key.private_key ? ok(`key parses: ${key.client_email} (project ${key.project_id})`) : bad('GCP_SA_KEY is JSON but not a service-account key'); } catch (e){ bad('GCP_SA_KEY is not valid JSON', 'paste the whole key file contents (it starts with {"type": "service_account")'); } }
   if (key && PROJECT && key.project_id !== PROJECT) log(`  note  the key is from project ${key.project_id}, GCP_PROJECT is ${PROJECT} (fine if the account has roles there)`);
   if (fails) return log(`\n${fails} problem(s); fix them and run 'node policy/gcp/gcp.js check' again`);
   log('auth and project');
-  try { auth(); ok('activated the service account and set the project'); } catch (e){ return bad('gcloud auth failed: ' + String(e.stderr || e.message).split('\n')[0], 'check the key; a deleted or disabled key fails here'); }
+  try { auth(); ok(process.env.GCP_SA_KEY ? 'activated the service account and set the project' : 'set the project'); } catch (e){ return bad('gcloud auth failed: ' + String(e.stderr || e.message).split('\n')[0], 'check the key; a deleted or disabled key fails here'); }
   try { sh('gcloud', ['projects', 'describe', PROJECT, '--format', 'value(projectId)']); ok('project is visible'); } catch (e){ bad('cannot see project ' + PROJECT, 'grant the service account a role on this project (e.g. Compute Instance Admin)'); }
   log('APIs');
   for (const api of ['compute.googleapis.com', 'storage.googleapis.com']){
@@ -122,7 +122,7 @@ const [cmd, arg] = pos;
     if (S.get(`sweeps/${id}/manifest.json`)) throw new Error(`sweep ${id} exists: use 'resume ${id}'`);
     const commit = opt.commit || sh('git', ['rev-parse', 'HEAD'], {cwd: ROOT}).trim();
     if (!LOCAL){ try { sh('git', ['branch', '-r', '--contains', commit], {cwd: ROOT}).trim() || (() => { throw 0; })(); } catch (e){ throw new Error(`commit ${commit} isn't on the remote: push first (VMs clone it)`); } }
-    const m = {id, created: new Date().toISOString(), sweepFile: arg, note: sweep.note, commit, repo: opt.repo || 'https://github.com/slisenberger/wild-arena.git', threads: +(opt.threads || 8), hours: +(opt.hours || 5.5), runs: sweep.runs, tries: {}};
+    const m = {id, created: new Date().toISOString(), sweepFile: arg, note: sweep.note, commit, repo: opt.repo || 'https://github.com/slisenberger/wild-arena.git', threads: +(opt.threads || 8), hours: +(opt.hours || 5.5), machines: MACHINES, runs: sweep.runs, tries: {}};
     sweep.runs.forEach(r => m.tries[r.name] = 1);
     if (!opt['dry-run']) S.putText(`sweeps/${id}/manifest.json`, JSON.stringify(m, null, 1));
     log(`sweep ${id} @ ${commit.slice(0, 10)} -> ${BUCKET}/sweeps/${id}/`); launchRuns(id, m, sweep.runs.map(r => r.name));
@@ -137,6 +137,7 @@ const [cmd, arg] = pos;
     if (skipped.length) log(`not retried (failed ${max}×): ${skipped.join(', ')}`);
     if (!todo.length){ log('nothing to resume'); return; }
     if (opt.hours) m.hours = +opt.hours;
+    if (opt.machine || opt.machines) m.machines = MACHINES; else if (m.machines) MACHINES = m.machines; // resume keeps the launch's machine choice
     todo.forEach(n => m.tries[n] = (m.tries[n] || 0) + 1); if (!opt['dry-run'] && (opt.yes || LOCAL)) S.putText(`sweeps/${arg}/manifest.json`, JSON.stringify(m, null, 1));
     log(`resuming ${todo.length}: ${todo.join(', ')}`); launchRuns(arg, m, todo);
   } else if (cmd === 'stop'){

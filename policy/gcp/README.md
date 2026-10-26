@@ -5,7 +5,10 @@ packs several runs (`--threads` cores each), checkpoints every run to a bucket e
 done. Everything is resumable: `train.js` saves after every step and refuses to continue on a different engine.
 
 ## Setup (once)
-Environment variables: `GCP_PROJECT`, `GCP_SA_KEY` (service-account JSON; secret), optional `GCP_REGION` (us-central1),
+Environment variables: `GCP_PROJECT`, `GCP_SA_KEY` (service-account JSON; secret; optional if gcloud is already logged in, e.g. a
+proxy-injected token), optional `GCP_REGION` (us-central1; a comma list such as `us-central1,us-east1` spills VMs into the next
+region: new projects allow only 8 external IPs, i.e. 8 VMs, per region), `GCS_XML_READ=1` (read the bucket over the XML API, for
+proxies that decode `%2F` and break `gcloud storage cat`),
 `GCP_BUCKET` (gs://<project>-wild-arena-runs, created on first use), `GCP_VM_SA` (service account for the VMs).
 The service account needs Compute Instance Admin (v1), Service Account User and Storage Admin. Spot vCPU quota in the
 region (~200 for two 112-core VMs). VMs clone the public repo at the exact commit, so push before launching.
