@@ -1,0 +1,53 @@
+{
+ "note": "Milestone 3, cat intents (Oct 26): the cat-specific intent set (commit / pounce / creep / abandon / soften / cover / blindside, features move_cat_features.js). No rule cleared 2 SE in a single draw (probes/cat_rules.js, logs/m3_cat_headroom*.txt, m3_cat_confirm.txt); cougarPounce was positive in both draws (+0.008 ± 0.005, +0.007 ± 0.005; pooled about 2.1 SE, cougar fights +0.028 ± 0.013), stalkerPounce and busyPounce near zero. Warm starts from those (and the most active rule, creepUnseen), plus cold starts with the drift cap (--thetaClip=1) at sigma .1 / .05 and one full-MLP cold start. All --withLive=true; val/test sizes as m3_arch_s1.",
+ "runs": [
+  {
+   "name": "cat_cp_c1",
+   "args": "--pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --arch=cat --initRule=cougarPounce --thetaClip=1 --seed=701"
+  },
+  {
+   "name": "cat_cp_c1_small",
+   "args": "--pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --arch=cat --initRule=cougarPounce --thetaClip=1 --sigma=.05 --lr=.04 --seed=702"
+  },
+  {
+   "name": "cat_cp_c2",
+   "args": "--pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --arch=cat --initRule=cougarPounce --thetaClip=2 --seed=703"
+  },
+  {
+   "name": "cat_sp_c1",
+   "args": "--pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --arch=cat --initRule=stalkerPounce --thetaClip=1 --seed=704"
+  },
+  {
+   "name": "cat_sp_c1_small",
+   "args": "--pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --arch=cat --initRule=stalkerPounce --thetaClip=1 --sigma=.05 --lr=.04 --seed=705"
+  },
+  {
+   "name": "cat_bp_c1",
+   "args": "--pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --arch=cat --initRule=busyPounce --thetaClip=1 --sigma=.05 --lr=.04 --seed=706"
+  },
+  {
+   "name": "cat_cu_c1",
+   "args": "--pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --arch=cat --initRule=creepUnseen --thetaClip=1 --sigma=.05 --lr=.04 --seed=707"
+  },
+  {
+   "name": "cat_cold_c1_s1",
+   "args": "--pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --arch=cat --thetaClip=1 --seed=708"
+  },
+  {
+   "name": "cat_cold_c1_s2",
+   "args": "--pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --arch=cat --thetaClip=1 --seed=709"
+  },
+  {
+   "name": "cat_cold_c1_small_s1",
+   "args": "--pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --arch=cat --thetaClip=1 --sigma=.05 --lr=.04 --seed=710"
+  },
+  {
+   "name": "cat_cold_c1_small_s2",
+   "args": "--pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --arch=cat --thetaClip=1 --sigma=.05 --lr=.04 --seed=711"
+  },
+  {
+   "name": "cat_cold_full_small",
+   "args": "--pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --arch=cat --mode=full --nh=16 --thetaClip=1 --sigma=.05 --lr=.04 --seed=712"
+  }
+ ]
+}

@@ -107,6 +107,26 @@ round. Report ± standard errors.
   target) a killing stab ×3, half armor, 8 s bleed, then it lets go and circles at 8 m (`backT`) while it bleeds.
   Canine break 3% (+30% unheld or big fresh prey, +35% armor ≥ .45): dmg ×.7 for good. `bigGame` prey ×1.5 at
   1.5–4× its mass; avoids armor ×.3; cougar yields to it. $100, swing 27 ± 4 s (mine +17 vs tiger +14).
+- **Light-pick identity pass (Oct 26, subagent; ROSTER.md has the table):** one visible signature each, a `sig()` counter,
+  no stat changes. Tags: `musk` (honey badger: a predator that bites it or closes to touch reels away, flees 2.5–4 s and
+  ignores it 15 s via `repelBy/repelUntil`; 12 s cooldown), `clawKick` (ostrich: kicks on ≤ 4× its mass bleed 6 s and
+  stun/shove; it kicks what comes for you within 8 m), `napeBite` (cougar: a pounce on prey ≤ 5× not facing it ×1.5,
+  half armor, stun 1.2 s), `swimStalk` (jaguar: unseen beyond 7 m in water, re-arms its ambush there), `tester` (lone wolf:
+  nips herbivores ≤ 1 t coming your way, kites just ahead of a > 3× chaser, away from you), `boneCrush` (hyena, replaces
+  its hamstring: +10% lasting `limp` per bite up to 40%, prefers lamed prey), `repeatBluff` (black bear: up to 3 mock
+  charges; a rattled target its size is run off), `chestBeat` (gorilla: something coming for you within 14 m → nearby
+  enemies −.2 morale and those under 2× its strength switch onto it; 12 s cooldown), `upends` (boar: a charge hit on
+  ≤ 2.5× its mass stuns 1 s and breaks the target's hold), `backLeap` (lion: latches onto non-predators up to 6× its mass
+  that are busy fighting its side), `hiddenGuard` (your leopard on guard, ambush ready: unseen beyond 6 m and not counted
+  by `guardsAround`). Sources: musk/loose skin (Latest Sightings; Science Focus), ostrich claw kick (Africa Freak),
+  cougar rear attack + nape bite (ExplorersWeb; Seattle Times 2000), jaguar swimming up to caimans (NatGeo 2013;
+  Roundglass), lone wolves on moose/bison (Wikipedia: Hunting behavior of gray wolves), hyena endurance (Holekamp Lab),
+  repeated bluff charges (bear.org; USFS), chest beats signal size (Wright et al. 2021, Sci. Rep.), boar posterior-thigh
+  tusk wounds (Wilderness Environ. Med. 2018 case), lions on a buffalo's back (Singita 2026), leopard concealment.
+  Rates/fight (`audit.js 100 1200`): musk .06, claw kick .42, nape bite .12, water ambush .11, leads a chase .39, cracks
+  bone 1.2, drives it off .12, upends .65, chest-beat .64, leaps on its back .09, springs from hiding .09. Swing
+  (price_abs N=240, paired): lion +8, leopard +7, gorilla +5 (mine +12), jaguar +3, others within ±4 except lone hyena
+  −7 ± 5; big enemies' "theirs" rose 4–10 s (no single mechanic > 4 s). Boards without these species: byte-identical.
 - **Pack items:** `wolfpack` ×4 (dealt 3 in 4), rare `wolfpack6` ×6, `hyenapack` ×4, `lionpack` ×2 (coalition),
   `buffaloherd` ×3, `bisonherd` ×3 are extra catalog entries (`species` points at the base animal, `group` = size,
   `dealWeight`; `sp(s)` gives the species for rivals/yields/snow checks). A board deals each species once, solo or
@@ -203,6 +223,9 @@ round. Report ± standard errors.
     `brawler` (lumbering predators), `kicker` (keepaway); croc heuristic. Per-gait intent geometry `INTENT_GEO` in sim.js,
     `policy/move_arch_features.js`, `probes/arch_rules.js`. Probe winners confirmed on a fresh draw: bulldozer flankBusy
     +0.170 ± 0.030, brawler patient +0.067 ± 0.021; cats: no headroom found so far (generic intents, hand-written rules only). Sweep `policy/sweeps/m3_arch_s1.json`.
+  - Cat intents (Oct 26, opt-in: weights with `set:'cat'`): `CAT_INTENTS` pounce / creep / abandon / soften / cover / blindside, features
+    `policy/move_cat_features.js`, probe `policy/probes/cat_rules.js`: no rule confirmed at 2 SE yet (cougarPounce +0.008 ± 0.005 twice,
+    directional); learning next: sweep `policy/sweeps/m3_cat_s1.json`.
   - Lesson: ES from zero collapsed (the style penalty drove every candidate back to "always commit", then exploration
     died: |θ| grew, non-commit 0%). Warm starts and small σ work; big σ collapses.
 
@@ -236,7 +259,11 @@ round. Report ± standard errors.
   Idle (audit, $1,200): yours 53.5% → ~40%, theirs 33.8% → ~23%. Cost: cats' value on your side fell (~+5–15 s).
   Ridden-mount experiments: evading with a non-giant mount made riding worse (reverted); giraffe/ostrich getaway ride
   (rarely throws you unless grabbed, kicks while carrying) is neutral within noise.
-- **Current prices (`abs_r12`, with the learned harrier + guard policies live):** 22 s of swing per $100, board total
+- **Current prices (`abs_r13`, after the light-picks identity pass):** 20 s of swing per $100, board total $2,500, budget
+  $1,200, rares 30%. Validation: median board's best team 92% (min 50, p25 79), typical full-spend team 197 s, 15
+  distinct best teams over 16 boards. Changes: rhino $400, grizzly $100, tiger $100, lion coalition $100.
+  (22 s/$100 → $2,400: typical 300 s, too easy; 18 s/$100 → $2,700: 83%, 153 s.)
+- *Previous* prices (`abs_r12`, with the learned harrier + guard policies live): 22 s of swing per $100, board total
   $2,600, budget $1,200, rares 30%. Validation: median board's best team 92% (min 38, p25 83), typical full-spend team
   173 s, 15 distinct best teams over 16 boards. Changes: rhino $300, croc $100, bull $100, triceratops $800.
   (20 s/$100 → $2,700: 83%, 164 s.)
