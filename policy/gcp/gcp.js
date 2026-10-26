@@ -28,7 +28,7 @@ const log = (...m) => console.log(...m);
 const S = {
   put(local, key){ if (LOCAL) { const f = path.join(BUCKET, key); fs.mkdirSync(path.dirname(f), {recursive: true}); fs.copyFileSync(local, f); } else sh('gcloud', ['storage', 'cp', '-q', local, `${BUCKET}/${key}`]); },
   putText(key, text){ const t = path.join(os.tmpdir(), 'wa_' + process.pid + '_' + path.basename(key)); fs.writeFileSync(t, text); try { S.put(t, key); } finally { fs.unlinkSync(t); } },
-  get(key){ try { return LOCAL ? fs.readFileSync(path.join(BUCKET, key), 'utf8') : sh('gcloud', ['storage', 'cat', `${BUCKET}/${key}`]); } catch (e){ return null; } },
+  get(key){ try { return LOCAL ? fs.readFileSync(path.join(BUCKET, key), 'utf8') : process.env.GCS_XML_READ ? sh('curl', ['-sSf', `https://storage.googleapis.com/${BUCKET.slice(5)}/${key}`]) : sh('gcloud', ['storage', 'cat', `${BUCKET}/${key}`]); } catch (e){ return null; } }, // GCS_XML_READ: proxies that decode %2F break gcloud's JSON-API reads
   list(prefix){ try { if (LOCAL){ const d = path.join(BUCKET, prefix); return fs.existsSync(d) ? fs.readdirSync(d).map(f => prefix + f) : []; } return sh('gcloud', ['storage', 'ls', `${BUCKET}/${prefix}`]).split('\n').filter(Boolean).map(u => u.replace(BUCKET + '/', '')); } catch (e){ return []; } },
   ensureBucket(){ if (LOCAL){ fs.mkdirSync(BUCKET, {recursive: true}); return; } try { sh('gcloud', ['storage', 'buckets', 'describe', BUCKET]); } catch (e){ log(`creating ${BUCKET} in ${REGION}`); sh('gcloud', ['storage', 'buckets', 'create', BUCKET, '--location', REGION, '--uniform-bucket-level-access']); } },
 };
