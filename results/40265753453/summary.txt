@@ -1,0 +1,36 @@
+== lin_big
+[test] best (zero) vs zero weights on 1200 held-out fights: +0.000 ± 0.000 (within 2 SE) | style 1.000 gates [] drift []
+test: 0.000 ± 0.000 (within noise), style 1.000
+== lin_fights300
+[test] best (zero) vs zero weights on 1200 held-out fights: +0.000 ± 0.000 (within 2 SE) | style 1.000 gates [] drift []
+test: 0.000 ± 0.000 (within noise), style 1.000
+== lin_huge
+[test] best (zero) vs zero weights on 1200 held-out fights: +0.000 ± 0.000 (within 2 SE) | style 1.000 gates [] drift []
+test: 0.000 ± 0.000 (within noise), style 1.000
+== lin_pairs32
+[test] best (zero) vs zero weights on 1200 held-out fights: +0.000 ± 0.000 (within 2 SE) | style 1.000 gates [] drift []
+test: 0.000 ± 0.000 (within noise), style 1.000
+== lin_s1
+[test] best (zero) vs zero weights on 1200 held-out fights: +0.000 ± 0.000 (within 2 SE) | style 1.000 gates [] drift []
+test: 0.000 ± 0.000 (within noise), style 1.000
+== lin_s2
+[test] best (after 32 updates) vs zero weights on 1200 held-out fights: +0.049 ± 0.012 (beyond 2 SE) | style 1.000 gates [] drift []
+test: 0.049 ± 0.012 (significant), style 1.000
+== lin_s3
+[test] best (after 32 updates) vs zero weights on 1200 held-out fights: +0.028 ± 0.011 (beyond 2 SE) | style 1.000 gates [] drift []
+test: 0.028 ± 0.011 (significant), style 1.000
+== lin_small
+[test] best (after 56 updates) vs zero weights on 1200 held-out fights: +0.083 ± 0.014 (beyond 2 SE) | style 1.000 gates [] drift []
+test: 0.083 ± 0.014 (significant), style 1.000
+== lin_style80
+[test] best (after 32 updates) vs zero weights on 1200 held-out fights: +0.010 ± 0.012 (within 2 SE) | style 1.000 gates [] drift []
+test: 0.010 ± 0.012 (within noise), style 1.000
+== mlp16
+[test] best (after 36 updates) vs zero weights on 1200 held-out fights: +0.053 ± 0.014 (beyond 2 SE) | style 1.000 gates [] drift []
+test: 0.053 ± 0.014 (significant), style 1.000
+== mlp16_big
+[test] best (zero) vs zero weights on 1200 held-out fights: +0.000 ± 0.000 (within 2 SE) | style 1.000 gates [] drift []
+test: 0.000 ± 0.000 (within noise), style 1.000
+== mlp8
+[test] best (after 24 updates) vs zero weights on 1200 held-out fights: +0.053 ± 0.013 (beyond 2 SE) | style 1.000 gates [] drift []
+test: 0.053 ± 0.013 (significant), style 1.000
