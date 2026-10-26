@@ -1,0 +1,90 @@
+harness test, tmp /tmp/m3test-079XoG
+
+0. Engine: no policy = the engine before the guard hook; archetypes stay independent
+  PASS no movePolicy: 640 fights identical to the pre-guard-hook engine (git 8f90345); events, final positions/HP/states, end time
+  PASS harrier-only policy (always flank): 160 fights identical to the pre-guard-hook engine (guards untouched)
+  PASS adding a zero (always-hold) guard policy next to a harrier policy changes nothing
+  PASS zero weights for cat / charger / bulldozer / brawler / kicker next to the shipped harrier + guard policies: 120 fights identical to the shipped policies alone
+  PASS a cat-only policy (always flank) gives the same fights with zero weights for every other archetype next to it
+  PASS cat intents: always blind side is unaffected by zero weights for the others and differs from the generic always flank; always commit (cat set) = no policy
+  PASS no cat weights, livePolicy:false: 440 fights identical to the engine before the cat intents (git 0120f2b)
+  PASS no cat weights, live default (harrier_v1 + guard_v1): 440 fights identical to the engine before the cat intents (git 0120f2b)
+
+==================== archetype: cat (95 features, 7 intents: commit / pounce / creep / abandon / soften / cover / blindside)
+160 probe fights (savanna/river/forest/tundra)
+
+1. Determinism and plumbing [cat]
+  PASS zero weights (margin 1) = no policy, every fight (event log + final positions)
+  PASS zero weights with margin 0 (all-tie logits -> intent 0) = no policy
+  PASS always-commit probe = no policy
+  PASS random hidden layer with a zero output layer = no policy
+  (19.7 fights/s on 4 threads with features on)
+  PASS serial = 4 worker threads (full records)
+  PASS serial = 4 shards merged (full records)
+  PASS a non-zero policy changes fights (the hook is live)
+  PASS whole dry run: serial = 4 threads (final state incl. θ, λ, history, validation, test)
+  PASS whole dry run: CLI jobs -> 3 worker processes -> merge = local run
+  PASS resume from a mid-run checkpoint = uninterrupted run (same next generations and result)
+  PASS each validation check used a fresh validation draw
+  PASS state carries the cat model shape (7 intents × 95 features + bias)
+
+2. Reward sanity [cat]
+  commit    goal 0.300  vs heuristic +0.000 ± 0.000  style 1.00 gates []  idle -0.006  drift 0  noContact 23%  fruitless 59%
+  pounce    goal 0.286  vs heuristic -0.014 ± 0.039  style 0.95 gates []  idle -0.006  drift 1  noContact 25%  fruitless 56%
+  creep     goal 0.146  vs heuristic -0.154 ± 0.060  style 0.98 gates []  idle -0.011  drift 2  noContact 33%  fruitless 67%
+  abandon   goal -0.107  vs heuristic -0.406 ± 0.058  style 0.45 gates [longIdle,stalkPounce,stillLong]  idle -0.136  drift 14  noContact 85%  fruitless 85%
+  soften    goal 0.270  vs heuristic -0.030 ± 0.053  style 1.00 gates []  idle -0.008  drift 0  noContact 31%  fruitless 70%
+  cover     goal -0.079  vs heuristic -0.379 ± 0.061  style 0.47 gates [longIdle,stalkPounce,stillLong]  idle -0.133  drift 14  noContact 84%  fruitless 84%
+  blindside goal 0.274  vs heuristic -0.026 ± 0.053  style 1.00 gates []  idle -0.006  drift 0  noContact 24%  fruitless 57%
+  PASS always commit = heuristic: goal diff 0, style 1
+  PASS cat: always abandon / always hold in cover: goal clearly worse (beyond 2 SE)
+  PASS cat: always abandon / always cover: style 0.45 / 0.47 below the 0.9 threshold
+  PASS cat: always abandon / always cover fail the long-idle gate; lying in cover forever fails the long-hold gate
+  PASS cat: always abandon / always cover get telemetry drift flags: pounce 1, creep 2, abandon 14, soften 0, cover 14, blindside 0
+  PASS cat: always cover / abandon pounce less (3.41 -> 0.21 / 0.01 per engaged minute)
+  PASS cat: the heuristic's profile has stalked pounces (81%) and pounce rates for both lions (2.77/min) and stalkers (3.55/min)
+  PASS style and goal symmetric when the arms of a paired comparison are swapped
+  PASS telemetry and metrics identical for no-policy and zero-weight arms (style computed the same way per fight)
+  heuristic goal per fight 0.300 (sd 0.653); components:
+    human    mean 0.117 sd 0.294
+    kill     mean 0.087 sd 0.283
+    animals  mean 0.199 sd 0.226
+    deaths   mean -0.098 sd 0.084
+    idle     mean -0.006 sd 0.011
+  σ = 0.1 perturbations vs heuristic (goal diff ± SE, share of non-commit decisions, realistic = style >= threshold and gates pass):
+    -0.002 ± 0.021  non-commit 48%  realistic
+    -0.039 ± 0.044  non-commit 45%  realistic
+    -0.104 ± 0.056  non-commit 93%  unrealistic
+    +0.050 ± 0.038  non-commit 21%  realistic
+    -0.003 ± 0.004  non-commit 9%  unrealistic
+    +0.050 ± 0.047  non-commit 26%  realistic
+    -0.398 ± 0.059  non-commit 100%  unrealistic
+    +0.004 ± 0.003  non-commit 0%  realistic
+  paired per-fight sd: all 0.504, realistic only 0.438 (unpaired 0.653)
+    fights for a 2 SE detection of 0.01: 7676
+    fights for a 2 SE detection of 0.02: 1919
+    fights for a 2 SE detection of 0.05: 308
+    fights for a 2 SE detection of 0.1: 77
+  PASS pairing reduces per-fight noise for realistic perturbations (paired sd < unpaired sd)
+
+3. Anti-overfitting (seed pools) [cat]
+  PASS train / val / test / calib pools (and each generation's / check's draw) share no fight seeds or boards
+  PASS held-out map (holdMap) never in train/val, present in test
+  PASS every fight has a cat on the other side
+  PASS every cat fight records at least one cat unit (mean 1.62 per fight)
+  PASS every team is a player-like draft from its dealt board within the $1200 budget
+
+4. Reward-hacking checks [cat]
+  PASS the heuristic itself is not flagged
+
+5. Engineering
+  PASS state records version, sim.js hash, harness hash, seed and config
+  PASS a state from a different sim.js is refused
+  PASS an unknown state version is refused
+  PASS a worker refuses jobs built for a different engine
+  PASS jobs record seed, config and every fight's board/fight seed
+  PASS an unknown archetype is refused at init
+  PASS cat dry run (init --arch=cat + calib + 1 gen + val + test) finished in 21.7 s
+  PASS cat: per-generation log line written
+
+44 passed, 0 failed (755 s)

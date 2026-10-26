@@ -80,7 +80,9 @@ Object.assign(METRICS_G, {
 });
 // the other side's other archetypes (cat, charger, bulldozer, brawler, kicker): the harrier profile without the dart
 // rhythm, plus per-archetype signature rates and realism gates (kind 'down': only a decrease is penalised):
-//   cat: pounce rhythm; gates: no long chases (a stalker doesn't run prey down for > 8 s at speed) and no face-on brawls
+//   cat: pounce rhythm, lion (rush) vs stalker pounce rates and near shares; gates: no long chases (a stalker doesn't run
+//        prey down for > 8 s at speed), no extra sprint distance, no face-on brawls, stalk-then-pounce share near the
+//        heuristic's, no lying still on a target for > 12 s on end
 //   charger: gate: the charge rate (charges per engaged minute) must not collapse
 //   brawler: gate: the honey badger stays fearless (no time spent waiting, regrouping or backing off while engaged)
 //   kicker: gate: no hunting across the field (closing on something > 20 m away)
@@ -89,7 +91,16 @@ const nogate = d => Object.assign({}, d, {gate: false});
 const METRICS_X = {
   cat: Object.assign({}, BASE_X, {
     pounceRate: {num: r => r.pounces * 60, den: r => r.engT, kind: 'two', rel: .3},
-    longChase:  {num: r => r.longChaseT, den: r => r.life, kind: 'up', tol: .02, gate: true}}),
+    longChase:  {num: r => r.longChaseT, den: r => r.life, kind: 'up', tol: .02, gate: true},
+    // cat-intent style (records from move_run.js; 0 for older records): stalk-then-pounce share, lion vs stalker
+    // profiles, no endless holds in cover, no extra sprinting (metres run at > 60% of top speed per engaged minute)
+    stalkPounce:     {num: r => r.stalkPounces || 0, den: r => r.pounces, kind: 'two', tol: .1, gate: true},
+    rushPounceRate:  {num: r => (r.pRush || 0) * 60, den: r => r.engRush || 0, kind: 'two', rel: .3},
+    stalkPounceRate: {num: r => (r.pStalk || 0) * 60, den: r => r.engStalk || 0, kind: 'two', rel: .3},
+    rushNear:        {num: r => r.nearRush || 0, den: r => r.engRush || 0, kind: 'two', tol: .1},
+    stalkNear:       {num: r => r.nearStalk || 0, den: r => r.engStalk || 0, kind: 'two', tol: .1},
+    stillLong:       {num: r => r.stillLongT || 0, den: r => r.life, kind: 'up', tol: .02, gate: true},
+    sprintRate:      {num: r => (r.sprintM || 0) * 60, den: r => r.engT, kind: 'up', rel: .4, gate: true}}),
   charger: Object.assign({}, BASE_X, {faceOn: nogate(BASE_X.faceOn),
     chargeRate: {num: r => r.charges * 60, den: r => r.engT, kind: 'down', rel: .25, gate: true}}),
   bulldozer: Object.assign({}, BASE_X, {faceOn: nogate(BASE_X.faceOn)}),

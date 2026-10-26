@@ -1,0 +1,389 @@
+harness test, tmp /tmp/m3test-4zzH4p
+
+0. Engine: no policy = the engine before the guard hook; archetypes stay independent
+  PASS no movePolicy: 640 fights identical to the pre-guard-hook engine (git 8f90345); events, final positions/HP/states, end time
+  PASS harrier-only policy (always flank): 160 fights identical to the pre-guard-hook engine (guards untouched)
+  PASS adding a zero (always-hold) guard policy next to a harrier policy changes nothing
+  PASS zero weights for cat / charger / bulldozer / brawler / kicker next to the shipped harrier + guard policies: 120 fights identical to the shipped policies alone
+  PASS a cat-only policy (always flank) gives the same fights with zero weights for every other archetype next to it
+  PASS cat intents: always blind side is unaffected by zero weights for the others and differs from the generic always flank; always commit (cat set) = no policy
+  PASS no cat weights, livePolicy:false: 440 fights identical to the engine before the cat intents (git 0120f2b)
+  PASS no cat weights, live default (harrier_v1 + guard_v1): 440 fights identical to the engine before the cat intents (git 0120f2b)
+
+==================== archetype: harrier (41 features, 5 intents: commit / wait / flank / regroup / disengage)
+160 probe fights (savanna/river/forest/tundra)
+
+1. Determinism and plumbing [harrier]
+  PASS zero weights (margin 1) = no policy, every fight (event log + final positions)
+  PASS zero weights with margin 0 (all-tie logits -> intent 0) = no policy
+  PASS always-commit probe = no policy
+  PASS random hidden layer with a zero output layer = no policy
+  (17.0 fights/s on 4 threads with features on)
+  PASS serial = 4 worker threads (full records)
+  PASS serial = 4 shards merged (full records)
+  PASS a non-zero policy changes fights (the hook is live)
+  PASS whole dry run: serial = 4 threads (final state incl. θ, λ, history, validation, test)
+  PASS whole dry run: CLI jobs -> 3 worker processes -> merge = local run
+  PASS resume from a mid-run checkpoint = uninterrupted run (same next generations and result)
+  PASS each validation check used a fresh validation draw
+  PASS state carries the harrier model shape (5 intents × 41 features + bias)
+
+2. Reward sanity [harrier]
+  commit    goal 0.040  vs heuristic +0.000 ± 0.000  style 1.00 gates []  idle -0.010  drift 0  noContact 18%  fruitless 48%
+  wait      goal -0.209  vs heuristic -0.249 ± 0.038  style 0.53 gates [longIdle]  idle -0.040  drift 7  noContact 43%  fruitless 80%
+  flank     goal -0.172  vs heuristic -0.212 ± 0.038  style 0.91 gates []  idle -0.012  drift 2  noContact 23%  fruitless 51%
+  regroup   goal -0.323  vs heuristic -0.363 ± 0.047  style 0.32 gates [longIdle]  idle -0.168  drift 10  noContact 73%  fruitless 83%
+  disengage goal -0.256  vs heuristic -0.296 ± 0.040  style 0.44 gates [longIdle]  idle -0.064  drift 8  noContact 56%  fruitless 77%
+  PASS always commit = heuristic: goal diff 0, style 1
+  PASS always disengage: goal clearly worse (beyond 2 SE)
+  PASS always wait: idle penalty at least 2× the heuristic's (-0.010 -> -0.040 per fight)
+  PASS always wait: style 0.53 below the 0.9 threshold
+  PASS circling without contact counts as idle (no-contact share 18% -> 43% for always-wait)
+  PASS every fixed-intent probe gets telemetry drift flags: wait 7, flank 2, regroup 10, disengage 8
+  PASS style and goal symmetric when the arms of a paired comparison are swapped
+  PASS telemetry and metrics identical for no-policy and zero-weight arms (style computed the same way per fight)
+  heuristic goal per fight 0.040 (sd 0.495); components:
+    human    mean 0.036 sd 0.144
+    kill     mean 0.031 sd 0.175
+    animals  mean 0.212 sd 0.250
+    deaths   mean -0.229 sd 0.205
+    idle     mean -0.010 sd 0.021
+  σ = 0.1 perturbations vs heuristic (goal diff ± SE, share of non-commit decisions, realistic = style >= threshold and gates pass):
+    +0.000 ± 0.034  non-commit 20%  realistic
+    -0.028 ± 0.023  non-commit 5%  realistic
+    +0.010 ± 0.028  non-commit 4%  realistic
+    -0.212 ± 0.038  non-commit 99%  realistic
+    -0.111 ± 0.051  non-commit 80%  unrealistic
+    +0.030 ± 0.028  non-commit 51%  unrealistic
+    +0.013 ± 0.032  non-commit 17%  realistic
+    -0.068 ± 0.029  non-commit 16%  realistic
+  paired per-fight sd: all 0.429, realistic only 0.392 (unpaired 0.495)
+    fights for a 2 SE detection of 0.01: 6159
+    fights for a 2 SE detection of 0.02: 1540
+    fights for a 2 SE detection of 0.05: 247
+    fights for a 2 SE detection of 0.1: 62
+  PASS pairing reduces per-fight noise for realistic perturbations (paired sd < unpaired sd)
+
+3. Anti-overfitting (seed pools) [harrier]
+  PASS train / val / test / calib pools (and each generation's / check's draw) share no fight seeds or boards
+  PASS held-out map (holdMap) never in train/val, present in test
+  PASS every fight has harriers on the other side
+  PASS every harrier fight records at least one harrier unit (mean 3.81 per fight)
+  PASS every team is a player-like draft from its dealt board within the $1200 budget
+
+4. Reward-hacking checks [harrier]
+  PASS the heuristic itself is not flagged
+
+==================== archetype: guard (55 features, 6 intents: hold / screen / intercept / space / help / fallback)
+160 probe fights (savanna/river/forest/tundra)
+
+1. Determinism and plumbing [guard]
+  PASS zero weights (margin 1) = no policy, every fight (event log + final positions)
+  PASS zero weights with margin 0 (all-tie logits -> intent 0) = no policy
+  PASS always-hold probe = no policy
+  PASS random hidden layer with a zero output layer = no policy
+  (16.0 fights/s on 4 threads with features on)
+  PASS serial = 4 worker threads (full records)
+  PASS serial = 4 shards merged (full records)
+  PASS a non-zero policy changes fights (the hook is live)
+  PASS whole dry run: serial = 4 threads (final state incl. θ, λ, history, validation, test)
+  PASS whole dry run: CLI jobs -> 3 worker processes -> merge = local run
+  PASS resume from a mid-run checkpoint = uninterrupted run (same next generations and result)
+  PASS each validation check used a fresh validation draw
+  PASS state carries the guard model shape (6 intents × 55 features + bias)
+
+2. Reward sanity [guard]
+  hold      goal 0.279  vs heuristic +0.000 ± 0.000  style 1.00 gates []  idle -0.066  drift 0  survival 44%  dmg to you 172 (collateral 61)
+  screen    goal 0.205  vs heuristic -0.074 ± 0.055  style 0.96 gates []  idle -0.063  drift 1  survival 41%  dmg to you 183 (collateral 79)
+  intercept goal 0.099  vs heuristic -0.180 ± 0.057  style 1.00 gates []  idle -0.040  drift 0  survival 31%  dmg to you 210 (collateral 65)
+  space     goal 0.079  vs heuristic -0.201 ± 0.058  style 0.89 gates []  idle -0.057  drift 4  survival 31%  dmg to you 209 (collateral 62)
+  help      goal 0.129  vs heuristic -0.150 ± 0.058  style 0.97 gates []  idle -0.035  drift 2  survival 35%  dmg to you 203 (collateral 46)
+  fallback  goal -0.274  vs heuristic -0.553 ± 0.063  style 0.69 gates []  idle -0.083  drift 10  survival 14%  dmg to you 262 (collateral 160)
+  PASS always hold = heuristic: goal diff 0, style 1
+  always space out: collateral damage to you 61.2 -> 61.7 per fight (+0.537 ± 10.9), all damage to you +36.733 ± 11.3, survival -32.250 ± 9.9 s (beyond 2 SE)
+  PASS always space out does not add collateral damage to you (+0.537 ± 10.9 HP per fight; small effect since the front-only elephant sweep)
+  PASS always fall back: goal clearly worse (beyond 2 SE)
+  PASS always fall back: style 0.69 below the 0.9 threshold
+  PASS holding a spot beside you without contact counts as standing by (standby share 29% -> 39% for always-fall-back; its fights are shorter, so the per-fight penalty moves less)
+  PASS every movement probe gets telemetry drift flags: screen 1, intercept 0, space 4, help 2, fallback 10
+  PASS style and goal symmetric when the arms of a paired comparison are swapped
+  PASS telemetry and metrics identical for no-policy and zero-weight arms (style computed the same way per fight)
+  heuristic goal per fight 0.279 (sd 0.765); components:
+    surv     mean 0.555 sd 0.410
+    human    mean -0.294 sd 0.241
+    dealt    mean 0.244 sd 0.120
+    deaths   mean -0.160 sd 0.101
+    idle     mean -0.066 sd 0.061
+  σ = 0.1 perturbations vs heuristic (goal diff ± SE, share of non-hold decisions, realistic = style >= threshold and gates pass):
+    +0.012 ± 0.062  non-hold 68%  realistic
+    -0.038 ± 0.055  non-hold 85%  realistic
+    -0.020 ± 0.019  non-hold 1%  realistic
+    +0.010 ± 0.010  non-hold 0%  realistic
+    -0.102 ± 0.055  non-hold 98%  realistic
+    -0.161 ± 0.056  non-hold 96%  realistic
+    -0.064 ± 0.057  non-hold 57%  realistic
+    -0.073 ± 0.039  non-hold 2%  realistic
+  paired per-fight sd: all 0.606, realistic only 0.606 (unpaired 0.765)
+    fights for a 2 SE detection of 0.01: 14670
+    fights for a 2 SE detection of 0.02: 3668
+    fights for a 2 SE detection of 0.05: 587
+    fights for a 2 SE detection of 0.1: 147
+  PASS pairing reduces per-fight noise for realistic perturbations (paired sd < unpaired sd)
+
+3. Anti-overfitting (seed pools) [guard]
+  PASS train / val / test / calib pools (and each generation's / check's draw) share no fight seeds or boards
+  PASS held-out map (holdMap) never in train/val, present in test
+  PASS every fight has at least one guard on your side
+  PASS every team is a player-like draft from its dealt board within the $1200 budget
+
+4. Reward-hacking checks [guard]
+  PASS the heuristic itself is not flagged
+
+==================== archetype: cat (95 features, 7 intents: commit / pounce / creep / abandon / soften / cover / blindside)
+160 probe fights (savanna/river/forest/tundra)
+
+1. Determinism and plumbing [cat]
+  PASS zero weights (margin 1) = no policy, every fight (event log + final positions)
+  PASS zero weights with margin 0 (all-tie logits -> intent 0) = no policy
+  PASS always-commit probe = no policy
+  PASS random hidden layer with a zero output layer = no policy
+  (19.8 fights/s on 4 threads with features on)
+  PASS serial = 4 worker threads (full records)
+  PASS serial = 4 shards merged (full records)
+  PASS a non-zero policy changes fights (the hook is live)
+  PASS whole dry run: serial = 4 threads (final state incl. θ, λ, history, validation, test)
+  PASS whole dry run: CLI jobs -> 3 worker processes -> merge = local run
+  PASS resume from a mid-run checkpoint = uninterrupted run (same next generations and result)
+  PASS each validation check used a fresh validation draw
+  PASS state carries the cat model shape (7 intents × 95 features + bias)
+
+2. Reward sanity [cat]
+  commit    goal 0.300  vs heuristic +0.000 ± 0.000  style 1.00 gates []  idle -0.006  drift 0  noContact 23%  fruitless 59%
+  pounce    goal 0.286  vs heuristic -0.014 ± 0.039  style 0.95 gates []  idle -0.006  drift 1  noContact 25%  fruitless 56%
+  creep     goal 0.146  vs heuristic -0.154 ± 0.060  style 0.98 gates []  idle -0.011  drift 2  noContact 33%  fruitless 67%
+  abandon   goal -0.107  vs heuristic -0.406 ± 0.058  style 0.45 gates [longIdle,stalkPounce,stillLong]  idle -0.136  drift 14  noContact 85%  fruitless 85%
+  soften    goal 0.270  vs heuristic -0.030 ± 0.053  style 1.00 gates []  idle -0.008  drift 0  noContact 31%  fruitless 70%
+  cover     goal -0.079  vs heuristic -0.379 ± 0.061  style 0.47 gates [longIdle,stalkPounce,stillLong]  idle -0.133  drift 14  noContact 84%  fruitless 84%
+  blindside goal 0.274  vs heuristic -0.026 ± 0.053  style 1.00 gates []  idle -0.006  drift 0  noContact 24%  fruitless 57%
+  PASS always commit = heuristic: goal diff 0, style 1
+  PASS cat: always abandon / always hold in cover: goal clearly worse (beyond 2 SE)
+  PASS cat: always abandon / always cover: style 0.45 / 0.47 below the 0.9 threshold
+  PASS cat: always abandon / always cover fail the long-idle gate; lying in cover forever fails the long-hold gate
+  PASS cat: always abandon / always cover get telemetry drift flags: pounce 1, creep 2, abandon 14, soften 0, cover 14, blindside 0
+  PASS cat: always cover / abandon pounce less (3.41 -> 0.21 / 0.01 per engaged minute)
+  PASS cat: the heuristic's profile has stalked pounces (81%) and pounce rates for both lions (2.77/min) and stalkers (3.55/min)
+  PASS style and goal symmetric when the arms of a paired comparison are swapped
+  PASS telemetry and metrics identical for no-policy and zero-weight arms (style computed the same way per fight)
+  heuristic goal per fight 0.300 (sd 0.653); components:
+    human    mean 0.117 sd 0.294
+    kill     mean 0.087 sd 0.283
+    animals  mean 0.199 sd 0.226
+    deaths   mean -0.098 sd 0.084
+    idle     mean -0.006 sd 0.011
+  σ = 0.1 perturbations vs heuristic (goal diff ± SE, share of non-commit decisions, realistic = style >= threshold and gates pass):
+    -0.002 ± 0.021  non-commit 48%  realistic
+    -0.039 ± 0.044  non-commit 45%  realistic
+    -0.104 ± 0.056  non-commit 93%  unrealistic
+    +0.050 ± 0.038  non-commit 21%  realistic
+    -0.003 ± 0.004  non-commit 9%  unrealistic
+    +0.050 ± 0.047  non-commit 26%  realistic
+    -0.398 ± 0.059  non-commit 100%  unrealistic
+    +0.004 ± 0.003  non-commit 0%  realistic
+  paired per-fight sd: all 0.504, realistic only 0.438 (unpaired 0.653)
+    fights for a 2 SE detection of 0.01: 7676
+    fights for a 2 SE detection of 0.02: 1919
+    fights for a 2 SE detection of 0.05: 308
+    fights for a 2 SE detection of 0.1: 77
+  PASS pairing reduces per-fight noise for realistic perturbations (paired sd < unpaired sd)
+
+3. Anti-overfitting (seed pools) [cat]
+  PASS train / val / test / calib pools (and each generation's / check's draw) share no fight seeds or boards
+  PASS held-out map (holdMap) never in train/val, present in test
+  PASS every fight has a cat on the other side
+  PASS every cat fight records at least one cat unit (mean 1.62 per fight)
+  PASS every team is a player-like draft from its dealt board within the $1200 budget
+
+4. Reward-hacking checks [cat]
+  PASS the heuristic itself is not flagged
+
+==================== archetype: charger (61 features, 5 intents: commit / wait / flank / regroup / disengage)
+160 probe fights (savanna/river/forest/tundra)
+
+1. Determinism and plumbing [charger]
+  PASS zero weights (margin 1) = no policy, every fight (event log + final positions)
+  PASS zero weights with margin 0 (all-tie logits -> intent 0) = no policy
+  PASS always-commit probe = no policy
+  PASS random hidden layer with a zero output layer = no policy
+  (18.0 fights/s on 4 threads with features on)
+  PASS serial = 4 worker threads (full records)
+  PASS serial = 4 shards merged (full records)
+  PASS a non-zero policy changes fights (the hook is live)
+  PASS whole dry run: serial = 4 threads (final state incl. θ, λ, history, validation, test)
+  PASS whole dry run: CLI jobs -> 3 worker processes -> merge = local run
+  PASS resume from a mid-run checkpoint = uninterrupted run (same next generations and result)
+  PASS each validation check used a fresh validation draw
+  PASS state carries the charger model shape (5 intents × 61 features + bias)
+
+2. Reward sanity [charger]
+  commit    goal 0.908  vs heuristic +0.000 ± 0.000  style 1.00 gates []  idle -0.023  drift 0  noContact 29%  fruitless 63%
+  wait      goal 0.051  vs heuristic -0.858 ± 0.087  style 0.50 gates [longIdle,chargeRate]  idle -0.140  drift 8  noContact 62%  fruitless 70%
+  flank     goal 0.787  vs heuristic -0.122 ± 0.094  style 0.78 gates [chargeRate]  idle -0.053  drift 3  noContact 38%  fruitless 63%
+  regroup   goal 0.048  vs heuristic -0.860 ± 0.085  style 0.48 gates [longIdle,chargeRate]  idle -0.179  drift 8  noContact 65%  fruitless 73%
+  disengage goal -0.018  vs heuristic -0.927 ± 0.084  style 0.43 gates [longIdle,chargeRate]  idle -0.228  drift 8  noContact 68%  fruitless 73%
+  PASS always commit = heuristic: goal diff 0, style 1
+  PASS charger: always disengage: goal clearly worse (beyond 2 SE)
+  PASS charger: always wait / always disengage: style 0.50 / 0.43 below the 0.9 threshold
+  PASS charger: circling without contact counts as idle (no-contact share 29% -> 62% for always-wait)
+  PASS charger: always wait / always disengage fail the long-idle gate
+  PASS charger: always wait / disengage get telemetry drift flags: wait 8, flank 3, regroup 8, disengage 8
+  PASS charger: always wait fails the charge-rate gate (charges per engaged minute 9.9 -> 0.0)
+  PASS style and goal symmetric when the arms of a paired comparison are swapped
+  PASS telemetry and metrics identical for no-policy and zero-weight arms (style computed the same way per fight)
+  heuristic goal per fight 0.908 (sd 1.034); components:
+    human    mean 0.305 sd 0.426
+    kill     mean 0.356 sd 0.480
+    animals  mean 0.379 sd 0.209
+    deaths   mean -0.110 sd 0.102
+    idle     mean -0.023 sd 0.049
+  σ = 0.1 perturbations vs heuristic (goal diff ± SE, share of non-commit decisions, realistic = style >= threshold and gates pass):
+    +0.029 ± 0.085  non-commit 56%  realistic
+    +0.001 ± 0.001  non-commit 0%  realistic
+    -0.090 ± 0.065  non-commit 32%  realistic
+    -0.609 ± 0.089  non-commit 98%  unrealistic
+    -0.012 ± 0.013  non-commit 0%  realistic
+    -0.191 ± 0.099  non-commit 87%  unrealistic
+    -0.061 ± 0.066  non-commit 28%  realistic
+    -0.041 ± 0.021  non-commit 0%  realistic
+  paired per-fight sd: all 0.826, realistic only 0.664 (unpaired 1.034)
+    fights for a 2 SE detection of 0.01: 17621
+    fights for a 2 SE detection of 0.02: 4406
+    fights for a 2 SE detection of 0.05: 705
+    fights for a 2 SE detection of 0.1: 177
+  PASS pairing reduces per-fight noise for realistic perturbations (paired sd < unpaired sd)
+
+3. Anti-overfitting (seed pools) [charger]
+  PASS train / val / test / calib pools (and each generation's / check's draw) share no fight seeds or boards
+  PASS held-out map (holdMap) never in train/val, present in test
+  PASS every fight has a charger on the other side
+  PASS every charger fight records at least one charger unit (mean 2.90 per fight)
+  PASS every team is a player-like draft from its dealt board within the $1200 budget
+
+4. Reward-hacking checks [charger]
+  PASS the heuristic itself is not flagged
+
+==================== archetype: bulldozer (61 features, 5 intents: commit / wait / flank / regroup / disengage)
+160 probe fights (savanna/river/forest/tundra)
+
+1. Determinism and plumbing [bulldozer]
+  PASS zero weights (margin 1) = no policy, every fight (event log + final positions)
+  PASS zero weights with margin 0 (all-tie logits -> intent 0) = no policy
+  PASS always-commit probe = no policy
+  PASS random hidden layer with a zero output layer = no policy
+  (17.9 fights/s on 4 threads with features on)
+  PASS serial = 4 worker threads (full records)
+  PASS serial = 4 shards merged (full records)
+  PASS a non-zero policy changes fights (the hook is live)
+  (whole runs, resume and sections 2-4 sampled out for bulldozer: --full runs them)
+
+==================== archetype: brawler (61 features, 5 intents: commit / wait / flank / regroup / disengage)
+160 probe fights (savanna/river/forest/tundra)
+
+1. Determinism and plumbing [brawler]
+  PASS zero weights (margin 1) = no policy, every fight (event log + final positions)
+  PASS zero weights with margin 0 (all-tie logits -> intent 0) = no policy
+  PASS always-commit probe = no policy
+  PASS random hidden layer with a zero output layer = no policy
+  (19.2 fights/s on 4 threads with features on)
+  PASS serial = 4 worker threads (full records)
+  PASS serial = 4 shards merged (full records)
+  PASS a non-zero policy changes fights (the hook is live)
+  PASS whole dry run: serial = 4 threads (final state incl. θ, λ, history, validation, test)
+  PASS whole dry run: CLI jobs -> 3 worker processes -> merge = local run
+  PASS resume from a mid-run checkpoint = uninterrupted run (same next generations and result)
+  PASS each validation check used a fresh validation draw
+  PASS state carries the brawler model shape (5 intents × 61 features + bias)
+
+2. Reward sanity [brawler]
+  commit    goal 0.380  vs heuristic +0.000 ± 0.000  style 1.00 gates []  idle -0.004  drift 0  noContact 16%  fruitless 51%
+  wait      goal 0.138  vs heuristic -0.242 ± 0.053  style 0.56 gates [longIdle,badgerBack]  idle -0.013  drift 6  noContact 36%  fruitless 70%
+  flank     goal 0.332  vs heuristic -0.049 ± 0.054  style 1.00 gates []  idle -0.005  drift 0  noContact 17%  fruitless 47%
+  regroup   goal 0.138  vs heuristic -0.242 ± 0.053  style 0.56 gates [longIdle,badgerBack]  idle -0.013  drift 6  noContact 36%  fruitless 70%
+  disengage goal 0.082  vs heuristic -0.298 ± 0.054  style 0.44 gates [longIdle,badgerBack]  idle -0.033  drift 8  noContact 54%  fruitless 84%
+  PASS always commit = heuristic: goal diff 0, style 1
+  PASS brawler: always disengage: goal clearly worse (beyond 2 SE)
+  PASS brawler: always wait / always disengage: style 0.56 / 0.44 below the 0.9 threshold
+  PASS brawler: circling without contact counts as idle (no-contact share 16% -> 36% for always-wait)
+  PASS brawler: always wait / always disengage fail the long-idle gate
+  PASS brawler: always wait / disengage get telemetry drift flags: wait 6, flank 0, regroup 6, disengage 8
+  PASS brawler: the heuristic honey badger never backs off; always disengage fails the fearless gate (49 fights with a badger; 51% of its time)
+  PASS style and goal symmetric when the arms of a paired comparison are swapped
+  PASS telemetry and metrics identical for no-policy and zero-weight arms (style computed the same way per fight)
+  heuristic goal per fight 0.380 (sd 0.694); components:
+    human    mean 0.038 sd 0.171
+    kill     mean 0.056 sd 0.231
+    animals  mean 0.372 sd 0.474
+    deaths   mean -0.082 sd 0.063
+    idle     mean -0.004 sd 0.009
+  σ = 0.1 perturbations vs heuristic (goal diff ± SE, share of non-commit decisions, realistic = style >= threshold and gates pass):
+    +0.076 ± 0.054  non-commit 50%  unrealistic
+    +0.002 ± 0.002  non-commit 0%  realistic
+    -0.010 ± 0.013  non-commit 4%  unrealistic
+    -0.216 ± 0.055  non-commit 92%  unrealistic
+    -0.003 ± 0.003  non-commit 0%  realistic
+    -0.012 ± 0.065  non-commit 83%  unrealistic
+    -0.214 ± 0.046  non-commit 65%  unrealistic
+    -0.000 ± 0.000  non-commit 0%  realistic
+  paired per-fight sd: all 0.500, realistic only 0.029 (unpaired 0.694)
+    fights for a 2 SE detection of 0.01: 35
+    fights for a 2 SE detection of 0.02: 9
+    fights for a 2 SE detection of 0.05: 2
+    fights for a 2 SE detection of 0.1: 1
+  PASS pairing reduces per-fight noise for realistic perturbations (paired sd < unpaired sd)
+
+3. Anti-overfitting (seed pools) [brawler]
+  PASS train / val / test / calib pools (and each generation's / check's draw) share no fight seeds or boards
+  PASS held-out map (holdMap) never in train/val, present in test
+  PASS every fight has a brawler on the other side
+  PASS every brawler fight records at least one brawler unit (mean 1.35 per fight)
+  PASS every team is a player-like draft from its dealt board within the $1200 budget
+
+4. Reward-hacking checks [brawler]
+  PASS the heuristic itself is not flagged
+
+==================== archetype: kicker (61 features, 5 intents: commit / wait / flank / regroup / disengage)
+160 probe fights (savanna/river/forest/tundra)
+
+1. Determinism and plumbing [kicker]
+  PASS zero weights (margin 1) = no policy, every fight (event log + final positions)
+  PASS zero weights with margin 0 (all-tie logits -> intent 0) = no policy
+  PASS always-commit probe = no policy
+  PASS random hidden layer with a zero output layer = no policy
+  (37.8 fights/s on 4 threads with features on)
+  PASS serial = 4 worker threads (full records)
+  PASS serial = 4 shards merged (full records)
+  PASS a non-zero policy changes fights (the hook is live)
+  (whole runs, resume and sections 2-4 sampled out for kicker: --full runs them)
+
+5. Engineering
+  PASS state records version, sim.js hash, harness hash, seed and config
+  PASS a state from a different sim.js is refused
+  PASS an unknown state version is refused
+  PASS a worker refuses jobs built for a different engine
+  PASS jobs record seed, config and every fight's board/fight seed
+  PASS an unknown archetype is refused at init
+  PASS harrier dry run (init --arch=harrier + calib + 1 gen + val + test) finished in 10.7 s
+  PASS harrier: per-generation log line written
+  PASS guard dry run (init --arch=guard + calib + 1 gen + val + test) finished in 11.4 s
+  PASS guard: per-generation log line written
+  PASS cat dry run (init --arch=cat + calib + 1 gen + val + test) finished in 8.6 s
+  PASS cat: per-generation log line written
+  PASS charger dry run (init --arch=charger + calib + 1 gen + val + test) finished in 10.2 s
+  PASS charger: per-generation log line written
+  PASS bulldozer dry run (init --arch=bulldozer + calib + 1 gen + val + test) finished in 14.9 s
+  PASS bulldozer: per-generation log line written
+  PASS brawler dry run (init --arch=brawler + calib + 1 gen + val + test) finished in 13.4 s
+  PASS brawler: per-generation log line written
+  PASS kicker dry run (init --arch=kicker + calib + 1 gen + val + test) finished in 15.5 s
+  PASS kicker: per-generation log line written
+
+179 passed, 0 failed (1916 s)

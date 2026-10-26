@@ -30,7 +30,9 @@ module.exports = { RULES, FIXED };
 if (require.main !== module && isMainThread) return;
 
 if (!isMainThread){
+  const live = I.moveChoose; // LIVE=1: the shipped harrier / guard policies still decide for their own units
   I.moveChoose = (w, u, t, d, Pw, arch) => {
+    if (!RULES[arch]) return live(w, u, t, d, Pw, arch);
     const a = Pw.fixed !== undefined ? Pw.fixed : RULES[arch][Pw.rule](F.extract(w, u, t, d));
     const st = w.cfg.moveStats; if (st){ const c = st[arch] || (st[arch] = new Array(5).fill(0)); c[a]++; }
     return a;

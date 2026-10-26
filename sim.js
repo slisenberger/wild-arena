@@ -682,6 +682,7 @@ function chooseTarget(w, u){
     }
     u.carcass = null;
     u.target = h.score * (.4 + u.s.aggr) > .3 * (1 - .8 * drive(u)) ? h.t : null; // bold predators commit sooner, timid ones hang back
+    if (u.cT){ if (w.t < u.cTT && active(u.cT) && hostile(w, u, u.cT)) u.target = u.cT; else u.cT = null; } // learned cat intent 'soften' (policy/), opt-in: holds the softer prey
     u.state = u.target ? 'engage' : 'roam';
   } else {
     u.target = herbivoreTarget(w, u);
@@ -1702,6 +1703,7 @@ function intentGo(w, u, t, d, touch, vmax){
     const vx = -ry * u.orbitDir + rx * (R0 - d) * g, vy = rx * u.orbitDir + ry * (R0 - d) * g, m = Math.hypot(vx, vy) || 1;
     return {tx: u.x + vx / m * 5, ty: u.y + vy / m * 5, frac: f}; };
   if (!k) return false; // commit: the heuristic
+  if (P.set === 'cat' && arch === 'cat') return catGo(w, u, t, d, touch, vmax, k); // the cat-specific intent set (CAT_INTENTS)
   if (k === 1) return circle(G.R(u), G.g, G.f); // wait for an opening: shadow from a distance that fits the gait (harrier ~16 m, as waitForOpening does)
   if (k === 2){ // flank: get round behind the target (opposite the way it faces), then the usual gait move from there (dart, pounce, charge)
     let hx = t.vx, hy = t.vy; if (Math.hypot(hx, hy) < .5 && t.target && active(t.target)){ hx = t.target.x - t.x; hy = t.target.y - t.y; }
@@ -1720,6 +1722,71 @@ function intentGo(w, u, t, d, touch, vmax){
     return m < 3 ? circle(Math.max(d, 10), .25, .3) : {tx: cx, ty: cy, frac: .7};
   }
   return {tx: t.x + rx * (touch + G.back), ty: t.y + ry * (touch + G.back), frac: .7}; // disengage: back off out of reach (harrier ~10 m; a charger to charging room)
+}
+// Cat-specific intents (cfg.movePolicy.cat with weights.set === 'cat'; policy/move_cat_features.js): the decisions a big
+// cat lives on, which the generic intents can't express. 0 commit = the heuristic (stalk, creep while unseen, pounce from
+// pounce range). Any intent that doesn't apply right now returns false = the heuristic for this tick.
+//   1 pounce    spring now from up to 1.3× pounce range (the heuristic waits for pounce range)
+//   2 creep     close at a creep (tall-grass cover holds below 45% speed) toward the target's rear, pounce from range
+//   3 abandon   spotted: withdraw to ~18 m and lie low; ~8 s out of the action with nothing after it restores the ambush
+//               (the engine's own catSense rule), then re-approach
+//   4 soften    switch to the softest reachable prey within 25 m (hurt, busy, held, running, unguarded, you), held 4 s
+//   5 cover     hold still in cover (beside a trunk within 10 m, else flat in the grass); prey that wanders into pounce
+//               range is pounced (the heuristic's ambush)
+//   6 blindside circle wide to the point behind the target (its heading: velocity, else toward its own target), then
+//               the heuristic pounce from there
+const CAT_INTENTS = ['commit', 'pounce', 'creep', 'abandon', 'soften', 'cover', 'blindside'];
+const CAT_GEO = {pounceX: 1.3, creep: .3, abandonR: 18, abandonF: .55, softR: 25, softHold: 4, softEdge: 1.2, coverR: 10, coverF: .3, blindF: .42, behind: -.5};
+function headingOf(t){
+  let hx = t.vx, hy = t.vy; if (Math.hypot(hx, hy) < .5 && t.target && active(t.target)){ hx = t.target.x - t.x; hy = t.target.y - t.y; }
+  const m = Math.hypot(hx, hy); return m < 1e-6 ? null : {x: hx / m, y: hy / m};
+}
+// how soft a target is for this cat (pure): hurt, busy / held / running / stunned, few guards, within its strength; you ×1.3
+function catSoftness(w, u, o){
+  const my = packStrength(w, u), easy = o.state === 'flee' || o.stun > 0 || !!o.latchedBy || !!o.heatstroke;
+  return (1.5 - o.hp / o.maxhp) * (busy(o) ? 1.4 : 1) * (easy ? 1.5 : 1) * Math.min(2, my / strength(o)) / (1 + guardsAround(w, o, u) / my) * (o.side === 'H' ? 1.3 : 1);
+}
+function catSofter(w, u, t){
+  let best = null, bs = catSoftness(w, u, t) * CAT_GEO.softEdge;
+  for (const o of predCandidates(w, u)){ if (o === t || dist(u, o) > CAT_GEO.softR) continue; const s = catSoftness(w, u, o); if (s > bs){ bs = s; best = o; } }
+  return best;
+}
+function catPounce(w, u, t, d, vmax){
+  const dur = clamp(d / (u.s.spd * 1.6), .25, .6), px = t.x + t.vx * dur, py = t.y + t.vy * dur;
+  u.mv = {k:'pounce', vx:(px - u.x) / dur * .95, vy:(py - u.y) / dur * .95, t:dur, tgt:t};
+  if (d > 6) log(w, `${capName(u)} pounces ${Math.round(d)} m onto ${nameOf(t)}`, 'pounce', u);
+  commitMove(w, u, vmax); return null;
+}
+function catGo(w, u, t, d, touch, vmax, k){
+  const P = u.s.pounce || 5, G = CAT_GEO, rx = (u.x - t.x) / (d || 1), ry = (u.y - t.y) / (d || 1);
+  if (k === 1) return d <= P * G.pounceX && d > touch * .8 && u.pounceCd <= 0 && u.stam > .2 && reachable(u, t) ? catPounce(w, u, t, d, vmax) : false;
+  if (k === 3){ if (d < G.abandonR) return {tx: t.x + rx * (G.abandonR + 2), ty: t.y + ry * (G.abandonR + 2), frac: G.abandonF}; return {tx: u.x, ty: u.y, frac: 0}; }
+  if (k === 4){
+    const o = catSofter(w, u, t); if (!o) return false;
+    u.cT = o; u.cTT = w.t + G.softHold; u.target = o; u.intentFor = null; // chooseTarget keeps it for softHold s; decide again for the new prey
+    const od = dist(u, o); return gaitMove(w, u, o, od, u.r + o.r + u.s.reach * .6, vmax);
+  }
+  if (d <= P) return false; // creep / cover / blind side: in pounce range the heuristic springs
+  if (k === 5){
+    let bt = null, bd = G.coverR; for (const tr of w.trees){ const q = Math.hypot(tr.x - u.x, tr.y - u.y) - tr.r; if (q < bd && !outsideZone(w, tr)){ bd = q; bt = tr; } }
+    if (!bt) return {tx: u.x, ty: u.y, frac: 0}; // flat in the grass
+    const ox = bt.x - t.x, oy = bt.y - t.y, om = Math.hypot(ox, oy) || 1, px = bt.x + ox / om * (bt.r + u.r + .3), py = bt.y + oy / om * (bt.r + u.r + .3);
+    return Math.hypot(px - u.x, py - u.y) < 1 ? {tx: u.x, ty: u.y, frac: 0} : {tx: px, ty: py, frac: G.coverF};
+  }
+  const h = headingOf(t), behind = h && rx * h.x + ry * h.y < G.behind;
+  if (k === 2){
+    if (!h || behind) return {tx: t.x, ty: t.y, frac: G.creep};
+    const ro = t.r + u.r + P * .8; let vx = t.x - h.x * ro - u.x, vy = t.y - h.y * ro - u.y; const m = Math.hypot(vx, vy) || 1; vx /= m; vy /= m;
+    if (d < ro + 1){ vx += rx * (ro + 1 - d) * .6; vy += ry * (ro + 1 - d) * .6; }
+    return {tx: u.x + vx * 5, ty: u.y + vy * 5, frac: G.creep};
+  }
+  // 6 blind side
+  if (!h || behind) return false; // already behind it (or it has no heading): the heuristic closes and pounces
+  const ro = t.r + u.r + Math.max(2.5, P * .7), px = t.x - h.x * ro, py = t.y - h.y * ro;
+  if (Math.hypot(px - u.x, py - u.y) < 2.5) return false;
+  let vx = px - u.x, vy = py - u.y; const m = Math.hypot(vx, vy) || 1; vx /= m; vy /= m;
+  if (d < ro + 2){ vx += rx * (ro + 2 - d) * .6; vy += ry * (ro + 2 - d) * .6; } // swing wide, not across its front
+  return {tx: u.x + vx * 5, ty: u.y + vy * 5, frac: G.blindF};
 }
 // Guard archetype (cfg.movePolicy.guard): your side's animals that aren't carrying you, in 'guard' state or engaged.
 // guardDecide (decisions loop) picks an intent every 0.5 s; 0 hold = the heuristic. screen / intercept / help also set
@@ -1795,7 +1862,7 @@ function guardIdleGo(w, u){
   return null;
 }
 const INTERNALS = { choose: null, predCandidates, predatorTarget, bestCarcass, guardsAround, packStrength, packMates, packMate, strength, hostile, canSee, reachable, distWater, inWater, busy, yieldsTo, wound, heightOf, pressure, active, has, dist, sp, social };
-Object.assign(INTERNALS, { moveChoose: null, LIVE: {harrier: null, guard: null}, INTENTS, archetypeOf, drive, locked, GUARD_INTENTS, GUARD_SPACE, guardThreat, guardHelpTarget, sideSees, evasiveMount, zoneAt });
+Object.assign(INTERNALS, { moveChoose: null, LIVE: {harrier: null, guard: null}, INTENTS, CAT_INTENTS, CAT_GEO, catSoftness, catSofter, headingOf, archetypeOf, drive, locked, GUARD_INTENTS, GUARD_SPACE, guardThreat, guardHelpTarget, sideSees, evasiveMount, zoneAt });
 function policyChoose(w, u){
   if (!INTERNALS.choose) throw new Error('cfg.policy is set but no policy is loaded: require policy/policy.js');
   INTERNALS.choose(w, u, w.cfg.policy);

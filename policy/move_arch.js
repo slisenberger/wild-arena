@@ -4,6 +4,7 @@
 //            regroup / disengage; fights where harriers are on the other side.
 //   guard:   your side's animals that aren't carrying you (guard state or engaged); intents hold / screen / intercept /
 //            space out / help ally / fall back; every fight with at least one guard on your side.
+//   cat:     since the cat intents (Oct 26), its own set (see below); otherwise as the four that follow.
 //   cat / charger / bulldozer / brawler / kicker: the rest of the other side by gait (sim.js archetypeOf: stalk + rush,
 //            charge, lumbering herbivores, lumbering predators, keepaway; the croc stays heuristic). The harrier intents
 //            (engine geometry per gait: INTENT_GEO), move_arch_features.js (the harrier vector + gait inputs), and fights
@@ -25,6 +26,12 @@ for (const name of ['cat', 'charger', 'bulldozer', 'brawler', 'kicker']){
     has: (board, team) => board.some(id => !team.includes(id) && enemyArch(id) === name)};
   SPECIES[name] = Object.keys(A.BY_ID).filter(id => A.BY_ID[id].gait && enemyArch(id) === name);
 }
+// the cat gets its own intent set (sim.js CAT_INTENTS: commit / pounce / creep / abandon / soften / cover / blindside) and
+// features (move_cat_features.js); its weights carry set: 'cat' so the engine reads intents 1-6 as cat intents. A cat
+// policy without set (e.g. the generic {fixed: k} probes in probes/arch_rules.js) still uses the generic intents.
+if (I.CAT_INTENTS) Object.assign(ARCH.cat, {F: require('./move_cat_features.js'), intents: I.CAT_INTENTS, set: 'cat'});
 for (const a of Object.values(ARCH)) a.nout = a.intents.length;
+// zero weights in an archetype's own shape (and intent set): the heuristic
+function zerosFor(name, nh, margin){ const a = arch(name), P = require('./move_model.js').zeros(a.F.DIM, nh || 0, margin, a.nout); if (a.set) P.set = a.set; return P; }
 function arch(name){ const a = ARCH[name || 'harrier']; if (!a) throw new Error('unknown archetype ' + name + ' (known: ' + Object.keys(ARCH).join(', ') + ')'); return a; }
-module.exports = { ARCH, arch, enemyArch, SPECIES };
+module.exports = { ARCH, arch, enemyArch, SPECIES, zerosFor };
