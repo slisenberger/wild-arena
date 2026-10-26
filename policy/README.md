@@ -752,3 +752,14 @@ cougarPounce, stalkerPounce. softer (31/40), reStalk (39/40) and hurtLieLow (33/
   always commit with the cat set = no policy.
 - **Byte-identical**: without cat weights, fights match the engine before the cat intents (the newest sim.js
   revision without `CAT_INTENTS`, or `REF_CAT_SIM`) exactly, both with `livePolicy:false` and with the live default.
+
+## Milestone 3 v2 sweep (Oct 26, Actions run 40372090395, `policy/sweeps/m3_v2.json`): no v2 so far
+- Warm starts from the shipped weights (`--initWeights`, test bar = v1): guards stayed at init in 8 of 10 runs; the one that
+  moved, g2_c2_s1, measured +7.9 ± 3.7 s vs guard_v1 on 1,200 fresh fights (`eval_guard.js`, seed 4242) and +2.5 ± 2.8 s,
+  win −0.4 ± 1.1 pts on 2,000 more (seed 777123): not real. Harriers: h2_c1_s1 passed its training test (+0.033 ± 0.016)
+  but on 1,200 fresh probe fights (index 33) vs harrier_v1: +0.011 ± 0.014; h2_c2_s1 +0.031 ± 0.018; h2_c2_big +0.008 ± 0.017.
+- Cold runs with `--thetaClip` no longer collapse everywhere: harrier cold_c1 +0.052 ± 0.013, cold_c1_small +0.099 ± 0.016,
+  guard cold_c1_small +0.065 ± 0.021 vs the heuristic, i.e. the same level as v1 (guard cold_c1_small vs guard_v1:
+  −1.0 ± 3.3 s). Big-σ cold runs still ended at zero.
+- Reading: v1 sits at a plateau for the current features and intents, so far. Next lever is richer inputs/actions, not
+  more ES on the same space.
