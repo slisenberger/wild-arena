@@ -18,8 +18,19 @@ function goalPartsGuard(r){
 // damage to your animals per goal unit, per archetype: chargers and bulldozers deal ~10× what a harrier does (3-4k HP a
 // fight), so at 1,000 the animals term would swamp killing you; at 10,000 it is ~0.3-0.4 a fight like the others'
 const ANIMAL_SCALE = {charger: 10000, bulldozer: 10000};
+// 'checkmate' goal (opt-in, --goal=checkmate): the whole side shares one outcome, credited to every archetype on it. Kill
+// the human (+1, whoever lands it), sooner is better (1 - time alive / 300; surviving to 5:00 = 0), plus partial credit for
+// the human's health lost to anyone; own deaths and idle time as before. Damage to the human's animals isn't rewarded:
+// tying up or removing guards should emerge as a means.
+const GOAL_C = {kill: 1, speed: 1, human: .5};
+function goalPartsCheckmate(r){
+  const T = r.survived ? 300 : Math.min(300, r.t);
+  return {kill: GOAL_C.kill * (r.survived ? 0 : 1), speed: GOAL_C.speed * (1 - T / 300), human: GOAL_C.human * Math.min(1, r.dmgHumanAll / r.hmax),
+    deaths: -GOAL.death * r.deaths, idle: -GOAL.idlePerMin * r.noContactT / 60};
+}
 function goalParts(r){
   if (r.arch === 'guard') return goalPartsGuard(r);
+  if (r.goalMode === 'checkmate') return goalPartsCheckmate(r);
   return {human: r.dmgHuman / r.hmax, kill: GOAL.kill * r.killedYou, animals: (r.dmgFoe - r.dmgHuman) / (ANIMAL_SCALE[r.arch] || GOAL.animalScale),
     deaths: -GOAL.death * r.deaths, idle: -GOAL.idlePerMin * r.noContactT / 60};
 }
@@ -149,4 +160,4 @@ function paired(recsA, recsB, ref){
   return {n: d.length, goalA: mean(recsA.map(goal)), goalB: mean(recsB.map(goal)), diff: mean(d), se: se(d),
     styleA: grade(ma, ref, d.length), styleB: grade(mb, ref, d.length), mA: ma, mB: mb, driftB: drift(mb, ref, d.length)};
 }
-module.exports = { GOAL, GOAL_G, ANIMAL_SCALE, METRICS, METRICS_G, METRICS_X, defsOf, goal, goalParts, metrics, metricSE, grade, drift, reference, paired, mean, sd, se };
+module.exports = { GOAL, GOAL_G, GOAL_C, ANIMAL_SCALE, METRICS, METRICS_G, METRICS_X, defsOf, goal, goalParts, metrics, metricSE, grade, drift, reference, paired, mean, sd, se };

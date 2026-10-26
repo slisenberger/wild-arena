@@ -45,7 +45,7 @@ function fightSet(pool, index, n, opts){
     const team = []; let left = A.RULES.budget; for (const id of order) if (A.BY_ID[id].price <= left){ team.push(id); left -= A.BY_ID[id].price; }
     const seed = Math.floor(R() * 2e9) + 1;
     if (!hasArch(board, team, arch)) continue;
-    out.push({pool, index, i: out.length, tr, bseed, board, team, mount: A.defaultMount(team), seed, live: !!opts.withLive}); k++;
+    out.push({pool, index, i: out.length, tr, bseed, board, team, mount: A.defaultMount(team), seed, live: !!opts.withLive, goal: opts.goal || null}); k++;
   }
   return out;
 }
@@ -69,14 +69,15 @@ function runFight(f, weights, arch){
   const us = w.units.filter(u => I.archetypeOf(u) === arch);
   const S = us.map(u => ({foe: 0, dealt: 0, st: null, dart: false, lastC: 0, nc: 0, face: 0, appr: null}));
   const r = {n: us.length, life: 0, fight: 0, close: 0, idle: 0, flee: 0, feed: 0, heat: 0, carry: 0, engT: 0, nearT: 0, distSum: 0,
-    darts: 0, hits: 0, dmgHuman: 0, dmgFoe: 0, noContactT: 0, longIdleT: 0, faceOnT: 0, faceOnStints: 0, appr: 0, fruitless: 0};
+    darts: 0, hits: 0, dmgHuman: 0, dmgFoe: 0, noContactT: 0, longIdleT: 0, faceOnT: 0, faceOnStints: 0, appr: 0, fruitless: 0, dmgHumanAll: 0};
+  if (f.goal) r.goalMode = f.goal;
   // the other non-harrier archetypes (records tagged with arch): signature-move starts and the realism-gate telemetry
   const X = arch !== 'harrier';
   if (X) Object.assign(r, {arch, charges: 0, pounces: 0, longChaseT: 0, farHuntT: 0, badgerLife: 0, badgerBackT: 0});
   let hp0 = H.hp;
   while (!w.over){
     A.step(w);
-    const hDrop = Math.max(0, hp0 - H.hp); hp0 = H.hp;
+    const hDrop = Math.max(0, hp0 - H.hp); hp0 = H.hp; r.dmgHumanAll += hDrop; // from anyone: the side-level goal
     us.forEach((u, i) => {
       const s = S[i];
       const df = u.st.foe - s.foe, dd = u.st.dealt - s.dealt; s.foe = u.st.foe; s.dealt = u.st.dealt;

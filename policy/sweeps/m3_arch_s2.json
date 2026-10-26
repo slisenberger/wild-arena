@@ -1,0 +1,69 @@
+{
+ "note": "Milestone 3, other-side archetypes, round 2 (Oct 26): the side-level 'checkmate' goal (--goal=checkmate: kill the human, credited to the whole side, sooner is better, plus health lost to anyone; own deaths and idle as before; no reward for hitting the human's animals). Same settings as m3_arch_s1 for the configurations that learned there (plus two that collapsed under the old goal, ch_fb_c1 and ki_pat_c1, to see whether the new goal revives them), new seeds. ha_v1_c1 continues the shipped harrier_v1 under the new goal (test bar = harrier_v1). Compare with m3_arch_s1 on behaviour, not on goal numbers: the goals differ.",
+ "runs": [
+  {
+   "name": "bd_fb_c1_s1",
+   "args": "--pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --arch=bulldozer --initRule=flankBusy --thetaClip=1 --goal=checkmate --seed=801"
+  },
+  {
+   "name": "bd_fb_c1_s2",
+   "args": "--pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --arch=bulldozer --initRule=flankBusy --thetaClip=1 --goal=checkmate --seed=802"
+  },
+  {
+   "name": "bd_fb_c1_small",
+   "args": "--pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --arch=bulldozer --initRule=flankBusy --thetaClip=1 --sigma=.05 --lr=.04 --goal=checkmate --seed=803"
+  },
+  {
+   "name": "bd_cold_c1",
+   "args": "--pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --arch=bulldozer --thetaClip=1 --goal=checkmate --seed=804"
+  },
+  {
+   "name": "br_cold_c1_s1",
+   "args": "--pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --arch=brawler --thetaClip=1 --goal=checkmate --seed=811"
+  },
+  {
+   "name": "br_cold_c1_s2",
+   "args": "--pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --arch=brawler --thetaClip=1 --goal=checkmate --seed=812"
+  },
+  {
+   "name": "br_pat_c2",
+   "args": "--pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --arch=brawler --initRule=patient --thetaClip=2 --goal=checkmate --seed=813"
+  },
+  {
+   "name": "ch_pat_c1_s1",
+   "args": "--pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --arch=charger --initRule=patient --thetaClip=1 --goal=checkmate --seed=821"
+  },
+  {
+   "name": "ch_pat_c1_s2",
+   "args": "--pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --arch=charger --initRule=patient --thetaClip=1 --goal=checkmate --seed=822"
+  },
+  {
+   "name": "ch_fb_c1",
+   "args": "--pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --arch=charger --initRule=flankBusy --thetaClip=1 --goal=checkmate --seed=823"
+  },
+  {
+   "name": "ki_fb_c1",
+   "args": "--pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --arch=kicker --initRule=flankBusy --thetaClip=1 --goal=checkmate --seed=831"
+  },
+  {
+   "name": "ki_pat_c1",
+   "args": "--pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --arch=kicker --initRule=patient --thetaClip=1 --goal=checkmate --seed=832"
+  },
+  {
+   "name": "ki_cold_c1_small",
+   "args": "--pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --arch=kicker --thetaClip=1 --sigma=.05 --lr=.04 --goal=checkmate --seed=833"
+  },
+  {
+   "name": "cat_cold_c1_s1",
+   "args": "--pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --arch=cat --thetaClip=1 --goal=checkmate --seed=841"
+  },
+  {
+   "name": "cat_cold_c1_s2",
+   "args": "--pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --arch=cat --thetaClip=1 --goal=checkmate --seed=842"
+  },
+  {
+   "name": "ha_v1_c1",
+   "args": "--pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --arch=harrier  --thetaClip=1 --initWeights=policy/weights/harrier_v1.json --goal=checkmate --seed=851"
+  }
+ ]
+}
