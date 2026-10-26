@@ -78,9 +78,44 @@ function launchRuns(id, m, names){
   let ok = 0; groups.forEach((g, i) => { if (createVM(id, i, g, m, m.hours)) ok++; });
   log(`${ok}/${groups.length} VMs created`);
 }
+// ---------- check: is the GCP setup usable? (each step says what to fix) ----------
+function check(){
+  const ok = m => log('  OK    ' + m), bad = (m, fix) => { log('  FAIL  ' + m + (fix ? '\n        fix: ' + fix : '')); fails++; };
+  let fails = 0;
+  log('environment');
+  PROJECT ? ok('GCP_PROJECT = ' + PROJECT) : bad('GCP_PROJECT not set', 'add it in the environment settings, then start a new session');
+  let key = null; if (!process.env.GCP_SA_KEY) bad('GCP_SA_KEY not set', 'add the service-account JSON key as a secret, then start a new session');
+  else { try { key = JSON.parse(process.env.GCP_SA_KEY); key.type === 'service_account' && key.client_email && key.private_key ? ok(`key parses: ${key.client_email} (project ${key.project_id})`) : bad('GCP_SA_KEY is JSON but not a service-account key'); } catch (e){ bad('GCP_SA_KEY is not valid JSON', 'paste the whole key file contents (it starts with {"type": "service_account")'); } }
+  if (key && PROJECT && key.project_id !== PROJECT) log(`  note  the key is from project ${key.project_id}, GCP_PROJECT is ${PROJECT} (fine if the account has roles there)`);
+  if (fails) return log(`\n${fails} problem(s); fix them and run 'node policy/gcp/gcp.js check' again`);
+  log('auth and project');
+  try { auth(); ok('activated the service account and set the project'); } catch (e){ return bad('gcloud auth failed: ' + String(e.stderr || e.message).split('\n')[0], 'check the key; a deleted or disabled key fails here'); }
+  try { sh('gcloud', ['projects', 'describe', PROJECT, '--format', 'value(projectId)']); ok('project is visible'); } catch (e){ bad('cannot see project ' + PROJECT, 'grant the service account a role on this project (e.g. Compute Instance Admin)'); }
+  log('APIs');
+  for (const api of ['compute.googleapis.com', 'storage.googleapis.com']){
+    try { const on = sh('gcloud', ['services', 'list', '--enabled', '--filter', 'config.name=' + api, '--format', 'value(config.name)']).trim(); on ? ok(api + ' enabled') : bad(api + ' not enabled', 'gcloud services enable ' + api + ' (or APIs & Services in the console)'); }
+    catch (e){ log(`  ?     could not list services (${String(e.stderr || e.message).split('\n').find(l => /ERROR/.test(l)) || 'permission'}); checking by use instead`); break; }
+  }
+  try { const z = zones(); z.length ? ok(`compute works: ${z.length} zones up in ${REGION}`) : bad('no zones listed in ' + REGION, 'check GCP_REGION'); } catch (e){ bad('compute call failed: ' + String(e.stderr || e.message).split('\n')[0]); }
+  log('quota (' + REGION + ')');
+  try { const q = JSON.parse(sh('gcloud', ['compute', 'regions', 'describe', REGION, '--format', 'json(quotas)'])).quotas || [];
+    for (const name of ['PREEMPTIBLE_CPUS', 'CPUS', 'C2D_CPUS', 'N2D_CPUS']){ const x = q.find(y => y.metric === name); if (x) log(`  ${x.limit >= 112 ? 'OK  ' : 'LOW '}  ${name}: ${x.usage}/${x.limit}${x.limit < 112 ? '  (a 112-core VM needs 112; request more in IAM & Admin > Quotas, or use --machine=n2d-highcpu-32)' : ''}`); } }
+  catch (e){ bad('could not read quotas: ' + String(e.stderr || e.message).split('\n')[0]); }
+  log('bucket ' + BUCKET);
+  try { S.ensureBucket(); const k = 'check/' + Date.now() + '.txt'; S.putText(k, 'hello'); S.get(k) === 'hello' ? ok('created/used the bucket; write + read work') : bad('wrote but could not read back'); try { sh('gcloud', ['storage', 'rm', '-q', `${BUCKET}/${k}`]); } catch (e){} }
+  catch (e){ bad('bucket write failed: ' + String(e.stderr || e.message).split('\n').find(l => /ERROR/.test(l)) || e.message, 'grant Storage Admin (or set GCP_BUCKET to a bucket the account can write)'); }
+  if (opt.vm){ // optional: create and delete a tiny spot VM (cost: ~a cent)
+    log('tiny VM (--vm)'); const name = 'wa-check-' + Date.now().toString(36), zone = zones()[0];
+    try { sh('gcloud', ['compute', 'instances', 'create', name, '--zone', zone, '--machine-type', 'e2-micro', '--provisioning-model', 'SPOT', '--instance-termination-action', 'DELETE', '--max-run-duration', '10m', '--image-family', 'debian-12', '--image-project', 'debian-cloud', '--scopes', 'cloud-platform', ...(process.env.GCP_VM_SA ? ['--service-account', process.env.GCP_VM_SA] : []), '--quiet']); ok('created ' + name + ' in ' + zone);
+      sh('gcloud', ['compute', 'instances', 'delete', name, '--zone', zone, '--quiet']); ok('deleted it'); }
+    catch (e){ bad('VM create/delete failed: ' + (String(e.stderr || e.message).split('\n').find(l => /ERROR/.test(l)) || ''), 'needs Compute Instance Admin (v1) + Service Account User'); }
+  }
+  log(fails ? `\n${fails} problem(s) above` : `\nall good${opt.vm ? '' : " (add --vm to also create and delete a tiny spot VM, ~1 cent)"}`);
+}
 // ---------- commands ----------
 const [cmd, arg] = pos;
 (async () => {
+  if (cmd === 'check') return check();
   if (!opt['dry-run']){ auth(); S.ensureBucket(); }
   if (cmd === 'launch'){
     const sweep = JSON.parse(fs.readFileSync(arg, 'utf8')), id = (opt.name || path.basename(arg, '.json') + '-' + Date.now().toString(36)).toLowerCase().replace(/[^a-z0-9-]/g, '-');

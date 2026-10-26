@@ -12,6 +12,7 @@ region (~200 for two 112-core VMs). VMs clone the public repo at the exact commi
 
 ## Commands
 ```
+node policy/gcp/gcp.js check [--vm]     # verify env vars, key, auth, APIs, quota, bucket (and a tiny spot VM with --vm)
 node policy/gcp/gcp.js launch  policy/sweeps/m3_v2.json [--name=ID] [--machine=c2d-highcpu-112] [--threads=8] [--hours=5.5] --yes   (--dry-run prints the gcloud commands)
 node policy/gcp/gcp.js status  ID        # pending / running / paused / done / failed / lost, with heartbeat age and last report line
 node policy/gcp/gcp.js resume  ID --yes  # relaunch everything not done (from checkpoints); failed runs retried up to --maxRetries=3
