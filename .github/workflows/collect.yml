@@ -1,0 +1,32 @@
+# Copy a training sweep's artifacts (state.json with the trained weights, logs, reports) into the training-results
+# branch, under results/<run id>/<run name>/, so they can be fetched with git (artifact storage isn't reachable from
+# every environment). Also writes results/<run id>/summary.txt with every run's test line.
+name: collect
+on:
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: 'train workflow run id'
+        required: true
+permissions:
+  contents: write
+  actions: read
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Download artifacts
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh run download "${{ inputs.run_id }}" -D "/tmp/r/${{ inputs.run_id }}"
+      - name: Commit to training-results
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git ls-remote --exit-code --heads origin training-results >/dev/null; then git fetch origin training-results && git checkout training-results; else git checkout --orphan training-results && git rm -rf . >/dev/null; fi
+          mkdir -p results && rm -rf "results/${{ inputs.run_id }}" && cp -r "/tmp/r/${{ inputs.run_id }}" results/
+          for d in results/${{ inputs.run_id }}/*/; do echo "== $(basename "$d")"; grep -h "^\[test\]\|^test:" "$d"/state.json.log "$d"/report.txt 2>/dev/null | tail -2; done > "results/${{ inputs.run_id }}/summary.txt"
+          git add results && git commit -m "Training results for run ${{ inputs.run_id }}" && git push origin training-results
