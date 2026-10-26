@@ -245,6 +245,14 @@ round. Report ± standard errors.
   With full teams, 38% of your damage is collateral (charges and sweeps aimed at your animals hit you). Of 11 ideas only
   a stale-dodge bug fix survived on the current engine.
 
+## In flight (Oct 26, for a new session)
+- GitHub Actions run 40372090395 (sweep `policy/sweeps/m3_v2.json`, guards + harriers v2): when done, run the `collect`
+  workflow with that run id and read `results/40372090395/summary.txt` on the `training-results` branch; verify winners
+  with `policy/probes/eval_guard.js` / `eval_state.js` before shipping as `policy/weights/*_v2.json`.
+- GCP: run `node policy/gcp/gcp.js check` (then `check --vm`) to confirm the credentials, then launch sweeps there.
+- Archetype policies (cats, chargers, bulldozers, brawlers, kickers) are being built in the original session's worktree;
+  if that work isn't on the branch yet, it hasn't been merged.
+
 ## Open threads (full list in BACKLOG.md)
 1. Realism: owner decision on a more fragile human. (Done Oct 2026: lion coalitions encircle — the second lion swings to
    the far side of a shared target, `sig 'encircles'` ~1.5/fight, value neutral.)
