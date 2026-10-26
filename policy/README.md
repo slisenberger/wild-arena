@@ -743,7 +743,7 @@ cougarPounce, stalkerPounce. softer (31/40), reStalk (39/40) and hurtLieLow (33/
 - cold starts at clip 1: σ .1 ×2, σ .05 ×2, and a full MLP (16 hidden) at σ .05.
 
 ### Tests
-`node policy/harness_test.js --arch=cat` (the cat suite; `logs/m3_harness_test_cat.txt`):
+`node policy/harness_test.js --arch=cat` 44/44 (`logs/m3_harness_test_cat.txt`); the full default run 179/179 in 32 min on a loaded machine (`logs/m3_harness_test_catset.txt`):
 - zero weights, always-commit, zero output over a random hidden layer, all with `set:'cat'`: identical to no policy;
   serial = threads = shards; whole dry runs, CLI shards, resume; seed pools; drift.
 - Probe sanity: always abandon / always cover are clearly worse, below the style threshold, fail longIdle (cover also
