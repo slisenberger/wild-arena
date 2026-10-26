@@ -188,6 +188,8 @@ round. Report ± standard errors.
     help the most hurt ally (55%). Hand-written guard rules found nothing; the learner did.
   - Training runs on GitHub Actions (`.github/workflows/train.yml`, sweeps in `policy/sweeps/`); `collect.yml` copies
     results to the `training-results` branch (artifact storage isn't reachable from the dev container).
+  - GCP spot training: `policy/gcp/gcp.js` (launch/status/resume/stop/collect, failure handling in `policy/gcp/README.md`);
+    needs GCP_PROJECT + GCP_SA_KEY in the environment.
   - Lesson: ES from zero collapsed (the style penalty drove every candidate back to "always commit", then exploration
     died: |θ| grew, non-commit 0%). Warm starts and small σ work; big σ collapses.
 
