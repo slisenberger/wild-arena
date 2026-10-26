@@ -1,0 +1,17 @@
+{
+ "note": "Milestone 3 sweep 1 (Oct 26): harriers, linear vs MLP, step sizes, seeds. Each run trains on its own 4-core runner.",
+ "runs": [
+  {"name": "lin_s1",    "args": "--pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --seed=101"},
+  {"name": "lin_s2",    "args": "--pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --seed=102"},
+  {"name": "lin_s3",    "args": "--pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --seed=103"},
+  {"name": "lin_big",   "args": "--pairs=16 --gens=60 --sigma=.25 --lr=.15 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --seed=104"},
+  {"name": "lin_huge",  "args": "--pairs=16 --gens=60 --sigma=.5 --lr=.3 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --seed=105"},
+  {"name": "lin_small", "args": "--pairs=16 --gens=60 --sigma=.05 --lr=.04 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --seed=106"},
+  {"name": "lin_pairs32","args": "--pairs=32 --gens=40 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --seed=107"},
+  {"name": "mlp8",      "args": "--mode=full --nh=8 --pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --seed=108"},
+  {"name": "mlp16",     "args": "--mode=full --nh=16 --pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --seed=109"},
+  {"name": "mlp16_big", "args": "--mode=full --nh=16 --pairs=16 --gens=60 --sigma=.25 --lr=.15 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --seed=110"},
+  {"name": "lin_style80","args": "--pairs=16 --gens=60 --styleThr=.8 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --seed=111"},
+  {"name": "lin_fights300","args": "--pairs=16 --gens=40 --fights=300 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --seed=112"}
+ ]
+}

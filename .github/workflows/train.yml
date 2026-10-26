@@ -1,0 +1,60 @@
+# Milestone 3 training sweeps on GitHub Actions (free for public repos): every run in the sweep file trains on its own
+# 4-core runner for up to `hours`, then uploads its state + log as an artifact. Resume an unfinished sweep by passing the
+# run id of the previous workflow run: each job downloads its own artifact and continues from the saved state.
+name: train
+on:
+  workflow_dispatch:
+    inputs:
+      sweep:
+        description: 'Sweep file (policy/sweeps/*.json)'
+        default: 'policy/sweeps/m3_s1.json'
+      hours:
+        description: 'Wall-clock training budget per job (hours, max ~5.6)'
+        default: '5.5'
+      resume_run:
+        description: 'Workflow run id to resume from (blank = fresh)'
+        default: ''
+permissions:
+  contents: read
+  actions: read
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.m.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: m
+        run: echo "matrix=$(node -e "const s=require('./${{ inputs.sweep }}');console.log(JSON.stringify({include:s.runs}))")" >> "$GITHUB_OUTPUT"
+  train:
+    needs: setup
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.setup.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Resume from a previous run
+        if: inputs.resume_run != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh run download "${{ inputs.resume_run }}" -n "${{ matrix.name }}" -D "policy/runs/${{ matrix.name }}" || echo "no artifact to resume; starting fresh"
+      - name: Init
+        run: |
+          f="policy/runs/${{ matrix.name }}/state.json"
+          if [ ! -f "$f" ]; then mkdir -p "$(dirname "$f")"; node policy/train.js init "$f" ${{ matrix.args }}; fi
+      - name: Train
+        run: node policy/train.js run "policy/runs/${{ matrix.name }}/state.json" --threads=4 --hours=${{ inputs.hours }}
+      - name: Report
+        if: always()
+        run: node policy/train.js report "policy/runs/${{ matrix.name }}/state.json" | tee "policy/runs/${{ matrix.name }}/report.txt"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ${{ matrix.name }}
+          path: policy/runs/${{ matrix.name }}/
+          retention-days: 30
