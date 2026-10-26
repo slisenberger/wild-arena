@@ -1,6 +1,7 @@
 (function(){
 'use strict';
 const A = window.Arena;
+const M = window.Migration; // the roguelike run's rules (migration.js)
 const $ = id => document.getElementById(id);
 // price-tier colors: $100 slate, $200 red, $300 orange, $400 gold, $500+ violet
 const tierHex = p => p >= 500 ? '#b48cf2' : p >= 400 ? '#f0b429' : p >= 300 ? '#ec7a2c' : p >= 200 ? '#d8473b' : '#8297aa';
@@ -12,7 +13,8 @@ const MAXV = {mine: Math.max(1, ...Object.values(A.MEASURED).map(m => m.mine)), 
 
 const S = window.__wa = {
   team: new Set(), boardSeed: newBoardSeed(), board: [], focus:'elephant', terrain:'savanna', mode:'wild', mount:'', pos:{}, youPos:null, seed: (Math.random()*1e6|0) + 1,
-  draft:'budget', pickN:3, daily:null, dailyKind:null, shared:null, played:null, screen:'draft', world:null, playT:0, playing:true, speed:2, sel:0, lastTs:0, dur:120
+  draft:'budget', pickN:3, daily:null, dailyKind:null, shared:null, played:null, screen:'draft', world:null, playT:0, playing:true, speed:2, sel:0, lastTs:0, dur:120,
+  mig:null, migKey:null // mig: the active migration run (null outside the mode)
 };
 
 // ---------- helpers ----------
@@ -21,7 +23,7 @@ const fmtT = t => { t = Math.max(0, t); const m = Math.floor(t/60), s = Math.flo
 const kmh = v => Math.round(v * 3.6);
 // draft modes: 'budget' (spend up to the budget) or 'pick' (exactly S.pickN animals, prices ignored); the engine doesn't care
 const isPick = () => S.draft === 'pick';
-const canAdd = a => isPick() ? S.team.size < S.pickN : a.price <= BUDGET - spent();
+const canAdd = a => S.mig ? M.canBuy(S.mig, a.id) : isPick() ? S.team.size < S.pickN : a.price <= BUDGET - spent();
 const draftReady = () => !isPick() || S.team.size === S.pickN;
 function strengthOf(a){ return Math.sqrt(A.hpOf(a) * a.dmg / a.cd); }
 function tok(a, size){ const d = document.createElement('span'); d.className = 'tok'; d.style.cssText = tokStyle(a); d.title = a.name; if (size) { d.style.width = d.style.height = size + 'px'; } if (!faceOf(a)) d.textContent = a.abbr; return d; }
@@ -53,11 +55,17 @@ function dealNewBoard(seed){
 }
 // ---------- navigation ----------
 function go(screen){
+  if (S.mig && (screen === 'draft' || screen === 'deploy') && (S.mig.over || S.mig.boonOffer)) screen = 'mig'; // a boon to pick (or a finished run) comes first
+  if (!S.mig && screen === 'mig') screen = 'arena';
+  if (S.mig && (screen === 'draft' || screen === 'deploy' || screen === 'mig')) migSync();
   S.screen = screen;
-  for (const id of ['arena','draft','deploy','fight','lab']) $('s-' + id).hidden = id !== screen;
+  for (const id of ['arena','draft','deploy','fight','lab','mig']) $('s-' + id).hidden = id !== screen;
+  if (screen === 'mig') renderMig();
+  $('newSeed').hidden = !!S.mig; // a migration's fights have fixed seeds
+  renderHud(); renderBudget();
   document.querySelectorAll('#steps button[data-s]').forEach(b => b.setAttribute('aria-current', b.dataset.s === screen ? 'true' : 'false'));
   if (screen === 'deploy') { renderMounts(); sizeCanvas($('deployCanvas')); drawDeploy(); }
-  if (screen === 'draft') renderDraft();
+  if (screen === 'draft') { renderBudget(); renderDraft(); }
   if (screen === 'fight') { sizeCanvas($('fightCanvas')); }
   if (screen === 'lab') renderLabDesc();
   window.scrollTo({top:0});
@@ -70,6 +78,7 @@ document.querySelectorAll('#steps button[data-s]').forEach(b => b.addEventListen
 
 // ---------- draft ----------
 function renderBudget(){
+  if (S.mig){ const f = S.screen === 'fight'; $('spent').textContent = f ? '' : '$' + S.mig.money.toLocaleString(); $('meter').innerHTML = ''; $('budgetMax').textContent = f ? 'Migration' : 'to spend'; return; } // no spoilers during a fight
   if (isPick()){ // picks left instead of dollars
     const n = S.team.size, left = S.pickN - n;
     $('spent').textContent = left > 0 ? `${left} pick${left === 1 ? '' : 's'} left` : 'Team full';
@@ -88,7 +97,11 @@ function renderDraft(){
   const left = BUDGET - spent();
   const onBoard = S.board.map(id => A.BY_ID[id]);
   const daily = S.daily ? `${S.dailyKind === 'pick3' ? 'Daily Pick-3' : 'Daily challenge'} ${S.daily} (${A.TERRAINS[S.terrain].name}): the same board, map and fight seed for everyone today. ` : '';
-  $('boardLede').textContent = daily + (isPick()
+  const R = S.mig;
+  $('draftTitle').textContent = R ? `Trading post · fight ${R.k + 1} of ${M.MIG.FIGHTS}` : 'Build a team to protect you from the rest';
+  for (const id of ['clearTeam', 'newBoard', 'copyDraft', 'copyDraftOut']) $(id).hidden = !!R;
+  $('boardLede').textContent = R ? `${R.kind !== 'plain' ? M.KIND_NAME[R.kind] + '! ' : ''}Next stop: the ${A.TERRAINS[R.terrain].name.toLowerCase()}. ${onBoard.length} animals on the board, worth $${boardTotal().toLocaleString()}. Buy what your $${R.money.toLocaleString()} covers; whatever you don't buy is against you. Your team carries its wounds; sell an animal for half its price.`
+    : daily + (isPick()
     ? `This game's board: ${onBoard.length} animals. Pick exactly ${S.pickN}, whatever they cost; every board animal you don't pick ends up on the other side. Tap a card to draft it; the panel below shows the full stat line.`
     : `This game's board: ${onBoard.length} animals worth $${boardTotal().toLocaleString()}. Spend up to $${BUDGET.toLocaleString()}; every board animal you don't pick ends up on the other side. Tap a card to draft it; the panel below shows the full stat line.`);
   // budget mode groups the cards by price; Pick N ignores prices, so it's one grid (pricier first)
@@ -117,6 +130,7 @@ function renderDraft(){
       const ck = document.createElement('span'); ck.className = 'check'; ck.textContent = '✓'; c.appendChild(ck);
       c.addEventListener('click', () => {
         S.focus = a.id;
+        if (S.mig){ if (picked) M.unbuy(S.mig, a.id); else M.buy(S.mig, a.id); saveRun(); migSync(); S.world = null; renderAll(); renderHud(); return; }
         if (S.team.has(a.id)) S.team.delete(a.id);
         else if (canAdd(a)) S.team.add(a.id);
         S.world = null;
@@ -130,6 +144,12 @@ function renderDraft(){
   }
   // team line
   const tl = $('teamline'); tl.innerHTML = '';
+  if (R){
+    const foes = S.board.filter(id => !S.team.has(id));
+    tl.innerHTML = migTeamHTML(R, true) + `<span class="label" style="margin-left:6px">Against you: ${foes.length} animals, $${foes.reduce((t, id) => t + A.BY_ID[id].price, 0).toLocaleString()}</span>`;
+    const btn = $('toDeployD'); btn.disabled = false; btn.textContent = 'Set formation';
+    renderDetail(); return;
+  }
   if (!S.team.size){ const s = document.createElement('span'); s.className = 'label'; s.textContent = 'No animals drafted yet. You can fight alone, but you will not like it.'; tl.appendChild(s); }
   for (const id of S.team){ const a = A.BY_ID[id]; const ch = document.createElement('span'); ch.className = 'chip'; ch.appendChild(tok(a)); ch.append(itemName(a) + (isPick() ? '' : ' $' + a.price)); tl.appendChild(ch); }
   const foes = S.board.filter(id => !S.team.has(id));
@@ -143,7 +163,7 @@ function renderDetail(){
   const a = A.BY_ID[S.focus]; const d = $('detail');
   const hp = A.hpOf(a);
   const stats = [
-    ...(isPick() ? [] : [['Price', '$' + a.price]]), ...(A.MEASURED[a.id] ? [['Helps you', '+' + Math.max(0, Math.round(A.MEASURED[a.id].mine)) + ' s'], ['Threat if left', Math.max(0, Math.round(-A.MEASURED[a.id].theirs)) + ' s']] : []), ['Mass', a.mass.toLocaleString() + ' kg'], ['Top speed', kmh(a.spd) + ' km/h'],
+    ...(isPick() ? [] : [['Price', '$' + a.price + (S.mig && M.teamIds(S.mig).includes(a.id) && !S.board.includes(a.id) ? ' (sells for $' + M.sellPrice(a.id) + ')' : '')]]), ...(A.MEASURED[a.id] ? [['Helps you', '+' + Math.max(0, Math.round(A.MEASURED[a.id].mine)) + ' s'], ['Threat if left', Math.max(0, Math.round(-A.MEASURED[a.id].theirs)) + ' s']] : []), ['Mass', a.mass.toLocaleString() + ' kg'], ['Top speed', kmh(a.spd) + ' km/h'],
     ['Durability', hp.toLocaleString() + ' hp'], ['Strike', a.dmg + ' / ' + a.cd + ' s'], ['Armor', Math.round(a.armor*100) + '%'],
     ['Reach', a.reach + ' m'], ['Sprint', a.stam + ' s'], ['Breaks at', Math.round(a.flee*100) + '% morale'],
     ['Heat tolerance', a.heat.toFixed(2)], ['Cold tolerance', a.cold.toFixed(2)], ['Strikes up to', a.strikeH + ' m'], ['Carries you at', a.mountH ? a.mountH + ' m' : 'too small'],
@@ -164,7 +184,7 @@ $('creditsBtn').addEventListener('click', () => {
 $('creditsClose').addEventListener('click', () => $('creditsDlg').close());
 // start over: fresh board and fight seed, empty team, default formation, back to the map screen
 $('copyDraft').addEventListener('click', () => copyLink(gameLink(currentGame()), $('copyDraftOut')));
-$('startOver').addEventListener('click', () => { S.seed = newBoardSeed(); $('seedLbl').textContent = S.seed; dealNewBoard(); S.playing = false; renderAll(); go('arena'); });
+$('startOver').addEventListener('click', () => { exitMig(); S.seed = newBoardSeed(); $('seedLbl').textContent = S.seed; dealNewBoard(); S.playing = false; renderAll(); go('arena'); });
 
 // ---------- arena setup ----------
 const TCOL = {savanna:'radial-gradient(circle at 70% 35%,#3d4a1f 0 14%,transparent 15%),linear-gradient(135deg,#5a4a1d,#2c2614)', river:'linear-gradient(90deg,#26341f 0 44%,#1f5165 44% 56%,#26341f 56%)', forest:'radial-gradient(circle at 30% 40%,#244a2c 0 18%,transparent 19%),radial-gradient(circle at 70% 60%,#244a2c 0 22%,transparent 23%),#17241a', tundra:'linear-gradient(135deg,#55606a,#2f363d)'};
@@ -195,7 +215,7 @@ function renderArenaOpts(){
   }
   $('pickRow').hidden = !isPick();
   document.querySelectorAll('#pickSeg button').forEach(b => b.setAttribute('aria-pressed', +b.dataset.n === S.pickN));
-  renderStreak();
+  renderStreak(); renderMigEntry();
 }
 // switch draft mode (or N): a team that no longer fits is trimmed, and it's no longer today's daily
 function setDraft(mode, n){
@@ -207,7 +227,7 @@ function setDraft(mode, n){
   renderAll();
 }
 document.querySelectorAll('#pickSeg button').forEach(b => b.addEventListener('click', () => setDraft('pick', +b.dataset.n)));
-$('toDraft').addEventListener('click', () => go('draft'));
+$('toDraft').addEventListener('click', () => { exitMig(); go('draft'); });
 // daily challenge: today's date (UTC) picks the map, the board and the fight seed, so everyone plays the same game
 const todayUTC = () => new Date().toISOString().slice(0, 10);
 function dateSeed(s){ let h = 2166136261; for (const c of s){ h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); } return (h >>> 0) % 1e6 + 1; }
@@ -215,6 +235,7 @@ function dateSeed(s){ let h = 2166136261; for (const c of s){ h ^= c.charCodeAt(
 const dailySeed = (kind, d) => dateSeed(kind === 'pick3' ? 'wild-arena:pick3:' + d : 'wild-arena:' + d);
 const dailyKey = (kind, d) => (kind === 'pick3' ? 'wa-daily-pick3:' : 'wa-daily:') + d;
 function startDaily(kind){
+  exitMig();
   const d = todayUTC(), h = dailySeed(kind, d), terr = Object.keys(A.TERRAINS);
   S.draft = kind === 'pick3' ? 'pick' : 'budget'; if (kind === 'pick3') S.pickN = 3;
   S.terrain = terr[h % terr.length]; S.seed = h; $('seedLbl').textContent = S.seed;
@@ -296,21 +317,23 @@ function applyLink(g){
 function loadHash(){
   const g = parseLink(location.hash);
   if (!g) return false;
+  exitMig();
   try { history.replaceState(null, '', location.href.split('#')[0]); } catch(e){}
   if (g.bad){ dealNewBoard(); renderAll(); go('arena'); showNotice(g.why === 'map' ? "That game link names a map this version doesn't have, so here's a fresh board." : "That game link couldn't be read, so here's a fresh board.", true); return true; }
   applyLink(g); renderAll(); go('draft'); return true;
 }
 window.addEventListener('hashchange', loadHash);
 // copy: the Clipboard API where allowed; otherwise (or if it fails) the link selected in a field, to copy by hand
-function copyLink(url, out){
+function copyLink(url, out, what){
+  what = what || 'Link';
   out.dataset.link = url; out.innerHTML = '';
   const say = t => { const s = document.createElement('span'); s.className = 'label'; s.textContent = t; out.appendChild(s); };
   const fallback = () => {
-    out.innerHTML = ''; const i = document.createElement('input'); i.readOnly = true; i.value = url; i.setAttribute('aria-label', 'Game link'); out.appendChild(i);
+    out.innerHTML = ''; const i = document.createElement('input'); i.readOnly = true; i.value = url; i.setAttribute('aria-label', what === 'Link' ? 'Game link' : what); out.appendChild(i);
     i.focus(); i.select(); let ok = false; try { ok = document.execCommand('copy'); } catch(e){}
-    say(ok ? 'Copied' : 'Copy this link');
+    say(ok ? 'Copied' : what === 'Link' ? 'Copy this link' : 'Copy this');
   };
-  if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(url).then(() => say('Link copied'), fallback); else fallback();
+  if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(url).then(() => say(what + ' copied'), fallback); else fallback();
 }
 
 // ---------- mount picker ----------
@@ -438,7 +461,11 @@ function absPlacements(){
   return out;
 }
 function currentPlacements(){ const y = youAt(), abs = absPlacements(), out = {}; for (const id in abs) out[id] = {dx: abs[id].x - y.x, dy: abs[id].y - y.y}; return out; }
-function makeCfg(){ return { board:S.board.slice(), team:[...S.team], placements:currentPlacements(), human:youAt(), terrain:S.terrain, mode:S.mode, mount:(S.mount && S.team.has(S.mount)) ? S.mount : null, seed:S.seed }; }
+function makeCfg(){
+  const c = { board:S.board.slice(), team:[...S.team], placements:currentPlacements(), human:youAt(), terrain:S.terrain, mode:S.mode, mount:(S.mount && S.team.has(S.mount)) ? S.mount : null, seed:S.seed };
+  if (S.mig){ const m = M.cfgFor(S.mig); c.startHp = m.startHp; c.humanHp = m.humanHp; c.boons = m.boons; } // carried wounds and boons (migration only)
+  return c;
+}
 function drawDeploy(){
   deployWorld = A.setup(makeCfg());
   const cv = $('deployCanvas'); const g = cv.getContext('2d'); const sc = cv._scale;
@@ -501,7 +528,11 @@ $('startFight').addEventListener('click', () => startBattle());
 // ---------- battle ----------
 function startBattle(){
   if (!draftReady()){ go('draft'); return; }
+  if (S.mig){ if (S.mig.over || S.mig.boonOffer){ go('mig'); return; } migSync(); }
   const w = A.simulate(makeCfg(), true);
+  // migration: the result counts the moment the fight is simulated (a reload can't undo it)
+  if (S.mig){ S.migWorld = w; S.migEntry = M.applyResult(S.mig, w); if (S.mig.over) recordMigEnd(); saveRun(); }
+  $('rematch').hidden = !!S.mig;
   const cg = currentGame(); S.played = Object.assign(cg, {pos: Object.assign({}, S.pos), you: S.youPos && Object.assign({}, S.youPos), daily: S.daily, dailyKind: S.dailyKind}); // what the result banner's link replays
   S.world = w; S.dur = w.result.t; S.playT = 0; S.playing = true; S.sel = 0;
   $('scrub').max = S.dur.toFixed(1); $('scrub').value = 0;
@@ -733,7 +764,7 @@ function renderSide(){
   }
   if (S.playT >= S.dur - 1e-6 && $('report').hidden){ renderReport(true); }
 }
-$('banner').addEventListener('click', e => { if (e.target.id === 'copyResult' && S.world && S.played) copyLink(gameLink(S.played, S.world.result.score), $('copyResultOut')); });
+$('banner').addEventListener('click', e => { if (e.target.id === 'migContinue'){ go('mig'); return; } if (e.target.id === 'copyResult' && S.world && S.played) copyLink(gameLink(S.played, S.world.result.score), $('copyResultOut')); });
 $('log').addEventListener('click', e => { const d = e.target.closest('[data-t]'); if (d){ S.playT = Math.max(0, +d.dataset.t - 1.5); S.playing = false; } });
 
 const HZ = A.MATCH_T;
@@ -744,6 +775,7 @@ function renderReport(show){
   const w = S.world; if (!w || !show) return;
   const res = w.result; const sum = A.summarize(w);
   const b = $('banner');
+  if (S.mig && S.migEntry && S.migWorld === w){ b.innerHTML = migBanner(S.migEntry, res); renderTeamReport(w, sum); return; }
   const score = res.score, prev = readBest(), isBest = score > prev + .05;
   if (isBest) writeBest(score);
   let dailyLine = '';
@@ -766,6 +798,9 @@ function renderReport(show){
     const k = A.BY_ID[res.killer];
     b.innerHTML = `<div class="banner lose"><span class="big">You lasted ${fmtT(score)}</span><span>Killed by the ${esc(k ? k.name : 'unknown')}. ${bestLine}${sharedLine}${dailyLine}</span>${shareRow}</div>`;
   }
+  renderTeamReport(w, sum);
+}
+function renderTeamReport(w, sum){
   const mine = sum.units.filter(u => u.side === 'P');
   const mvp = mine.slice().sort((a, b) => (b.protect*1.5 + b.dealt) - (a.protect*1.5 + a.dealt))[0];
   const rows = mine.map(u => { const a = A.BY_ID[u.id]; const status = u.alive ? 'Alive' : 'Killed by ' + (A.BY_ID[u.killedBy] ? A.BY_ID[u.killedBy].name : '?'); return `<tr><td><span style="display:inline-flex;gap:6px;align-items:center">${tokHTML(a, 26)}${esc(a.name)}${mvp && u === mvp && (u.dealt > 0) ? ' <b style="color:var(--gold)">MVP</b>' : ''}</span></td><td class="n">${u.dealt.toLocaleString()}</td><td class="n">${u.protect.toLocaleString()}</td><td class="n">${u.taken.toLocaleString()}</td><td class="n">${u.kills}</td><td>${esc(status)}</td></tr>`; }).join('');
@@ -876,12 +911,162 @@ $('runPrice').addEventListener('click', () => {
   });
 });
 
+// ---------- migration (the roguelike run: 7 fights, team and wounds carry over; rules in migration.js) ----------
+const MIG_KEY = 'wa-mig', MIG_BEST = 'wa-mig-best', migDailyKey = d => 'wa-mig-daily:' + d;
+const migDailySeed = d => dateSeed('wild-arena:migration:' + d);
+function readJSON(k){ try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch(e){ return null; } }
+function writeJSON(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
+// a saved run is only trusted if everything in it still exists in this version
+function loadRun(){
+  const r = readJSON(MIG_KEY), ok = id => Object.prototype.hasOwnProperty.call(A.BY_ID, id);
+  if (!r || r.v !== 1 || !Array.isArray(r.team) || !Array.isArray(r.board) || !Array.isArray(r.boons) || !Array.isArray(r.log)) return null;
+  if (!r.board.every(ok) || !r.team.every(e => e && ok(e.id) && Array.isArray(e.hp)) || !A.TERRAINS[r.terrain]) return null;
+  return r;
+}
+function saveRun(){ if (S.mig) writeJSON(MIG_KEY, S.mig); }
+// point the shared game state (board, team, map, fight seed) at the run's coming fight
+function migSync(){
+  const r = S.mig; if (!r) return;
+  const key = r.seed + ':' + r.k;
+  S.draft = 'budget'; S.daily = null; S.dailyKind = null; S.shared = null;
+  S.terrain = r.terrain; S.board = r.board.slice(); S.boardSeed = r.boardSeed; S.seed = r.fightSeed; $('seedLbl').textContent = S.seed;
+  S.team = new Set(M.teamIds(r));
+  if (S.migKey !== key){ S.migKey = key; S.pos = {}; S.youPos = null; S.mount = bestMount(); } // a new fight: fresh formation on the new map
+  for (const id in S.pos) if (!S.team.has(id)) delete S.pos[id];
+  if (S.mount && !S.team.has(S.mount)) S.mount = bestMount();
+  if (!S.board.includes(S.focus) && !S.team.has(S.focus)) S.focus = S.board[0] || M.teamIds(r)[0] || 'elephant';
+}
+function startMig(seed, daily){
+  hideNotice(); S.mig = M.newRun(seed, daily || null); S.migKey = null; S.migEntry = null; S.world = null; saveRun(); go('mig');
+}
+// leave the mode (the run stays saved, to resume from the arena screen); the normal game gets a fresh board
+function exitMig(){ if (!S.mig) return; S.mig = null; S.migKey = null; S.migEntry = null; S.world = null; dealNewBoard(); renderHud(); }
+function recordMigEnd(){
+  const r = S.mig, cur = {survived: r.survived, total: +r.total.toFixed(1), won: r.won, daily: r.daily};
+  const best = readJSON(MIG_BEST); r.prevBest = best; r.newBest = M.better(cur, best); if (r.newBest) writeJSON(MIG_BEST, cur);
+  if (r.daily){ const db = readJSON(migDailyKey(r.daily)); r.prevDaily = db; r.newDaily = M.better(cur, db); if (r.newDaily) writeJSON(migDailyKey(r.daily), cur); bumpStreak(r.daily); }
+}
+const hpCol = f => f > .5 ? '#d5f2cf' : f > .25 ? C.gold : C.red;
+const hpBar = f => `<i title="${Math.round(f * 100)}%"><b style="width:${Math.round(clamp01(f) * 100)}%;background:${hpCol(f)}"></b></i>`;
+const pctHp = f => Math.round(f * 100) + '%';
+function migTeamHTML(r, shop){
+  let h = `<div class="migteam"><div class="mt"><span class="tok" style="background:#f5f2ea;width:30px;height:30px;font-size:10px">YOU</span><div><div class="nm">You · ${pctHp(r.hp)}</div><div class="hpb">${hpBar(r.hp)}</div></div></div>`;
+  for (const e of r.team){
+    const a = A.BY_ID[e.id], g = M.groupOf(e.id), nm = g > 1 ? `${a.groupName} (${e.hp.length} of ${g})` : a.name;
+    const act = !shop ? '' : e.fresh ? `<button class="btn" data-unbuy="${a.id}" title="Undo: get the $${a.price} back">Undo</button>` : `<button class="btn" data-sell="${a.id}" title="Sell for half its price">Sell $${M.sellPrice(a.id)}</button>`;
+    h += `<div class="mt${e.fresh ? ' fresh' : ''}">${tokHTML(a, 30)}<div><div class="nm">${esc(nm)}${e.fresh ? ' <span class="label" style="color:var(--you)">new</span>' : ''}</div><div class="hpb">${e.hp.map(hpBar).join('')}</div></div>${act}</div>`;
+  }
+  if (!r.team.length) h += `<span class="label" style="align-self:center">No animals with you.</span>`;
+  return h + '</div>';
+}
+// team-line buttons (trading post): sell a carried animal, undo a buy
+$('teamline').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b || !S.mig) return;
+  if (b.dataset.sell) M.sell(S.mig, b.dataset.sell); else if (b.dataset.unbuy) M.unbuy(S.mig, b.dataset.unbuy); else return;
+  saveRun(); migSync(); S.world = null; renderAll(); renderHud();
+});
+// the run HUD: fight k/7, money, your health, boons, team, and a way back to the run screen or out
+function renderHud(){
+  const r = S.mig, hud = $('migHud'); $('migStep').hidden = !r;
+  if (!r || S.screen === 'fight'){ hud.hidden = true; return; } // no spoilers while a fight plays (its result already counts)
+  const fightTxt = r.over ? (r.won ? 'Run complete' : `Run over · ${r.survived} of ${M.MIG.FIGHTS} survived`) : `Fight ${r.k + 1}/${M.MIG.FIGHTS} · ${A.TERRAINS[r.terrain].name}${r.kind !== 'plain' ? ' · ' + M.KIND_NAME[r.kind] : ''}`;
+  const team = r.team.map(e => `<span title="${esc(itemName(A.BY_ID[e.id]))}: ${e.hp.map(pctHp).join(', ')}" style="display:inline-flex;flex-direction:column;align-items:center;gap:2px">${tokHTML(A.BY_ID[e.id], 22)}<span class="hpb" style="display:flex"><i style="display:block;width:22px;height:3px;border-radius:2px;background:var(--line);overflow:hidden"><b style="display:block;height:100%;width:${Math.round(e.hp.reduce((s, x) => s + x, 0) / e.hp.length * 100)}%;background:${hpCol(Math.min(...e.hp))}"></b></i></span></span>`).join('');
+  hud.innerHTML = `<b>Migration${r.daily ? ' · daily' : ''}</b><span>${fightTxt}</span><span class="money">$${r.money.toLocaleString()}</span><span>You ${pctHp(r.hp)}</span>`
+    + (team ? `<span style="display:inline-flex;gap:4px;flex-wrap:wrap">${team}</span>` : '')
+    + (r.boons.length ? `<span class="boons">${r.boons.map(b => `<span class="boon" title="${esc(A.BOONS[b].desc)}">${esc(A.BOONS[b].name)}</span>`).join('')}</span>` : '')
+    + `<span class="btnrow">${S.screen !== 'mig' ? '<button class="btn" data-hud="run">Run</button>' : ''}<button class="btn" data-hud="abandon">${r.over ? 'Close run' : 'Abandon'}</button></span>`;
+  hud.hidden = false;
+}
+$('migHud').addEventListener('click', e => {
+  const b = e.target.closest('button[data-hud]'); if (!b) return;
+  if (b.dataset.hud === 'run'){ go('mig'); return; }
+  if (!S.mig.over && b.dataset.armed !== '1'){ b.dataset.armed = '1'; b.textContent = 'Abandon this run?'; b.classList.add('on'); return; } // two clicks to throw a run away
+  try { localStorage.removeItem(MIG_KEY); } catch(err){}
+  exitMig(); renderAll(); go('arena');
+});
+function migShare(r){
+  const last = r.log[r.log.length - 1], team = last ? last.team.map(id => A.BY_ID[id].abbr).join('+') || 'no animals' : 'no animals';
+  return `Wild Arena ${r.daily ? 'daily migration ' + r.daily : 'migration'}: ${r.won ? `made it through all ${M.MIG.FIGHTS} fights` : `survived ${r.survived} of ${M.MIG.FIGHTS} fights`}, ${fmtT(r.total)} alive in all${r.boons.length ? ', boons ' + r.boons.map(b => A.BOONS[b].name).join(', ') : ''}, last team ${team}.`;
+}
+function migBanner(e, res){
+  const r = S.mig, n = e.k + 1, k = A.BY_ID[res.killer];
+  const cont = `<div class="btnrow"><button class="btn primary" id="migContinue">${r.over ? 'See how the run went' : 'Continue migration'}</button></div>`;
+  if (res.survived){
+    const why = res.why === 'cleared' ? `The other side was dead, routed or full by ${fmtT(res.t)}.` : res.why === 'quiet' ? `Nothing came at you for ${A.QUIET_T} s, so the other side gave up at ${fmtT(res.t)}.` : `You held out the full ${fmtT(HZ)}.`;
+    return `<div class="banner win"><span class="big">Fight ${n} survived</span><span>${why} You earn $${e.earned}.${r.won ? ` That was the last fight: the migration is through.` : ''}</span>${cont}</div>`;
+  }
+  return `<div class="banner lose"><span class="big">Killed in fight ${n}</span><span>You lasted ${fmtT(res.score)}, killed by the ${esc(k ? k.name : 'unknown')}. The migration ends here.</span>${cont}</div>`;
+}
+function recapHTML(r, e){
+  const n = e.k + 1, lost = e.lost.map(l => { const a = A.BY_ID[l.id]; return M.groupOf(l.id) > 1 && !l.all ? `${l.n} of your ${a.groupName.toLowerCase()}` : `your ${a.groupName && M.groupOf(l.id) > 1 ? a.groupName.toLowerCase() : a.name}`; });
+  const kill = A.BY_ID[e.killer];
+  const head = e.survived ? `<span class="big" style="color:var(--you)">Fight ${n} survived · ${fmtT(e.t)}</span>` : `<span class="big" style="color:var(--red)">Killed in fight ${n} · ${fmtT(e.t)}</span>`;
+  const lines = [
+    `${A.TERRAINS[e.terrain].name}${e.kind !== 'plain' ? ' · ' + M.KIND_NAME[e.kind] : ''}. ${e.survived ? (e.why === 'cleared' ? 'You cleared the field.' : e.why === 'quiet' ? 'The other side gave up.' : 'You held out the full five minutes.') : `Killed by the ${esc(kill ? kill.name : 'unknown')}.`}`,
+    `Other side: ${e.down} down${e.routed ? ', ' + e.routed + ' routed' : ''}.` + (lost.length ? ` You lost ${esc(lost.join(', '))}.` : e.team.length ? ' Your whole team made it.' : ''),
+  ];
+  if (e.survived) lines.push(`Earned <b class="mono" style="color:var(--gold)">$${e.earned}</b> ($${M.MIG.PER_MIN} a minute alive, $${M.MIG.PER_KILL} per enemy down, $${M.MIG.BONUS} for surviving). You were at ${pctHp(e.hpWas)} and patched up to ${pctHp(r.hp)}; survivors heal ${Math.round((M.MIG.HEAL + (r.boons.includes('dressing') ? M.MIG.DRESSING : 0)) * 100)}% of their wounds.`);
+  return head + lines.map(l => `<p class="notes" style="margin:0">${l}</p>`).join('');
+}
+function renderMig(){
+  const r = S.mig; if (!r) return;
+  $('migTitle').textContent = r.over ? (r.won ? 'Migration complete' : 'The migration ends') : `The migration · fight ${r.k + 1} of ${M.MIG.FIGHTS}`;
+  const order = M.terrainOrder(r.seed);
+  $('migTrail').innerHTML = Array.from({length: M.MIG.FIGHTS}, (_, i) => {
+    const cls = i < r.survived ? 'done' : r.over && !r.won && i === r.k ? 'dead' : !r.over && i === r.k ? 'now' : '';
+    return `<span class="${cls}">${i + 1} ${A.TERRAINS[order[i % 4]].name}${M.fightKind(i) !== 'plain' ? ' · ' + M.KIND_NAME[M.fightKind(i)].toLowerCase() : ''}</span>`;
+  }).join('');
+  const last = r.log[r.log.length - 1];
+  $('migRecap').hidden = !last; $('migRecap').innerHTML = last ? recapHTML(r, last) : '';
+  // boon: one of three, before the trading post
+  const bb = $('migBoonBox'); bb.hidden = !r.boonOffer || r.over;
+  if (!bb.hidden) $('migBoons').innerHTML = r.boonOffer.map(id => `<button class="opt" data-boon="${id}"><h3>${esc(A.BOONS[id].name)}</h3><p>${esc(A.BOONS[id].desc)}</p></button>`).join('');
+  $('migTeam').innerHTML = migTeamHTML(r, false);
+  const nx = $('migNext'), act = $('migActions');
+  if (!r.over){
+    const tot = r.board.reduce((s, id) => s + A.BY_ID[id].price, 0);
+    nx.hidden = false;
+    nx.innerHTML = `<h3 style="margin-bottom:6px">Next: fight ${r.k + 1} · ${A.TERRAINS[r.terrain].name}${r.kind !== 'plain' ? ' · ' + M.KIND_NAME[r.kind] : ''}</h3><p class="notes">${r.kind === 'mega' ? 'Something huge and rare is on this board. ' : r.kind === 'herd' ? 'The last fight: the elephants are here, and the mammoth. ' : ''}The trading post has ${r.board.length} animals worth $${tot.toLocaleString()}; whatever you don't buy is against you. You have $${r.money.toLocaleString()}.${r.k === 0 ? ' After each fight you survive you earn money, pick a boon and trade again.' : ''}</p>`;
+    act.innerHTML = `<button class="btn primary" id="migToShop" ${r.boonOffer ? 'disabled' : ''}>${r.boonOffer ? 'Choose a boon first' : 'To the trading post'}</button>`;
+  } else {
+    const best = r.newBest ? 'A new best run.' : r.prevBest ? `Best run: ${r.prevBest.survived} of ${M.MIG.FIGHTS} fights, ${fmtT(r.prevBest.total)} alive.` : '';
+    const daily = r.daily ? ` Daily migration ${r.daily}: ${r.newDaily ? 'your best today.' : r.prevDaily ? `best today ${r.prevDaily.survived} of ${M.MIG.FIGHTS}, ${fmtT(r.prevDaily.total)}.` : ''}` : '';
+    nx.hidden = false;
+    nx.innerHTML = `<h3 style="margin-bottom:6px">${r.won ? `All ${M.MIG.FIGHTS} fights survived` : `${r.survived} of ${M.MIG.FIGHTS} fights survived`} · ${fmtT(r.total)} alive</h3><p class="notes">${best}${daily}</p><p class="notes" style="margin-top:6px">Share: “${esc(migShare(r))}”</p>`;
+    act.innerHTML = `<button class="btn primary" id="migAgain">New migration</button><button class="btn" id="migAgainDaily">Daily migration</button><button class="btn" id="migCopy">Copy result</button><span class="copyOut" id="migCopyOut"></span><button class="btn" id="migHome">Back to the arena</button>`;
+  }
+}
+$('migBoons').addEventListener('click', e => { const b = e.target.closest('[data-boon]'); if (!b || !S.mig) return; M.pickBoon(S.mig, b.dataset.boon); saveRun(); renderMig(); renderHud(); });
+$('migActions').addEventListener('click', e => {
+  const id = e.target.id;
+  if (id === 'migToShop') go('draft');
+  else if (id === 'migAgain') startMig(newBoardSeed());
+  else if (id === 'migAgainDaily') startMig(migDailySeed(todayUTC()), todayUTC());
+  else if (id === 'migCopy') copyLink(migShare(S.mig), $('migCopyOut'), 'Result');
+  else if (id === 'migHome'){ try { localStorage.removeItem(MIG_KEY); } catch(err){} exitMig(); renderAll(); go('arena'); }
+});
+// arena screen entry: start, daily, resume, best
+function renderMigEntry(){
+  const r = loadRun(), live = r && !r.over, rb = $('migResume');
+  rb.hidden = !live; if (live) rb.textContent = `Resume (fight ${r.k + 1}/${M.MIG.FIGHTS}, $${r.money.toLocaleString()})`;
+  const best = readJSON(MIG_BEST), db = readJSON(migDailyKey(todayUTC()));
+  $('migBest').textContent = (best ? `Best run: ${best.won ? 'all ' + M.MIG.FIGHTS + ' fights' : best.survived + ' of ' + M.MIG.FIGHTS + ' fights'} survived, ${fmtT(best.total)} alive.` : 'No migration finished yet.') + (db ? ` Today's daily: ${db.survived} of ${M.MIG.FIGHTS}, ${fmtT(db.total)}.` : '');
+}
+$('migNew').addEventListener('click', () => startMig(newBoardSeed()));
+$('migDaily').addEventListener('click', () => startMig(migDailySeed(todayUTC()), todayUTC()));
+$('migResume').addEventListener('click', () => { const r = loadRun(); if (!r || r.over) return; hideNotice(); S.mig = r; S.migKey = null; S.migEntry = null; S.world = null; go('mig'); });
+
 // ---------- init ----------
 function renderAll(){ renderBudget(); renderDraft(); renderArenaOpts(); }
 window.addEventListener('resize', () => { if (S.screen === 'deploy'){ sizeCanvas($('deployCanvas')); drawDeploy(); } if (S.screen === 'fight') sizeCanvas($('fightCanvas')); });
 $('seedLbl').textContent = S.seed;
 syncSpeed();
-if (!loadHash()){ dealNewBoard(); renderAll(); go('arena'); }
+if (!loadHash()){
+  dealNewBoard(); renderAll();
+  const run = loadRun(); // a migration in progress picks up where it left off after a reload
+  if (run && !run.over){ S.mig = run; go('mig'); showNotice(`<b>Migration resumed</b> <span>Fight ${run.k + 1} of ${M.MIG.FIGHTS}, $${run.money.toLocaleString()} to spend.</span>`); }
+  else go('arena');
+}
 requestAnimationFrame(frame);
 if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { if (S.screen === 'deploy') drawDeploy(); });
 })();
