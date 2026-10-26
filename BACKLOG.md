@@ -188,13 +188,18 @@ Pick for new roles. Top three for design value: **honey badger, moose, Komodo dr
 - [ ] Real frame animation needs drawn sprites: an original art project (don't trace others' photos).
 
 ## 8. Replayability
-- [ ] **Roguelike "migration" mode (owner, Oct 26):** 7 sequential fights. Start ~$600; survive to earn money (time
-  alive + kills); team carries over: survivors keep wounds (partial heal), dead animals are gone, your own HP carries
-  (death ends the run). Between fights: a trading post (draft from a fresh board, sell animals) and 1-of-3 realistic
-  boons (spear: you hit harder; waterskin: less heat; snowshoes; ranger's whistle: guards regroup on you; smoke: enemy
-  morale). Escalation: richer, nastier boards; rares later; fight 4 a megafauna fight, fight 7 "the herd" (elephants).
-  Score = fights survived + total time; a daily roguelike seed. Engine: opt-in carry-over HP + boons as cfg modifiers.
-  Start after the Pick-N / share-link UI work lands (both are heavy ui.js changes).
+- [x] **Roguelike "migration" mode (owner, Oct 26) — first playable done (Oct 26).** 7 fights, $600 start; earn $80/min alive
+  + $25 per enemy down + $50 for surviving (rounded to $50); survivors keep wounds (heal 40%, you 30%), the dead are gone,
+  packs carry their surviving members; death ends the run. Between fights: recap, 1-of-3 boons (8: spear, waterskin,
+  snowshoes, ranger's whistle, smoke pots, thick hide coat, field dressing, lookout tower), trading post (a fresh board
+  of 8 + 1.5/fight animals at $1,100 + $550/fight; buy, undo, sell for half). Fight 4 megafauna (a rare giant or
+  sabre-tooth guaranteed), fight 7 the herd (elephant + mammoth); maps rotate through all four terrains. Score: fights
+  survived, then total time; best run + daily migration in localStorage, share line. Rules in `migration.js`; greedy
+  bot `migration_bot.js` (200 runs: median 4 fights survived, 74% reach fight 4, 51% fight 5, 7% win).
+  Follow-ups: sell price by health; a smarter bot (does selling or boon choice matter?); boon balance (measure each
+  boon's swing; spear and hide are weak, whistle/tower/dressing likely matter most); events between fights (river
+  crossing, drought); "rest" option (skip the trading post to heal more); per-run leaderboard via the daily seed;
+  a migration share link that replays the run; scout the next board before buying; mount choice remembered per run.
 - [ ] **Daily challenge** (shared seed, shared map) + **verified leaderboard** (store the config,
   re-simulate to verify the score — cheap because the sim is deterministic).
 - [ ] **Mutators / rules cards:** drought, night, double predators, no mounts, half budget, random prices.
