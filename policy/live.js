@@ -4,5 +4,6 @@
 const path = require('path');
 const A = require(process.env.SIM ? path.resolve(process.env.SIM) : path.join(__dirname, '..', 'sim.js'));
 require('./move_policy.js'); // registers the intent chooser with the engine
-A._internals.LIVE.harrier = require('./weights/harrier_v1.json'); // enemy wolves and hyenas
+A._internals.LIVE.harrier = require('./weights/harrier_v1.json'); // enemy wolves and hyenas: regroup before going in
+A._internals.LIVE.guard = require('./weights/guard_v1.json');     // your guards: pile in to help the most hurt ally
 module.exports = A._internals.LIVE;
