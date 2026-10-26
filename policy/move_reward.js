@@ -4,7 +4,7 @@
 //                       how long the units were in it); the same function for every arm of a paired comparison
 //  grade(m, ref)        style grade in [0,1] against the heuristic's own measured profile, plus realism gates
 //  drift(m, ref, N)     telemetry outside the heuristic's normal range (tolerance + 2 SE at this many fights)
-const GOAL = {kill: 1, death: .25, idlePerMin: .05, animalScale: 1000};
+const GOAL = {kill: 1, death: .1, idlePerMin: .05, animalScale: 1000}; // death .25 -> .1 (Oct 26): at .25 self-preservation dominated the goal and hanging back scored best
 function goalParts(r){
   return {human: r.dmgHuman / r.hmax, kill: GOAL.kill * r.killedYou, animals: (r.dmgFoe - r.dmgHuman) / GOAL.animalScale,
     deaths: -GOAL.death * r.deaths, idle: -GOAL.idlePerMin * r.noContactT / 60};
