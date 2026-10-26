@@ -190,8 +190,8 @@ function mkUnit(s, side, x, y, id){
 // ---------- world setup ----------
 function setup(cfg){
   // the live game's learned policies (policy/live.js) apply unless the cfg brings its own movePolicy or sets livePolicy:false
-  if (cfg.movePolicy === undefined && cfg.livePolicy !== false && INTERNALS.moveChoose && (INTERNALS.LIVE.harrier || INTERNALS.LIVE.guard)){
-    const mp = {}; for (const k of ['harrier', 'guard']) if (INTERNALS.LIVE[k]) mp[k] = INTERNALS.LIVE[k];
+  if (cfg.movePolicy === undefined && cfg.livePolicy !== false && INTERNALS.moveChoose && Object.values(INTERNALS.LIVE).some(v => v)){
+    const mp = {}; for (const k of Object.keys(INTERNALS.LIVE)) if (INTERNALS.LIVE[k]) mp[k] = INTERNALS.LIVE[k]; // any archetype with shipped weights
     cfg = Object.assign({}, cfg, {movePolicy: mp});
   }
   // cfg: {team:[ids], placements:{id:{dx,dy}}, terrain, mode:'wild'|'allout', ride:bool, seed, board:[ids] (optional: only these animals are in the game)}
@@ -1564,9 +1564,31 @@ function predCandidates(w, u){
 // engaged (policy/move_policy.js registers INTERNALS.moveChoose); the engine still does the steering. Intent 0 = commit
 // returns false: the caller runs the usual waitForOpening / gaitMove chain, so a policy that always commits is the
 // heuristic. Any other intent returns true with its move in u.intentGo ({tx, ty, frac}, or null if a gait move took
-// over). Archetypes so far: 'harrier' = the other side's orbit-gait pack hunters (wolf, hyena and their packs).
+// over). Other-side archetypes by gait: 'harrier' = orbit (wolf, hyena and their packs), 'cat' = stalk / rush (tiger,
+// jaguar, cougar, leopard, smilodon, lion, lion coalition), 'charger' = charge (rhinos, hippo, buffalo / bison and their
+// herds, bull, moose, boar, triceratops), 'bulldozer' = lumbering herbivores (elephant, mammoth, gorilla), 'brawler' =
+// lumbering predators (grizzly, polar, black bear, honey badger), 'kicker' = keepaway (giraffe, ostrich, giant kangaroo).
+// The croc (lunge) stays heuristic. Only a unit whose archetype has weights in cfg.movePolicy is affected.
 const INTENTS = ['commit', 'wait', 'flank', 'regroup', 'disengage'];
-function archetypeOf(u){ return u.side === 'E' && u.s.gait === 'orbit' ? 'harrier' : u.side === 'P' && !u.rider ? 'guard' : null; }
+const ARCH_GAIT = {orbit: 'harrier', stalk: 'cat', rush: 'cat', charge: 'charger', keepaway: 'kicker'};
+function archetypeOf(u){
+  if (u.side === 'E'){ const g = u.s.gait; return g === 'lumber' ? (u.s.pred ? 'brawler' : 'bulldozer') : ARCH_GAIT[g] || null; }
+  return u.side === 'P' && !u.rider ? 'guard' : null;
+}
+// per-archetype geometry of the generic intents: wait = circle at R m (radial gain g, speed fraction f); flank = the rear
+// point this far beyond touching (then the usual gait move from there: a cat pounces, a charger charges from behind);
+// disengage = back off this far beyond reach. A charger waits and backs off far enough to start a charge (5-32 m); a cat
+// waits just outside its pounce range at a creep (tall-grass cover holds below 45% of its speed).
+const INTENT_GEO = {
+  harrier:   {R: () => 16, g: .25, f: .45, flank: () => 3.2, ff: .8, back: 10},
+  cat:       {R: u => Math.max(12, (u.s.pounce || 5) + 4), g: .25, f: .3, flank: u => Math.max(2.5, Math.min(6, (u.s.pounce || 5) - 1.5)), ff: .7, back: 12},
+  charger:   {R: () => 20, g: .25, f: .35, flank: () => 12, ff: .7, back: 14},
+  bulldozer: {R: () => 12, g: .25, f: .35, flank: () => 3, ff: .7, back: 10},
+  brawler:   {R: () => 10, g: .3, f: .4, flank: () => 3, ff: .8, back: 10},
+  kicker:    {R: () => 14, g: .25, f: .4, flank: () => 3, ff: .7, back: 12},
+};
+// same-species allies (packmates, herd members, or just the same kind) for 'regroup'
+const kinOf = (u, o) => o !== u && o.side === u.side && active(o) && sp(o.s) === sp(u.s);
 function intentMove(w, u, t, d, touch, vmax){ const m = intentGo(w, u, t, d, touch, vmax); if (m === false) return false; u.intentGo = m; return true; }
 function intentGo(w, u, t, d, touch, vmax){
   const arch = archetypeOf(u), P = arch && w.cfg.movePolicy[arch];
@@ -1575,27 +1597,28 @@ function intentGo(w, u, t, d, touch, vmax){
   if (!INTERNALS.moveChoose) throw new Error('cfg.movePolicy is set but no movement policy is loaded: require policy/move_policy.js');
   if (u.intentFor !== t || !(u.intentT > DT / 2)){ u.intentFor = t; u.intentT = .5; u.intent = INTERNALS.moveChoose(w, u, t, d, P, arch); }
   else u.intentT -= DT;
-  const k = u.intent, rx = (u.x - t.x) / (d || 1), ry = (u.y - t.y) / (d || 1), circle = (R0, g, f) => {
+  const k = u.intent, rx = (u.x - t.x) / (d || 1), ry = (u.y - t.y) / (d || 1), G = INTENT_GEO[arch], circle = (R0, g, f) => {
     const vx = -ry * u.orbitDir + rx * (R0 - d) * g, vy = rx * u.orbitDir + ry * (R0 - d) * g, m = Math.hypot(vx, vy) || 1;
     return {tx: u.x + vx / m * 5, ty: u.y + vy / m * 5, frac: f}; };
   if (!k) return false; // commit: the heuristic
-  if (k === 1) return circle(16, .25, .45); // wait for an opening: shadow from ~16 m (as waitForOpening does)
-  if (k === 2){ // flank: get round behind the target (opposite the way it faces), then dart in from there
+  if (k === 1) return circle(G.R(u), G.g, G.f); // wait for an opening: shadow from a distance that fits the gait (harrier ~16 m, as waitForOpening does)
+  if (k === 2){ // flank: get round behind the target (opposite the way it faces), then the usual gait move from there (dart, pounce, charge)
     let hx = t.vx, hy = t.vy; if (Math.hypot(hx, hy) < .5 && t.target && active(t.target)){ hx = t.target.x - t.x; hy = t.target.y - t.y; }
     const hm = Math.hypot(hx, hy); if (hm < 1e-6) return gaitMove(w, u, t, d, touch, vmax);
-    const ro = t.r + u.r + 3.2, px = t.x - hx / hm * ro, py = t.y - hy / hm * ro;
+    const ro = t.r + u.r + G.flank(u), px = t.x - hx / hm * ro, py = t.y - hy / hm * ro;
     if (Math.hypot(px - u.x, py - u.y) < 2.5) return gaitMove(w, u, t, d, touch, vmax);
     let vx = px - u.x, vy = py - u.y; const m = Math.hypot(vx, vy) || 1; vx /= m; vy /= m;
     if (d < ro + 1){ vx += rx * (ro + 1 - d) * .6; vy += ry * (ro + 1 - d) * .6; } // swing wide instead of cutting through it
-    return {tx: u.x + vx * 5, ty: u.y + vy * 5, frac: .8};
+    return {tx: u.x + vx * 5, ty: u.y + vy * 5, frac: G.ff};
   }
-  if (k === 3){ // regroup: close on the packmates, then hang back with them
-    let cx = 0, cy = 0, n = 0; for (const o of w.units) if (packMate(u, o) && dist(u, o) < 40){ cx += o.x; cy += o.y; n++; }
-    if (!n) return circle(16, .25, .45);
+  if (k === 3){ // regroup: close on the packmates (harrier) / same-species allies, herd members included, then hang back with them
+    const mate = arch === 'harrier' ? packMate : kinOf;
+    let cx = 0, cy = 0, n = 0; for (const o of w.units) if (mate(u, o) && dist(u, o) < 40){ cx += o.x; cy += o.y; n++; }
+    if (!n) return circle(G.R(u), G.g, G.f);
     cx /= n; cy /= n; const m = Math.hypot(cx - u.x, cy - u.y);
     return m < 3 ? circle(Math.max(d, 10), .25, .3) : {tx: cx, ty: cy, frac: .7};
   }
-  return {tx: t.x + rx * (touch + 10), ty: t.y + ry * (touch + 10), frac: .7}; // disengage: back off to ~10 m out of reach
+  return {tx: t.x + rx * (touch + G.back), ty: t.y + ry * (touch + G.back), frac: .7}; // disengage: back off out of reach (harrier ~10 m; a charger to charging room)
 }
 // Guard archetype (cfg.movePolicy.guard): your side's animals that aren't carrying you, in 'guard' state or engaged.
 // guardDecide (decisions loop) picks an intent every 0.5 s; 0 hold = the heuristic. screen / intercept / help also set
