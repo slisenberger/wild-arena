@@ -210,11 +210,20 @@ Pick for new roles. Top three for design value: **honey badger, moose, Komodo dr
   Engine: `cfg.board` (done). Probe: `board.js` (how winnable random boards are by K). Open: group items
   (multiple units per species), a winnability check when dealing a board (offline-verified daily boards, or a
   fast value model), UI for the board, and pricing measured in board mode.
-- [ ] **Fixed animal-count choices:** a rules option where you pick exactly N animals (e.g. 3 or 4)
-  instead of spending a budget — simpler, and a different puzzle. Can coexist with budget mode.
+- [x] **Fixed animal-count choices** (done Oct 2026, UI only): a "Pick N" draft mode on the arena screen next to
+  Budget — pick exactly N (2–5, default 3) board animals whatever they cost; everything unpicked is still the other
+  side. Header shows picks left, prices are hidden, bests are kept per mode (`|pickN` key suffix), and there's a
+  **Daily Pick-3** with its own seed and best key (`wa-daily-pick3:<date>`). Open: price-free winnability check
+  (some boards may be lopsided with 3 picks; not measured yet).
 - [ ] **Rotating sets with rare choices:** each day/week/seed offers a rotating roster; some animals are
   rare (appear in few rotations), so a game with the honey badger or an orca-in-the-river is an event.
-- [ ] Per-map score-attack leaderboards; shareable seed + team links.
+- [x] **Shareable game links** (done Oct 2026): `#g=1,m:<map>,b:<board seed>,s:<fight seed>,d:<b|pN>[,t:<ids>,r:<mount|->,p:you=x_y;id=x_y][,sc:<score>]`.
+  "Copy link" on the draft screen and in the result banner (Clipboard API, falls back to a selected field). Opening one
+  restores map, board, seed, mode and team/formation, shows "Shared game: can you beat 3:12?", and replays the same fight.
+  Versioned and lenient (missing fields default; unreadable links or unknown maps get a fresh board and a note).
+- [x] **Daily streak** (done Oct 2026): consecutive UTC days with a daily run (either kind), `wa-streak` in localStorage,
+  shown next to the Daily buttons.
+- [ ] Per-map score-attack leaderboards.
 
 ## 9. Learned AI (ambition)
 - [ ] **Cat headroom (owner: "no headroom, so far"):** rules over the generic intents found nothing for cats, but the guards
