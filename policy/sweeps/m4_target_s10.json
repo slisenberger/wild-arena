@@ -1,0 +1,21 @@
+{
+ "note": "Milestone 4 round 10 (Oct 27): enemy cats with the guard-situation features, freer. tgt6 cat_p_p24 (thetaClip 1) tested +0.083 ± 0.028 clean (fresh re-check +0.042 ± 0.028) with many weights AT the ±1 clip (avoid stronger, avoid strong free guards, prefer close / rivals / feuds): the trust region binds. Here thetaClip 3 / 0, 24-32 pairs.",
+ "runs": [
+  {
+   "name": "catp_tc3_s1",
+   "args": "--arch=cat --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --goal=checkmate --spec=true --target=true --feat=plus --margin=.25 --pairs=24 --thetaClip=3 --seed=2001"
+  },
+  {
+   "name": "catp_tc3_s2",
+   "args": "--arch=cat --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --goal=checkmate --spec=true --target=true --feat=plus --margin=.25 --pairs=24 --thetaClip=3 --seed=2002"
+  },
+  {
+   "name": "catp_free",
+   "args": "--arch=cat --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --goal=checkmate --spec=true --target=true --feat=plus --margin=.25 --pairs=24 --thetaClip=0 --seed=2003"
+  },
+  {
+   "name": "catp_mlp_tc3",
+   "args": "--arch=cat --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --goal=checkmate --spec=true --target=true --feat=plus --margin=.25 --pairs=24 --thetaClip=3 --nh=8 --pairs=32 --seed=2004"
+  }
+ ]
+}
