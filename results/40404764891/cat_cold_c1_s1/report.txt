@@ -1,0 +1,78 @@
+state: phase done, gen 60/60, λ 0.00, best zero, sim f9f586688d57ef2c
+calib: heuristic goal 0.410, paired sd 0.629, effect 0.082, N {"train":119,"val":1000,"test":1200}
+gen 0: goal 0.290 / best 0.478 / heuristic 0.308, style 0.712, λ 1.00, non-commit 53.2%, flagged 12
+gen 1: goal 0.417 / best 0.490 / heuristic 0.460, style 0.942, λ 1.75, non-commit 32.6%, flagged 5
+gen 2: goal 0.387 / best 0.457 / heuristic 0.390, style 1.000, λ 1.59, non-commit 3.5%, flagged 0
+gen 3: goal 0.297 / best 0.323 / heuristic 0.296, style 1.000, λ 1.19, non-commit 0.5%, flagged 0
+gen 4: goal 0.243 / best 0.263 / heuristic 0.243, style 1.000, λ 0.79, non-commit 0.0%, flagged 0
+gen 5: goal 0.383 / best 0.398 / heuristic 0.380, style 1.000, λ 0.39, non-commit 0.0%, flagged 0
+gen 6: goal 0.320 / best 0.336 / heuristic 0.319, style 1.000, λ 0.00, non-commit 0.0%, flagged 0
+gen 7: goal 0.326 / best 0.329 / heuristic 0.326, style 1.000, λ 0.00, non-commit 0.0%, flagged 0
+gen 8: goal 0.439 / best 0.439 / heuristic 0.439, style 1.000, λ 0.00, non-commit 0.0%, flagged 0
+gen 9: goal 0.359 / best 0.360 / heuristic 0.359, style 1.000, λ 0.00, non-commit 0.0%, flagged 0
+gen 10: goal 0.271 / best 0.271 / heuristic 0.271, style 1.000, λ 0.00, non-commit 0.0%, flagged 0
+gen 11: goal 0.383 / best 0.383 / heuristic 0.383, style 1.000, λ 0.00, non-commit 0.0%, flagged 0
+gen 12: goal 0.393 / best 0.393 / heuristic 0.393, style 1.000, λ 0.00, non-commit 0.0%, flagged 0
+gen 13: goal 0.261 / best 0.262 / heuristic 0.261, style 1.000, λ 0.00, non-commit 0.0%, flagged 0
+gen 14: goal 0.432 / best 0.432 / heuristic 0.432, style 1.000, λ 0.00, non-commit 0.0%, flagged 0
+gen 15: goal 0.417 / best 0.417 / heuristic 0.417, style 1.000, λ 0.00, non-commit 0.0%, flagged 0
+gen 16: goal 0.409 / best 0.409 / heuristic 0.409, style 1.000, λ 0.00, non-commit 0.0%, flagged 0
+gen 17: goal 0.317 / best 0.317 / heuristic 0.317, style 1.000, λ 0.00, non-commit 0.0%, flagged 0
+gen 18: goal 0.542 / best 0.542 / heuristic 0.542, style 1.000, λ 0.00, non-commit 0.0%, flagged 0
+gen 19: goal 0.265 / best 0.265 / heuristic 0.265, style 1.000, λ 0.00, non-commit 0.0%, flagged 0
+gen 20: goal 0.373 / best 0.373 / heuristic 0.373, style 1.000, λ 0.00, non-commit 0.0%, flagged 0
+gen 21: goal 0.448 / best 0.448 / heuristic 0.448, style 1.000, λ 0.00, non-commit 0.0%, flagged 0
+gen 22: goal 0.350 / best 0.350 / heuristic 0.350, style 1.000, λ 0.00, non-commit 0.0%, flagged 0
+gen 23: goal 0.317 / best 0.317 / heuristic 0.317, style 1.000, λ 0.00, non-commit 0.0%, flagged 0
+gen 24: goal 0.299 / best 0.299 / heuristic 0.299, style 1.000, λ 0.00, non-commit 0.0%, flagged 0
+gen 25: goal 0.276 / best 0.276 / heuristic 0.276, style 1.000, λ 0.00, non-commit 0.0%, flagged 0
+gen 26: goal 0.363 / best 0.363 / heuristic 0.363, style 1.000, λ 0.00, non-commit 0.0%, flagged 0
+gen 27: goal 0.346 / best 0.346 / heuristic 0.346, style 1.000, λ 0.00, non-commit 0.0%, flagged 0
+gen 28: goal 0.264 / best 0.264 / heuristic 0.264, style 1.000, λ 0.00, non-commit 0.0%, flagged 0
+gen 29: goal 0.341 / best 0.341 / heuristic 0.341, style 1.000, λ 0.00, non-commit 0.0%, flagged 0
+gen 30: goal 0.480 / best 0.480 / heuristic 0.480, style 1.000, λ 0.00, non-commit 0.0%, flagged 0
+gen 31: goal 0.183 / best 0.183 / heuristic 0.183, style 1.000, λ 0.00, non-commit 0.0%, flagged 0
+gen 32: goal 0.355 / best 0.355 / heuristic 0.355, style 1.000, λ 0.00, non-commit 0.0%, flagged 0
+gen 33: goal 0.469 / best 0.469 / heuristic 0.469, style 1.000, λ 0.00, non-commit 0.0%, flagged 0
+gen 34: goal 0.336 / best 0.336 / heuristic 0.336, style 1.000, λ 0.00, non-commit 0.0%, flagged 0
+gen 35: goal 0.326 / best 0.326 / heuristic 0.326, style 1.000, λ 0.00, non-commit 0.0%, flagged 0
+gen 36: goal 0.287 / best 0.287 / heuristic 0.287, style 1.000, λ 0.00, non-commit 0.0%, flagged 0
+gen 37: goal 0.407 / best 0.416 / heuristic 0.407, style 1.000, λ 0.00, non-commit 0.0%, flagged 0
+gen 38: goal 0.353 / best 0.353 / heuristic 0.353, style 1.000, λ 0.00, non-commit 0.0%, flagged 0
+gen 39: goal 0.286 / best 0.286 / heuristic 0.286, style 1.000, λ 0.00, non-commit 0.0%, flagged 0
+gen 40: goal 0.250 / best 0.250 / heuristic 0.250, style 1.000, λ 0.00, non-commit 0.0%, flagged 0
+gen 41: goal 0.483 / best 0.483 / heuristic 0.483, style 1.000, λ 0.00, non-commit 0.0%, flagged 0
+gen 42: goal 0.367 / best 0.367 / heuristic 0.367, style 1.000, λ 0.00, non-commit 0.0%, flagged 0
+gen 43: goal 0.394 / best 0.395 / heuristic 0.395, style 1.000, λ 0.00, non-commit 0.0%, flagged 0
+gen 44: goal 0.376 / best 0.376 / heuristic 0.376, style 1.000, λ 0.00, non-commit 0.0%, flagged 0
+gen 45: goal 0.352 / best 0.352 / heuristic 0.352, style 1.000, λ 0.00, non-commit 0.0%, flagged 0
+gen 46: goal 0.308 / best 0.308 / heuristic 0.308, style 1.000, λ 0.00, non-commit 0.0%, flagged 0
+gen 47: goal 0.341 / best 0.341 / heuristic 0.341, style 1.000, λ 0.00, non-commit 0.0%, flagged 0
+gen 48: goal 0.363 / best 0.363 / heuristic 0.363, style 1.000, λ 0.00, non-commit 0.0%, flagged 0
+gen 49: goal 0.381 / best 0.381 / heuristic 0.381, style 1.000, λ 0.00, non-commit 0.0%, flagged 0
+gen 50: goal 0.333 / best 0.333 / heuristic 0.333, style 1.000, λ 0.00, non-commit 0.0%, flagged 0
+gen 51: goal 0.300 / best 0.300 / heuristic 0.300, style 1.000, λ 0.00, non-commit 0.0%, flagged 0
+gen 52: goal 0.346 / best 0.346 / heuristic 0.346, style 1.000, λ 0.00, non-commit 0.0%, flagged 0
+gen 53: goal 0.314 / best 0.314 / heuristic 0.314, style 1.000, λ 0.00, non-commit 0.0%, flagged 0
+gen 54: goal 0.187 / best 0.187 / heuristic 0.187, style 1.000, λ 0.00, non-commit 0.0%, flagged 0
+gen 55: goal 0.394 / best 0.394 / heuristic 0.394, style 1.000, λ 0.00, non-commit 0.0%, flagged 0
+gen 56: goal 0.352 / best 0.352 / heuristic 0.352, style 1.000, λ 0.00, non-commit 0.0%, flagged 0
+gen 57: goal 0.330 / best 0.330 / heuristic 0.330, style 1.000, λ 0.00, non-commit 0.0%, flagged 0
+gen 58: goal 0.362 / best 0.362 / heuristic 0.362, style 1.000, λ 0.00, non-commit 0.0%, flagged 0
+gen 59: goal 0.217 / best 0.217 / heuristic 0.217, style 1.000, λ 0.00, non-commit 0.0%, flagged 0
+val gen 4 (#0): 0.000 ± 0.000 style 1.000 
+val gen 8 (#1): 0.000 ± 0.000 style 1.000 
+val gen 12 (#2): 0.000 ± 0.000 style 1.000 
+val gen 16 (#3): 0.000 ± 0.000 style 1.000 
+val gen 20 (#4): 0.000 ± 0.000 style 1.000 
+val gen 24 (#5): 0.000 ± 0.000 style 1.000 
+val gen 28 (#6): 0.000 ± 0.000 style 1.000 
+val gen 32 (#7): 0.000 ± 0.000 style 1.000 
+val gen 36 (#8): 0.000 ± 0.000 style 1.000 
+val gen 40 (#9): 0.000 ± 0.000 style 1.000 
+val gen 44 (#10): 0.000 ± 0.000 style 1.000 
+val gen 48 (#11): 0.000 ± 0.000 style 1.000 
+val gen 52 (#12): 0.000 ± 0.000 style 1.000 
+val gen 56 (#13): 0.000 ± 0.000 style 1.000 
+val gen 60 (#14): 0.000 ± 0.000 style 1.000 
+test: 0.000 ± 0.000 (within noise), style 1.000

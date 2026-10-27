@@ -1,0 +1,36 @@
+== cat_bp_c1
+[test] best (rule busyPounce) vs zero weights on 1200 held-out fights: +0.015 ± 0.013 (within 2 SE) | style 1.000 gates [] drift []
+test: 0.015 ± 0.013 (within noise), style 1.000
+== cat_cold_c1_s1
+[test] best (zero) vs zero weights on 1200 held-out fights: +0.000 ± 0.000 (within 2 SE) | style 1.000 gates [] drift []
+test: 0.000 ± 0.000 (within noise), style 1.000
+== cat_cold_c1_s2
+[test] best (zero) vs zero weights on 1200 held-out fights: +0.000 ± 0.000 (within 2 SE) | style 1.000 gates [] drift []
+test: 0.000 ± 0.000 (within noise), style 1.000
+== cat_cold_c1_small_s1
+[test] best (after 40 updates) vs zero weights on 1200 held-out fights: +0.072 ± 0.024 (beyond 2 SE) | style 1.000 gates [] drift []
+test: 0.072 ± 0.024 (significant), style 1.000
+== cat_cold_c1_small_s2
+[test] best (after 48 updates) vs zero weights on 1200 held-out fights: +0.019 ± 0.025 (within 2 SE) | style 0.999 gates [] drift [noContact 0.254→0.320]
+test: 0.019 ± 0.025 (within noise), style 0.999
+== cat_cold_full_small
+[test] best (zero) vs zero weights on 1200 held-out fights: +0.000 ± 0.000 (within 2 SE) | style 1.000 gates [] drift []
+test: 0.000 ± 0.000 (within noise), style 1.000
+== cat_cp_c1
+[test] best (after 16 updates) vs zero weights on 1200 held-out fights: +0.097 ± 0.024 (beyond 2 SE) | style 0.993 gates [] drift [noContact 0.256→0.330]
+test: 0.097 ± 0.024 (significant), style 0.993
+== cat_cp_c1_small
+[test] best (after 44 updates) vs zero weights on 1200 held-out fights: +0.042 ± 0.024 (within 2 SE) | style 1.000 gates [] drift []
+test: 0.042 ± 0.024 (within noise), style 1.000
+== cat_cp_c2
+[test] best (rule cougarPounce) vs zero weights on 1200 held-out fights: -0.000 ± 0.004 (within 2 SE) | style 1.000 gates [] drift []
+test: -0.000 ± 0.004 (within noise), style 1.000
+== cat_cu_c1
+[test] best (after 32 updates) vs zero weights on 1200 held-out fights: +0.120 ± 0.023 (beyond 2 SE) | style 1.000 gates [] drift []
+test: 0.120 ± 0.023 (significant), style 1.000
+== cat_sp_c1
+[test] best (after 60 updates) vs zero weights on 1200 held-out fights: +0.079 ± 0.023 (beyond 2 SE) | style 1.000 gates [] drift []
+test: 0.079 ± 0.023 (significant), style 1.000
+== cat_sp_c1_small
+[test] best (after 12 updates) vs zero weights on 1200 held-out fights: +0.018 ± 0.025 (within 2 SE) | style 1.000 gates [] drift []
+test: 0.018 ± 0.025 (within noise), style 1.000

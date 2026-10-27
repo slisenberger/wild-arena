@@ -1,0 +1,218 @@
+[init] policy/runs/cat_sp_c1_small/state.json: sim f9f586688d57ef2c, harness 44fe77f8d2801a55, 95 features (cat), 672 trainable, config {"arch":"cat","seed":705,"mode":"linear","nh":0,"margin":1,"sigma":0.05,"lr":0.04,"pairs":16,"gens":60,"fights":"auto","fightsMin":100,"fightsMax":300,"calibFights":400,"calibPerturb":4,"valEvery":4,"valFights":1000,"valMax":1200,"testFights":1200,"testMax":1200,"effect":"auto","styleThr":0.9,"lambda0":1,"lambdaLr":4,"gatePenalty":0.25,"holdMap":null,"acceptNoDrift":true,"baseline":true,"initRule":"stalkerPounce","initWeights":null,"thetaClip":1,"withLive":true}
+[calib] 400 fights × 5 arms, 56 s, 35.6 fights/s
+  heuristic goal 0.411 (sd 0.822); parts human 0.157±sd0.344, kill 0.135±sd0.342, animals 0.223±sd0.274, deaths -0.097±sd0.080, idle -0.007±sd0.013
+  paired per-fight sd 0.455; perturbation effects 0.073 -0.002 0.000 -0.020 (SE 0.023), true-effect sd 0.035 -> effect 0.082
+  fights for 2 SE: {"effect":123,"effect×2":31,"0.05":331,"0.1":83} -> N train 100, val 1000, test 1200
+[gen 0] goal mean 0.409 best 0.657 (heuristic 0.458: mean -0.049) | style mean 0.908 min 0.044 feasible 88% | λ 1.00→0.97 | non-commit 21.8% | drift-flagged 5/32 | |θ| 9.725 | 3300 fights, 82 s, 40.5/s
+    flagged: goal 0.451 style 0.930 gates [longIdle] drift [longIdle 0.015→0.144; noContact 0.244→0.376]
+    flagged: goal 0.217 style 0.623 gates [longIdle,stillLong] drift [closeShare 0.557→0.854; meanDist 27.456→41.792; longIdle 0.015→0.493; noContact 0.244→0.744; pounceRate 3.314→0.662; rushPounceRate 2.203→0.329; stalkPounceRate 3.593→0.724; rushNear 0.289→0.066; stillLong 0.031→0.478]
+    flagged: goal 0.657 style 0.983 gates [] drift [noContact 0.244→0.376]
+    flagged: goal 0.343 style 0.544 gates [longIdle,stillLong] drift [closeShare 0.557→0.852; meanDist 27.456→45.127; longIdle 0.015→0.489; noContact 0.244→0.797; fruitless 0.557→0.775; pounceRate 3.314→0.459; rushPounceRate 2.203→0.200; stalkPounceRate 3.593→0.520; rushNear 0.289→0.031; stillLong 0.031→0.490]
+    flagged: goal 0.479 style 0.721 gates [longIdle,stillLong] drift [closeShare 0.557→0.802; meanDist 27.456→37.221; longIdle 0.015→0.369; noContact 0.244→0.634; pounceRate 3.314→1.039; stalkPounceRate 3.593→0.973; stillLong 0.031→0.332]
+[gen 1] goal mean 0.383 best 0.470 (heuristic 0.395: mean -0.012) | style mean 0.915 min 0.250 feasible 88% | λ 0.97→0.91 | non-commit 17.0% | drift-flagged 4/32 | |θ| 9.774 | 3300 fights, 72 s, 45.9/s
+    flagged: goal 0.311 style 0.750 gates [longIdle,stillLong] drift [closeShare 0.557→0.769; longIdle 0.015→0.344; noContact 0.244→0.613; pounceRate 3.314→1.002; stalkPounceRate 3.593→1.013; stillLong 0.031→0.329]
+    flagged: goal 0.326 style 0.842 gates [longIdle,stillLong] drift [longIdle 0.015→0.182; noContact 0.244→0.416; stillLong 0.031→0.172]
+    flagged: goal 0.388 style 0.848 gates [longIdle,stillLong] drift [longIdle 0.015→0.144; noContact 0.244→0.403; stillLong 0.031→0.141]
+    flagged: goal 0.403 style 0.842 gates [longIdle,stillLong] drift [longIdle 0.015→0.156; noContact 0.244→0.454; stillLong 0.031→0.121]
+[gen 2] goal mean 0.364 best 0.419 (heuristic 0.361: mean +0.004) | style mean 0.975 min 0.468 feasible 94% | λ 0.91→0.61 | non-commit 21.5% | drift-flagged 2/32 | |θ| 9.846 | 3300 fights, 84 s, 39.1/s
+    flagged: goal 0.390 style 0.984 gates [longIdle] drift [longIdle 0.015→0.067; noContact 0.244→0.360]
+    flagged: goal 0.261 style 0.968 gates [longIdle,stillLong] drift [longIdle 0.015→0.070; stillLong 0.031→0.076]
+[gen 3] goal mean 0.466 best 0.537 (heuristic 0.488: mean -0.022) | style mean 0.998 min 0.950 feasible 100% | λ 0.61→0.21 | non-commit 27.1% | drift-flagged 1/32 | |θ| 9.921 | 3300 fights, 89 s, 37.2/s
+    flagged: goal 0.549 style 0.950 gates [] drift [noContact 0.244→0.407]
+[gen 4] goal mean 0.312 best 0.391 (heuristic 0.325: mean -0.013) | style mean 1.000 min 1.000 feasible 100% | λ 0.21→0.00 | non-commit 36.4% | drift-flagged 0/32 | |θ| 10.004 | 5300 fights, 134 s, 39.5/s
+  [val #0] centre (after 4 updates, non-commit 25.1%) vs best (rule stalkerPounce) on 1000 fresh fights: +0.043 ± 0.020 | style 1.000 gates [] drift [] -> ACCEPT
+[gen 5] goal mean 0.463 best 0.528 (heuristic 0.463: mean +0.000) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 35.4% | drift-flagged 0/32 | |θ| 10.106 | 3300 fights, 87 s, 37.8/s
+[gen 6] goal mean 0.390 best 0.500 (heuristic 0.362: mean +0.028) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 39.4% | drift-flagged 0/32 | |θ| 10.177 | 3300 fights, 90 s, 36.6/s
+[gen 7] goal mean 0.297 best 0.421 (heuristic 0.302: mean -0.005) | style mean 0.979 min 0.342 feasible 97% | λ 0.00→0.00 | non-commit 50.9% | drift-flagged 1/32 | |θ| 10.253 | 3300 fights, 85 s, 39.0/s
+    flagged: goal 0.315 style 0.842 gates [longIdle,stillLong] drift [longIdle 0.015→0.102; noContact 0.244→0.422; stillLong 0.031→0.110]
+[gen 8] goal mean 0.391 best 0.511 (heuristic 0.381: mean +0.010) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 61.9% | drift-flagged 0/32 | |θ| 10.338 | 5300 fights, 127 s, 41.9/s
+  [val #1] centre (after 8 updates, non-commit 63.8%) vs best (after 4 updates) on 1000 fresh fights: +0.050 ± 0.026 | style 1.000 gates [] drift [] -> keep best
+[gen 9] goal mean 0.397 best 0.496 (heuristic 0.346: mean +0.051) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 71.8% | drift-flagged 0/32 | |θ| 10.427 | 3300 fights, 86 s, 38.5/s
+[gen 10] goal mean 0.403 best 0.528 (heuristic 0.509: mean -0.106) | style mean 0.992 min 0.749 feasible 97% | λ 0.00→0.00 | non-commit 73.8% | drift-flagged 1/32 | |θ| 10.517 | 3300 fights, 85 s, 38.7/s
+    flagged: goal 0.369 style 0.999 gates [longIdle] drift [longIdle 0.015→0.061; noContact 0.244→0.360]
+[gen 11] goal mean 0.311 best 0.453 (heuristic 0.353: mean -0.042) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 71.9% | drift-flagged 0/32 | |θ| 10.611 | 3300 fights, 85 s, 38.9/s
+[gen 12] goal mean 0.352 best 0.454 (heuristic 0.341: mean +0.012) | style mean 0.982 min 0.439 feasible 97% | λ 0.00→0.00 | non-commit 71.4% | drift-flagged 3/32 | |θ| 10.700 | 5300 fights, 131 s, 40.6/s
+    flagged: goal 0.282 style 0.994 gates [] drift [noContact 0.244→0.365]
+    flagged: goal 0.315 style 0.939 gates [longIdle,stillLong] drift [longIdle 0.015→0.064; stillLong 0.031→0.096]
+    flagged: goal 0.436 style 0.999 gates [] drift [noContact 0.244→0.360]
+  [val #2] centre (after 12 updates, non-commit 72.9%) vs best (after 4 updates) on 1000 fresh fights: +0.058 ± 0.025 | style 1.000 gates [] drift [] -> ACCEPT
+[gen 13] goal mean 0.338 best 0.472 (heuristic 0.285: mean +0.053) | style mean 0.982 min 0.410 feasible 97% | λ 0.00→0.00 | non-commit 72.8% | drift-flagged 1/32 | |θ| 10.775 | 3300 fights, 86 s, 38.2/s
+    flagged: goal 0.346 style 0.910 gates [longIdle,stillLong] drift [longIdle 0.015→0.079; stillLong 0.031→0.089]
+[gen 14] goal mean 0.341 best 0.418 (heuristic 0.287: mean +0.055) | style mean 0.952 min 0.342 feasible 91% | λ 0.00→0.00 | non-commit 75.1% | drift-flagged 4/32 | |θ| 10.843 | 3300 fights, 83 s, 39.6/s
+    flagged: goal 0.277 style 0.912 gates [longIdle,stillLong] drift [longIdle 0.015→0.074; stillLong 0.031→0.111]
+    flagged: goal 0.361 style 0.972 gates [stillLong] drift [stillLong 0.031→0.084]
+    flagged: goal 0.392 style 0.842 gates [longIdle,stillLong] drift [longIdle 0.015→0.162; noContact 0.244→0.414; stillLong 0.031→0.163]
+    flagged: goal 0.242 style 0.996 gates [] drift [noContact 0.244→0.363]
+[gen 15] goal mean 0.471 best 0.650 (heuristic 0.477: mean -0.006) | style mean 0.981 min 0.377 feasible 97% | λ 0.00→0.00 | non-commit 72.4% | drift-flagged 1/32 | |θ| 10.913 | 3300 fights, 83 s, 39.6/s
+    flagged: goal 0.314 style 0.877 gates [longIdle,stillLong] drift [longIdle 0.015→0.084; noContact 0.244→0.376; stillLong 0.031→0.118]
+[gen 16] goal mean 0.411 best 0.506 (heuristic 0.447: mean -0.037) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 74.2% | drift-flagged 0/32 | |θ| 10.983 | 5300 fights, 126 s, 42.1/s
+  [val #3] centre (after 16 updates, non-commit 73.6%) vs best (after 12 updates) on 1000 fresh fights: +0.033 ± 0.018 | style 1.000 gates [] drift [] -> keep best
+[gen 17] goal mean 0.391 best 0.483 (heuristic 0.314: mean +0.077) | style mean 0.982 min 0.428 feasible 97% | λ 0.00→0.00 | non-commit 73.8% | drift-flagged 1/32 | |θ| 11.053 | 3300 fights, 79 s, 41.7/s
+    flagged: goal 0.416 style 0.928 gates [longIdle,stillLong] drift [longIdle 0.015→0.074; stillLong 0.031→0.087]
+[gen 18] goal mean 0.396 best 0.479 (heuristic 0.351: mean +0.044) | style mean 0.983 min 0.701 feasible 94% | λ 0.00→0.00 | non-commit 74.0% | drift-flagged 2/32 | |θ| 11.132 | 3300 fights, 85 s, 39.0/s
+    flagged: goal 0.401 style 0.951 gates [stillLong] drift [stillLong 0.031→0.092]
+    flagged: goal 0.329 style 0.999 gates [stillLong] drift [stillLong 0.031→0.073]
+[gen 19] goal mean 0.353 best 0.438 (heuristic 0.311: mean +0.043) | style mean 0.981 min 0.411 feasible 97% | λ 0.00→0.00 | non-commit 74.9% | drift-flagged 2/32 | |θ| 11.208 | 3300 fights, 83 s, 39.6/s
+    flagged: goal 0.404 style 0.994 gates [] drift [closeShare 0.557→0.742]
+    flagged: goal 0.391 style 0.911 gates [longIdle,stillLong] drift [longIdle 0.015→0.075; stillLong 0.031→0.103]
+[gen 20] goal mean 0.433 best 0.508 (heuristic 0.427: mean +0.006) | style mean 1.000 min 0.994 feasible 100% | λ 0.00→0.00 | non-commit 73.8% | drift-flagged 1/32 | |θ| 11.281 | 5300 fights, 129 s, 41.1/s
+    flagged: goal 0.469 style 0.994 gates [] drift [noContact 0.244→0.365]
+  [val #4] centre (after 20 updates, non-commit 72.0%) vs best (after 12 updates) on 1000 fresh fights: +0.025 ± 0.023 | style 1.000 gates [] drift [] -> keep best
+[gen 21] goal mean 0.407 best 0.564 (heuristic 0.270: mean +0.137) | style mean 0.980 min 0.365 feasible 97% | λ 0.00→0.00 | non-commit 69.6% | drift-flagged 1/32 | |θ| 11.347 | 3300 fights, 88 s, 37.7/s
+    flagged: goal 0.448 style 0.865 gates [longIdle,stillLong] drift [longIdle 0.015→0.104; noContact 0.244→0.387; stillLong 0.031→0.101]
+[gen 22] goal mean 0.453 best 0.564 (heuristic 0.380: mean +0.073) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 71.6% | drift-flagged 0/32 | |θ| 11.414 | 3300 fights, 89 s, 37.2/s
+[gen 23] goal mean 0.493 best 0.573 (heuristic 0.345: mean +0.148) | style mean 0.981 min 0.422 feasible 97% | λ 0.00→0.00 | non-commit 77.0% | drift-flagged 3/32 | |θ| 11.480 | 3300 fights, 85 s, 38.8/s
+    flagged: goal 0.473 style 0.922 gates [longIdle,stillLong] drift [longIdle 0.015→0.073; stillLong 0.031→0.091]
+    flagged: goal 0.491 style 0.998 gates [] drift [rushNear 0.289→0.091]
+    flagged: goal 0.341 style 0.979 gates [] drift [noContact 0.244→0.379]
+[gen 24] goal mean 0.514 best 0.609 (heuristic 0.427: mean +0.086) | style mean 1.000 min 0.999 feasible 100% | λ 0.00→0.00 | non-commit 76.0% | drift-flagged 1/32 | |θ| 11.538 | 5300 fights, 133 s, 40.0/s
+    flagged: goal 0.536 style 0.999 gates [] drift [noContact 0.244→0.360]
+  [val #5] centre (after 24 updates, non-commit 76.7%) vs best (after 12 updates) on 1000 fresh fights: -0.015 ± 0.022 | style 1.000 gates [] drift [] -> keep best
+[gen 25] goal mean 0.501 best 0.651 (heuristic 0.343: mean +0.157) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 80.1% | drift-flagged 0/32 | |θ| 11.601 | 3300 fights, 80 s, 41.1/s
+[gen 26] goal mean 0.336 best 0.410 (heuristic 0.312: mean +0.024) | style mean 0.910 min 0.721 feasible 66% | λ 0.00→0.00 | non-commit 80.6% | drift-flagged 11/32 | |θ| 11.657 | 3300 fights, 76 s, 43.6/s
+    flagged: goal 0.346 style 0.991 gates [stillLong] drift [stillLong 0.031→0.077]
+    flagged: goal 0.243 style 0.989 gates [stillLong] drift [stillLong 0.031→0.077]
+    flagged: goal 0.364 style 0.995 gates [stillLong] drift [stillLong 0.031→0.075]
+    flagged: goal 0.341 style 1.000 gates [stillLong] drift [stillLong 0.031→0.073]
+    flagged: goal 0.384 style 0.987 gates [stillLong] drift [stillLong 0.031→0.078]
+    flagged: goal 0.318 style 0.991 gates [stillLong] drift [stillLong 0.031→0.077]
+    flagged: goal 0.387 style 0.989 gates [stillLong] drift [stillLong 0.031→0.077]
+    flagged: goal 0.388 style 0.971 gates [stillLong] drift [stillLong 0.031→0.084]
+    flagged: goal 0.258 style 0.982 gates [stillLong] drift [stillLong 0.031→0.080]
+    flagged: goal 0.380 style 0.994 gates [stillLong] drift [stillLong 0.031→0.075]
+    flagged: goal 0.256 style 0.994 gates [stillLong] drift [stillLong 0.031→0.075]
+[gen 27] goal mean 0.466 best 0.555 (heuristic 0.275: mean +0.192) | style mean 0.998 min 0.965 feasible 100% | λ 0.00→0.00 | non-commit 84.6% | drift-flagged 4/32 | |θ| 11.707 | 3300 fights, 85 s, 38.9/s
+    flagged: goal 0.539 style 0.980 gates [] drift [noContact 0.244→0.379]
+    flagged: goal 0.481 style 0.980 gates [] drift [noContact 0.244→0.378]
+    flagged: goal 0.450 style 0.997 gates [] drift [noContact 0.244→0.362]
+    flagged: goal 0.452 style 0.965 gates [] drift [noContact 0.244→0.389; rushNear 0.289→0.088]
+[gen 28] goal mean 0.491 best 0.652 (heuristic 0.465: mean +0.026) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 81.7% | drift-flagged 0/32 | |θ| 11.754 | 5300 fights, 141 s, 37.6/s
+  [val #6] centre (after 28 updates, non-commit 82.8%) vs best (after 12 updates) on 1000 fresh fights: +0.025 ± 0.024 | style 1.000 gates [] drift [] -> keep best
+[gen 29] goal mean 0.492 best 0.601 (heuristic 0.370: mean +0.122) | style mean 0.987 min 0.726 feasible 97% | λ 0.00→0.00 | non-commit 85.0% | drift-flagged 12/32 | |θ| 11.801 | 3300 fights, 88 s, 37.4/s
+    flagged: goal 0.576 style 0.990 gates [] drift [noContact 0.244→0.368]
+    flagged: goal 0.433 style 0.976 gates [stillLong] drift [noContact 0.244→0.373; stillLong 0.031→0.077]
+    flagged: goal 0.501 style 0.989 gates [] drift [noContact 0.244→0.370]
+    flagged: goal 0.508 style 0.999 gates [] drift [noContact 0.244→0.360]
+    flagged: goal 0.495 style 0.990 gates [] drift [noContact 0.244→0.368]
+    flagged: goal 0.470 style 0.977 gates [] drift [noContact 0.244→0.382]
+    flagged: goal 0.511 style 0.971 gates [] drift [noContact 0.244→0.387]
+    flagged: goal 0.541 style 0.974 gates [] drift [noContact 0.244→0.384]
+    flagged: goal 0.450 style 0.995 gates [] drift [noContact 0.244→0.364]
+    flagged: goal 0.524 style 0.999 gates [] drift [noContact 0.244→0.360]
+    flagged: goal 0.457 style 0.993 gates [] drift [noContact 0.244→0.366]
+    flagged: goal 0.420 style 0.994 gates [] drift [noContact 0.244→0.365]
+[gen 30] goal mean 0.308 best 0.401 (heuristic 0.259: mean +0.049) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 88.2% | drift-flagged 0/32 | |θ| 11.847 | 3300 fights, 82 s, 40.1/s
+[gen 31] goal mean 0.470 best 0.556 (heuristic 0.363: mean +0.107) | style mean 0.929 min 0.395 feasible 81% | λ 0.00→0.00 | non-commit 88.6% | drift-flagged 6/32 | |θ| 11.891 | 3300 fights, 89 s, 37.2/s
+    flagged: goal 0.470 style 0.939 gates [longIdle,stillLong] drift [longIdle 0.015→0.064; stillLong 0.031→0.103]
+    flagged: goal 0.454 style 0.980 gates [stillLong] drift [stillLong 0.031→0.081]
+    flagged: goal 0.464 style 0.959 gates [stillLong] drift [noContact 0.244→0.372; stillLong 0.031→0.083]
+    flagged: goal 0.517 style 0.949 gates [stillLong] drift [stillLong 0.031→0.092]
+    flagged: goal 0.451 style 0.997 gates [stillLong] drift [stillLong 0.031→0.074]
+    flagged: goal 0.463 style 0.895 gates [longIdle,stillLong] drift [longIdle 0.015→0.093; stillLong 0.031→0.135]
+[gen 32] goal mean 0.413 best 0.523 (heuristic 0.280: mean +0.134) | style mean 0.866 min 0.342 feasible 78% | λ 0.00→0.13 | non-commit 91.7% | drift-flagged 7/32 | |θ| 11.930 | 5300 fights, 127 s, 41.7/s
+    flagged: goal 0.379 style 0.895 gates [longIdle,stillLong] drift [longIdle 0.015→0.086; stillLong 0.031→0.115]
+    flagged: goal 0.323 style 0.911 gates [longIdle,stillLong] drift [longIdle 0.015→0.072; rushNear 0.289→0.078; stillLong 0.031→0.097]
+    flagged: goal 0.422 style 0.974 gates [longIdle,stillLong] drift [longIdle 0.015→0.063; stillLong 0.031→0.081]
+    flagged: goal 0.434 style 0.859 gates [longIdle,stillLong] drift [longIdle 0.015→0.091; noContact 0.244→0.387; rushPounceRate 2.203→0.384; rushNear 0.289→0.091; stillLong 0.031→0.109]
+    flagged: goal 0.523 style 0.848 gates [longIdle,stillLong] drift [longIdle 0.015→0.081; noContact 0.244→0.399; rushNear 0.289→0.086; stillLong 0.031→0.103]
+    flagged: goal 0.391 style 0.898 gates [longIdle,stillLong] drift [longIdle 0.015→0.080; stillLong 0.031→0.103]
+    flagged: goal 0.387 style 0.842 gates [longIdle,stillLong] drift [longIdle 0.015→0.108; noContact 0.244→0.420; stillLong 0.031→0.118]
+  [val #7] centre (after 32 updates, non-commit 90.0%) vs best (after 12 updates) on 1000 fresh fights: -0.023 ± 0.022 | style 1.000 gates [] drift [] -> keep best
+[gen 33] goal mean 0.315 best 0.378 (heuristic 0.237: mean +0.078) | style mean 0.973 min 0.436 feasible 94% | λ 0.13→0.00 | non-commit 91.6% | drift-flagged 2/32 | |θ| 11.962 | 3300 fights, 81 s, 40.7/s
+    flagged: goal 0.279 style 0.947 gates [stillLong] drift [stillLong 0.031→0.098]
+    flagged: goal 0.325 style 0.936 gates [longIdle,stillLong] drift [longIdle 0.015→0.065; stillLong 0.031→0.101]
+[gen 34] goal mean 0.348 best 0.431 (heuristic 0.305: mean +0.043) | style mean 0.938 min 0.328 feasible 91% | λ 0.00→0.00 | non-commit 91.7% | drift-flagged 4/32 | |θ| 11.995 | 3300 fights, 93 s, 35.3/s
+    flagged: goal 0.353 style 0.866 gates [longIdle,stillLong] drift [longIdle 0.015→0.092; noContact 0.244→0.387; stillLong 0.031→0.102]
+    flagged: goal 0.297 style 0.828 gates [longIdle,stillLong] drift [longIdle 0.015→0.130; noContact 0.244→0.409; rushPounceRate 2.203→0.349; rushNear 0.289→0.081; stillLong 0.031→0.149]
+    flagged: goal 0.288 style 0.838 gates [longIdle,stillLong] drift [longIdle 0.015→0.117; noContact 0.244→0.414; rushNear 0.289→0.088; stillLong 0.031→0.146]
+    flagged: goal 0.380 style 0.981 gates [] drift [noContact 0.244→0.377]
+[gen 35] goal mean 0.428 best 0.528 (heuristic 0.339: mean +0.088) | style mean 0.856 min 0.375 feasible 63% | λ 0.00→0.18 | non-commit 92.5% | drift-flagged 14/32 | |θ| 12.029 | 3300 fights, 82 s, 40.3/s
+    flagged: goal 0.360 style 0.985 gates [stillLong] drift [stillLong 0.031→0.079]
+    flagged: goal 0.367 style 0.986 gates [stillLong] drift [noContact 0.244→0.364; stillLong 0.031→0.077]
+    flagged: goal 0.418 style 0.963 gates [stillLong] drift [noContact 0.244→0.374; stillLong 0.031→0.081]
+    flagged: goal 0.453 style 0.875 gates [longIdle,stillLong] drift [longIdle 0.015→0.079; noContact 0.244→0.383; stillLong 0.031→0.115]
+    flagged: goal 0.448 style 0.989 gates [] drift [noContact 0.244→0.370]
+    flagged: goal 0.322 style 0.923 gates [longIdle,stillLong] drift [longIdle 0.015→0.067; noContact 0.244→0.367; stillLong 0.031→0.093]
+    flagged: goal 0.372 style 0.919 gates [longIdle,stillLong] drift [longIdle 0.015→0.071; noContact 0.244→0.369; stillLong 0.031→0.090]
+    flagged: goal 0.435 style 0.972 gates [stillLong] drift [stillLong 0.031→0.084]
+    flagged: goal 0.449 style 0.957 gates [stillLong] drift [stillLong 0.031→0.090]
+    flagged: goal 0.426 style 0.998 gates [stillLong] drift [stillLong 0.031→0.074]
+    flagged: goal 0.480 style 0.971 gates [stillLong] drift [stillLong 0.031→0.084]
+    flagged: goal 0.356 style 0.948 gates [stillLong] drift [stillLong 0.031→0.093]
+    flagged: goal 0.478 style 0.998 gates [] drift [noContact 0.244→0.361]
+    flagged: goal 0.517 style 0.914 gates [longIdle,stillLong] drift [longIdle 0.015→0.068; noContact 0.244→0.374; stillLong 0.031→0.108]
+[gen 36] goal mean 0.394 best 0.479 (heuristic 0.333: mean +0.061) | style mean 0.962 min 0.385 feasible 94% | λ 0.18→0.00 | non-commit 93.6% | drift-flagged 4/32 | |θ| 12.064 | 5300 fights, 127 s, 41.7/s
+    flagged: goal 0.402 style 0.885 gates [longIdle,stillLong] drift [longIdle 0.015→0.098; noContact 0.244→0.368; stillLong 0.031→0.132]
+    flagged: goal 0.483 style 0.920 gates [longIdle,stillLong] drift [longIdle 0.015→0.067; noContact 0.244→0.370; stillLong 0.031→0.110]
+    flagged: goal 0.377 style 0.991 gates [] drift [rushPounceRate 2.203→0.324]
+    flagged: goal 0.479 style 0.998 gates [] drift [rushPounceRate 2.203→0.417]
+  [val #8] centre (after 36 updates, non-commit 93.0%) vs best (after 12 updates) on 1000 fresh fights: -0.016 ± 0.025 | style 0.999 gates [] drift [noContact 0.244→0.316] -> keep best
+[gen 37] goal mean 0.323 best 0.450 (heuristic 0.296: mean +0.027) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 93.2% | drift-flagged 0/32 | |θ| 12.103 | 3300 fights, 87 s, 38.1/s
+[gen 38] goal mean 0.475 best 0.564 (heuristic 0.555: mean -0.080) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 91.6% | drift-flagged 0/32 | |θ| 12.134 | 3300 fights, 83 s, 39.9/s
+[gen 39] goal mean 0.432 best 0.547 (heuristic 0.357: mean +0.075) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 91.1% | drift-flagged 0/32 | |θ| 12.164 | 3300 fights, 84 s, 39.3/s
+[gen 40] goal mean 0.533 best 0.707 (heuristic 0.435: mean +0.098) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 91.2% | drift-flagged 0/32 | |θ| 12.193 | 5300 fights, 139 s, 38.1/s
+  [val #9] centre (after 40 updates, non-commit 92.6%) vs best (after 12 updates) on 1000 fresh fights: -0.004 ± 0.024 | style 1.000 gates [] drift [] -> keep best
+[gen 41] goal mean 0.398 best 0.456 (heuristic 0.434: mean -0.036) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 93.3% | drift-flagged 0/32 | |θ| 12.219 | 3300 fights, 84 s, 39.3/s
+[gen 42] goal mean 0.449 best 0.524 (heuristic 0.306: mean +0.144) | style mean 0.980 min 0.372 feasible 97% | λ 0.00→0.00 | non-commit 89.8% | drift-flagged 1/32 | |θ| 12.250 | 3300 fights, 92 s, 35.7/s
+    flagged: goal 0.495 style 0.872 gates [longIdle,stillLong] drift [longIdle 0.015→0.088; noContact 0.244→0.381; stillLong 0.031→0.097]
+[gen 43] goal mean 0.367 best 0.460 (heuristic 0.212: mean +0.155) | style mean 0.982 min 0.424 feasible 97% | λ 0.00→0.00 | non-commit 93.6% | drift-flagged 1/32 | |θ| 12.280 | 3300 fights, 88 s, 37.4/s
+    flagged: goal 0.353 style 0.924 gates [longIdle,stillLong] drift [longIdle 0.015→0.070; stillLong 0.031→0.098]
+[gen 44] goal mean 0.499 best 0.579 (heuristic 0.354: mean +0.145) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 91.4% | drift-flagged 0/32 | |θ| 12.312 | 5300 fights, 128 s, 41.4/s
+  [val #10] centre (after 44 updates, non-commit 92.9%) vs best (after 12 updates) on 1000 fresh fights: -0.021 ± 0.024 | style 1.000 gates [] drift [] -> keep best
+[gen 45] goal mean 0.433 best 0.554 (heuristic 0.485: mean -0.052) | style mean 0.964 min 0.402 feasible 94% | λ 0.00→0.00 | non-commit 93.3% | drift-flagged 3/32 | |θ| 12.347 | 3300 fights, 101 s, 32.6/s
+    flagged: goal 0.400 style 0.938 gates [longIdle,stillLong] drift [longIdle 0.015→0.065; stillLong 0.031→0.094]
+    flagged: goal 0.395 style 0.992 gates [] drift [noContact 0.244→0.366]
+    flagged: goal 0.554 style 0.902 gates [longIdle,stillLong] drift [longIdle 0.015→0.078; noContact 0.244→0.360; stillLong 0.031→0.111]
+[gen 46] goal mean 0.338 best 0.423 (heuristic 0.302: mean +0.036) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 93.5% | drift-flagged 0/32 | |θ| 12.387 | 3300 fights, 83 s, 39.9/s
+[gen 47] goal mean 0.540 best 0.741 (heuristic 0.423: mean +0.118) | style mean 0.942 min 0.436 feasible 94% | λ 0.00→0.00 | non-commit 92.8% | drift-flagged 31/32 | |θ| 12.425 | 3300 fights, 82 s, 40.0/s
+    flagged: goal 0.553 style 0.974 gates [] drift [noContact 0.244→0.384]
+    flagged: goal 0.569 style 0.993 gates [] drift [noContact 0.244→0.366]
+    flagged: goal 0.514 style 0.965 gates [] drift [noContact 0.244→0.392]
+    flagged: goal 0.616 style 0.998 gates [] drift [noContact 0.244→0.361]
+    flagged: goal 0.507 style 0.982 gates [] drift [noContact 0.244→0.376]
+    flagged: goal 0.557 style 0.936 gates [longIdle,stillLong] drift [longIdle 0.015→0.064; noContact 0.244→0.406; stillLong 0.031→0.076]
+    flagged: goal 0.520 style 0.966 gates [] drift [noContact 0.244→0.391]
+    flagged: goal 0.513 style 0.976 gates [] drift [noContact 0.244→0.382]
+    flagged: goal 0.566 style 0.970 gates [] drift [noContact 0.244→0.388]
+    flagged: goal 0.569 style 0.982 gates [] drift [noContact 0.244→0.376]
+    flagged: goal 0.538 style 0.978 gates [] drift [noContact 0.244→0.380]
+    flagged: goal 0.540 style 0.978 gates [] drift [noContact 0.244→0.380]
+    flagged: goal 0.551 style 0.972 gates [] drift [noContact 0.244→0.386]
+    flagged: goal 0.456 style 0.971 gates [] drift [noContact 0.244→0.387]
+    flagged: goal 0.623 style 0.963 gates [] drift [noContact 0.244→0.394]
+    flagged: goal 0.585 style 0.973 gates [] drift [noContact 0.244→0.385]
+    flagged: goal 0.470 style 0.971 gates [] drift [noContact 0.244→0.387]
+    flagged: goal 0.479 style 0.982 gates [] drift [noContact 0.244→0.376]
+    flagged: goal 0.520 style 0.971 gates [] drift [noContact 0.244→0.386]
+    flagged: goal 0.741 style 0.974 gates [] drift [noContact 0.244→0.384]
+    flagged: goal 0.507 style 0.982 gates [] drift [noContact 0.244→0.376]
+    flagged: goal 0.519 style 0.958 gates [] drift [noContact 0.244→0.399]
+    flagged: goal 0.586 style 0.947 gates [] drift [noContact 0.244→0.416]
+    flagged: goal 0.549 style 0.947 gates [] drift [noContact 0.244→0.419]
+    flagged: goal 0.494 style 0.993 gates [] drift [noContact 0.244→0.365]
+    flagged: goal 0.520 style 0.948 gates [longIdle,stillLong] drift [longIdle 0.015→0.063; noContact 0.244→0.393; stillLong 0.031→0.078]
+    flagged: goal 0.591 style 0.992 gates [] drift [noContact 0.244→0.366]
+    flagged: goal 0.573 style 0.963 gates [] drift [noContact 0.244→0.395]
+    flagged: goal 0.435 style 0.979 gates [] drift [noContact 0.244→0.379]
+    flagged: goal 0.493 style 0.969 gates [] drift [noContact 0.244→0.389]
+    flagged: goal 0.466 style 0.981 gates [] drift [noContact 0.244→0.377]
+[gen 48] goal mean 0.607 best 0.677 (heuristic 0.425: mean +0.182) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 93.3% | drift-flagged 0/32 | |θ| 12.456 | 5300 fights, 125 s, 42.3/s
+  [val #11] centre (after 48 updates, non-commit 94.6%) vs best (after 12 updates) on 1000 fresh fights: +0.006 ± 0.026 | style 1.000 gates [] drift [] -> keep best
+[gen 49] goal mean 0.511 best 0.595 (heuristic 0.393: mean +0.118) | style mean 0.983 min 0.730 feasible 94% | λ 0.00→0.00 | non-commit 94.5% | drift-flagged 2/32 | |θ| 12.494 | 3300 fights, 75 s, 44.3/s
+    flagged: goal 0.509 style 0.980 gates [stillLong] drift [stillLong 0.031→0.081]
+    flagged: goal 0.595 style 0.989 gates [stillLong] drift [stillLong 0.031→0.077]
+[gen 50] goal mean 0.491 best 0.605 (heuristic 0.367: mean +0.124) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 95.0% | drift-flagged 0/32 | |θ| 12.538 | 3300 fights, 88 s, 37.5/s
+[gen 51] goal mean 0.494 best 0.570 (heuristic 0.360: mean +0.133) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 94.4% | drift-flagged 0/32 | |θ| 12.576 | 3300 fights, 89 s, 37.1/s
+[gen 52] goal mean 0.431 best 0.545 (heuristic 0.348: mean +0.083) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 94.4% | drift-flagged 0/32 | |θ| 12.620 | 5300 fights, 118 s, 44.9/s
+  [val #12] centre (after 52 updates, non-commit 95.6%) vs best (after 12 updates) on 1000 fresh fights: +0.024 ± 0.025 | style 1.000 gates [] drift [] -> keep best
+[gen 53] goal mean 0.467 best 0.590 (heuristic 0.350: mean +0.117) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 93.7% | drift-flagged 0/32 | |θ| 12.665 | 3300 fights, 81 s, 40.7/s
+[gen 54] goal mean 0.358 best 0.457 (heuristic 0.225: mean +0.133) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 95.1% | drift-flagged 0/32 | |θ| 12.712 | 3300 fights, 86 s, 38.4/s
+[gen 55] goal mean 0.503 best 0.617 (heuristic 0.495: mean +0.007) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 95.3% | drift-flagged 0/32 | |θ| 12.757 | 3300 fights, 87 s, 38.0/s
+[gen 56] goal mean 0.432 best 0.539 (heuristic 0.293: mean +0.139) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 95.0% | drift-flagged 0/32 | |θ| 12.805 | 5300 fights, 138 s, 38.3/s
+  [val #13] centre (after 56 updates, non-commit 95.2%) vs best (after 12 updates) on 1000 fresh fights: +0.009 ± 0.024 | style 1.000 gates [] drift [] -> keep best
+[gen 57] goal mean 0.429 best 0.522 (heuristic 0.305: mean +0.124) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 94.2% | drift-flagged 0/32 | |θ| 12.849 | 3300 fights, 93 s, 35.3/s
+[gen 58] goal mean 0.451 best 0.602 (heuristic 0.359: mean +0.091) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 95.2% | drift-flagged 0/32 | |θ| 12.888 | 3300 fights, 84 s, 39.1/s
+[gen 59] goal mean 0.384 best 0.483 (heuristic 0.235: mean +0.149) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 93.2% | drift-flagged 0/32 | |θ| 12.936 | 3300 fights, 77 s, 42.9/s
+  [val #14] centre (after 60 updates, non-commit 93.2%) vs best (after 12 updates) on 1000 fresh fights: +0.018 ± 0.025 | style 1.000 gates [] drift [] -> keep best
+[test] best (after 12 updates) vs zero weights on 1200 held-out fights: +0.018 ± 0.025 (within 2 SE) | style 1.000 gates [] drift []
+  per map: savanna 0.081±0.046 (n 300), river 0.063±0.046 (n 300), forest 0.000±0.062 (n 300), tundra -0.072±0.045 (n 300); your win% 47.3 -> 46.3

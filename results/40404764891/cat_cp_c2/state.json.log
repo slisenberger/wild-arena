@@ -1,0 +1,105 @@
+[init] policy/runs/cat_cp_c2/state.json: sim f9f586688d57ef2c, harness 44fe77f8d2801a55, 95 features (cat), 672 trainable, config {"arch":"cat","seed":703,"mode":"linear","nh":0,"margin":1,"sigma":0.1,"lr":0.08,"pairs":16,"gens":60,"fights":"auto","fightsMin":100,"fightsMax":300,"calibFights":400,"calibPerturb":4,"valEvery":4,"valFights":1000,"valMax":1200,"testFights":1200,"testMax":1200,"effect":"auto","styleThr":0.9,"lambda0":1,"lambdaLr":4,"gatePenalty":0.25,"holdMap":null,"acceptNoDrift":true,"baseline":true,"initRule":"cougarPounce","initWeights":null,"thetaClip":2,"withLive":true}
+[calib] 400 fights × 5 arms, 55 s, 36.2 fights/s
+  heuristic goal 0.372 (sd 0.751); parts human 0.164±sd0.340, kill 0.133±sd0.339, animals 0.189±sd0.237, deaths -0.105±sd0.086, idle -0.008±sd0.014
+  paired per-fight sd 0.416; perturbation effects -0.012 -0.023 -0.003 -0.063 (SE 0.021), true-effect sd 0.016 -> effect 0.075
+  fights for 2 SE: {"effect":123,"effect×2":31,"0.05":278,"0.1":70} -> N train 100, val 1000, test 1200
+[gen 0] goal mean 0.345 best 0.434 (heuristic 0.393: mean -0.049) | style mean 0.757 min -0.255 feasible 69% | λ 1.00→1.57 | non-commit 45.1% | drift-flagged 10/32 | |θ| 8.836 | 3300 fights, 93 s, 35.4/s
+    flagged: goal 0.440 style 0.842 gates [longIdle,stillLong] drift [longIdle 0.011→0.127; noContact 0.281→0.461; stillLong 0.039→0.117]
+    flagged: goal 0.191 style 0.869 gates [longIdle] drift [longIdle 0.011→0.099; noContact 0.281→0.407; fruitless 0.554→0.719; pounceRate 3.142→1.134; rushPounceRate 2.716→0.523; stalkPounceRate 3.243→1.300]
+    flagged: goal 0.456 style 0.869 gates [longIdle,stillLong] drift [longIdle 0.011→0.139; noContact 0.281→0.414; stillLong 0.039→0.161]
+    flagged: goal 0.191 style 0.563 gates [longIdle,stillLong] drift [closeShare 0.564→0.861; meanDist 28.219→40.500; longIdle 0.011→0.378; noContact 0.281→0.750; fruitless 0.554→0.771; deathRate 0.603→0.396; pounceRate 3.142→0.389; rushPounceRate 2.716→0.136; stalkPounceRate 3.243→0.485; rushNear 0.250→0.031; stillLong 0.039→0.375]
+    flagged: goal 0.102 style 0.495 gates [longIdle,stalkPounce,stillLong] drift [closeShare 0.564→0.877; meanDist 28.219→41.738; longIdle 0.011→0.433; noContact 0.281→0.783; fruitless 0.554→0.799; deathRate 0.603→0.414; pounceRate 3.142→0.362; stalkPounce 0.820→0.500; rushPounceRate 2.716→0.208; stalkPounceRate 3.243→0.416; rushNear 0.250→0.040; stillLong 0.039→0.448]
+    flagged: goal 0.295 style 0.849 gates [longIdle,stillLong] drift [longIdle 0.011→0.192; noContact 0.281→0.432; stillLong 0.039→0.123]
+    flagged: goal 0.524 style 0.895 gates [longIdle,stillLong] drift [longIdle 0.011→0.088; stillLong 0.039→0.107]
+    flagged: goal 0.269 style 0.580 gates [longIdle,stillLong] drift [closeShare 0.564→0.873; meanDist 28.219→40.396; longIdle 0.011→0.435; noContact 0.281→0.766; fruitless 0.554→0.761; deathRate 0.603→0.414; pounceRate 3.142→0.518; rushPounceRate 2.716→0.231; stalkPounceRate 3.243→0.622; rushNear 0.250→0.037; stillLong 0.039→0.412]
+    flagged: goal 0.425 style 0.646 gates [longIdle,stillLong] drift [closeShare 0.564→0.843; meanDist 28.219→43.545; longIdle 0.011→0.360; noContact 0.281→0.699; pounceRate 3.142→0.850; rushPounceRate 2.716→0.356; stalkPounceRate 3.243→1.017; stillLong 0.039→0.235]
+    flagged: goal 0.292 style 0.612 gates [longIdle,stillLong] drift [closeShare 0.564→0.815; meanDist 28.219→41.980; longIdle 0.011→0.399; noContact 0.281→0.670; fruitless 0.554→0.740; pounceRate 3.142→0.751; rushPounceRate 2.716→0.257; stalkPounceRate 3.243→0.977; rushNear 0.250→0.049; stillLong 0.039→0.255]
+[gen 1] goal mean 0.238 best 0.332 (heuristic 0.252: mean -0.014) | style mean 1.000 min 1.000 feasible 100% | λ 1.57→1.17 | non-commit 11.8% | drift-flagged 0/32 | |θ| 9.176 | 3300 fights, 88 s, 37.4/s
+[gen 2] goal mean 0.355 best 0.393 (heuristic 0.360: mean -0.005) | style mean 0.999 min 0.978 feasible 100% | λ 1.17→0.78 | non-commit 2.4% | drift-flagged 1/32 | |θ| 9.511 | 3300 fights, 86 s, 38.5/s
+    flagged: goal 0.338 style 0.978 gates [] drift [rushPounceRate 2.716→0.369]
+[gen 3] goal mean 0.289 best 0.335 (heuristic 0.290: mean -0.001) | style mean 1.000 min 1.000 feasible 100% | λ 0.78→0.38 | non-commit 1.0% | drift-flagged 0/32 | |θ| 9.855 | 3300 fights, 65 s, 51.0/s
+[gen 4] goal mean 0.374 best 0.404 (heuristic 0.373: mean +0.001) | style mean 1.000 min 1.000 feasible 100% | λ 0.38→0.00 | non-commit 1.1% | drift-flagged 0/32 | |θ| 10.173 | 5300 fights, 107 s, 49.5/s
+  [val #0] centre (after 4 updates, non-commit 0.0%) vs best (rule cougarPounce) on 1000 fresh fights: +0.006 ± 0.004 | style 1.000 gates [] drift [] -> keep best
+[gen 5] goal mean 0.307 best 0.373 (heuristic 0.296: mean +0.012) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 0.5% | drift-flagged 0/32 | |θ| 10.482 | 3300 fights, 60 s, 54.8/s
+[gen 6] goal mean 0.263 best 0.293 (heuristic 0.260: mean +0.003) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 0.6% | drift-flagged 0/32 | |θ| 10.777 | 3300 fights, 58 s, 56.9/s
+[gen 7] goal mean 0.416 best 0.458 (heuristic 0.418: mean -0.002) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 1.8% | drift-flagged 0/32 | |θ| 11.074 | 3300 fights, 60 s, 54.6/s
+[gen 8] goal mean 0.384 best 0.454 (heuristic 0.389: mean -0.005) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 2.9% | drift-flagged 0/32 | |θ| 11.380 | 5300 fights, 111 s, 47.7/s
+  [val #1] centre (after 8 updates, non-commit 1.5%) vs best (rule cougarPounce) on 1000 fresh fights: -0.000 ± 0.010 | style 1.000 gates [] drift [] -> keep best
+[gen 9] goal mean 0.336 best 0.386 (heuristic 0.334: mean +0.002) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 3.8% | drift-flagged 0/32 | |θ| 11.672 | 3300 fights, 76 s, 43.4/s
+[gen 10] goal mean 0.329 best 0.403 (heuristic 0.387: mean -0.058) | style mean 1.000 min 0.995 feasible 100% | λ 0.00→0.00 | non-commit 5.7% | drift-flagged 1/32 | |θ| 11.951 | 3300 fights, 75 s, 44.1/s
+    flagged: goal 0.322 style 0.995 gates [] drift [rushPounceRate 2.716→0.640]
+[gen 11] goal mean 0.411 best 0.516 (heuristic 0.397: mean +0.014) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 7.2% | drift-flagged 0/32 | |θ| 12.227 | 3300 fights, 91 s, 36.2/s
+[gen 12] goal mean 0.373 best 0.444 (heuristic 0.392: mean -0.020) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 7.1% | drift-flagged 0/32 | |θ| 12.488 | 5300 fights, 120 s, 44.2/s
+  [val #2] centre (after 12 updates, non-commit 5.6%) vs best (rule cougarPounce) on 1000 fresh fights: -0.011 ± 0.012 | style 1.000 gates [] drift [] -> keep best
+[gen 13] goal mean 0.275 best 0.345 (heuristic 0.349: mean -0.074) | style mean 1.000 min 0.996 feasible 100% | λ 0.00→0.00 | non-commit 6.7% | drift-flagged 1/32 | |θ| 12.735 | 3300 fights, 68 s, 48.2/s
+    flagged: goal 0.224 style 0.996 gates [] drift [rushPounceRate 2.716→0.651]
+[gen 14] goal mean 0.240 best 0.320 (heuristic 0.296: mean -0.055) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 7.8% | drift-flagged 0/32 | |θ| 12.960 | 3300 fights, 70 s, 47.1/s
+[gen 15] goal mean 0.304 best 0.367 (heuristic 0.274: mean +0.030) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 8.0% | drift-flagged 0/32 | |θ| 13.190 | 3300 fights, 64 s, 51.3/s
+[gen 16] goal mean 0.265 best 0.333 (heuristic 0.257: mean +0.007) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 7.2% | drift-flagged 0/32 | |θ| 13.425 | 5300 fights, 112 s, 47.4/s
+  [val #3] centre (after 16 updates, non-commit 7.7%) vs best (rule cougarPounce) on 1000 fresh fights: -0.006 ± 0.013 | style 1.000 gates [] drift [] -> keep best
+[gen 17] goal mean 0.348 best 0.400 (heuristic 0.380: mean -0.032) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 7.3% | drift-flagged 0/32 | |θ| 13.667 | 3300 fights, 58 s, 57.0/s
+[gen 18] goal mean 0.284 best 0.343 (heuristic 0.340: mean -0.057) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 12.5% | drift-flagged 0/32 | |θ| 13.895 | 3300 fights, 71 s, 46.5/s
+[gen 19] goal mean 0.382 best 0.421 (heuristic 0.346: mean +0.036) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 10.3% | drift-flagged 0/32 | |θ| 14.122 | 3300 fights, 58 s, 57.1/s
+[gen 20] goal mean 0.312 best 0.369 (heuristic 0.361: mean -0.049) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 12.3% | drift-flagged 0/32 | |θ| 14.350 | 5300 fights, 115 s, 46.1/s
+  [val #4] centre (after 20 updates, non-commit 9.5%) vs best (rule cougarPounce) on 1000 fresh fights: +0.009 ± 0.011 | style 1.000 gates [] drift [] -> keep best
+[gen 21] goal mean 0.339 best 0.373 (heuristic 0.374: mean -0.035) | style mean 0.994 min 0.967 feasible 100% | λ 0.00→0.00 | non-commit 7.0% | drift-flagged 10/32 | |θ| 14.552 | 3300 fights, 59 s, 56.2/s
+    flagged: goal 0.325 style 0.968 gates [] drift [rushPounceRate 2.716→0.210]
+    flagged: goal 0.319 style 0.995 gates [] drift [rushPounceRate 2.716→0.636]
+    flagged: goal 0.283 style 0.969 gates [] drift [rushPounceRate 2.716→0.232]
+    flagged: goal 0.355 style 0.967 gates [] drift [rushPounceRate 2.716→0.200]
+    flagged: goal 0.343 style 0.967 gates [] drift [rushPounceRate 2.716→0.193]
+    flagged: goal 0.329 style 0.998 gates [] drift [rushPounceRate 2.716→0.685]
+    flagged: goal 0.327 style 0.994 gates [] drift [rushPounceRate 2.716→0.612]
+    flagged: goal 0.344 style 0.996 gates [] drift [rushPounceRate 2.716→0.648]
+    flagged: goal 0.314 style 0.983 gates [] drift [rushPounceRate 2.716→0.451]
+    flagged: goal 0.329 style 0.968 gates [] drift [rushPounceRate 2.716→0.217]
+[gen 22] goal mean 0.355 best 0.382 (heuristic 0.350: mean +0.005) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 5.4% | drift-flagged 0/32 | |θ| 14.750 | 3300 fights, 57 s, 57.7/s
+[gen 23] goal mean 0.280 best 0.289 (heuristic 0.287: mean -0.008) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 3.9% | drift-flagged 0/32 | |θ| 14.941 | 3300 fights, 62 s, 53.1/s
+[gen 24] goal mean 0.525 best 0.561 (heuristic 0.544: mean -0.019) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 3.5% | drift-flagged 0/32 | |θ| 15.127 | 5300 fights, 105 s, 50.3/s
+  [val #5] centre (after 24 updates, non-commit 1.9%) vs best (rule cougarPounce) on 1000 fresh fights: +0.003 ± 0.005 | style 1.000 gates [] drift [] -> keep best
+[gen 25] goal mean 0.287 best 0.321 (heuristic 0.285: mean +0.002) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 0.8% | drift-flagged 0/32 | |θ| 15.298 | 3300 fights, 58 s, 57.3/s
+[gen 26] goal mean 0.272 best 0.295 (heuristic 0.271: mean +0.002) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 0.7% | drift-flagged 0/32 | |θ| 15.461 | 3300 fights, 56 s, 58.7/s
+[gen 27] goal mean 0.194 best 0.198 (heuristic 0.194: mean +0.000) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 0.2% | drift-flagged 0/32 | |θ| 15.628 | 3300 fights, 58 s, 56.8/s
+[gen 28] goal mean 0.412 best 0.424 (heuristic 0.411: mean +0.001) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 0.1% | drift-flagged 0/32 | |θ| 15.794 | 5300 fights, 112 s, 47.1/s
+  [val #6] centre (after 28 updates, non-commit 0.2%) vs best (rule cougarPounce) on 1000 fresh fights: +0.002 ± 0.004 | style 1.000 gates [] drift [] -> keep best
+[gen 29] goal mean 0.283 best 0.284 (heuristic 0.283: mean +0.001) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 0.3% | drift-flagged 0/32 | |θ| 15.959 | 3300 fights, 53 s, 61.7/s
+[gen 30] goal mean 0.275 best 0.275 (heuristic 0.275: mean +0.000) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 0.4% | drift-flagged 0/32 | |θ| 16.110 | 3300 fights, 60 s, 55.1/s
+[gen 31] goal mean 0.236 best 0.237 (heuristic 0.237: mean -0.000) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 0.8% | drift-flagged 0/32 | |θ| 16.266 | 3300 fights, 59 s, 56.2/s
+[gen 32] goal mean 0.457 best 0.459 (heuristic 0.458: mean -0.002) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 0.3% | drift-flagged 0/32 | |θ| 16.422 | 5300 fights, 110 s, 48.2/s
+  [val #7] centre (after 32 updates, non-commit 0.2%) vs best (rule cougarPounce) on 1000 fresh fights: -0.001 ± 0.006 | style 1.000 gates [] drift [] -> keep best
+[gen 33] goal mean 0.352 best 0.353 (heuristic 0.352: mean -0.001) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 0.1% | drift-flagged 0/32 | |θ| 16.566 | 3300 fights, 55 s, 59.5/s
+[gen 34] goal mean 0.266 best 0.275 (heuristic 0.268: mean -0.002) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 0.2% | drift-flagged 0/32 | |θ| 16.705 | 3300 fights, 55 s, 60.5/s
+[gen 35] goal mean 0.365 best 0.369 (heuristic 0.364: mean +0.000) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 0.0% | drift-flagged 0/32 | |θ| 16.849 | 3300 fights, 52 s, 63.7/s
+[gen 36] goal mean 0.354 best 0.354 (heuristic 0.354: mean +0.000) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 0.1% | drift-flagged 0/32 | |θ| 16.986 | 5300 fights, 101 s, 52.7/s
+  [val #8] centre (after 36 updates, non-commit 0.0%) vs best (rule cougarPounce) on 1000 fresh fights: -0.002 ± 0.002 | style 1.000 gates [] drift [] -> keep best
+[gen 37] goal mean 0.286 best 0.286 (heuristic 0.286: mean +0.000) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 0.1% | drift-flagged 0/32 | |θ| 17.121 | 3300 fights, 49 s, 67.8/s
+[gen 38] goal mean 0.330 best 0.330 (heuristic 0.330: mean -0.000) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 0.1% | drift-flagged 0/32 | |θ| 17.257 | 3300 fights, 58 s, 57.2/s
+[gen 39] goal mean 0.306 best 0.306 (heuristic 0.306: mean -0.000) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 0.0% | drift-flagged 0/32 | |θ| 17.389 | 3300 fights, 53 s, 62.9/s
+[gen 40] goal mean 0.141 best 0.141 (heuristic 0.141: mean -0.000) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 0.0% | drift-flagged 0/32 | |θ| 17.517 | 5300 fights, 108 s, 49.1/s
+  [val #9] centre (after 40 updates, non-commit 0.0%) vs best (rule cougarPounce) on 1000 fresh fights: +0.004 ± 0.005 | style 1.000 gates [] drift [] -> keep best
+[gen 41] goal mean 0.371 best 0.372 (heuristic 0.372: mean -0.001) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 0.0% | drift-flagged 0/32 | |θ| 17.638 | 3300 fights, 54 s, 61.4/s
+[gen 42] goal mean 0.435 best 0.435 (heuristic 0.435: mean +0.000) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 0.0% | drift-flagged 0/32 | |θ| 17.753 | 3300 fights, 59 s, 55.5/s
+[gen 43] goal mean 0.403 best 0.403 (heuristic 0.403: mean -0.000) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 0.0% | drift-flagged 0/32 | |θ| 17.862 | 3300 fights, 59 s, 55.9/s
+[gen 44] goal mean 0.395 best 0.395 (heuristic 0.395: mean -0.000) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 0.1% | drift-flagged 0/32 | |θ| 17.964 | 5300 fights, 104 s, 51.0/s
+  [val #10] centre (after 44 updates, non-commit 0.0%) vs best (rule cougarPounce) on 1000 fresh fights: -0.000 ± 0.005 | style 1.000 gates [] drift [] -> keep best
+[gen 45] goal mean 0.390 best 0.390 (heuristic 0.390: mean +0.000) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 0.0% | drift-flagged 0/32 | |θ| 18.041 | 3300 fights, 56 s, 58.8/s
+[gen 46] goal mean 0.365 best 0.384 (heuristic 0.384: mean -0.019) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 0.1% | drift-flagged 0/32 | |θ| 18.128 | 3300 fights, 58 s, 57.1/s
+[gen 47] goal mean 0.443 best 0.444 (heuristic 0.443: mean +0.000) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 0.0% | drift-flagged 0/32 | |θ| 18.208 | 3300 fights, 51 s, 64.3/s
+[gen 48] goal mean 0.326 best 0.326 (heuristic 0.326: mean -0.000) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 0.0% | drift-flagged 0/32 | |θ| 18.286 | 5300 fights, 108 s, 49.0/s
+  [val #11] centre (after 48 updates, non-commit 0.0%) vs best (rule cougarPounce) on 1000 fresh fights: -0.003 ± 0.005 | style 1.000 gates [] drift [] -> keep best
+[gen 49] goal mean 0.303 best 0.306 (heuristic 0.303: mean +0.000) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 0.0% | drift-flagged 0/32 | |θ| 18.366 | 3300 fights, 63 s, 52.8/s
+[gen 50] goal mean 0.411 best 0.424 (heuristic 0.410: mean +0.001) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 0.0% | drift-flagged 0/32 | |θ| 18.460 | 3300 fights, 54 s, 61.5/s
+[gen 51] goal mean 0.318 best 0.329 (heuristic 0.329: mean -0.011) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 0.1% | drift-flagged 0/32 | |θ| 18.549 | 3300 fights, 59 s, 55.6/s
+[gen 52] goal mean 0.429 best 0.430 (heuristic 0.430: mean -0.001) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 0.0% | drift-flagged 0/32 | |θ| 18.641 | 5300 fights, 107 s, 49.5/s
+  [val #12] centre (after 52 updates, non-commit 0.0%) vs best (rule cougarPounce) on 1000 fresh fights: -0.001 ± 0.004 | style 1.000 gates [] drift [] -> keep best
+[gen 53] goal mean 0.409 best 0.409 (heuristic 0.409: mean +0.000) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 0.0% | drift-flagged 0/32 | |θ| 18.732 | 3300 fights, 58 s, 57.3/s
+[gen 54] goal mean 0.414 best 0.414 (heuristic 0.414: mean -0.000) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 0.0% | drift-flagged 0/32 | |θ| 18.822 | 3300 fights, 54 s, 60.6/s
+[gen 55] goal mean 0.378 best 0.378 (heuristic 0.378: mean +0.000) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 0.0% | drift-flagged 0/32 | |θ| 18.907 | 3300 fights, 50 s, 65.6/s
+[gen 56] goal mean 0.225 best 0.225 (heuristic 0.225: mean +0.000) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 0.0% | drift-flagged 0/32 | |θ| 18.989 | 5300 fights, 113 s, 46.9/s
+  [val #13] centre (after 56 updates, non-commit 0.0%) vs best (rule cougarPounce) on 1000 fresh fights: -0.004 ± 0.005 | style 1.000 gates [] drift [] -> keep best
+[gen 57] goal mean 0.245 best 0.245 (heuristic 0.245: mean +0.000) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 0.0% | drift-flagged 0/32 | |θ| 19.064 | 3300 fights, 58 s, 57.1/s
+[gen 58] goal mean 0.327 best 0.327 (heuristic 0.327: mean -0.000) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 0.0% | drift-flagged 0/32 | |θ| 19.136 | 3300 fights, 55 s, 60.3/s
+[gen 59] goal mean 0.315 best 0.315 (heuristic 0.315: mean +0.000) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 0.1% | drift-flagged 0/32 | |θ| 19.201 | 3300 fights, 50 s, 65.4/s
+  [val #14] centre (after 60 updates, non-commit 0.0%) vs best (rule cougarPounce) on 1000 fresh fights: +0.004 ± 0.006 | style 1.000 gates [] drift [] -> keep best
+[test] best (rule cougarPounce) vs zero weights on 1200 held-out fights: -0.000 ± 0.004 (within 2 SE) | style 1.000 gates [] drift []
+  per map: savanna -0.004±0.007 (n 300), river 0.004±0.011 (n 300), forest -0.003±0.012 (n 300), tundra 0.002±0.002 (n 300); your win% 49.8 -> 49.9
