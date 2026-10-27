@@ -6,4 +6,5 @@ const A = require(process.env.SIM ? path.resolve(process.env.SIM) : path.join(__
 require('./move_policy.js'); // registers the intent chooser with the engine
 A._internals.LIVE.harrier = require('./weights/harrier_v1.json'); // enemy wolves and hyenas: regroup before going in
 A._internals.LIVE.guard = require('./weights/guard_v1.json');     // your guards: pile in to help the most hurt ally
+A._internals.LIVE.cat = require('./weights/cat_v1.json');         // enemy big cats: creep in closer before committing
 module.exports = A._internals.LIVE;

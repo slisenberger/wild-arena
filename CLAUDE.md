@@ -215,6 +215,11 @@ round. Report ± standard errors.
     fights (+0.073 vs 'patient'); they regroup before going in (44% of decisions), die less, kill you +2.3 pts.
   - Your guards (`guard_v1`): survival +13.3 ± 2.9 s, win +7.5 ± 1.2 pts (1,200 fights, live engine); they pile in to
     help the most hurt ally (55%). Hand-written guard rules found nothing; the learner did.
+  - **Enemy big cats (`cat_v1`, shipped Oct 27; cat intents, `set:'cat'`)**: sweep `m3_cat_s1` run cat_cp_c1 (warm start from
+    the cougarPounce rule, `--thetaClip=1`). Test +0.097 ± 0.024 vs heuristic; fresh re-checks (`policy/probes/eval_arch.js`)
+    +0.080 ± 0.021 (1,500, probe 41) and +0.053 ± 0.017 (2,000, probe 53), style 1.00, no gate or drift. They creep closer on
+    74% of decisions (commit 24%) and kill you +3 pts more often. Fights without an enemy cat are byte-identical. The cats'
+    'no headroom found so far' held for hand-written rules only: the learner found it.
   - Training runs on GitHub Actions (`.github/workflows/train.yml`, sweeps in `policy/sweeps/`); `collect.yml` copies
     results to the `training-results` branch (artifact storage isn't reachable from the dev container).
   - GCP spot training: `policy/gcp/gcp.js` (launch/status/resume/stop/collect, failure handling in `policy/gcp/README.md`);
@@ -259,7 +264,11 @@ round. Report ± standard errors.
   Idle (audit, $1,200): yours 53.5% → ~40%, theirs 33.8% → ~23%. Cost: cats' value on your side fell (~+5–15 s).
   Ridden-mount experiments: evading with a non-giant mount made riding worse (reverted); giraffe/ostrich getaway ride
   (rarely throws you unless grabbed, kicks while carrying) is neutral within noise.
-- **Current prices (`abs_r13`, after the light-picks identity pass):** 20 s of swing per $100, board total $2,500, budget
+- **Current prices (`abs_r14`, with `cat_v1` live):** 20 s of swing per $100, board total $2,600, budget $1,200, rares 30%.
+  Validation: median board's best team 92% (min 50, p25 79), typical full-spend team 175 s, 15 distinct best teams over 16
+  boards. Changes: buffalo $300, grizzly $200, bull $200, lion coalition $200, black rhino $200. (22 s/$100 → $2,500: 96%,
+  209 s, too easy.) Enemy tiger's threat −18 s (was the most threatening cat).
+- *Previous* prices (`abs_r13`, after the light-picks identity pass): 20 s of swing per $100, board total $2,500, budget
   $1,200, rares 30%. Validation: median board's best team 92% (min 50, p25 79), typical full-spend team 197 s, 15
   distinct best teams over 16 boards. Changes: rhino $400, grizzly $100, tiger $100, lion coalition $100.
   (22 s/$100 → $2,400: typical 300 s, too easy; 18 s/$100 → $2,700: 83%, 153 s.)
@@ -292,7 +301,8 @@ round. Report ± standard errors.
   ended at init); g2_c2_s1 looked +7.9 ± 3.7 s vs guard_v1 on 1,200 fresh fights but +2.5 ± 2.8 s, win −0.4 ± 1.1 on 2,000
   more. `--thetaClip` cold runs did learn (harrier +0.099 ± 0.016 vs heuristic, guard +0.065 ± 0.021) but don't beat v1.
   Next: new inputs or actions (latched cat decisions, species-aware features), not more of the same sweep.
-- Cat sweep: Actions run 40404764891 (`m3_cat_s1`); collect with `collect.yml` when it's done.
+- Cat sweep `m3_cat_s1` (run 40404764891): shipped as `cat_v1` (see Milestone 3). Runner-ups beat the heuristic too
+  (creepUnseen +0.094 ± 0.021 but fails the longIdle gate; stalkerPounce +0.061 ± 0.020; cold small σ +0.076 ± 0.020).
 - GCP: run `node policy/gcp/gcp.js check` (then `check --vm`) to confirm the credentials, then launch sweeps there.
 - Archetype policies (cats, chargers, bulldozers, brawlers, kickers) are being built in the original session's worktree;
   if that work isn't on the branch yet, it hasn't been merged.

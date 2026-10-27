@@ -763,3 +763,11 @@ cougarPounce, stalkerPounce. softer (31/40), reStalk (39/40) and hurtLieLow (33/
   −1.0 ± 3.3 s). Big-σ cold runs still ended at zero.
 - Reading: v1 sits at a plateau for the current features and intents, so far. Next lever is richer inputs/actions, not
   more ES on the same space.
+
+## Cat sweep m3_cat_s1 (Oct 27, Actions run 40404764891): shipped as cat_v1
+Training tests vs heuristic (1,200 held-out fights): creepUnseen warm +0.120 ± 0.023, cougarPounce warm (cp_c1) +0.097 ± 0.024,
+stalkerPounce warm +0.079 ± 0.023, cold σ .05 +0.072 ± 0.024; the rest within 2 SE (cold σ .1 and the full MLP ended at zero).
+Independent check (`node policy/probes/eval_arch.js <state> 1500 41`, shipped policies on for everything else): creepUnseen
++0.094 ± 0.021 but fails the longIdle gate (0.010→0.037) and drifts on noContact, cp_c1 +0.080 ± 0.021 clean, stalkerPounce
++0.061 ± 0.020, cold +0.076 ± 0.020. Second fresh draw for cp_c1 (2,000, probe 53): +0.053 ± 0.017, style 1.00, no gate/drift;
+intent shares commit 24%, creep 74%, pounce/blindside ~1% each. Shipped as `policy/weights/cat_v1.json` (live.js, build.js).
