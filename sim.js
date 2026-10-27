@@ -76,6 +76,34 @@ const ANIMALS = [
   traits:['The largest wild cattle: a tonne of muscle, slow to anger, very hard to stop once it is','Faces down stalkers: a cat it spots creeping in loses its ambush, and usually gives up and slinks off','A forest animal: it charges through the trees without crashing into them']},
  {id:'walrus', name:'Walrus', abbr:'WAL', price:200, mass:1200, spd:2.5, swim:2.2, dmg:150, cd:1.4, armor:.5, reach:2.2, stam:4, heat:.3, cold:1, water:1, aggr:.5, flee:.2, corner:1.4, pred:false, charge:false, vision:20, habitat:{tundra:2.5}, tags:['territorial','shoreGuard','tuskStab'],
   traits:['Tundra only, and often there: holds the icy lake the way a croc holds a river','Tusk stab: at the water\'s edge or in the water it drives both tusks down (x1.5, half armor) and pins anything up to its own size','10 cm of hide over 15 cm of blubber; on land it hauls itself along slowly']},
+ // ---- prehistoric rares, Oct 27, 2026 (research/prehistoric_candidates.md; sources in CLAUDE.md "Then (32-34)") ----
+ // Woolly rhinoceros (Coelodonta antiquitatis): frozen carcasses with skin and stomach contents (Starunia 1907/1929,
+ // Churapcha, Yakutia 2014/2020). 1.5-2 t typical (Wikipedia), European multi-proxy mean 2-2.5 t; nasal horn 1-1.35 m,
+ // often flattened, with abrasion read as brushing snow aside to graze (Fortelius 1983); skin 5-15 mm over 1.5-3 cm of fat;
+ // healed horn wounds from fights; short legs, likely intolerant of deep snow (so no snow bonus of its own: snowFactor by
+ // mass). No measured or modelled speed: 10 m/s is the reviewer's analogue estimate, under a white rhino's for the short legs.
+ {id:'woollyrhino', name:'Woolly Rhinoceros', abbr:'WRH', price:300, mass:2000, spd:10, swim:1, dmg:175, cd:1.4, armor:.5, reach:2.8, stam:15, heat:.4, cold:1, water:0, aggr:.45, flee:.2, corner:1.4, pred:false, charge:true, vision:18, rare:true, habitat:{tundra:1}, tags:['snowPlough'],
+  traits:['Rare, tundra only: the Ice Age rhino, known from frozen carcasses with skin, fur and stomach contents','Snow plough (speculative, from the wear on its horn): head low, it shoves a furrow through the snow, and anything that follows in it wades through more easily','A metre-long flattened horn and two tonnes behind it; short legs, so deep drifts slow it like anything its size']},
+ // Giant short-faced bear (Arctodus simus): adults 317-957 kg, females <= 500, males ~800, mean ~625 (Christiansen 1999;
+ // Figueirido et al. 2010); 1.67 m at the shoulder, 2.4-3.4 m on its hind legs, vertical arm reach about 4.3 m (a
+ // reconstruction); a pacing gait built for efficient travel, top speed 40-45 km/h (Matheus 2003). Sprint stamina is a
+ // grizzly's (the pacing gait is a travel gait, not sprint endurance: reviewer). Diet debated: isotopes put some Beringian
+ // bears at Smilodon's trophic level (Fox-Dobbs et al. 2008), teeth and jaws read as an opportunistic omnivore like the
+ // brown bear (Figueirido et al. 2010); hunting people at half a grizzly's rate is a game assumption. Kleptoparasitism
+ // (taking kills from wolves, sabre-tooths, Homotherium) is a hypothesis (Matheus 1995), modelled on the modern analogue:
+ // bears displaced cougars at 11 of the 27 cougar kills they visited (Murphy et al. 1998, Ursus 10).
+ {id:'shortface', name:'Giant Short-faced Bear', abbr:'SFB', bluffP:.5, price:300, mass:650, spd:12, swim:1.8, dmg:160, cd:1.0, armor:.35, reach:2.3, stam:15, heat:.6, cold:.9, water:.3, aggr:.55, flee:.2, corner:1.3, pred:true, charge:false, vision:30, hpMul:1.1, rare:true, habitat:{tundra:1, forest:1}, tags:['scavenger','bluff','usurps'], prey:{human:.5}, rivals:{grizzly:1.2, wolf:1.3},
+  traits:['Rare, tundra and forest: Arctodus, the Ice Age bear that stood 3.4 m on its hind legs','Bully (a hypothesis): it shoulders in on a predator holding prey and rears over it, and the predator sometimes lets go, the way cougars give up kills to grizzlies','Reaches about 4.3 m standing: a rider even on a mammoth; a long-legged walker built for distance; diet debated, omnivore or scavenger']},
+ // Utahraptor ostrommaysi: 6-7 m long; mass estimates ~280-500 kg (Kirkland et al. 1993 "under 500 kg"; Paul 280 kg;
+ // Makovicky ~290; specimens 391 and 481 kg), taken here at 350. Robust legs read as an ambush hunter rather than a
+ // pursuer (Kirkland; Paul: "not particularly fast"; dromaeosaurids score low on cursorial indices, Persons & Currie 2016):
+ // no measured speed, 8 m/s is the reviewer's estimate. 22-24 cm sickle claw; feathered (inferred from relatives). Prey
+ // restraint (Fowler et al. 2011, PLoS ONE 6:e28964): leap onto prey smaller than or about its own size, pin it under its
+ // weight with the sickle claws, flap for balance and tear with the jaws (latchMax 1: bigger prey it only bites). Yellow Cat
+ // Member: semi-arid seasonal floodplain with riverine forest and conifer woodland -> forest, and the savanna map as an open
+ // floodplain stand-in (there was no grass yet: ferns and cycads instead).
+ {id:'utahraptor', name:'Utahraptor', abbr:'UTA', latchMax:1, price:200, mass:350, spd:8, swim:1.2, dmg:120, cd:.9, armor:.1, reach:2.2, stam:8, heat:.9, cold:.5, water:0, aggr:.6, flee:.3, corner:1.3, pred:true, latch:true, charge:false, vision:30, pierce:.2, rare:true, habitat:{forest:1, savanna:1}, tags:['ambush','pinDown'], prey:{human:1.0},
+  traits:['Rare, forest and savanna: a real 6 m raptor, polar-bear heavy and feathered like its relatives (not the film\'s scaly pack)','Leaps on and pins: prey up to its own size is borne down under its weight and held by the sickle claws while it tears (Fowler et al. 2011)','An ambusher, not a runner: waits in cover, then a short burst; bigger prey it can only bite']},
 ];
 // Fighting styles: how each animal moves and attacks. strikeH = highest point it can hit (m); mountH = rider height if it can carry you (0 = can't).
 const STYLE = {
@@ -110,6 +138,9 @@ const STYLE = {
  muskox:{gait:'charge', strikeH:1.5, mountH:0, overshoot:2, turn:1.2, wheel:.5, style:'Living wall', how:'Short head-down dashes. When predators close in, the herd forms a line or a ring around you, horn bosses out, and takes turns charging out and back.'},
  gaur:{gait:'charge', strikeH:1.9, mountH:1.9, overshoot:4, turn:.9, wheel:.8, style:'Placid tank', how:'Grazes until provoked. Turns to face a stalking cat and walks straight at it; once roused, a heavy charge that threads between trees.'},
  walrus:{gait:'lumber', strikeH:1.5, mountH:0, style:'Shore guard', how:'Lies low in the water by the shore and heaves out at whatever comes to the edge, stabbing down with both tusks.'},
+ woollyrhino:{gait:'charge', strikeH:1.6, mountH:1.8, overshoot:7, turn:.3, wheel:1.3, style:'Snow plough', how:'Head low, horn sweeping the snow aside; it ploughs a furrow that others follow, and charges like any rhino.'},
+ shortface:{gait:'lumber', strikeH:4.3, mountH:0, maul:true, style:'Bully', how:'Paces in on long legs; shoulders in on anything holding prey and rears up over it to make it let go. Every third swipe is a maul.'},
+ utahraptor:{gait:'stalk', strikeH:2.8, mountH:0, pounce:6, style:'Pinner', how:'Waits in cover, bursts out over a short distance and leaps on: prey its own size is pinned under its weight and held by the sickle claws.'},
 };
 ANIMALS.forEach(a => Object.assign(a, STYLE[a.id]));
 // Pack items: the same species, but one pick brings several. A board deals a species solo or as a pack, never both.
@@ -686,6 +717,7 @@ function bestCarcass(w, u){
 function chooseTarget(w, u){
   if (u.side === 'H') return;
   if (u.latchOn){ u.target = u.latchOn; return; }
+  if (u.usurpOn){ u.target = u.usurpOn; u.state = 'engage'; return; } // a short-faced bear heading for a predator that holds prey
   if (u.side === 'P'){
     if (evasiveMount(u)){ u.target = null; u.state = 'carry'; return; }
     if (u.withdrawn){ u.target = null; u.state = 'withdraw'; return; }
@@ -838,7 +870,8 @@ function strike(w, a, t, opts){
   const backLeap = has(a,'backLeap') && !t.s.pred && !t.rider && t.target && t.target !== a && (t.target.side !== 'E') === (a.side !== 'E') && t.s.mass <= 6 * s.mass && dist(t, t.target) < t.r + t.target.r + t.s.reach + 2;
   if (!opts.latch && !opts.sweep && s.latch && !a.latchOn && !t.latchedBy && t.state !== 'dead' && (t.s.mass <= (s.latchMax || 2.5) * s.mass || backLeap) && heightOf(t) === 0 && w.R() < (opts.pounce ? .7 : .45)){
     a.latchOn = t; t.latchedBy = a; sig(w, a, t.s.mass > (s.latchMax || 2.5) * s.mass ? 'leaps on its back' : 'hold');
-    log(w, `${capName(a)} gets a hold on ${nameOf(t)}`, 'latch', t);
+    if (has(a,'pinDown')){ t.stun = Math.max(t.stun, t.s.mass > .6 * s.mass ? .8 : 1.2); sig(w, a, 'pins it down'); log(w, `${capName(a)} leaps on ${nameOf(t)} and pins it down with its sickle claws`, 'latch', t); } // raptor prey restraint (Fowler et al. 2011)
+    else log(w, `${capName(a)} gets a hold on ${nameOf(t)}`, 'latch', t);
   }
   if (!opts.latch && has(a,'drowner') && !a.latchOn && !t.latchedBy && t.side !== 'H' && t.state !== 'dead' && t.s.mass < a.s.mass && inWater(w, t) && inWater(w, a) && w.R() < .6){
     a.latchOn = t; t.latchedBy = a; a.holdT = 2.5; sig(w, a, 'holds it under');
@@ -931,7 +964,7 @@ function speedOf(w, u){
     v *= dW > 10 ? .25 : .7; // walk 2-4 km/h, exhausted before 100 m (IUCN CSG, Locomotion); no water on the map: as before
   }
   if (w.T.id === 'forest' && u.s.mass > 800 && !has(u,'forestRunner')) v *= .78; // (a gaur lives in forest and moves through it at speed)
-  if (w.T.snow){ let sf = snowFactor(u.s); if (w.bn && u.side === 'H') sf = 1 - (1 - sf) * w.bn.snow; v *= w.snowDepth === 1 ? sf : Math.max(.35, 1 - (1 - sf) * w.snowDepth); }
+  if (w.T.snow){ let sf = snowFactor(u.s); if (w.bn && u.side === 'H') sf = 1 - (1 - sf) * w.bn.snow; if (w.furrow && furrowAt(w, u)) sf += (1 - sf) / 2; v *= w.snowDepth === 1 ? sf : Math.max(.35, 1 - (1 - sf) * w.snowDepth); } // (in a woolly rhino's furrow: half the snow's drag)
   if (u.slowT > 0) v *= (1 - u.slow);
   if (u.limp) v *= 1 - u.limp; // bones cracked by a hyena
   v *= 1 - .3 * wound(u); // badly hurt animals slow down
@@ -965,6 +998,9 @@ function step(w){
     if (u.latchOn && !active(u.latchOn)) { u.latchOn = null; }
     if (!u.target && !u.latchOn && !u.latchedBy && (u.state === 'roam' || u.state === 'rest' || u.state === 'guard' || u.state === 'idle')) u.idleT = (u.idleT || 0) + DT; else u.idleT = Math.max(0, (u.idleT || 0) - 2 * DT); // a brief scuffle doesn't reset its patience
     if (has(u,'pinStab')){ u.pinT = u.latchOn ? (u.pinT || 0) + DT : 0; u.backT = Math.max(0, (u.backT || 0) - DT); if (u.stabbed && (!active(u.stabbed) || u.stabbed.state === 'flee')) u.backT = 0; if (!u.backT) u.circling = false; }
+    if (w.T.snow && has(u,'snowPlough')) plough(w, u);
+    if (w.furrow && !u.furrowed && u.side !== 'H' && !has(u,'snowPlough')){ const p = furrowAt(w, u); if (p){ u.furrowed = true; sig(w, p.by, 'opens a lane'); } } // (counted once per animal that follows it)
+    if (has(u,'usurps')){ usurp(w, u); if (w.over) return; }
     if (u.latchOn && has(u,'drowner')){ u.holdT -= DT; if (u.holdT <= 0 || !inWater(w, u.latchOn)) release(w, u); }
     if (has(u,'thumper') && !u.thumped && active(u) && u.state !== 'dead'){ // foot-thump alarm: its side looks sharper for a while
       for (const o of units) if (o.s.pred && active(o) && hostile(w, u, o) && dist(u, o) < u.s.vision && canSee(w, u, o)){ u.thumped = true; w.alarm[u.side] = 8; sig(w, u, 'foot-thump alarm'); log(w, `${capName(u)} thumps the ground: predator!`, 'info', u); break; }
@@ -981,7 +1017,7 @@ function step(w){
     // an aquatic stalker that has slipped back under and stayed off prey for ~4 s can ambush again
     if (!u.ambushReady && (has(u,'aquaStalk') || has(u,'swimStalk')) && inWater(w, u) && u.atk < -4 && !u.latchedBy) u.ambushReady = true;
     // a cat that has been out of the action for a while (no strike for ~8 s, nothing after it) lies low and can ambush again
-    if (!u.ambushReady && has(u,'ambush') && has(u,'catSense') && u.atk < -8 && !u.latchedBy && !u.latchOn && !units.some(o => o.target === u && active(o))) u.ambushReady = true;
+    if (!u.ambushReady && has(u,'ambush') && (has(u,'catSense') || has(u,'pinDown')) && u.atk < -8 && !u.latchedBy && !u.latchOn && !units.some(o => o.target === u && active(o))) u.ambushReady = true;
   }
   // closing arena
   if (w.zone){
@@ -1287,7 +1323,7 @@ function step(w){
     if (!active(u) || !u.latchOn) continue;
     const t = u.latchOn;
     const p = .15 * Math.sqrt(t.s.mass / u.s.mass) * (t.cornerT > 0 ? 1.5 : 1) * (t.side === 'H' ? .3 : 1) * (has(t,'looseSkin') ? 5 : 1); // loose skin: it twists free
-    if (w.R() < p * DT * (has(u,'pinStab') ? .6 : 1)){ if (has(t,'looseSkin')) sig(w, t, 'twists free'); release(w, u, 'shaken off'); }
+    if (w.R() < p * DT * (has(u,'pinStab') ? .6 : 1) * (has(u,'pinDown') ? .5 : 1)){ if (has(t,'looseSkin')) sig(w, t, 'twists free'); release(w, u, 'shaken off'); } // (pinned under a raptor's weight: half as easy to throw off)
   }
   // attacks
   for (const u of units){
@@ -1513,6 +1549,63 @@ function faceDown(w, u){
     c.repelBy = c.target; c.repelUntil = w.t + 12; c.target = null; c.mv = null; c.state = 'flee'; c.fleeT = 2 + w.R() * 1.5;
     sig(w, u, 'faces down a stalker'); log(w, `${capName(u)} turns and walks straight at ${nameOf(c)}, which slinks off`, 'bluff', u);
   } else { sig(w, u, 'stalker spotted'); log(w, `${capName(u)} spots ${nameOf(c)} creeping in`, 'info', u); }
+}
+// ---------- woolly rhino: the snow plough (tag 'snowPlough'; research/prehistoric_candidates.md §1) ----------
+// On a snow map, a moving woolly rhino leaves a furrow: a trail point every 0.5 s, each lasting 12 s. Anything within 1.2 m
+// of a point (either side, you included) moves as if the snow's drag were halved (snowFactor halfway to 1). The rhino gets
+// nothing from its own fresh furrow (it is the one breaking the snow). Basis: abrasion on the flattened horn read as
+// sweeping snow aside (Fortelius 1983; Wikipedia "Woolly rhinoceros") and the general rule that hoofed animals travel more
+// easily in a broken trail (trail-following is documented in bison, elk and deer; Telfer & Kelsall 1984, Ecology 65, on
+// sinking depth). Speculative for Coelodonta (reviewer): labelled so on the card. w.furrowAll keeps every point for replays.
+const FURROW = {every: .5, life: 12, r: 1.2, own: 2}; // (shrunk from 20 s / 1.5 m after the review: speculative)
+function plough(w, u){
+  if (!active(u) || u.onTree || Math.hypot(u.vx, u.vy) < 1 || w.t - (u.ploughT ?? -9) < FURROW.every) return;
+  u.ploughT = w.t;
+  if (!w.furrow){ w.furrow = []; w.furrowAll = []; }
+  const p = {x: u.x, y: u.y, t: w.t, by: u}; w.furrow.push(p); w.furrowAll.push({x: u.x, y: u.y, t: w.t});
+  while (w.furrow.length && w.furrow[0].t < w.t - FURROW.life) w.furrow.shift();
+}
+function furrowAt(w, u){ // pure: the furrow point under u, if any
+  for (const p of w.furrow) if (p.t >= w.t - FURROW.life && !(p.by === u && p.t > w.t - FURROW.own) && Math.abs(p.x - u.x) < FURROW.r && Math.abs(p.y - u.y) < FURROW.r && Math.hypot(p.x - u.x, p.y - u.y) < FURROW.r) return p;
+  return null;
+}
+// ---------- giant short-faced bear: takes over a kill in progress (tag 'usurps'; research §2) ----------
+// A predator of the other side within 35 m that it can see, holding prey (any latch) or biting a downed target, and no more than .5x the bear's mass
+// (the bear-cougar ratios in the evidence): the bear makes for it (up to 8 s) and rears up over it. The holder lets go and
+// backs off with p = .4 if the prey is down (stunned or under 30% health: bears displaced cougars at 11 of 27 kills they
+// reached, Murphy et al. 1998), .25 if it is still fighting (an extrapolation from carcasses to live prey, reviewer); +.2 if
+// the holder is under .3x the bear's mass, -.15 per packmate within 15 m (big wolf packs hold their own against grizzlies
+// at carcasses, Gunther & Smith 2004); a honey badger never. It then leaves that prey alone for 15 s. If it holds on, the bear's next swipe is a
+// maul. 8 s cooldown. Kleptoparasitism in Arctodus is a hypothesis (Matheus 1995); the card says so.
+const USURP = {r: 35, mass: .5, p: .25, pDown: .4, small: .3, smallP: .2, packP: .15, go: 8, cd: 8, leave: 15};
+// the prey a predator is in the middle of killing: whatever it holds, or a downed target (stunned or under 30% health) it
+// is biting (a wolf pack or hyenas finishing something off)
+const isDown = t => t.stun > 0 || t.hp < t.maxhp * .3;
+function killInHand(o){
+  if (o.latchOn) return active(o.latchOn) ? o.latchOn : null;
+  const t = o.target; return t && active(t) && isDown(t) && dist(o, t) <= o.r + t.r + o.s.reach + .5 ? t : null;
+}
+function usurp(w, u){
+  if (u.usurpOn){
+    const o = u.usurpOn, prey = active(o) ? killInHand(o) : null;
+    if (!prey || prey === u || u.state === 'flee' || u.heatstroke || u.latchedBy || w.t > u.usurpT){ u.usurpOn = null; return; }
+    if (dist(u, o) > u.r + o.r + u.s.reach + 1 || u.stun > 0) return;
+    u.usurpOn = null; u.usurpCd = w.t + USURP.cd; u.atk = Math.max(u.atk, .6);
+    const down = isDown(prey), p = has(o,'fearless') ? 0 : (down ? USURP.pDown : USURP.p) + (o.s.mass <= USURP.small * u.s.mass ? USURP.smallP : 0) - USURP.packP * packMates(w, o);
+    if (w.R() < p){
+      release(w, o); o.repelBy = prey; o.repelUntil = w.t + USURP.leave; o.target = null; o.mv = null; o.state = 'flee'; o.fleeT = 2.5 + w.R() * 1.5; o.morale -= .1;
+      sig(w, u, 'makes it let go'); log(w, `${capName(u)} rears up over ${nameOf(o)}, which lets go of ${nameOf(prey)} and backs off`, 'bluff', u);
+    } else { u.strikes = u.strikes - u.strikes % 3 + 2; sig(w, u, 'rears over a kill'); log(w, `${capName(u)} rears up over ${nameOf(o)}, which holds on`, 'info', u); }
+    return;
+  }
+  if (u.usurpCd > w.t || u.state === 'flee' || u.heatstroke || u.latchedBy || u.latchOn || u.withdrawn || u.routing || u.rider) return;
+  let best = null, bd = USURP.r;
+  for (const o of w.units){
+    if (!active(o) || !o.s.pred || !hostile(w, u, o) || o.s.mass > USURP.mass * u.s.mass) continue;
+    const k = killInHand(o); if (!k || k === u) continue;
+    const d = dist(u, o); if (d < bd && canSee(w, u, o)){ bd = d; best = o; }
+  }
+  if (best){ u.usurpOn = best; u.usurpT = w.t + USURP.go; u.target = best; u.state = 'engage'; }
 }
 // wedged between trunks (no progress for a second while trying to move): detour sideways for a moment
 function unstick(w, u, d){
