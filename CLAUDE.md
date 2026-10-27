@@ -7,6 +7,31 @@ in sim.js; `cfg.board`). With `RULES.total` set, every board's prices add up to 
 **time alive, capped at 5:00** (surviving to 5:00, clearing the board, or the other side giving up all
 count as 5:00). Live site: GitHub Pages serves `index.html` from `main`.
 
+## Working with the owner (distilled Oct 27 from many sessions; follow unless told otherwise)
+- **Autonomy is the default.** The owner sets direction in short messages, often from a phone, then leaves ("drive the open
+  tracks forward and push to live"). Verified work (tests pass, balance validated, determinism checked) gets merged to main
+  without asking. Report results when back, outcome first, in plain words.
+- **Riffs are design input, not orders.** "Idk", "maybe", "just riffing" means: capture it, judge it, and propose. A new mode
+  or big feature gets a short design doc (`research/`), then a playable prototype **behind a URL flag** (`?five=1` style).
+  It never goes on the main screen until the owner has played it. Half-baked features get switched off, so don't ship one.
+- **Realism first.** Real animals only (extinct is fine if it really lived; real proportions, e.g. a turkey-sized
+  feathered Velociraptor). Every number and behaviour needs a source, and every animal needs one distinct visible
+  signature ("Smash Bros roster").
+- **The fantasy is being the underdog.** Don't make the game easier to fix a problem. Ask before changing difficulty knobs:
+  budget, board total, rare rate. Fix balance through variety and pricing. "Good animals are too good" is a known problem,
+  so dominant picks get made rarer or countered, never buffed around.
+- **Don't change knobs the owner didn't ask about.** When a proposal moves a number they care about, explain the why in
+  one or two plain sentences ("the total is the other side's budget, so...").
+- **Science wording:** a null result is "none found **so far**", never "there's no headroom". Keep trying with better setups.
+- **Mobile first.** The owner plays and screenshots on a phone (~412 px). Check every UI change with a Playwright
+  screenshot at phone width and look at it, not just for page errors.
+- **Bug reports are terse** ("this is broken", "the streak was wrong"). Reproduce, fix the most likely cause, and say the
+  assumption in one line, so they can correct it if it's wrong. Don't block on clarifying questions.
+- **One decisions list.** Keep the owner's pending decisions in `DECISIONS.md` (with a recommendation each) instead of
+  repeating questions across messages. End a report with at most a 3-item "needs you" list pointing there.
+- **Pricing rules:** $100 steps, the elephant stays affordable ($700 cap), budget $1,200. Re-measure after any roster or
+  behaviour change.
+
 ## Files
 - `sim.js` — the whole simulation engine. Pure JS, no DOM, deterministic per seed (`rng(seed)`).
   Exports `window.Arena` in the browser and `module.exports` in Node.
