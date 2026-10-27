@@ -83,9 +83,13 @@ count as 5:00). Live site: GitHub Pages serves `index.html` from `main`.
   The Migration-era `cfg.humanHp` / `cfg.boons` (`BOONS`) hooks are still in sim.js but unused. Tools:
   `progressive_bot.js [runs] [workers] [seed0]` (greedy bot; env `PROG='{...}'` overrides constants, `NOISE`, `RAND`),
   `progressive_r1.js [boards] [seeds]` (every full-spend round-1 team on dealt round-1 boards), `level_abs.js [N] [level]`
-  (paired level-L vs level-0 value per item). UI: arena panel `.progentry`, `s-prog` run screen, the draft screen is the
-  shop (heal/sell/undo on the team line, premium card marked "Not for sale"); run in localStorage `wa-prog` (resumes after
-  reload), best `wa-prog-best`, daily `wa-prog-daily:<date>`. A fight's result is applied the moment it's simulated.
+  (paired level-L vs level-0 value per item); `progressive_bot.js` env `PROG_JS=` runs another rules file (before/after).
+  UI (UX pass Oct 27, `research/prog_ux/`): Start → round 1's shop (the draft screen; `#progShop` panel: tier, premium
+  enemy, last-fight recap, team cards with health % per member, rest line, level effect + next level, Heal to 100% / Heal all
+  / Sell (two taps) / Return) → Formation (`#progForm` roster; the fight starts here; "Fight now" in the shop skips it) →
+  result → next shop. `s-prog` = run overview and the end screen (every animal of the run from `run.hist`). The mount follows
+  the team (`S.mountPick` = picked this round). Run in localStorage `wa-prog` (resumes in the shop after a reload), best
+  `wa-prog-best`, daily `wa-prog-daily:<date>`. A fight's result is applied the moment it's simulated.
 - `BACKLOG.md` — every idea captured so far (realism, anti-camping, pricing, herds, maps, animals,
   mechanics, replayability) with status and suggested order. Add new ideas there.
 
@@ -412,7 +416,9 @@ round. Report ± standard errors.
 ## Progressive mode (prototype Oct 27, `?progressive=1`; details and numbers in `research/progressive_mode.md`)
 - 7 rounds up a price ladder (round 1 $100 animals only … round 7 any, a giant for sale), premium enemy from round 3 (top
   band, not for sale), $400 start (round 1 is all $100 animals: no stranded $50, owner) + top-ups 450/500/500/500/600/800, boards 10/10/10/10/11/11/12 worth
-  $1,000/1,200/1,500/1,800/2,100/2,300/2,600, $25/kill (cap $150), rest 30% / heal 25% of price,
+  $1,000/1,200/1,500/1,800/2,100/2,300/2,600, $25/kill (cap $150; the last round pays nothing), rest 30%; full heal =
+  price × .55 × health missing ($5 steps up, min $10), sell = price × .5 × health ($5 steps down), not under 25% health
+  (was a flat 25% heal / half-price sale; .55 kept the bot's completion rate: 1,000 runs 17.3% → 15.9%, round 1 81.5%),
   scars, XP and levels (level 3 ≈ +8% of swing, `level_abs.js`), two retries (a loss restores the round's shop).
 - Bot on the final engine (`abs_r16`, all live policies; 500 runs): round 1 first-try 81%, median run ends in round 6,
   15.8% complete; round 6 (herd premium) is the wall (first-try 32%). Before the integration: 83%, round 5, 16.4%.

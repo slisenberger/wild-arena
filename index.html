@@ -232,6 +232,52 @@ th.n{text-align:right}
   .proghud .btnrow{margin-left:0}
   .progteam{grid-template-columns:1fr}
 }
+/* progressive UX pass (Oct 27): the shop's round panel, team cards with health/heal/sell/XP, formation roster */
+.progshop{display:flex;flex-direction:column;gap:10px}
+.progshop .panel{padding:12px 14px}
+.roundchips{display:flex;flex-wrap:wrap;gap:6px}
+.roundchips > span{display:inline-flex;align-items:center;gap:6px;font-size:13px;padding:4px 10px;border-radius:999px;border:1px solid var(--line);background:var(--panel2)}
+.roundchips .money{font-family:var(--mono);color:var(--gold);border-color:color-mix(in srgb, var(--gold) 50%, var(--line))}
+.roundchips .prem{border-color:var(--foe);padding-left:4px}
+.roundchips .prem b{color:var(--foe)}
+.teamhead{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;margin-bottom:8px}
+.teamhead h3{margin:0}
+.progmsg{font-size:13px;color:var(--you)}
+.progmsg:empty{display:none}
+.mt{flex-wrap:wrap;align-items:flex-start}
+.mt .mtb{flex:1 1 200px}
+.mt .hpb{flex-wrap:wrap;align-items:center;gap:4px 8px;margin-top:5px;font:12px/1.1 var(--mono);color:var(--muted)}
+.mt .hpb .hpm{display:inline-flex;align-items:center;gap:5px}
+.mt .hpb i{width:56px;height:7px}
+.mt .hpb .pc{color:var(--fg)}
+.mt .flag{font-size:11px;font-weight:600;line-height:1;padding:3px 7px;border-radius:999px;border:1px solid;white-space:nowrap}
+.mt .flag.hurt{color:var(--gold);border-color:color-mix(in srgb, var(--gold) 60%, var(--line))}
+.mt .flag.bad{color:var(--red);border-color:color-mix(in srgb, var(--red) 70%, var(--line))}
+.mt .flag.ok{color:var(--you);border-color:color-mix(in srgb, var(--you) 50%, var(--line))}
+.mt .rest{font-size:11.5px;color:var(--muted);margin-top:3px}
+.mt .xpb{flex-wrap:wrap;gap:3px 6px}
+.mt .lvnow{font-size:12px;color:var(--muted);margin-top:4px;line-height:1.3}
+.mt .lvnow b{color:var(--gold);font-weight:600}
+.mt .mta{flex:1 1 100%;flex-direction:row;flex-wrap:wrap;margin-left:0;gap:6px}
+.mt .mta .btn{flex:1 1 140px;min-height:44px;font-size:13.5px;padding:6px 10px}
+.mt .mta .btn.arm{background:var(--red);border-color:var(--red);color:#fff}
+.mt.small{align-items:center;flex-wrap:nowrap}
+.mt.small .mtb{flex:1 1 auto}
+.mt.small .mta{flex:0 0 auto;margin-left:auto}
+.mt.small .mta .btn{flex:0 0 auto}
+.xphow summary,.recapbox summary,.howrun summary{cursor:pointer;font-size:13px;padding:10px 0;color:var(--muted)}
+.recapbox summary{color:var(--fg);font-weight:600}
+.xphow p,.howrun p{margin:0 0 6px}
+.xplist{margin:4px 0 0;padding-left:18px;font-size:13px;color:var(--muted)}
+.xplist b{color:var(--fg);font-weight:600}
+.progform{display:flex;flex-direction:column;gap:8px}
+.mt .mtb{flex:1 1 0;min-width:0}
+.mt .xpb span{font-family:var(--body);font-size:12px;line-height:1.3}
+.mt .flag.surv{color:#16110a;background:var(--gold);border-color:var(--gold)}
+.mt.surv{border-color:color-mix(in srgb, var(--gold) 70%, var(--line));background:color-mix(in srgb, var(--gold) 6%, var(--panel2))}
+.mt .flag{color:var(--muted);border-color:var(--line)}
+.mt .hpb .flag{font-family:var(--body)}
+@media (max-width:560px){ .roundchips > span{font-size:12.5px} }
 /* ---- mobile UX pass (Oct 27): sticky action bar, bigger tap targets, compact arena/header on phones ---- */
 .actbar{position:fixed;left:0;right:0;bottom:0;z-index:25;background:color-mix(in srgb, var(--bg) 92%, transparent);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border-top:1px solid var(--line);padding:10px max(16px, env(safe-area-inset-right, 0px)) calc(10px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px))}
 .actbar .in{max-width:1080px;margin:0 auto;display:flex;gap:8px;align-items:center}
@@ -308,6 +354,7 @@ body.hasbar #toDraft, body.hasbar #toDeployD, body.hasbar #startFight{display:no
     <h2 id="draftTitle">Build a team to protect you from the rest</h2>
     <p class="lede" id="boardLede"></p>
   </div>
+  <div class="progshop" id="progShop" hidden></div>
   <div class="teamline" id="teamline"></div>
   <div id="tiers" style="display:flex;flex-direction:column;gap:12px"></div>
   <div class="detail" id="detail"></div>
@@ -337,6 +384,7 @@ body.hasbar #toDraft, body.hasbar #toDeployD, body.hasbar #startFight{display:no
   <div style="display:flex;flex-direction:column;gap:6px">
     <h2>Set your formation</h2>
   </div>
+  <div class="panel progform" id="progForm" hidden></div>
   <p class="lede" id="deployHelp">Drag anyone, including yourself, anywhere on your side of the map. Animals inside the escort ring move with you. Anything placed farther out holds that spot as a guard post and fights whatever comes within 14 m of it. On the river, swimmers can start in the water: a croc beside a ford ambushes whatever crosses.</p>
   <div class="panel" style="display:flex;flex-direction:column;gap:10px"><div class="label">Ride one of your animals</div><div class="mounts" id="mountOpts"></div><p class="notes" id="mountNote"></p></div>
   <div class="stage" id="deployStage"><canvas id="deployCanvas"></canvas></div>
@@ -379,7 +427,7 @@ body.hasbar #toDraft, body.hasbar #toDeployD, body.hasbar #startFight{display:no
 <section class="screen" id="s-prog" hidden>
   <div style="display:flex;flex-direction:column;gap:6px"><h2 id="progTitle">Progressive run</h2><div class="progtrail" id="progTrail"></div></div>
   <div class="panel recap" id="progRecap" hidden></div>
-  <div class="panel" id="progTeamBox"><h3 style="margin-bottom:8px">Your team</h3><div id="progTeam"></div></div>
+  <div class="panel" id="progTeamBox"><h3 style="margin-bottom:8px" id="progTeamTitle">Your team</h3><div id="progTeam"></div></div>
   <div class="panel" id="progNext"></div>
   <div class="btnrow" id="progActions"></div>
 </section>
@@ -2793,7 +2841,7 @@ module.exports = A._internals.LIVE;
 // Round 1 is dealt only from $100 animals; each round raises the per-animal cap and the board total, giants only near
 // the end (the last round guarantees one). The other side is everything on the board you don't buy, plus from round 3
 // one premium enemy from that round's top price band that can't be bought. Survivors keep their wounds (a free rest
-// heals 30% of what's missing; a full heal costs 25% of the price), a fight below 25% health leaves a scar (-10% max
+// heals 30% of what's missing; a full heal costs 55% of the price times the share of health missing; selling pays half the price times health), a fight below 25% health leaves a scar (-10% max
 // health for the run, up to -30%), and animals earn XP for what they do and level up (experience, not superpowers).
 // A loss uses one of two retries: back to the round's shop as it opened (the lost fight is undone except the time
 // alive), refight on a new fight seed; the third loss ends the run.
@@ -2815,7 +2863,11 @@ const PROG = {
   START: 400, TOPUP: [0, 450, 500, 500, 500, 600, 800], // round 1 is all $100 animals, so it starts on a whole $100 (owner); money: $START for round 1, then a fixed top-up for each later round you reach
   PER_KILL: 25, KILL_CAP: 150,     // + $25 per enemy killed, at most $150 a fight (owner may change these)
   REST: .3,                        // free rest between fights: heals 30% of the missing health
-  HEAL_SHARE: .25, HEAL_MIN: 50,   // full heal: 25% of the price, at least $50
+  HEAL_RATE: .55, HEAL_MIN: 10,    // full heal: price × HEAL_RATE × the share of the pick's health that's missing ($5 steps, rounded up, at least $10)
+  SELL_SHARE: .5, SELL_MIN: .25,   // sell: price × SELL_SHARE × its condition ($5 steps, rounded down); below 25% condition it can't be sold
+  STEP: 5,
+  // condition = the pick's health summed over its members ÷ the group size (a pack with dead members is worth less).
+  // HEAL_RATE ≥ SELL_SHARE, so healing then selling never makes money (UX pass, Oct 27; the old rule was a flat 25% heal, half-price sale; .55 kept the bot's completion rate where it was)
   SCAR_AT: .25, SCAR: .1, SCAR_MAX: 3, // below 25% health in a fight: -10% max health for the run, at most 3 scars
   XP: {dmg: 50, kill: 10, survive: 5, sig: 5, sigMax: 2, mvp: 10}, // 1 XP per 50 damage (double vs things attacking you)
   LEVELS: [25, 60, 110],           // XP for Seasoned, Cunning, Veteran
@@ -2828,8 +2880,12 @@ function hash(s){ let h = 2166136261; for (const c of String(s)){ h ^= c.charCod
 const groupOf = id => A.BY_ID[id].group || 1;
 const spOf = id => A.BY_ID[id].species || id;
 const levelOf = xp => PROG.LEVELS.filter(t => xp >= t).length;
-const healCost = id => Math.max(PROG.HEAL_MIN, Math.round(A.BY_ID[id].price * PROG.HEAL_SHARE / 25) * 25);
-const sellPrice = id => Math.floor(A.BY_ID[id].price / 2);
+// a team entry's condition (0..1): health summed over its members ÷ group size; missing = what a full heal restores
+const condition = e => e.hp.reduce((s, f) => s + f, 0) / groupOf(e.id);
+const missing = e => e.hp.reduce((s, f) => s + Math.max(0, 1 - f), 0) / groupOf(e.id);
+const healCost = e => Math.max(PROG.HEAL_MIN, Math.ceil(A.BY_ID[e.id].price * PROG.HEAL_RATE * missing(e) / PROG.STEP - 1e-9) * PROG.STEP);
+const sellPrice = e => Math.floor(A.BY_ID[e.id].price * PROG.SELL_SHARE * Math.min(1, condition(e)) / PROG.STEP + 1e-9) * PROG.STEP;
+const tooHurtToSell = e => condition(e) < PROG.SELL_MIN;
 
 function terrainOrder(seed){
   const t = Object.keys(A.TERRAINS), R = A.rng(hash('terr:' + seed));
@@ -2838,7 +2894,7 @@ function terrainOrder(seed){
 }
 function newRun(seed, daily){
   const run = {v: 1, mode: 'progressive', seed, daily: daily || null, k: 0, attempt: 0, losses: 0, money: PROG.START, team: [], log: [],
-    total: 0, won: 0, kills: 0, over: false, complete: false, phase: 'shop', mvp: {}};
+    total: 0, won: 0, kills: 0, over: false, complete: false, phase: 'shop', mvp: {}, hist: [], uidN: 0};
   dealRound(run);
   return run;
 }
@@ -2890,14 +2946,23 @@ function cfgFor(run){
   if (Object.keys(levels).length) c.levels = levels;
   return c;
 }
-// the shop: buy from the board, undo a buy made this visit, sell a carried animal for half its price, pay for a full heal
+// the shop: buy from the board, return a buy made this visit (full refund), sell a carried animal (half price × condition), pay for a full heal
 function canBuy(run, id){ return run.phase === 'shop' && run.board.includes(id) && id !== run.premium && !onTeam(run, id) && A.BY_ID[id].price <= run.money; }
-function buy(run, id){ if (!canBuy(run, id)) return false; run.money -= A.BY_ID[id].price; const n = groupOf(id); run.team.push({id, hp: Array(n).fill(1), scar: Array(n).fill(0), xp: 0, lv: 0, kills: 0, fresh: true}); return true; }
+function buy(run, id){ if (!canBuy(run, id)) return false; run.money -= A.BY_ID[id].price; const n = groupOf(id); run.team.push({id, uid: ++run.uidN, hp: Array(n).fill(1), scar: Array(n).fill(0), xp: 0, lv: 0, kills: 0, fresh: true}); return true; }
+// the run's history of every animal that fought for you (the end screen's table): one record per buy, found by uid
+function histOf(run, e){
+  if (!run.hist) run.hist = [];
+  if (e.uid == null) e.uid = run.uidN = (run.uidN || 0) + 1; // a run saved before histories existed
+  let h = run.hist.find(x => x.uid === e.uid);
+  if (!h){ h = {uid: e.uid, id: e.id, from: run.k, fights: 0, rounds: [], kills: 0, dealt: 0, protect: 0, mvp: 0, xp: 0, lv: 0, scars: 0, out: null}; run.hist.push(h); }
+  return h;
+}
 function unbuy(run, id){ const i = run.team.findIndex(e => e.id === id && e.fresh); if (i < 0) return false; run.money += A.BY_ID[id].price; run.team.splice(i, 1); return true; }
-function sell(run, id){ const i = run.team.findIndex(e => e.id === id && !e.fresh); if (i < 0 || run.phase !== 'shop') return false; run.money += sellPrice(id); run.team.splice(i, 1); return true; }
+function canSell(run, id){ const e = run.team.find(x => x.id === id && !x.fresh); return !!e && run.phase === 'shop' && !tooHurtToSell(e); }
+function sell(run, id){ if (!canSell(run, id)) return false; const i = run.team.findIndex(e => e.id === id && !e.fresh), e = run.team[i], sp = sellPrice(e); run.money += sp; histOf(run, e).out = {how: 'sold', k: run.k, price: sp}; run.team.splice(i, 1); return true; }
 const needsHeal = e => e.hp.some(f => f < .995);
-function canHeal(run, id){ const e = run.team.find(x => x.id === id); return !!e && run.phase === 'shop' && needsHeal(e) && healCost(id) <= run.money; }
-function heal(run, id){ if (!canHeal(run, id)) return false; const e = run.team.find(x => x.id === id); run.money -= healCost(id); e.hp = e.hp.map(() => 1); return true; }
+function canHeal(run, id){ const e = run.team.find(x => x.id === id); return !!e && run.phase === 'shop' && needsHeal(e) && healCost(e) <= run.money; }
+function heal(run, id){ if (!canHeal(run, id)) return false; const e = run.team.find(x => x.id === id); run.money -= healCost(e); e.hp = e.hp.map(() => 1); return true; }
 
 // after the fight: XP and levels, scars, wounds (plus a free rest), money; a loss uses a retry
 function applyResult(run, w){
@@ -2919,11 +2984,15 @@ function applyResult(run, w){
     us.forEach((u, i) => { if (u.state !== 'dead' && !u.escaped) alive.push({f: Math.max(.01, u.hp / u.maxhp), scar: (e.scar[i] || 0) + ((u.st.low != null && u.st.low < PROG.SCAR_AT) ? 1 : 0), was: e.scar[i] || 0}); });
     const lostN = us.length - alive.length;
     if (lostN) entry.lost.push({id: e.id, n: lostN, all: !alive.length});
-    const xp = Math.round(p.dealt / X.dmg + X.kill * p.kills + (alive.length ? X.survive : 0) + X.sig * Math.min(X.sigMax, p.sig) + (top === p && p.dealt > 0 ? X.mvp : 0));
-    entry.xp[e.id] = xp; if (p.kills) entry.kills[e.id] = p.kills;
+    const why = {fight: Math.round(p.dealt / X.dmg), kills: X.kill * p.kills, survive: alive.length ? X.survive : 0, sig: X.sig * Math.min(X.sigMax, p.sig), mvp: top === p && p.dealt > 0 ? X.mvp : 0};
+    const xp = why.fight + why.kills + why.survive + why.sig + why.mvp; // what it earned the XP for (the recap lists it)
+    entry.xp[e.id] = xp; (entry.xpWhy = entry.xpWhy || {})[e.id] = why; if (p.kills) entry.kills[e.id] = p.kills;
     e.kills = (e.kills || 0) + p.kills; e.xp += xp;
     const lv = levelOf(e.xp); if (lv > e.lv){ entry.ups.push({id: e.id, lv}); e.lv = lv; }
-    if (!alive.length) continue;
+    const h = histOf(run, e); h.fights++; if (!h.rounds.includes(k)) h.rounds.push(k);
+    h.kills += p.kills; h.dealt += Math.round(us.reduce((s, u) => s + u.st.dealt, 0)); h.protect += Math.round(us.reduce((s, u) => s + u.st.protect, 0)); if (top === p) h.mvp++;
+    h.xp = e.xp; h.lv = e.lv; h.scars = Math.max(h.scars, alive.reduce((s, a) => s + Math.min(PROG.SCAR_MAX, a.scar), 0));
+    if (!alive.length){ const dead = us.filter(u => u.state === 'dead'), last = dead.sort((a, b) => (b.deathT || 0) - (a.deathT || 0))[0]; h.out = dead.length ? {how: 'died', k, by: last.killedBy || null} : {how: 'fled', k}; continue; }
     const scarred = alive.filter(a => a.scar > a.was && a.was < PROG.SCAR_MAX).length;
     if (scarred) entry.scars.push({id: e.id, n: scarred});
     team.push(Object.assign({}, e, {hp: alive.map(a => Math.min(1, a.f + (1 - a.f) * PROG.REST)), was: alive.map(a => a.f), scar: alive.map(a => Math.min(PROG.SCAR_MAX, a.scar)), fresh: false}));
@@ -2934,15 +3003,18 @@ function applyResult(run, w){
     run.losses++;
     if (run.losses > PROG.RETRIES){ run.over = true; run.phase = 'over'; return entry; }
     // a retry: back to the shop as the round opened (money, team, wounds and XP as they were), a new fight seed
-    entry.ups = []; entry.scars = []; entry.xp = {};
+    entry.ups = []; entry.scars = []; entry.xp = {}; entry.xpWhy = {};
     const pre = JSON.parse(run.pre); run.money = pre.money; run.team = pre.team; run.board = pre.board;
+    // the history follows the undo: the restored team is back (not dead, not sold), this visit's buys went back to the board
+    for (const h of run.hist || []){ const e = run.team.find(x => x.uid === h.uid);
+      if (e){ h.out = null; h.xp = e.xp; h.lv = e.lv; } else if (h.rounds.includes(k) && (!h.out || h.out.k === k) && h.from === k) h.out = {how: 'undone', k}; }
     run.attempt++; run.fightSeed = hash('fight:' + run.seed + ':' + k + ':' + run.attempt);
     run.phase = 'shop'; entry.retry = true;
     return entry;
   }
-  entry.earned = Math.min(PROG.KILL_CAP, PROG.PER_KILL * down); run.money += entry.earned;
   run.won++; run.k++;
-  if (run.k >= PROG.ROUNDS){ run.over = true; run.complete = true; run.phase = 'over'; return entry; }
+  if (run.k >= PROG.ROUNDS){ run.over = true; run.complete = true; run.phase = 'over'; return entry; } // the last round pays nothing: there's nothing left to buy
+  entry.earned = Math.min(PROG.KILL_CAP, PROG.PER_KILL * down); run.money += entry.earned;
   entry.topup = PROG.TOPUP[run.k]; run.money += entry.topup;
   dealRound(run); run.phase = 'shop';
   return entry;
@@ -2950,7 +3022,7 @@ function applyResult(run, w){
 // runs compare by rounds won, then total time alive
 const better = (a, b) => !b || a.won > b.won || (a.won === b.won && a.total > b.total + .05);
 
-const API = {PROG, LEVEL_NAME, LEVEL_DESC, GIANTS, hash, newRun, dealRound, cfgFor, teamIds, canBuy, buy, unbuy, sell, sellPrice, canHeal, heal, healCost, needsHeal,
+const API = {histOf, PROG, LEVEL_NAME, LEVEL_DESC, GIANTS, hash, newRun, dealRound, cfgFor, teamIds, canBuy, buy, unbuy, sell, canSell, sellPrice, tooHurtToSell, condition, missing, canHeal, heal, healCost, needsHeal,
   applyResult, better, terrainOrder, groupOf, levelOf};
 if (typeof module !== 'undefined' && module.exports) module.exports = API; else root.Progressive = API;
 })(typeof window !== 'undefined' ? window : globalThis);
@@ -3048,13 +3120,14 @@ function go(screen){
   if (!S.prog && screen === 'prog') screen = 'arena';
   if (S.screen === 'draft') S.draftScroll = {board: S.boardSeed, y: window.scrollY}; // coming back to the same board keeps your place
   if (S.prog && (screen === 'draft' || screen === 'deploy' || screen === 'prog')) progSync();
+  if (S.screen !== screen){ S.progMsg = ''; S.sellArm = null; if (S.prog && S.screen === 'draft') hideNotice(); } // a run's 'resumed' note has done its job once you leave the shop
   S.screen = screen;
   for (const id of ['arena','draft','deploy','fight','lab','prog']) $('s-' + id).hidden = id !== screen;
   if (screen === 'prog') renderProg();
   $('newSeed').hidden = !!(S.prog || S.five); // a progressive run's or a 5-in-a-row run's fights have fixed seeds
   renderHud(); renderBudget();
   document.querySelectorAll('#steps button[data-s]').forEach(b => b.setAttribute('aria-current', b.dataset.s === screen ? 'true' : 'false'));
-  if (screen === 'deploy') { renderMounts(); sizeCanvas($('deployCanvas')); drawDeploy(); }
+  if (screen === 'deploy') { renderMounts(); renderProgForm(); sizeCanvas($('deployCanvas')); drawDeploy(); }
   if (screen === 'draft') { renderBudget(); renderDraft(); }
   if (screen === 'fight') { sizeCanvas($('fightCanvas')); }
   if (screen === 'lab') renderLabDesc();
@@ -3085,6 +3158,7 @@ function renderDraft(){
   $('draftTitle').textContent = R ? `Round ${R.k + 1} of ${M.PROG.ROUNDS} · the shop` : 'Build a team to protect you from the rest';
   for (const id of ['clearTeam', 'newBoard', 'copyDraft', 'copyDraftOut']) $(id).hidden = !!R;
   if (S.five) $('newBoard').hidden = true;
+  $('progShop').hidden = !R; if (R) $('progShop').innerHTML = progShopHTML(R); else $('progShop').innerHTML = '';
   $('boardLede').textContent = R ? progLede(R)
     : five + daily + (`This game's board: ${onBoard.length} animals worth $${boardTotal().toLocaleString()}. Spend up to $${BUDGET.toLocaleString()}; every board animal you don't pick ends up on the other side. Tap a card to draft it; the panel below shows the full stat line.`);
   // the cards are grouped by price, priciest first
@@ -3113,7 +3187,7 @@ function renderDraft(){
       const ck = document.createElement('span'); ck.className = 'check'; ck.textContent = '✓'; c.appendChild(ck);
       c.addEventListener('click', () => {
         S.focus = a.id;
-        if (S.prog){ if (picked) M.unbuy(S.prog, a.id); else M.buy(S.prog, a.id); saveRun(); progSync(); S.world = null; renderAll(); renderHud(); return; }
+        if (S.prog){ if (picked) M.unbuy(S.prog, a.id); else M.buy(S.prog, a.id); S.progMsg = ''; S.sellArm = null; saveRun(); progSync(); S.world = null; renderAll(); renderHud(); return; }
         if (S.team.has(a.id)) S.team.delete(a.id);
         else if (canAdd(a)) S.team.add(a.id);
         S.world = null;
@@ -3129,7 +3203,7 @@ function renderDraft(){
   const tl = $('teamline'); tl.innerHTML = '';
   if (R){
     const foes = S.board.filter(id => !S.team.has(id));
-    tl.innerHTML = progTeamHTML(R, true) + `<span class="label" style="margin-left:6px">Against you: ${foes.length} animals, $${foes.reduce((t, id) => t + A.BY_ID[id].price, 0).toLocaleString()}${R.premium ? ' (with the ' + esc(itemName(A.BY_ID[R.premium])) + ')' : ''}</span>`;
+    tl.innerHTML = `<span class="label">The board · against you right now: ${foes.length} animals, $${foes.reduce((t, id) => t + A.BY_ID[id].price, 0).toLocaleString()}${R.premium ? ' (with the premium ' + esc(itemName(A.BY_ID[R.premium])) + ')' : ''}</span>`;
     const btn = $('toDeployD'); btn.disabled = false; btn.textContent = 'Set formation';
     renderDetail(); return;
   }
@@ -3144,7 +3218,7 @@ function renderDetail(){
   const a = A.BY_ID[S.focus]; const d = $('detail');
   const hp = A.hpOf(a);
   const stats = [
-    ...([['Price', '$' + a.price + (S.prog && M.teamIds(S.prog).includes(a.id) && !S.board.includes(a.id) ? ' (sells for $' + M.sellPrice(a.id) + ')' : '')]]), ['Mass', a.mass.toLocaleString() + ' kg'], ['Top speed', kmh(a.spd) + ' km/h'],
+    ...([['Price', '$' + a.price + (() => { const own = S.prog && S.prog.team.find(e => e.id === a.id && !e.fresh); return own ? (M.tooHurtToSell(own) ? ' (too hurt to sell)' : ' (sells for $' + M.sellPrice(own) + ')') : ''; })()]]), ['Mass', a.mass.toLocaleString() + ' kg'], ['Top speed', kmh(a.spd) + ' km/h'],
     ['Durability', hp.toLocaleString() + ' hp'], ['Strike', a.dmg + ' / ' + a.cd + ' s'], ['Armor', Math.round(a.armor*100) + '%'],
     ['Reach', a.reach + ' m'], ['Sprint', a.stam + ' s'], ['Breaks at', Math.round(a.flee*100) + '% morale'],
     ['Heat tolerance', a.heat.toFixed(2)], ['Cold tolerance', a.cold.toFixed(2)], ['Strikes up to', a.strikeH + ' m'], ['Carries you at', a.mountH ? a.mountH + ' m' : 'too small'],
@@ -3375,12 +3449,13 @@ function renderMounts(){
   const team = [...S.team];
   if (S.mount && !S.team.has(S.mount)) S.mount = '';
   const foot = document.createElement('button'); foot.className = 'foot'; foot.textContent = 'On foot'; foot.setAttribute('aria-pressed', !S.mount);
-  foot.addEventListener('click', () => { S.mount = ''; S.world = null; renderMounts(); drawDeploy(); }); box.appendChild(foot);
+  foot.addEventListener('click', () => { S.mount = ''; if (S.prog) S.mountPick = S.progKey; S.world = null; renderMounts(); renderProgForm(); drawDeploy(); }); box.appendChild(foot);
+  const hpOfPick = id => { const e = S.prog && S.prog.team.find(x => x.id === id); return e ? ' · ' + pctHp(e.hp.reduce((s, x) => s + x, 0) / e.hp.length) : ''; };
   for (const id of team){
     const a = A.BY_ID[id]; if (!a.mountH) continue;
     const b = document.createElement('button'); b.setAttribute('aria-pressed', S.mount === id);
-    b.appendChild(tok(a, 30)); b.append(`${a.name} · ${a.mountH} m`);
-    b.addEventListener('click', () => { S.mount = id; S.world = null; renderMounts(); drawDeploy(); });
+    b.appendChild(tok(a, 30)); b.append(`${a.name} · ${a.mountH} m${hpOfPick(id)}`);
+    b.addEventListener('click', () => { S.mount = id; if (S.prog) S.mountPick = S.progKey; S.world = null; renderMounts(); renderProgForm(); drawDeploy(); });
     box.appendChild(b);
   }
   const small = team.filter(id => !A.BY_ID[id].mountH).map(id => A.BY_ID[id].name);
@@ -4069,7 +4144,7 @@ function renderSide(){
   }
   if (S.playT >= S.dur - 1e-6 && $('report').hidden){ renderReport(true); }
 }
-$('banner').addEventListener('click', e => { if (e.target.id === 'progContinue'){ go('prog'); return; } if (e.target.id === 'fiveNext'){ fiveNext(); return; } if (e.target.id === 'copyFive'){ copyLink(fiveShare(), $('copyFiveOut'), 'Result'); return; } if (e.target.id === 'copyResult' && S.world && S.played) copyLink(gameLink(S.played, S.world.result.score), $('copyResultOut')); });
+$('banner').addEventListener('click', e => { if (e.target.id === 'progContinue'){ if (S.prog && !S.prog.over){ S.progRecapOpen = S.prog.log.length; go('draft'); } else go('prog'); return; } if (e.target.id === 'fiveNext'){ fiveNext(); return; } if (e.target.id === 'copyFive'){ copyLink(fiveShare(), $('copyFiveOut'), 'Result'); return; } if (e.target.id === 'copyResult' && S.world && S.played) copyLink(gameLink(S.played, S.world.result.score), $('copyResultOut')); });
 $('log').addEventListener('click', e => { const d = e.target.closest('[data-t]'); if (d){ S.playT = Math.max(0, +d.dataset.t - 1.5); S.playing = false; } });
 
 const HZ = A.MATCH_T;
@@ -4242,13 +4317,14 @@ function progSync(){
   S.daily = null; S.shared = null;
   S.terrain = r.terrain; S.board = A.ANIMALS.map(a => a.id).filter(id => r.board.includes(id) || id === r.premium); S.boardSeed = r.boardSeed; S.seed = r.fightSeed; $('seedLbl').textContent = S.seed;
   S.team = new Set(M.teamIds(r));
-  if (S.progKey !== key){ S.progKey = key; S.pos = {}; S.youPos = null; S.mount = bestMount(); } // a new round: fresh formation on the new map (a retry keeps yours)
+  if (S.progKey !== key){ S.progKey = key; S.pos = {}; S.youPos = null; } // a new round: fresh formation on the new map (a retry keeps yours)
   for (const id in S.pos) if (!S.team.has(id)) delete S.pos[id];
-  if (S.mount && !S.team.has(S.mount)) S.mount = bestMount();
+  // the mount follows the team (carried survivors and this visit's buys: ride your elephant) until you pick one on the formation page this round
+  if (S.mountPick !== key || (S.mount && !S.team.has(S.mount))){ S.mount = bestMount(); if (S.mountPick === key && !S.team.has(S.mount)) S.mountPick = null; }
   if (!S.board.includes(S.focus) && !S.team.has(S.focus)) S.focus = r.board[0] || M.teamIds(r)[0] || 'honeybadger';
 }
 function startProg(seed, daily){
-  hideNotice(); S.prog = M.newRun(seed, daily || null); S.progKey = null; S.progEntry = null; S.world = null; saveRun(); go('prog');
+  hideNotice(); S.prog = M.newRun(seed, daily || null); S.progKey = null; S.progEntry = null; S.world = null; S.progHowOpen = true; S.progMsg = ''; saveRun(); go('draft'); // straight into round 1's shop (the run overview is one tap away)
 }
 // leave the mode (the run stays saved, to resume from the arena screen); the normal game gets a fresh board
 function exitProg(){ if (!S.prog) return; S.prog = null; S.progKey = null; S.progEntry = null; S.world = null; dealNewBoard(); renderHud(); }
@@ -4261,52 +4337,139 @@ const hpCol = f => f > .5 ? '#d5f2cf' : f > .25 ? C.gold : C.red;
 const hpBar = f => `<i title="${Math.round(f * 100)}%"><b style="width:${Math.round(clamp01(f) * 100)}%;background:${hpCol(f)}"></b></i>`;
 const pctHp = f => Math.round(f * 100) + '%';
 const stars = lv => `<span class="stars" title="${M.LEVEL_NAME[lv]}" aria-label="level ${lv}">${'★'.repeat(lv)}<span class="off">${'★'.repeat(3 - lv)}</span></span>`;
-// XP toward the next level (a full bar at Veteran)
+const money = n => '$' + n.toLocaleString();
+// what each level does, in plain words (sim.js LEVEL_FX; the levels stack)
+const LV_FX = ['no experience bonus yet', 'holds its nerve longer; a fallen packmate shakes it less', 'spots threats 15% farther', '+10% damage and +10% health'];
+function xpHowHTML(){
+  const X = M.PROG.XP, L = M.PROG.LEVELS;
+  return `<p class="notes"><b>Earning XP:</b> 1 XP per ${X.dmg} damage it deals (double against anything that's attacking you), ${X.kill} per kill, ${X.survive} for surviving the fight, ${X.sig} each time its signature move lands (up to ${X.sigMax} a fight) and ${X.mvp} for the fight's MVP. A pack or herd shares one pool.</p>`
+    + `<p class="notes"><b>Levels</b> (they stack): ★ Seasoned at ${L[0]} XP: ${LV_FX[1]}. ★★ Cunning at ${L[1]}: ${LV_FX[2]}. ★★★ Veteran at ${L[2]}: ${LV_FX[3]}. Experience, not superpowers: a Veteran is roughly 8% more useful than a Rookie.</p>`;
+}
+// XP toward the next level (a full bar at Veteran), and what the next level brings
 function xpInfo(e){
   const L = M.PROG.LEVELS, lo = e.lv ? L[e.lv - 1] : 0, hi = L[e.lv];
-  return hi == null ? {f: 1, txt: `${e.xp} XP`} : {f: (e.xp - lo) / (hi - lo), txt: `${e.xp}/${hi} XP`};
+  return hi == null ? {f: 1, txt: `${e.xp} XP · top level`} : {f: (e.xp - lo) / (hi - lo), txt: `${e.xp}/${hi} XP → ${M.LEVEL_NAME[e.lv + 1]}: ${LV_FX[e.lv + 1]}`};
 }
+const lvNow = e => e.lv ? `<b>${M.LEVEL_NAME[e.lv]}:</b> ${LV_FX.slice(1, e.lv + 1).join('; ')}.` : `<b>Rookie:</b> ${LV_FX[0]}.`;
 const retriesLeft = r => Math.max(0, M.PROG.RETRIES - r.losses);
-function progTeamHTML(r, shop){
-  let h = '<div class="progteam">';
-  for (const e of r.team){
-    const a = A.BY_ID[e.id], g = M.groupOf(e.id), nm = g > 1 ? `${a.groupName} (${e.hp.length} of ${g})` : a.name, x = xpInfo(e), scars = e.scar.reduce((s, n) => s + n, 0);
-    const heal = shop && !e.fresh && M.needsHeal(e) ? `<button class="btn" data-heal="${a.id}" ${M.canHeal(r, a.id) ? '' : 'disabled'} title="Full heal">Heal $${M.healCost(a.id)}</button>` : '';
-    const act = !shop ? '' : e.fresh ? `<button class="btn" data-unbuy="${a.id}" title="Undo: get the $${a.price} back">Undo</button>` : `${heal}<button class="btn" data-sell="${a.id}" title="Sell for half its price">Sell $${M.sellPrice(a.id)}</button>`;
-    const sub = [e.kills ? `${e.kills} kill${e.kills > 1 ? 's' : ''}` : '', scars ? `<span class="scar" title="Scars: −${M.PROG.SCAR * 100}% max health each">${scars} scar${scars > 1 ? 's' : ''}</span>` : ''].filter(Boolean).join(' · ');
-    h += `<div class="mt${e.fresh ? ' fresh' : ''}">${tokHTML(a, 34)}<div class="mtb"><div class="nm">${esc(nm)} ${stars(e.lv)}${e.fresh ? ' <span class="label" style="color:var(--you)">new</span>' : ''}</div>`
-      + `<div class="hpb">${e.hp.map(hpBar).join('')}</div><div class="xpb"><i><b style="width:${Math.round(clamp01(x.f) * 100)}%"></b></i><span>${x.txt}${e.lv ? ' · ' + M.LEVEL_NAME[e.lv] : ''}</span></div>${sub ? `<div class="sub">${sub}</div>` : ''}</div>${act ? `<div class="mta">${act}</div>` : ''}</div>`;
+const avgOf = a => a.reduce((s, x) => s + x, 0) / a.length;
+// health: one bar + % per member (packs and herds), a flag for wounded ones, and what the free rest did after the last fight
+function healthHTML(e){
+  const g = M.groupOf(e.id), hurt = M.needsHeal(e), low = Math.min(...e.hp);
+  const members = e.hp.map(f => `<span class="hpm">${hpBar(f)}<span class="pc">${pctHp(f)}</span></span>`).join('');
+  const lost = g > 1 && e.hp.length < g ? `<span>${g - e.hp.length} of ${g} lost</span>` : '';
+  const flag = e.fresh ? '' : !hurt ? '<span class="flag ok">Full health</span>' : low < .35 ? '<span class="flag bad">Badly hurt</span>' : '<span class="flag hurt">Wounded</span>';
+  return `<div class="hpb">${members}${lost}${flag}</div>`;
+}
+function restHTML(e){
+  if (e.fresh || !Array.isArray(e.was) || !e.was.length || e.was.length !== e.hp.length) return '';
+  const was = avgOf(e.was), rested = Math.min(1, was + (1 - was) * M.PROG.REST);
+  if (was > .995) return '';
+  return `<div class="rest">Came out of the last fight at ${pctHp(was)}; the free rest healed it to ${pctHp(rested)}${avgOf(e.hp) > rested + .005 ? ', then you healed it to ' + pctHp(avgOf(e.hp)) : ''}.</div>`;
+}
+// one team card: shop (heal / sell / return), view (run screen) or compact
+function mtHTML(r, e, mode){
+  const a = A.BY_ID[e.id], g = M.groupOf(e.id), nm = g > 1 ? `${a.groupName} (${e.hp.length} of ${g})` : a.name, scars = e.scar.reduce((s, n) => s + n, 0);
+  if (mode === 'shop' && e.fresh) // bought this visit: a compact line with a full refund
+    return `<div class="mt small fresh">${tokHTML(a, 30)}<div class="mtb"><div class="nm">${esc(nm)} <span class="label" style="color:var(--you)">new · $${a.price}</span></div></div><div class="mta"><button class="btn" data-unbuy="${a.id}" title="Changed your mind: give it back for the full $${a.price}">Return · +$${a.price}</button></div></div>`;
+  const x = xpInfo(e);
+  let act = '';
+  if (mode === 'shop'){
+    if (M.needsHeal(e)){
+      const c = M.healCost(e), ok = M.canHeal(r, e.id);
+      act += `<button class="btn" data-heal="${a.id}" ${ok ? '' : 'disabled'} title="Pays to bring every member back to full health. Cost: ${Math.round(M.PROG.HEAL_RATE * 100)}% of its $${a.price} price × the ${pctHp(M.missing(e))} of health it's missing.">Heal to 100% · $${c}${ok ? '' : ` (need $${c - r.money} more)`}</button>`;
+    }
+    if (M.tooHurtToSell(e)) act += `<button class="btn" disabled title="Below ${M.PROG.SELL_MIN * 100}% health nobody will buy it: heal it or keep it">Can't sell: under ${M.PROG.SELL_MIN * 100}% health</button>`;
+    else { const sp = M.sellPrice(e), armed = S.sellArm === e.id;
+      act += `<button class="btn${armed ? ' arm' : ''}" data-sell="${a.id}" data-armed="${armed ? 1 : 0}" title="Half its $${a.price} price × its health (${pctHp(Math.min(1, M.condition(e)))}). Its XP and level go with it.">${armed ? `Tap again to sell · +$${sp}` : `Sell · +$${sp}`}</button>`; }
   }
-  if (!r.team.length) h += `<span class="label" style="align-self:center">${r.over ? 'None of your animals made it.' : 'No animals with you yet.'}</span>`;
+  const sub = [e.kills ? `${e.kills} kill${e.kills > 1 ? 's' : ''}` : '', scars ? `<span class="scar">${scars} scar${scars > 1 ? 's' : ''}: −${Math.round(M.PROG.SCAR * 100 * scars)}% max health for the run</span>` : ''].filter(Boolean).join(' · ');
+  return `<div class="mt${e.fresh ? ' fresh' : ''}">${tokHTML(a, 34)}<div class="mtb"><div class="nm">${esc(nm)} ${stars(e.lv)}${e.fresh ? ' <span class="label" style="color:var(--you)">new</span>' : ''}</div>`
+    + healthHTML(e) + restHTML(e)
+    + `<div class="lvnow">${lvNow(e)}</div><div class="xpb"><i><b style="width:${Math.round(clamp01(x.f) * 100)}%"></b></i><span>${esc(x.txt)}</span></div>${sub ? `<div class="sub">${sub}</div>` : ''}</div>${act ? `<div class="mta">${act}</div>` : ''}</div>`;
+}
+function progTeamHTML(r, mode){
+  mode = mode === true ? 'shop' : mode || 'view';
+  const team = mode === 'shop' ? r.team.filter(e => !e.fresh).concat(r.team.filter(e => e.fresh)) : r.team;
+  let h = '<div class="progteam">' + team.map(e => mtHTML(r, e, mode)).join('');
+  if (!r.team.length) h += `<span class="label" style="align-self:center">${r.over ? 'None of your animals made it.' : 'No animals with you yet: tap a card below to buy one.'}</span>`;
   return h + '</div>';
 }
-function progLede(r){
-  const cap = M.PROG.CAP[r.k], tot = r.board.reduce((s, id) => s + A.BY_ID[id].price, 0);
-  const prem = r.premium ? ` The ${itemName(A.BY_ID[r.premium])} is not for sale: it joins the other side.` : '';
-  return `${A.TERRAINS[r.terrain].name}. ${cap ? `Animals up to $${cap}` : 'Any animal'}: ${r.board.length} on the board, worth $${tot.toLocaleString()}. You have $${r.money.toLocaleString()}; whatever you don't buy is against you.${prem} Your team keeps its wounds: heal, sell for half price, or buy more.${r.attempt ? ` Retry ${r.attempt} of ${M.PROG.RETRIES}: a new fight seed.` : ''}`;
+const healAllCost = r => r.team.filter(e => !e.fresh && M.needsHeal(e)).reduce((s, e) => s + M.healCost(e), 0);
+// the shop's round panel: what you need for the decision, in one place (round, map, money, retries, premium enemy, recap), then your team
+function progShopHTML(r){
+  const cap = M.PROG.CAP[r.k], tot = r.board.reduce((s, id) => s + A.BY_ID[id].price, 0), p = r.premium && A.BY_ID[r.premium];
+  // round, map, money and retries sit in the run bar above; here: the board's tier, the premium enemy, the retry
+  const chips = [`<span>${cap ? `Animals up to $${cap}` : 'Any animal'} · ${r.board.length} on the board, ${money(tot)}</span>`];
+  if (r.attempt) chips.unshift(`<span>Retry ${r.attempt} of ${M.PROG.RETRIES}: a new fight</span>`);
+  if (r.k === RN - 1) chips.push('<span>Last round: a giant is for sale</span>');
+  if (p) chips.push(`<span class="prem" title="Premium enemy: not for sale, it joins the other side">${tokHTML(p, 24)}<b>Premium enemy:</b> ${esc(itemName(p))} ($${p.price})</span>`);
+  const last = r.log[r.log.length - 1], recapOpen = S.progRecapOpen === r.log.length;
+  const recap = last ? `<details class="recapbox" data-k="recap"${recapOpen ? ' open' : ''}><summary>Last fight: round ${last.k + 1} ${last.survived ? 'won' : 'lost'} · ${fmtT(last.t)}</summary><div class="recap">${recapHTML(r, last, true)}</div></details>` : '';
+  const intro = r.k === 0 && !r.attempt && !r.log.length ? `<details class="howrun" data-k="how"${S.progHowOpen !== false ? ' open' : ''}><summary>How a run works</summary><p class="notes">Seven rounds, each board a little richer: round 1 is all $100 animals, the giants come at the end. Whatever you don't buy fights you. Your survivors stay with you, wounds and all; they earn XP and level up. Each new round brings fresh money (+$${M.PROG.TOPUP[1]} or more, plus $${M.PROG.PER_KILL} a kill). Lose a round and you refight it from this shop; you get ${M.PROG.RETRIES} retries in the whole run.</p></details>` : '';
+  const carried = r.team.filter(e => !e.fresh), hurt = carried.filter(M.needsHeal), all = healAllCost(r);
+  const healAll = hurt.length >= 2 ? `<button class="btn" id="progHealAll" ${all <= r.money ? '' : 'disabled'} title="Heal every wounded animal to 100%">Heal all ${hurt.length} wounded · $${all}${all <= r.money ? '' : ` (need $${all - r.money} more)`}</button>` : '';
+  const sum = carried.length ? `${carried.length} survivor${carried.length > 1 ? 's' : ''}${hurt.length ? `, ${hurt.length} wounded` : ', all at full health'}. Rest heals ${M.PROG.REST * 100}% of a wound for free after each won fight; healing pays for the rest. Selling pays half the price × health; under ${M.PROG.SELL_MIN * 100}% nobody buys.` : '';
+  return `<div class="panel"><div class="roundchips">${chips.join('')}</div>${recap}${intro}</div>`
+    + `<div class="panel"><div class="teamhead"><h3>Your team</h3>${healAll}</div>${sum ? `<p class="notes" style="margin-bottom:8px">${sum}</p>` : ''}<div class="progmsg" id="progMsg" role="status">${S.progMsg || ''}</div>${progTeamHTML(r, 'shop')}`
+    + `<details class="xphow" data-k="xp"${S.progXpOpen ? ' open' : ''}><summary>How XP and levels work</summary>${xpHowHTML()}</details></div>`;
 }
-// team-line buttons (the shop): sell a carried animal, undo a buy, pay for a full heal
-$('teamline').addEventListener('click', e => {
-  const b = e.target.closest('button'); if (!b || !S.prog) return;
-  if (b.dataset.sell) M.sell(S.prog, b.dataset.sell); else if (b.dataset.unbuy) M.unbuy(S.prog, b.dataset.unbuy); else if (b.dataset.heal) M.heal(S.prog, b.dataset.heal); else return;
-  saveRun(); progSync(); S.world = null; renderAll(); renderHud();
-});
-// the run HUD: round k/7, money, retries, team, and a way back to the run screen or out
+function progLede(r){
+  const p = r.premium && A.BY_ID[r.premium];
+  return `Tap a card to buy it; whatever you don't buy is against you${p ? `, plus the premium ${itemName(p)}` : ''}. Then set your formation (or fight straight away).`;
+}
+function progSay(msg){ S.progMsg = msg; }
+// the shop's team buttons: return a buy, heal (one or all), sell (tap twice)
+function progShopClick(e){
+  const b = e.target.closest('button'); if (!b || !S.prog || b.disabled) return;
+  const r = S.prog, nm = id => itemName(A.BY_ID[id]), entry = id => r.team.find(x => x.id === id);
+  if (b.dataset.sell){
+    const id = b.dataset.sell;
+    if (S.sellArm !== id){ S.sellArm = id; progSay(''); renderDraft(); return; } // two taps: selling loses its XP and level
+    const x = entry(id), sp = M.sellPrice(x), c = M.condition(x);
+    if (!M.sell(r, id)) return; progSay(`Sold the ${esc(nm(id))} for $${sp} (at ${pctHp(Math.min(1, c))} health). ${money(r.money)} to spend.`);
+  } else if (b.dataset.unbuy){ const id = b.dataset.unbuy; if (!M.unbuy(r, id)) return; progSay(`Returned the ${esc(nm(id))}: +$${A.BY_ID[id].price} back.`); }
+  else if (b.dataset.heal){
+    const id = b.dataset.heal, x = entry(id), before = x.hp.map(pctHp).join(', '), c = M.healCost(x);
+    if (!M.heal(r, id)) return; progSay(`Healed the ${esc(nm(id))} from ${before} to 100% for $${c}. ${money(r.money)} left.`);
+  } else if (b.id === 'progHealAll'){
+    const hurt = r.team.filter(x => !x.fresh && M.needsHeal(x)), c = healAllCost(r); if (c > r.money) return;
+    for (const x of hurt) M.heal(r, x.id); progSay(`Healed ${hurt.map(x => 'the ' + esc(nm(x.id))).join(', ')} to 100% for $${c}. ${money(r.money)} left.`);
+  } else return;
+  S.sellArm = null; saveRun(); progSync(); S.world = null; renderAll(); renderHud();
+}
+$('progShop').addEventListener('click', progShopClick);
+$('progShop').addEventListener('toggle', e => { const k = e.target.dataset && e.target.dataset.k; if (k === 'recap') S.progRecapOpen = e.target.open ? S.prog.log.length : -1; else if (k === 'how') S.progHowOpen = e.target.open; else if (k === 'xp') S.progXpOpen = e.target.open; }, true);
+// the formation step in a run: who's with you (health, level) and who's against you; the fight starts from here
+function renderProgForm(){
+  const el = $('progForm'), r = S.prog; el.hidden = !r; if (!r) return;
+  const foes = S.board.filter(id => !S.team.has(id)), p = r.premium && A.BY_ID[r.premium];
+  const mine = r.team.map(e => { const a = A.BY_ID[e.id]; return `<span class="chip">${tokHTML(a, 24)}${esc(M.groupOf(e.id) > 1 ? `${a.groupName} (${e.hp.length} of ${M.groupOf(e.id)})` : a.name)} · ${pctHp(avgOf(e.hp))}${e.lv ? ' ' + '★'.repeat(e.lv) : ''}</span>`; }).join('');
+  el.innerHTML = `<div class="label">Round ${r.k + 1} · ${esc(A.TERRAINS[r.terrain].name)} · your team</div><div class="teamline">${mine || '<span class="label">Just you.</span>'}</div>`
+    + `<p class="notes">Against you: ${foes.length} animals worth ${money(foes.reduce((t, id) => t + A.BY_ID[id].price, 0))}${p ? `, including the premium ${esc(itemName(p))}` : ''}. Auto formation is already set${S.mount ? ` and you ride the ${esc(A.BY_ID[S.mount].name)}` : ''}: tap Fight, or drag anyone first.</p>`;
+}
+// the run HUD: round k/7, money, retries, team, and a way to the run overview or out
+let abandonTimer = null;
 function renderHud(){
   const r = S.prog, hud = $('progHud'); $('progStep').hidden = !r;
+  const so = $('startOver'); so.textContent = r ? 'Leave run' : 'Start over'; so.title = r ? 'Back to the arena. The run stays saved: resume it from the arena screen.' : 'New board, empty team, back to the map';
   if (!r || S.screen === 'fight'){ hud.hidden = true; return; } // no spoilers while a fight plays (its result already counts)
   const roundTxt = r.over ? (r.complete ? 'Run complete' : `Run over · ${r.won} of ${RN} rounds won`) : `Round ${r.k + 1}/${RN} · ${A.TERRAINS[r.terrain].name}`;
   const team = r.team.map(e => `<span class="hudpick" title="${esc(itemName(A.BY_ID[e.id]))}: ${e.hp.map(pctHp).join(', ')}, ${M.LEVEL_NAME[e.lv]}">${tokHTML(A.BY_ID[e.id], 24)}<i><b style="width:${Math.round(e.hp.reduce((s, x) => s + x, 0) / e.hp.length * 100)}%;background:${hpCol(Math.min(...e.hp))}"></b></i>${e.lv ? `<span class="stars">${'★'.repeat(e.lv)}</span>` : ''}</span>`).join('');
-  const lives = `<span class="lives" title="Retries left">${'♥'.repeat(retriesLeft(r))}<span class="off">${'♥'.repeat(M.PROG.RETRIES - retriesLeft(r))}</span></span>`;
+  const lives = `<span class="lives" title="Retries left: ${retriesLeft(r)}">${'♥'.repeat(retriesLeft(r))}<span class="off">${'♥'.repeat(M.PROG.RETRIES - retriesLeft(r))}</span></span>`;
   hud.innerHTML = `<b>Progressive${r.daily ? ' · daily' : ''}</b><span>${roundTxt}</span><span class="money">$${r.money.toLocaleString()}</span>${lives}`
     + (team ? `<span class="hudteam">${team}</span>` : '')
-    + `<span class="btnrow">${S.screen !== 'prog' ? '<button class="btn" data-hud="run">Run</button>' : ''}<button class="btn" data-hud="abandon">${r.over ? 'Close run' : 'Abandon'}</button></span>`;
+    + `<span class="btnrow">${S.screen !== 'prog' ? '<button class="btn" data-hud="run" title="All seven rounds, your team and the last fight">Run overview</button>' : ''}<button class="btn" data-hud="abandon" title="${r.over ? 'Close the finished run' : 'End this run for good (it can\'t be resumed)'}">${r.over ? 'Close run' : 'Abandon run'}</button></span>`;
   hud.hidden = false;
 }
 $('progHud').addEventListener('click', e => {
   const b = e.target.closest('button[data-hud]'); if (!b) return;
   if (b.dataset.hud === 'run'){ go('prog'); return; }
-  if (!S.prog.over && b.dataset.armed !== '1'){ b.dataset.armed = '1'; b.textContent = 'Abandon this run?'; b.classList.add('on'); return; } // two clicks to throw a run away
+  if (!S.prog.over && b.dataset.armed !== '1'){ // two taps to throw a run away; the arming wears off after 4 s
+    b.dataset.armed = '1'; b.textContent = 'Tap again: end the run for good'; b.classList.add('on');
+    clearTimeout(abandonTimer); abandonTimer = setTimeout(() => { if (b.isConnected){ b.dataset.armed = '0'; b.textContent = 'Abandon run'; b.classList.remove('on'); } }, 4000);
+    return;
+  }
   try { localStorage.removeItem(PROG_KEY); } catch(err){}
   exitProg(); renderAll(); go('arena');
 });
@@ -4316,18 +4479,28 @@ function progShare(r){
   const last = r.log[r.log.length - 1], team = last ? last.team.map(id => A.BY_ID[id].abbr).join('+') || 'no animals' : 'no animals', mvp = runMvp(r);
   return `Wild Arena ${r.daily ? 'daily progressive ' + r.daily : 'progressive'}: ${r.complete ? `all ${RN} rounds won` : `${r.won} of ${RN} rounds won`}, ${r.kills} kills, ${fmtT(r.total)} alive in all${mvp ? ', MVP ' + mvp.name : ''}, last team ${team}.`;
 }
-const upsTxt = e => e.ups.map(u => `${itemName(A.BY_ID[u.id])} is now ${M.LEVEL_NAME[u.lv]}`).join('; ');
+const upsTxt = e => e.ups.map(u => `${itemName(A.BY_ID[u.id])} is now ${M.LEVEL_NAME[u.lv]} (${LV_FX[u.lv]})`).join('; ');
 function progBanner(e, res){
   const r = S.prog, n = e.k + 1, k = A.BY_ID[res.killer];
-  const cont = `<div class="btnrow"><button class="btn primary" id="progContinue">${r.over ? 'See how the run went' : e.retry ? 'Back to the shop' : 'On to round ' + (r.k + 1)}</button></div>`;
+  const cont = `<div class="btnrow"><button class="btn primary" id="progContinue">${r.over ? 'See how the run went' : e.retry ? `Retry round ${n}: to the shop` : `Round ${r.k + 1}: to the shop`}</button></div>`;
   if (res.survived){
     const why = res.why === 'cleared' ? `The other side was dead, routed or full by ${fmtT(res.t)}.` : res.why === 'quiet' ? `Nothing came at you for ${A.QUIET_T} s, so the other side gave up at ${fmtT(res.t)}.` : `You held out the full ${fmtT(HZ)}.`;
-    return `<div class="banner win"><span class="big">Round ${n} won</span><span>${why} ${e.down} kills: +$${e.earned}.${e.ups.length ? ' ' + esc(upsTxt(e)) + '.' : ''}${r.complete ? ' That was the last round: the run is complete.' : ''}</span>${cont}</div>`;
+    return `<div class="banner win"><span class="big">Round ${n} won</span><span>${why} ${e.down} kills${r.complete ? '' : `: +$${e.earned}`}.${e.ups.length ? ' ' + esc(upsTxt(e)) + '.' : ''}${r.complete ? ' That was the last round: the run is complete.' : ''}</span>${cont}</div>`;
   }
-  const tail = r.over ? 'That was your last retry: the run ends here.' : `Retry: the round starts again from the shop as it was (${retriesLeft(r)} retr${retriesLeft(r) === 1 ? 'y' : 'ies'} left after this one).`;
+  const tail = r.over ? 'That was your last retry: the run ends here.' : `You refight it from the shop as the round opened: same team, wounds, XP and money, a new fight (${retriesLeft(r)} retr${retriesLeft(r) === 1 ? 'y' : 'ies'} left after this one).`;
   return `<div class="banner lose"><span class="big">Round ${n} lost</span><span>You lasted ${fmtT(res.score)}, killed by the ${esc(k ? k.name : 'unknown')}. ${tail}</span>${cont}</div>`;
 }
-function recapHTML(r, e){
+// what each animal earned its XP for, in words
+function xpWhyTxt(w){
+  const X = M.PROG.XP, bits = [];
+  if (w.fight) bits.push(`${w.fight} for fighting`);
+  if (w.kills) bits.push(`${w.kills} for ${w.kills / X.kill} kill${w.kills / X.kill > 1 ? 's' : ''}`);
+  if (w.sig) bits.push(`${w.sig} for its signature move`);
+  if (w.mvp) bits.push(`${w.mvp} as MVP`);
+  if (w.survive) bits.push(`${w.survive} for surviving`);
+  return bits.join(', ');
+}
+function recapHTML(r, e, compact){
   const n = e.k + 1, nm = id => itemName(A.BY_ID[id]);
   const lost = e.lost.map(l => { const a = A.BY_ID[l.id]; return M.groupOf(l.id) > 1 && !l.all ? `${l.n} of your ${a.groupName.toLowerCase()}` : `your ${M.groupOf(l.id) > 1 ? a.groupName.toLowerCase() : a.name}`; });
   const kill = A.BY_ID[e.killer];
@@ -4338,17 +4511,41 @@ function recapHTML(r, e){
   ];
   const ks = Object.entries(e.kills || {}).map(([id, c]) => `${esc(nm(id))} ${c}`);
   if (ks.length) lines.push(`Kills: ${ks.join(', ')}.${e.mvp ? ` MVP: the ${esc(nm(e.mvp))}.` : ''}`);
+  let xp = '';
   if (e.survived){
-    const xp = Object.entries(e.xp).filter(([, v]) => v > 0).map(([id, v]) => `${esc(nm(id))} +${v}`);
-    if (xp.length) lines.push(`XP: ${xp.join(', ')}.${e.ups.length ? ` <b style="color:var(--gold)">${esc(upsTxt(e))}.</b>` : ''}`);
+    const rows = Object.entries(e.xp).filter(([, v]) => v > 0).map(([id, v]) => { const w = e.xpWhy && e.xpWhy[id], up = e.ups.find(u => u.id === id);
+      const gone = e.lost.some(l => l.id === id && l.all);
+      return `<li><b>${esc(nm(id))} +${v} XP</b>${gone ? ' (lost in the fight)' : ''}${w ? ': ' + esc(xpWhyTxt(w)) : ''}${up ? ` · <b style="color:var(--gold)">now ${M.LEVEL_NAME[up.lv]}: ${esc(LV_FX[up.lv])}</b>` : ''}</li>`; });
+    if (rows.length) xp = `<p class="notes" style="margin:0">XP earned:</p><ul class="xplist">${rows.join('')}</ul>`;
     if (e.scars.length) lines.push(`Scarred (fell below ${M.PROG.SCAR_AT * 100}% health): ${e.scars.map(s => esc(nm(s.id))).join(', ')}, −${M.PROG.SCAR * 100}% max health for the run.`);
-    lines.push(`Money: +$${e.earned} for kills ($${M.PROG.PER_KILL} each, up to $${M.PROG.KILL_CAP})${e.topup ? `, +$${e.topup} for the new round` : ''}. Survivors rested and healed ${M.PROG.REST * 100}% of their wounds.`);
+    if (e.topup != null) lines.push(`Money: +$${e.earned} for kills ($${M.PROG.PER_KILL} each, up to $${M.PROG.KILL_CAP}), +$${e.topup} for the new round. Survivors rested: each healed ${M.PROG.REST * 100}% of its wounds for free.`); // the last round pays nothing
   } else if (e.retry) lines.push('The lost fight is undone: your team, money, wounds and XP are back as they were when the round opened.');
-  return head + lines.map(l => `<p class="notes" style="margin:0">${l}</p>`).join('');
+  return (compact ? '' : head) + lines.map(l => `<p class="notes" style="margin:0">${l}</p>`).join('') + xp;
+}
+// the end of a run: every animal that fought for you (alive, dead, sold), survivors first, then by kills
+const kfmt = n => n >= 1000 ? (n / 1000).toFixed(n >= 1e5 ? 0 : 1) + 'k' : String(n);
+function runSummaryHTML(r){
+  const alive = new Set(r.team.map(e => e.uid)), hs = (r.hist || []).slice();
+  const rank = h => alive.has(h.uid) ? 0 : h.out && h.out.how === 'undone' ? 2 : 1;
+  hs.sort((a, b) => rank(a) - rank(b) || b.kills - a.kills || (b.dealt + b.protect) - (a.dealt + a.protect));
+  if (!hs.length) return '<p class="notes">No animal fought for you this run.</p>';
+  const rows = hs.map(h => {
+    const a = A.BY_ID[h.id], o = h.out, rs = h.rounds.slice().sort((x, y) => x - y), live = alive.has(h.uid);
+    const fate = live ? `<span class="flag surv">★ Survivor${r.complete ? ': went the distance' : ''}</span>`
+      : !o ? '' : o.how === 'died' ? `<span class="flag bad">Died in round ${o.k + 1}${o.by && A.BY_ID[o.by] ? ' to the ' + esc(A.BY_ID[o.by].name) : ''}</span>`
+      : o.how === 'fled' ? `<span class="flag hurt">Fled in round ${o.k + 1}</span>` : o.how === 'sold' ? `<span class="flag">Sold before round ${o.k + 1} · $${o.price}</span>`
+      : `<span class="flag">Refunded: round ${o.k + 1} was replayed</span>`;
+    const span = rs.length ? (rs.length === 1 ? `round ${rs[0] + 1}` : `rounds ${rs[0] + 1}–${rs[rs.length - 1] + 1} (${rs.length})`) : '';
+    const stats = [span, `${h.kills} kill${h.kills === 1 ? '' : 's'}`, `${kfmt(h.dealt + h.protect)} damage${h.protect ? ` (${kfmt(h.protect)} protecting you)` : ''}`,
+      `${M.LEVEL_NAME[h.lv]} · ${h.xp} XP`, h.scars ? `${h.scars} scar${h.scars > 1 ? 's' : ''}` : '', h.mvp ? `MVP ${h.mvp}×` : ''].filter(Boolean).join(' · ');
+    return `<div class="mt sumrow${live ? ' surv' : ''}">${tokHTML(a, 34)}<div class="mtb"><div class="nm">${esc(itemName(a))} ${stars(h.lv)}</div><div class="hpb">${fate}</div><div class="sub">${stats}</div></div></div>`;
+  });
+  const nRef = hs.filter(h => rank(h) === 2).length, main = rows.slice(0, rows.length - nRef), ref = rows.slice(rows.length - nRef);
+  return `<div class="progteam">${main.join('')}</div>` + (nRef ? `<details class="xphow"><summary>${nRef} more bought for a round you lost and replayed (refunded)</summary><div class="progteam">${ref.join('')}</div></details>` : '');
 }
 function renderProg(){
   const r = S.prog; if (!r) return;
-  $('progTitle').textContent = r.over ? (r.complete ? 'Run complete' : 'The run ends') : `Round ${r.k + 1} of ${RN}`;
+  $('progTitle').textContent = r.over ? (r.complete ? 'Run complete' : 'The run ends') : `Run overview · round ${r.k + 1} of ${RN}`;
   const order = M.terrainOrder(r.seed);
   $('progTrail').innerHTML = Array.from({length: RN}, (_, i) => {
     const cls = i < r.won ? 'done' : r.over && !r.complete && i === r.k ? 'dead' : !r.over && i === r.k ? 'now' : '';
@@ -4357,14 +4554,14 @@ function renderProg(){
   }).join('');
   const last = r.log[r.log.length - 1];
   $('progRecap').hidden = !last; $('progRecap').innerHTML = last ? recapHTML(r, last) : '';
-  $('progTeam').innerHTML = progTeamHTML(r, false);
+  $('progTeamTitle').textContent = r.over ? 'Every animal of the run' : 'Your team';
+  $('progTeam').innerHTML = r.over ? runSummaryHTML(r) : progTeamHTML(r, 'view') + `<details class="xphow"><summary>How XP and levels work</summary>${xpHowHTML()}</details>`;
   const nx = $('progNext'), act = $('progActions');
   if (!r.over){
     const tot = r.board.reduce((s, id) => s + A.BY_ID[id].price, 0), cap = M.PROG.CAP[r.k], p = r.premium && A.BY_ID[r.premium];
-    const intro = r.k === 0 && !r.attempt ? ` Seven rounds, each a little richer than the last: round 1 is all $100 animals, the giants come at the end. You keep your survivors (wounds and all), they earn XP and level up, and every round brings $${M.PROG.TOPUP[1]}+ more to spend. Lose a round and you can retry it twice in the whole run.` : '';
     nx.hidden = false;
-    nx.innerHTML = `<h3 style="margin-bottom:6px">Next: round ${r.k + 1} · ${A.TERRAINS[r.terrain].name}${r.attempt ? ' · retry ' + r.attempt : ''}</h3><p class="notes">${cap ? `Animals up to $${cap}` : 'Any animal'}: ${r.board.length} on the board, worth $${tot.toLocaleString()}.${p ? ` The premium enemy this round is the <b>${esc(itemName(p))}</b> ($${p.price}): it can't be bought and fights you.` : ''}${r.k === RN - 1 ? ' The last round: a giant is on the board.' : ''} You have $${r.money.toLocaleString()}.${intro}</p>`;
-    act.innerHTML = `<button class="btn primary" id="progToShop">To the shop</button>`;
+    nx.innerHTML = `<h3 style="margin-bottom:6px">Next: round ${r.k + 1} · ${A.TERRAINS[r.terrain].name}${r.attempt ? ' · retry ' + r.attempt : ''}</h3><p class="notes">${cap ? `Animals up to $${cap}` : 'Any animal'}: ${r.board.length} on the board, worth $${tot.toLocaleString()}.${p ? ` The premium enemy this round is the <b>${esc(itemName(p))}</b> ($${p.price}): it can't be bought and fights you.` : ''}${r.k === RN - 1 ? ' The last round: a giant is on the board.' : ''} You have $${r.money.toLocaleString()}, ${retriesLeft(r)} retr${retriesLeft(r) === 1 ? 'y' : 'ies'} left.</p>`;
+    act.innerHTML = `<button class="btn primary" id="progToShop">Back to the shop</button>`;
   } else {
     const fmtBest = b => `${b.complete ? 'all ' + RN : b.won + ' of ' + RN} rounds, ${fmtT(b.total)} alive`;
     const best = r.newBest ? 'A new best run.' : r.prevBest ? `Best run: ${fmtBest(r.prevBest)}.` : '';
@@ -4383,17 +4580,23 @@ $('progActions').addEventListener('click', e => {
   else if (id === 'progCopy') copyLink(progShare(S.prog), $('progCopyOut'), 'Result');
   else if (id === 'progHome'){ try { localStorage.removeItem(PROG_KEY); } catch(err){} exitProg(); renderAll(); go('arena'); }
 });
-// arena screen entry: start, daily, resume, best
+// arena screen entry: start, daily, resume, best. Starting a new run while one is saved asks first (it replaces the saved run).
 function renderProgEntry(){
   if (!PROG_ON) return;
   const r = loadRun(), live = r && !r.over, rb = $('progResume');
   rb.hidden = !live; if (live) rb.textContent = `Resume (round ${r.k + 1}/${RN}, $${r.money.toLocaleString()})`;
+  for (const id of ['progNew', 'progDaily']){ const b = $(id); b.dataset.armed = '0'; b.classList.remove('on'); b.textContent = id === 'progNew' ? (live ? 'New run' : 'Start a run') : 'Daily run'; }
   const best = readJSON(PROG_BEST), db = readJSON(progDailyKey(todayLocal()));
   $('progBest').textContent = (best ? `Best run: ${best.complete ? 'all ' + RN : best.won + ' of ' + RN} rounds won, ${fmtT(best.total)} alive.` : 'No run finished yet.') + (db ? ` Today's daily: ${db.won} of ${RN}, ${fmtT(db.total)}.` : '');
 }
-$('progNew').addEventListener('click', () => startProg(newBoardSeed()));
-$('progDaily').addEventListener('click', () => startProg(progDailySeed(todayLocal()), todayLocal()));
-$('progResume').addEventListener('click', () => { const r = loadRun(); if (!r || r.over) return; hideNotice(); S.prog = r; S.progKey = null; S.progEntry = null; S.world = null; go('prog'); });
+function confirmReplace(b, start){
+  const r = loadRun();
+  if (r && !r.over && b.dataset.armed !== '1'){ b.dataset.armed = '1'; b.textContent = `Tap again: replace your saved run (round ${r.k + 1})`; b.classList.add('on'); return; }
+  start();
+}
+$('progNew').addEventListener('click', e => confirmReplace(e.currentTarget, () => startProg(newBoardSeed())));
+$('progDaily').addEventListener('click', e => confirmReplace(e.currentTarget, () => startProg(progDailySeed(todayLocal()), todayLocal())));
+$('progResume').addEventListener('click', () => { const r = loadRun(); if (!r || r.over) return; hideNotice(); S.prog = r; S.progKey = null; S.progEntry = null; S.world = null; go('draft'); });
 
 // ---------- personal stats (localStorage 'wa-stats'): every fight played on this device ----------
 // per pick (catalog item): games, wins, kills, damage, protecting you, deaths, MVPs; per enemy: games faced, times it
@@ -4477,8 +4680,10 @@ function renderActBar(){
     const n = S.prog ? M.teamIds(S.prog).length : S.team.size;
     const sum = document.createElement('span'); sum.className = 'sum';
     sum.innerHTML = S.prog ? `<b>$${S.prog.money.toLocaleString()}</b><br>left` : `<b>$${spent().toLocaleString()}</b> / $${BUDGET.toLocaleString()}<br>${n} pick${n === 1 ? '' : 's'}`;
-    add(sum, actBtn('Formation', () => go('deploy'), false, 'Place your animals (optional: Fight uses the auto formation)'), actBtn(n ? 'Fight' : 'Fight alone', () => startBattle(), true));
+    if (S.prog) add(sum, actBtn('Fight now', () => startBattle(), false, 'Skip the formation: fight with the auto formation'), actBtn('Formation', () => go('deploy'), true, 'Next: pick your mount and placements, then fight'));
+    else add(sum, actBtn('Formation', () => go('deploy'), false, 'Place your animals (optional: Fight uses the auto formation)'), actBtn(n ? 'Fight' : 'Fight alone', () => startBattle(), true));
   }
+  else if (sc === 'deploy' && S.prog) add(actBtn('Shop', () => go('draft'), false, 'Back to the shop'), actBtn('Auto', () => $('autoForm').click(), false, 'Auto formation: put everyone back in the default spots'), actBtn('Fight', () => startBattle(), true));
   else if (sc === 'deploy') add(actBtn('Auto', () => $('autoForm').click(), false, 'Auto formation'), actBtn('Release the animals', () => startBattle(), true));
   else if (sc === 'fight' && S.world){
     if (!ended) add(actBtn('Skip to result', skipToEnd, true));
@@ -4497,7 +4702,7 @@ syncSpeed();
 if (!loadHash()){
   dealNewBoard(); renderAll();
   const run = loadRun(); // a progressive run in progress picks up where it left off after a reload
-  if (PROG_ON && run && !run.over){ S.prog = run; go('prog'); showNotice(`<b>Run resumed</b> <span>Round ${run.k + 1} of ${RN}, $${run.money.toLocaleString()} to spend.</span>`); }
+  if (PROG_ON && run && !run.over){ S.prog = run; go('draft'); showNotice(`<b>Run resumed</b> <span>Round ${run.k + 1} of ${RN}, $${run.money.toLocaleString()} to spend.</span>`); }
   else go('arena');
 }
 requestAnimationFrame(frame);
