@@ -21,6 +21,9 @@ const S = window.__wa = {
 const spent = () => [...S.team].reduce((s, id) => s + A.BY_ID[id].price, 0);
 const fmtT = t => { t = Math.max(0, t); const m = Math.floor(t/60), s = Math.floor(t%60); return m + ':' + String(s).padStart(2,'0'); };
 const kmh = v => Math.round(v * 3.6);
+// Pick N draft mode and Daily Pick-3 are switched off (owner, Oct 27); ?pickn=1 shows them. Links with d:pN open as budget games.
+const PICK_ON = (() => { try { return /[?&]pickn=1\b/.test(location.search); } catch(e){ return false; } })();
+if (!PICK_ON) for (const el of [...document.querySelectorAll('.pickentry'), $('dailyPick'), $('pickRow')]) if (el){ el.hidden = true; el.style.display = 'none'; }
 // draft modes: 'budget' (spend up to the budget) or 'pick' (exactly S.pickN animals, prices ignored); the engine doesn't care
 const isPick = () => S.draft === 'pick';
 const canAdd = a => S.mig ? M.canBuy(S.mig, a.id) : isPick() ? S.team.size < S.pickN : a.price <= BUDGET - spent();
@@ -301,7 +304,7 @@ function parseLink(hash){
   return g;
 }
 function applyLink(g){
-  S.terrain = g.terrain; S.draft = g.draft; S.pickN = g.pickN;
+  S.terrain = g.terrain; S.draft = PICK_ON ? g.draft : 'budget'; S.pickN = g.pickN;
   S.seed = g.seed || newBoardSeed(); $('seedLbl').textContent = S.seed;
   dealNewBoard(g.boardSeed || undefined);
   for (const id of g.team) if (S.board.includes(id) && canAdd(A.BY_ID[id])) S.team.add(id); // drop anything not on this board or over the limit

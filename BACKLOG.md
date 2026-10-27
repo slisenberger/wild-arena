@@ -227,7 +227,7 @@ Pick for new roles. Top three for design value: **honey badger, moose, Komodo dr
   Engine: `cfg.board` (done). Probe: `board.js` (how winnable random boards are by K). Open: group items
   (multiple units per species), a winnability check when dealing a board (offline-verified daily boards, or a
   fast value model), UI for the board, and pricing measured in board mode.
-- [x] **Fixed animal-count choices** (done Oct 2026, UI only): a "Pick N" draft mode on the arena screen next to
+- [x] **Fixed animal-count choices** (done Oct 2026, UI only; switched off by the owner Oct 27, `?pickn=1` shows it): a "Pick N" draft mode on the arena screen next to
   Budget — pick exactly N (2–5, default 3) board animals whatever they cost; everything unpicked is still the other
   side. Header shows picks left, prices are hidden, bests are kept per mode (`|pickN` key suffix), and there's a
   **Daily Pick-3** with its own seed and best key (`wa-daily-pick3:<date>`). Open: price-free winnability check

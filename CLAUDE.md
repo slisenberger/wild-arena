@@ -286,9 +286,13 @@ round. Report ± standard errors.
   a stale-dodge bug fix survived on the current engine.
 
 ## In flight (Oct 26, for a new session)
-- GitHub Actions run 40372090395 (sweep `policy/sweeps/m3_v2.json`, guards + harriers v2): when done, run the `collect`
-  workflow with that run id and read `results/40372090395/summary.txt` on the `training-results` branch; verify winners
-  with `policy/probes/eval_guard.js` / `eval_state.js` before shipping as `policy/weights/*_v2.json`.
+- **v2 sweep (run 40372090395, `m3_v2`) found nothing that beats v1 so far; v1 stays live.** Training tests: only the
+  warm harrier run h2_c1_s1 passed (+0.033 ± 0.016 vs harrier_v1); on fresh fights (`eval_state.js … 1200 33`, v1 arm) the
+  top three harriers were +0.011 ± 0.014, +0.031 ± 0.018, +0.008 ± 0.017 vs v1. Guards: the warm runs didn't move (most
+  ended at init); g2_c2_s1 looked +7.9 ± 3.7 s vs guard_v1 on 1,200 fresh fights but +2.5 ± 2.8 s, win −0.4 ± 1.1 on 2,000
+  more. `--thetaClip` cold runs did learn (harrier +0.099 ± 0.016 vs heuristic, guard +0.065 ± 0.021) but don't beat v1.
+  Next: new inputs or actions (latched cat decisions, species-aware features), not more of the same sweep.
+- Cat sweep: Actions run 40404764891 (`m3_cat_s1`); collect with `collect.yml` when it's done.
 - GCP: run `node policy/gcp/gcp.js check` (then `check --vm`) to confirm the credentials, then launch sweeps there.
 - Archetype policies (cats, chargers, bulldozers, brawlers, kickers) are being built in the original session's worktree;
   if that work isn't on the branch yet, it hasn't been merged.
@@ -303,7 +307,8 @@ round. Report ± standard errors.
 5. Replayability: verified leaderboard, rotating rosters, new animals. (Done: daily challenge —
    `Daily challenge` button; the UTC date hashes to the map, board and fight seed; rematch keeps the seed; today's best in
    localStorage `wa-daily:<date>`; a share line in the result banner.)
-   - Done (Oct 2026, ui.js only): **Pick N** draft mode (`S.draft`/`S.pickN`, exactly 2–5 picks, prices ignored; bests
+   - Done (Oct 2026, ui.js only; **Pick N and Daily Pick-3 switched off by the owner, Oct 27**: `?pickn=1` shows them, `PICK_ON`
+     in ui.js; links with `d:pN` open as budget games): **Pick N** draft mode (`S.draft`/`S.pickN`, exactly 2–5 picks, prices ignored; bests
      keyed `|pickN`; **Daily Pick-3** seeds `wild-arena:pick3:<date>`, best `wa-daily-pick3:<date>`), **game links**
      `#g=1,m:,b:,s:,d:b|pN[,t:,r:,p:][,sc:]` (`gameLink`/`parseLink`/`applyLink`; positions are stored to the cm at drag
      time and encoded exactly, so a link replays the same fight; bad links fall back to a fresh board with a notice),

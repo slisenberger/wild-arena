@@ -1,5 +1,5 @@
 // Independent check of a trained guard policy on the CURRENT live engine (shipped harrier policy on): player-like
-// budget-fill teams on dealt boards, paired seeds; your survival time and win% with vs without the guard policy.
+// budget-fill teams on dealt boards, paired seeds; your survival time and win% with the trained guard weights vs the live default (the shipped guard policy, if any).
 // Usage: node policy/probes/eval_guard.js <state.json> [N] [seedBase]
 const { Worker, isMainThread, parentPort, workerData } = require('worker_threads');
 const path = require('path');
