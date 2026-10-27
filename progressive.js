@@ -21,10 +21,10 @@ const PROG = {
   RARE:  [.1, .15, .2, .25, .3, .3, .3],
   R1_OUT: [],                      // species kept out of round 1 (e.g. the $100 big cats, so it's the small fry's round)
   PREMIUM_FROM: 2,                 // round 3 on: one premium enemy from the round's top price band, not for sale
-  START: 450, TOPUP: [0, 400, 500, 500, 500, 600, 800], // money: $START for round 1, then a fixed top-up for each later round you reach
-  PER_KILL: 25, KILL_CAP: 150,     // + $25 per enemy killed, at most $150 a fight (owner may change these)
+  START: 400, TOPUP: [0, 400, 500, 500, 500, 600, 800], // money: $START for round 1, then a fixed top-up for each later round you reach
+  PER_KILL: 25, KILL_CAP: 150,     // + $25 per enemy killed, at most $150 a fight, paid in whole $100s (owner: money only in $100 steps)
   REST: .3,                        // free rest between fights: heals 30% of the missing health
-  HEAL_SHARE: .25, HEAL_MIN: 50,   // full heal: 25% of the price, at least $50
+  HEAL_SHARE: .25, HEAL_MIN: 100,  // full heal: 25% of the price in $100 steps, at least $100
   SCAR_AT: .25, SCAR: .1, SCAR_MAX: 3, // below 25% health in a fight: -10% max health for the run, at most 3 scars
   XP: {dmg: 50, kill: 10, survive: 5, sig: 5, sigMax: 2, mvp: 10}, // 1 XP per 50 damage (double vs things attacking you)
   LEVELS: [25, 60, 110],           // XP for Seasoned, Cunning, Veteran
@@ -37,8 +37,8 @@ function hash(s){ let h = 2166136261; for (const c of String(s)){ h ^= c.charCod
 const groupOf = id => A.BY_ID[id].group || 1;
 const spOf = id => A.BY_ID[id].species || id;
 const levelOf = xp => PROG.LEVELS.filter(t => xp >= t).length;
-const healCost = id => Math.max(PROG.HEAL_MIN, Math.round(A.BY_ID[id].price * PROG.HEAL_SHARE / 25) * 25);
-const sellPrice = id => Math.floor(A.BY_ID[id].price / 2);
+const healCost = id => Math.max(PROG.HEAL_MIN, Math.round(A.BY_ID[id].price * PROG.HEAL_SHARE / 100) * 100);
+const sellPrice = id => Math.floor(A.BY_ID[id].price / 200) * 100; // half, rounded down to $100 (a $100 animal sells for nothing)
 
 function terrainOrder(seed){
   const t = Object.keys(A.TERRAINS), R = A.rng(hash('terr:' + seed));
@@ -99,7 +99,7 @@ function cfgFor(run){
   if (Object.keys(levels).length) c.levels = levels;
   return c;
 }
-// the shop: buy from the board, undo a buy made this visit, sell a carried animal for half its price, pay for a full heal
+// the shop: buy from the board, undo a buy made this visit, sell a carried animal for half its price rounded down to $100, pay for a full heal
 function canBuy(run, id){ return run.phase === 'shop' && run.board.includes(id) && id !== run.premium && !onTeam(run, id) && A.BY_ID[id].price <= run.money; }
 function buy(run, id){ if (!canBuy(run, id)) return false; run.money -= A.BY_ID[id].price; const n = groupOf(id); run.team.push({id, hp: Array(n).fill(1), scar: Array(n).fill(0), xp: 0, lv: 0, kills: 0, fresh: true}); return true; }
 function unbuy(run, id){ const i = run.team.findIndex(e => e.id === id && e.fresh); if (i < 0) return false; run.money += A.BY_ID[id].price; run.team.splice(i, 1); return true; }
@@ -149,7 +149,7 @@ function applyResult(run, w){
     run.phase = 'shop'; entry.retry = true;
     return entry;
   }
-  entry.earned = Math.min(PROG.KILL_CAP, PROG.PER_KILL * down); run.money += entry.earned;
+  entry.earned = Math.floor(Math.min(PROG.KILL_CAP, PROG.PER_KILL * down) / 100) * 100; run.money += entry.earned;
   run.won++; run.k++;
   if (run.k >= PROG.ROUNDS){ run.over = true; run.complete = true; run.phase = 'over'; return entry; }
   entry.topup = PROG.TOPUP[run.k]; run.money += entry.topup;
