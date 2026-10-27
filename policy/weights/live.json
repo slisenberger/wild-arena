@@ -1,5 +1,6 @@
 {
  "_note": "Which weights the live game ships per archetype (policy/live.js loads them, build.js bundles them). Training with --withLive plays against exactly these.",
  "harrier": "harrier_v1.json",
- "guard": "guard_v1.json"
+ "guard": "guard_v1.json",
+ "bulldozer": "bulldozer_v1.json"
 }

@@ -1,0 +1,17 @@
+bd_fb_c1_small_s1  [test] best (after 4 updates) vs zero weights on 1200 held-out fights: +0.131 ± 0.027 (beyond 2 SE) | style 1.000 gates [] drift []
+bd_fb_c1_small_s2  [test] best (after 16 updates) vs zero weights on 1200 held-out fights: +0.129 ± 0.028 (beyond 2 SE) | style 1.000 gates [] drift []
+bd_fb_c1_small_s3  [test] best (after 16 updates) vs zero weights on 1200 held-out fights: +0.137 ± 0.029 (beyond 2 SE) | style 1.000 gates [] drift []
+br_cold_c1_s1      (no test yet)
+br_cold_c1_s2      (no test yet)
+br_cold_c1_s3      (no test yet)
+ch_pat_c1_s1       (no test yet)
+ch_pat_c1_s2       [test] best (rule patient) vs zero weights on 1200 held-out fights: +0.023 ± 0.032 (within 2 SE) | style 1.000 gates [] drift []
+ch_pat_c1_s3       [test] best (rule patient) vs zero weights on 1200 held-out fights: +0.024 ± 0.032 (within 2 SE) | style 1.000 gates [] drift []
+ki_fb_c1_s1        [test] best (rule flankBusy) vs zero weights on 1200 held-out fights: +0.002 ± 0.026 (within 2 SE) | style 1.000 gates [] drift []
+ki_fb_c1_s2        [test] best (rule flankBusy) vs zero weights on 1200 held-out fights: +0.007 ± 0.026 (within 2 SE) | style 1.000 gates [] drift []
+ki_fb_c1_s3        (no test yet)
+cat_cold_c1_s1     [test] best (zero) vs zero weights on 1200 held-out fights: +0.000 ± 0.000 (within 2 SE) | style 1.000 gates [] drift []
+cat_cold_c1_s2     [test] best (after 36 updates) vs zero weights on 1200 held-out fights: +0.039 ± 0.021 (within 2 SE) | style 1.000 gates [] drift []
+ha_v1_c1_s1        (no test yet)
+ha_v1_c1_s2        (no test yet)
+cat_cold_c1_small  (no test yet)
