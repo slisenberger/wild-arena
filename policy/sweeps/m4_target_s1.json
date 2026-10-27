@@ -1,0 +1,33 @@
+{
+ "note": "Milestone 4 pilot (Oct 27): learned TARGET choice (who to go after), not movement. policy/policy.js 'target-lin': score = margin*[the heuristic's pick] + w.x over the 63 per-candidate features (isMount, logStrVsSelf, busyElsewhere, fleeing, hpFrac, guardRatio, ...); zero weights = the heuristic exactly (60/60 fights byte-identical). The archetype keeps its shipped movement policy; side-level checkmate goal + spec; realism engine with bulldozer_v1/charger_v1 live. Cats x4 (margins .25/.5, small sigma), plus brawler, kicker, bulldozer at margin .25.",
+ "runs": [
+  {
+   "name": "cat_t_m25_s1",
+   "args": "--arch=cat --margin=.25 --pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --goal=checkmate --spec=true --target=true --thetaClip=1 --seed=1101"
+  },
+  {
+   "name": "cat_t_m25_s2",
+   "args": "--arch=cat --margin=.25 --pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --goal=checkmate --spec=true --target=true --thetaClip=1 --seed=1102"
+  },
+  {
+   "name": "cat_t_m50",
+   "args": "--arch=cat --margin=.5 --pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --goal=checkmate --spec=true --target=true --thetaClip=1 --seed=1103"
+  },
+  {
+   "name": "cat_t_m25_small",
+   "args": "--arch=cat --margin=.25 --sigma=.05 --lr=.04 --pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --goal=checkmate --spec=true --target=true --thetaClip=1 --seed=1104"
+  },
+  {
+   "name": "br_t_m25",
+   "args": "--arch=brawler --margin=.25 --pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --goal=checkmate --spec=true --target=true --thetaClip=1 --seed=1111"
+  },
+  {
+   "name": "ki_t_m25",
+   "args": "--arch=kicker --margin=.25 --pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --goal=checkmate --spec=true --target=true --thetaClip=1 --seed=1121"
+  },
+  {
+   "name": "bd_t_m25",
+   "args": "--arch=bulldozer --margin=.25 --pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --goal=checkmate --spec=true --target=true --thetaClip=1 --seed=1131"
+  }
+ ]
+}

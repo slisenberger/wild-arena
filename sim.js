@@ -673,7 +673,7 @@ function chooseTarget(w, u){
       u.state = u.target ? 'engage' : 'rest';
       return;
     }
-    if (w.cfg.policy){ policyChoose(w, u); return; } // learned target selection (policy/), opt-in: off unless cfg.policy is given
+    if (w.cfg.policy && (!w.cfg.policy.byArch || w.cfg.policy.byArch[archetypeOf(u)])){ policyChoose(w, u); return; } // learned target selection (policy/), opt-in: off unless cfg.policy is given; {byArch} = only those archetypes
     const h = predatorTarget(w, u);
     if (w.mode === 'wild' && u.hunger > .3 && !u.sated){
       const c = bestCarcass(w, u);

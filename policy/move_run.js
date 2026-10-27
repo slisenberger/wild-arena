@@ -7,6 +7,7 @@ const fs = require('fs');
 const SIM = process.env.SIM ? path.resolve(process.env.SIM) : path.join(__dirname, '..', 'sim.js');
 const A = require(SIM);
 require('./move_policy.js');
+require('./policy.js'); // target choice (cfg.policy), for the milestone-4 --target pilot
 const { arch: archOf } = require('./move_arch.js');
 const I = A._internals;
 const TERR = Object.keys(A.TERRAINS);
@@ -62,8 +63,9 @@ function cfgOf(f){ return {team: f.team, board: f.board, terrain: f.tr, mode: 'w
 // with f.live, the OTHER archetypes use the shipped policies (policy/live.js), so v2 trains against the live game
 function setPolicy(cfg, f, arch, weights){
   const mp = {};
-  if (f.live) for (const [k, v] of Object.entries(I.LIVE || {})) if (v && k !== arch) mp[k] = v;
-  if (weights) mp[arch] = weights;
+  if (f.live) for (const [k, v] of Object.entries(I.LIVE || {})) if (v && (k !== arch || (weights && weights.kind === 'target-lin'))) mp[k] = v;
+  if (weights && weights.kind === 'target-lin'){ cfg.policy = {byArch: {[arch]: weights}}; cfg.policyStats = {}; } // target scorer: the arch keeps its shipped movement policy
+  else if (weights) mp[arch] = weights;
   if (Object.keys(mp).length){ cfg.movePolicy = mp; cfg.moveStats = {}; }
 }
 function runFight(f, weights, arch){
@@ -131,7 +133,7 @@ function runFight(f, weights, arch){
   r.deaths = us.filter(u => u.state === 'dead').length; r.escaped = us.filter(u => u.escaped).length;
   r.hmax = H.maxhp; r.killedYou = !w.result.survived && H.state === 'dead' && us.includes(H.lastHitBy) ? 1 : 0;
   r.t = +w.result.t.toFixed(1); r.survived = w.result.survived ? 1 : 0; r.why = w.result.why || null; r.killer = w.result.killer || null;
-  r.intents = weights && cfg.moveStats[arch] ? cfg.moveStats[arch] : null;
+  r.intents = weights && weights.kind === 'target-lin' ? (s => [s.agree || 0, (s.n || 0) - (s.agree || 0), 0, 0, 0])(cfg.policyStats || {}) : weights && cfg.moveStats && cfg.moveStats[arch] ? cfg.moveStats[arch] : null; // target scorer: [kept the heuristic's pick, deviated]
   r.fp = fingerprint(w);
   return r;
 }
@@ -194,7 +196,7 @@ function fingerprint(w){
 function runTasks(tasks, cands, fights, arch){ return tasks.map(k => ({k: k.k, rec: runFight(fights[k.f], cands[k.c], arch)})); }
 
 function fileHash(files){ const h = crypto.createHash('sha256'); for (const f of files) h.update(fs.readFileSync(f)); return h.digest('hex').slice(0, 16); }
-const HARNESS_FILES = ['move_features.js', 'move_guard_features.js', 'move_arch_features.js', 'move_cat_features.js', 'move_arch.js', 'move_model.js', 'move_policy.js', 'move_run.js', 'move_reward.js'].map(f => path.join(__dirname, f));
+const HARNESS_FILES = ['features.js', 'policy.js', 'move_features.js', 'move_guard_features.js', 'move_arch_features.js', 'move_arch.js', 'move_model.js', 'move_policy.js', 'move_run.js', 'move_reward.js'].map(f => path.join(__dirname, f));
 const simHash = () => fileHash([SIM]);
 const harnessHash = () => fileHash(HARNESS_FILES);
 module.exports = { A, SIM, TERR, TEL, XTEL, CTEL, GTEL, GCLASS, GSIG, guardClass, POOL, stateOf, fightSet, cfgOf, runFight, runTasks, fingerprint, simHash, harnessHash };
