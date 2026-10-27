@@ -9,7 +9,6 @@ const C = {you:'#4fd1bd', foe:'#ef6b4b', bone:'#d9cfb4', fg:'#ece6d3', muted:'#9
 const BUDGET = A.RULES.budget;
 const newBoardSeed = () => (Math.random() * 1e6 | 0) + 1;
 const maxStr = Math.max(...A.ANIMALS.map(a => Math.sqrt(A.hpOf(a) * a.dmg / a.cd)));
-const MAXV = {mine: Math.max(1, ...Object.values(A.MEASURED).map(m => m.mine)), threat: Math.max(1, ...Object.values(A.MEASURED).map(m => -m.theirs))};
 
 const S = window.__wa = {
   team: new Set(), boardSeed: newBoardSeed(), board: [], focus:'elephant', terrain:'savanna', mode:'wild', mount:'', pos:{}, youPos:null, seed: (Math.random()*1e6|0) + 1,
@@ -43,6 +42,38 @@ function terrainFit(a, tid){
 }
 function badgesHTML(a){ return terrainFit(a, S.terrain).map(([k, t]) => `<span class="bdg ${k}">${t}</span>`).join(''); }
 // ---------- board ----------
+// each species' signature move, shown on its card (ROSTER.md has the full kits); pack items use their species' line
+const SIGNATURE = {
+  elephant: ['Trunk sweep', 'mock charges, then sweeps everything in reach; you ride 3 m up'],
+  mammoth: ['Trunk sweep', 'the elephant’s sweep, at home in the snow'],
+  triceratops: ['Frill charge', '8 t of horns that can’t steer once it commits'],
+  rhino: ['Blind charge', 'a long armored charge that overshoots by 9 m'],
+  blackrhino: ['Hothead', 'charges anything that moves, even a sound'],
+  hippo: ['Submerged', 'hidden underwater, then bursts out in a charge'],
+  buffalo: ['Grudge', 'remembers whoever hurt it for 40 s and hunts them down'],
+  bison: ['Spin', 'tail-up mock charge, turns on a dime in the snow'],
+  moose: ['Stomp', 'rears and stomps anything small or knocked down'],
+  bull: ['Bred to charge', 'never needs provoking; chases whatever moves'],
+  boar: ['Upend', 'a low charge that bowls over anything up to 2.5× its weight'],
+  giraffe: ['Lookout', 'your side spots threats 50% farther; a lethal kick'],
+  ostrich: ['Claw kick', 'a forward kick that rips predators open and knocks them back'],
+  gorilla: ['Chest-beat', 'rattles whatever comes for you and turns it onto the gorilla'],
+  honeybadger: ['Musk', 'fearless; predators that bite it reel away and leave it alone'],
+  polar: ['Snow ghost', 'white on white in the snow; hunts from the water'],
+  grizzly: ['Maul', 'a bluff charge, then every third swipe mauls'],
+  blackbear: ['Bouncer', 'bluff-charges up to 3× and runs off anything its size'],
+  tiger: ['Throat hold', 'stalks, pounces from 9 m, holds prey 4× its size'],
+  lion: ['Back leap', 'the fastest sprint; leaps onto big prey busy with someone else'],
+  leopard: ['Hidden guard', 'lies unseen beside you and springs on what comes for you'],
+  jaguar: ['Water ambush', 'swims in unseen; a bite that ignores half of armor'],
+  cougar: ['Nape bite', 'a 12 m pounce; from behind it bites the neck and stuns'],
+  wolf: ['Tester', 'nips big herbivores and leads the chase away from you'],
+  hyena: ['Bone crack', 'each bite leaves a limp that never wears off'],
+  giantkangaroo: ['Kickboxer', 'grabs, then a two-footed kick; holds attackers under water'],
+  smilodon: ['Sabre stab', 'pins prey, stabs it, then circles while it bleeds'],
+  croc: ['Death roll', 'invisible in water until 7 m; lunges, rolls, drags prey under'],
+};
+const sigOf = a => SIGNATURE[a.species || a.id] || null;
 // a pick of a pack animal brings its whole group when the rules use groups
 const groupOf = a => a.group || 1;
 const itemName = a => groupOf(a) > 1 ? `${a.groupName} (${groupOf(a)})` : a.name;
@@ -113,10 +144,10 @@ function renderDraft(){
       const meta = document.createElement('div'); meta.className = 'meta'; meta.textContent = `${a.mass.toLocaleString()} kg · ${kmh(a.spd)} km/h`; c.appendChild(meta);
       const bars = document.createElement('div'); bars.className = 'bars';
       const rows = [['Power', strengthOf(a)/maxStr], ['Armor', a.armor/.6], ['Speed', a.spd/20], ['Stamina', Math.min(1, a.stam/60)]];
-      // measured: how much it helps on your side, and how dangerous it is if you leave it to the other side
-      const mv = A.MEASURED[a.id]; if (mv){ rows.push(['Helps', Math.max(0, mv.mine) / MAXV.mine, C.you], ['Threat', Math.max(0, -mv.theirs) / MAXV.threat, C.foe]); } // full wording in the detail panel
       for (const [k,v,col] of rows){ const l = document.createElement('span'); l.textContent = k; const b = document.createElement('div'); b.className = 'bar'; const f = document.createElement('b'); f.style.width = Math.round(Math.min(1,v)*100) + '%'; if (col) f.style.background = col; b.appendChild(f); bars.append(l, b); }
       c.appendChild(bars);
+      const sg = sigOf(a); if (sg){ const d = document.createElement('div'); d.className = 'sigline'; d.innerHTML = `<b>${esc(sg[0])}</b> ${esc(sg[1])}`; c.appendChild(d); }
+      const rec = recordLine(a.id); if (rec){ const d = document.createElement('div'); d.className = 'recline'; d.textContent = rec; c.appendChild(d); }
       const ck = document.createElement('span'); ck.className = 'check'; ck.textContent = '✓'; c.appendChild(ck);
       c.addEventListener('click', () => {
         S.focus = a.id;
@@ -151,12 +182,12 @@ function renderDetail(){
   const a = A.BY_ID[S.focus]; const d = $('detail');
   const hp = A.hpOf(a);
   const stats = [
-    ...([['Price', '$' + a.price + (S.mig && M.teamIds(S.mig).includes(a.id) && !S.board.includes(a.id) ? ' (sells for $' + M.sellPrice(a.id) + ')' : '')]]), ...(A.MEASURED[a.id] ? [['Helps you', '+' + Math.max(0, Math.round(A.MEASURED[a.id].mine)) + ' s'], ['Threat if left', Math.max(0, Math.round(-A.MEASURED[a.id].theirs)) + ' s']] : []), ['Mass', a.mass.toLocaleString() + ' kg'], ['Top speed', kmh(a.spd) + ' km/h'],
+    ...([['Price', '$' + a.price + (S.mig && M.teamIds(S.mig).includes(a.id) && !S.board.includes(a.id) ? ' (sells for $' + M.sellPrice(a.id) + ')' : '')]]), ['Mass', a.mass.toLocaleString() + ' kg'], ['Top speed', kmh(a.spd) + ' km/h'],
     ['Durability', hp.toLocaleString() + ' hp'], ['Strike', a.dmg + ' / ' + a.cd + ' s'], ['Armor', Math.round(a.armor*100) + '%'],
     ['Reach', a.reach + ' m'], ['Sprint', a.stam + ' s'], ['Breaks at', Math.round(a.flee*100) + '% morale'],
     ['Heat tolerance', a.heat.toFixed(2)], ['Cold tolerance', a.cold.toFixed(2)], ['Strikes up to', a.strikeH + ' m'], ['Carries you at', a.mountH ? a.mountH + ' m' : 'too small'],
   ];
-  d.innerHTML = `<div><div style="display:flex;gap:10px;align-items:center;margin-bottom:10px">${tokHTML(a, 64)}<h3 style="font-size:22px">${esc(itemName(a))}</h3></div>${groupOf(a) > 1 ? `<p class="notes" style="margin:-4px 0 8px">One pick brings ${groupOf(a)} of them; they keep each other's nerve and go for the same target. Left on the board, all ${groupOf(a)} come at you.</p>` : ''}
+  d.innerHTML = `<div><div style="display:flex;gap:10px;align-items:center;margin-bottom:10px">${tokHTML(a, 64)}<h3 style="font-size:22px">${esc(itemName(a))}</h3></div>${sigOf(a) ? `<p class="sigline" style="margin:-2px 0 8px"><b>${esc(sigOf(a)[0])}</b> ${esc(sigOf(a)[1])}</p>` : ''}${recordDetail(a.id)}${groupOf(a) > 1 ? `<p class="notes" style="margin:-4px 0 8px">One pick brings ${groupOf(a)} of them; they keep each other's nerve and go for the same target. Left on the board, all ${groupOf(a)} come at you.</p>` : ''}
     <div class="stats">${stats.map(([k,v]) => `<div class="stat"><div class="v">${esc(v)}</div><div class="k">${k}</div></div>`).join('')}</div></div>
     <div><div class="styleTag" style="font-size:15px">${esc(a.style)}</div><p style="margin:4px 0 10px">${esc(a.how)}</p>${badgesHTML(a) ? `<div class="badges" style="margin-bottom:10px">${badgesHTML(a)} <span class="notes" style="font-size:12px">in the ${esc(A.TERRAINS[S.terrain].name.toLowerCase())}</span></div>` : ''}<div class="label" style="margin-bottom:6px">Traits</div><ul class="traits">${a.traits.map(t => `<li>${esc(t)}</li>`).join('')}</ul>
     <p class="notes" style="margin-top:10px">${a.pred ? 'Predator: hunts by weighing meat against risk, and gets hungrier as the fight goes on.' : 'Herbivore: fights intruders, predators and anything that wounds it.'}</p></div>`;
@@ -194,7 +225,7 @@ function renderArenaOpts(){
     b.addEventListener('click', () => { S.mode = id; S.world = null; renderArenaOpts(); });
     mo.appendChild(b);
   }
-  renderStreak(); renderMigEntry(); renderFiveEntry();
+  renderStreak(); renderMigEntry(); renderFiveEntry(); renderStats();
 }
 $('toDraft').addEventListener('click', () => { exitMig(); go('draft'); });
 // daily challenge: today's local date picks the map, the board and the fight seed, so everyone plays the same game
@@ -646,6 +677,7 @@ function startBattle(){
   // migration: the result counts the moment the fight is simulated (a reload can't undo it)
   if (S.mig){ S.migWorld = w; S.migEntry = M.applyResult(S.mig, w); if (S.mig.over) recordMigEnd(); saveRun(); }
   if (S.five){ S.fiveWorld = w; fiveApply(w); }
+  if (!S.mig) recordStats(w); // personal stats count the fight the moment it's simulated
   $('rematch').hidden = !!(S.mig || S.five);
   const cg = currentGame(); S.played = Object.assign(cg, {pos: Object.assign({}, S.pos), you: S.youPos && Object.assign({}, S.youPos), daily: S.daily}); // what the result banner's link replays
   S.world = w; S.dur = w.result.t; S.playT = 0; S.playing = true; S.sel = 0;
@@ -1368,6 +1400,55 @@ function renderMigEntry(){
 $('migNew').addEventListener('click', () => startMig(newBoardSeed()));
 $('migDaily').addEventListener('click', () => startMig(migDailySeed(todayLocal()), todayLocal()));
 $('migResume').addEventListener('click', () => { const r = loadRun(); if (!r || r.over) return; hideNotice(); S.mig = r; S.migKey = null; S.migEntry = null; S.world = null; go('mig'); });
+
+// ---------- personal stats (localStorage 'wa-stats'): every fight played on this device ----------
+// per pick (catalog item): games, wins, kills, damage, protecting you, deaths, MVPs; per enemy: games faced, times it
+// killed you; per map: games, wins, best; your own kills; the last 50 games with a replay link
+const STATS_KEY = 'wa-stats', HIST_N = 50;
+function readStats(){ try { const s = JSON.parse(localStorage.getItem(STATS_KEY) || 'null'); if (s && s.v === 1) return s; } catch(e){} return {v: 1, games: 0, wins: 0, you: 0, mine: {}, foes: {}, maps: {}, hist: []}; }
+function recordStats(w){
+  const st = readStats(), sum = A.summarize(w), res = w.result, won = !!res.survived;
+  st.games++; if (won) st.wins++;
+  const m = st.maps[S.terrain] || (st.maps[S.terrain] = {g: 0, w: 0, best: 0}); m.g++; if (won) m.w++; m.best = Math.max(m.best, res.score);
+  const mine = sum.units.filter(u => u.side === 'P'), mvp = mine.slice().sort((a, b) => (b.protect * 1.5 + b.dealt) - (a.protect * 1.5 + a.dealt))[0];
+  for (const id of S.team){ const r = st.mine[id] || (st.mine[id] = {g: 0, w: 0, k: 0, d: 0, p: 0, x: 0, mvp: 0}); r.g++; if (won) r.w++; }
+  for (const u of mine){ const r = st.mine[u.id]; if (!r) continue; r.k += u.kills || 0; r.d += u.dealt || 0; r.p += u.protect || 0; if (!u.alive && !u.escaped) r.x++; }
+  if (mvp && mvp.dealt > 0 && st.mine[mvp.id]) st.mine[mvp.id].mvp++;
+  for (const id of S.board) if (!S.team.has(id)){ const f = st.foes[id] || (st.foes[id] = {g: 0, kd: 0}); f.g++; }
+  if (!won && res.killer && st.foes[res.killer]) st.foes[res.killer].kd++;
+  st.you += (sum.units.find(u => u.side === 'H') || {}).kills || 0;
+  let link = ''; try { link = gameLink(Object.assign(currentGame(), {pos: Object.assign({}, S.pos), you: S.youPos}), res.score); link = link.slice(link.indexOf('#')); } catch(e){}
+  st.hist.unshift({d: todayLocal(), m: S.terrain, t: [...S.team], sc: Math.round(res.score * 10) / 10, won, k: res.killer || null, l: link});
+  st.hist.length = Math.min(st.hist.length, HIST_N);
+  try { localStorage.setItem(STATS_KEY, JSON.stringify(st)); } catch(e){}
+  renderStats();
+}
+const pct = (a, b) => b ? Math.round(100 * a / b) + '%' : '–';
+function recordLine(id){ const r = readStats().mine[id]; return r && r.g ? `You: ${r.g} game${r.g === 1 ? '' : 's'} · ${pct(r.w, r.g)} won · ${r.k} kill${r.k === 1 ? '' : 's'}` : ''; }
+function recordDetail(id){
+  const st = readStats(), r = st.mine[id], f = st.foes[id];
+  if (!(r && r.g) && !(f && f.g)) return '';
+  const bits = [];
+  if (r && r.g) bits.push(`On your side: ${r.g} game${r.g === 1 ? '' : 's'}, ${pct(r.w, r.g)} won, ${r.k} kills, ${r.d.toLocaleString()} damage (${r.p.toLocaleString()} protecting you), MVP ${r.mvp}×, died ${r.x}×.`);
+  if (f && f.g) bits.push(`Against you: faced ${f.g}×, killed you ${f.kd}×.`);
+  return `<p class="notes" style="margin:0 0 8px;color:var(--gold)">${esc(bits.join(' '))}</p>`;
+}
+function renderStats(){
+  const el = $('statsPanel'); if (!el) return;
+  const st = readStats(); el.hidden = !st.games; if (!st.games) return;
+  const name = id => A.BY_ID[id] ? itemName(A.BY_ID[id]) : id;
+  const nem = Object.entries(st.foes).filter(([, f]) => f.kd).sort((a, b) => b[1].kd - a[1].kd)[0];
+  const best = Object.entries(st.mine).filter(([, r]) => r.g >= 3).sort((a, b) => b[1].w / b[1].g - a[1].w / a[1].g)[0];
+  const top = Object.entries(st.mine).sort((a, b) => b[1].k - a[1].k)[0];
+  $('statsSum').textContent = `Your stats: ${st.games} game${st.games === 1 ? '' : 's'}, ${pct(st.wins, st.games)} survived`;
+  const maps = Object.keys(A.TERRAINS).map(t => { const m = st.maps[t]; return `<tr><td>${esc(A.TERRAINS[t].name)}</td><td class="n">${m ? m.g : 0}</td><td class="n">${m ? pct(m.w, m.g) : '–'}</td><td class="n">${m ? fmtT(m.best) : '–'}</td></tr>`; }).join('');
+  const rows = Object.entries(st.mine).sort((a, b) => b[1].g - a[1].g).map(([id, r]) => `<tr><td><span style="display:inline-flex;gap:6px;align-items:center">${tokHTML(A.BY_ID[id] || A.HUMAN, 18)}${esc(name(id))}</span></td><td class="n">${r.g}</td><td class="n">${pct(r.w, r.g)}</td><td class="n">${r.k}</td><td class="n">${r.d >= 1000 ? (r.d / 1000).toFixed(r.d >= 1e5 ? 0 : 1) + 'k' : r.d}</td></tr>`).join('');
+  const hist = st.hist.slice(0, 12).map(h => `<li><span class="mono">${esc(h.d.slice(5))}</span> ${esc(A.TERRAINS[h.m] ? A.TERRAINS[h.m].name : h.m)} · ${h.won ? '<b style="color:var(--gold)">survived</b>' : 'lasted ' + fmtT(h.sc) + (h.k && A.BY_ID[h.k] ? ' (' + esc(A.BY_ID[h.k].name) + ')' : '')} · ${esc(h.t.map(id => A.BY_ID[id] ? A.BY_ID[id].abbr : id).join('+') || 'alone')}${h.l ? ` · <a href="${esc(h.l)}">replay</a>` : ''}</li>`).join('');
+  $('statsBody').innerHTML = `<p class="notes">${[nem ? `Nemesis: the ${esc(name(nem[0]))} (killed you ${nem[1].kd}×).` : '', top && top[1].k ? `Top killer on your side: ${esc(name(top[0]))} (${top[1].k} kills).` : '', best ? `Best record: ${esc(name(best[0]))} (${pct(best[1].w, best[1].g)} of ${best[1].g}).` : '', st.you ? `You've finished off ${st.you} animal${st.you === 1 ? '' : 's'} with your own hands.` : ''].filter(Boolean).join(' ')}</p>
+    <div class="tblwrap"><table><thead><tr><th>Map</th><th class="n">Games</th><th class="n">Survived</th><th class="n">Best</th></tr></thead><tbody>${maps}</tbody></table></div>
+    <div class="tblwrap" style="margin-top:10px"><table><thead><tr><th>Your animals</th><th class="n">Games</th><th class="n">Won</th><th class="n">Kills</th><th class="n">Damage</th></tr></thead><tbody>${rows}</tbody></table></div>
+    <h4 style="margin:12px 0 6px">Recent games</h4><ul class="hist">${hist}</ul>`;
+}
 
 // ---------- init ----------
 function renderAll(){ renderBudget(); renderDraft(); renderArenaOpts(); }

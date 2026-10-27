@@ -279,8 +279,8 @@ round. Report ± standard errors.
 - **Current prices (after the species-based morale fix, `abs_r5`):** 24 s of swing per $100, giants/herds capped
   at $700 (triceratops $800), board total $2,800, budget $1,200. Validation: median board's best team 88% (min 50,
   p25 83; with/without elephant both 88%), typical full-spend team median 167 s, 51% of teams win at least one
-  screen run, 13 distinct best teams over 16 boards. Cards show measured "Helps you" / "Threat if left"
-  (`MEASURED`, written by `apply_values.js`).
+  screen run, 13 distinct best teams over 16 boards. `MEASURED` (written by `apply_values.js`) keeps each animal's
+  measured mine/theirs; the cards no longer show it (owner, Oct 27: they show the signature move and your own record).
 - **Battle drive + contextual targets (Oct 2026, owner: every animal is there to win the fight):** `drive(u)` builds
   from 3 s of idleness over 12 s (`u.idleT` drains, doesn't reset; the other side starts at 6). It widens herbivores'
   notice radius (+60 m, hearing the fight) and their interest in you, lowers predators' commit threshold (a sated one
@@ -352,6 +352,11 @@ round. Report ± standard errors.
      `#g=1,m:,b:,s:,d:b|pN[,t:,r:,p:][,sc:]` (`gameLink`/`parseLink`/`applyLink`; positions are stored to the cm at drag
      time and encoded exactly, so a link replays the same fight; bad links fall back to a fresh board with a notice),
      and a **daily streak** (`wa-streak`).
+   - **Cards and personal stats (Oct 27):** each card shows its species' signature move (`SIGNATURE` in ui.js) and your own
+     record with it; the Helps / Threat bars are gone. Every fight played (not migration) is recorded at simulation time in
+     localStorage `wa-stats` (`recordStats`): per pick games/wins/kills/damage/protecting/deaths/MVPs, per enemy games
+     faced and times it killed you, per map games/wins/best, your own kills, and the last 50 games with replay links. The
+     arena's "Your stats" panel (`renderStats`) shows maps, your animals, nemesis, top killer and recent games.
    - Prototype (Oct 27, ui.js only, **hidden unless `?five=1`**, `FIVE_ON`): **5 in a Row**: today's five boards (each its own
      map; `fiveSeed(date, k, 'board'|'fight'|'retry')`), full-budget draft each, a board counts only if you survive to 5:00,
      one retry per run (new fight seed, redraft allowed). Run saved in `wa-five-run` (resumes after reload), best per day
