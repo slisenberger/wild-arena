@@ -74,7 +74,7 @@ count as 5:00). Live site: GitHub Pages serves `index.html` from `main`.
   fight each; least-squares fit of each animal's swing value (seconds gained by moving it from their side to
   yours), proposed prices ∝ swing ($100 steps, min $100). Note: the older whole-roster tools (`quick.js`,
   `camp.js`, `budget.js`, `tourney.js`) predate the board model and now fight all 22 animals.
-- `progressive.js` — **progressive mode** rules (prototype Oct 27, **hidden unless `?progressive=1`**, `PROG_ON` in ui.js; it
+- `progressive.js` — **progressive mode** rules (its shop opens in the Versus draft layout unless the player picked another with the switcher; a switcher choice sticks without the `?draftui` flag) (prototype Oct 27, **hidden unless `?progressive=1`**, `PROG_ON` in ui.js; it
   replaced the switched-off Migration mode, whose `migration.js`/`migration_bot.js` and `?migration=1` are gone). Pure JS,
   bundled by `build.js` after sim.js as `window.Progressive`: 7 rounds up a price ladder (`PROG.CAP/BOARD/TOTAL`), a premium
   enemy from round 3, top-ups, kill bonus, rest/heal, scars, XP/levels, two retries (`PROG` constants). Engine hooks in sim.js

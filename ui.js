@@ -1294,7 +1294,7 @@ function progSync(){
   if (!S.board.includes(S.focus) && !S.team.has(S.focus)) S.focus = r.board[0] || M.teamIds(r)[0] || 'honeybadger';
 }
 function startProg(seed, daily){
-  hideNotice(); S.prog = M.newRun(seed, daily || null); S.progKey = null; S.progEntry = null; S.world = null; S.progHowOpen = true; S.progMsg = ''; saveRun(); go('draft'); // straight into round 1's shop (the run overview is one tap away)
+  hideNotice(); S.prog = M.newRun(seed, daily || null); S.progKey = null; S.progEntry = null; S.world = null; S.progHowOpen = false; S.progMsg = ''; saveRun(); go('draft'); // straight into round 1's shop (the run overview is one tap away)
 }
 // leave the mode (the run stays saved, to resume from the arena screen); the normal game gets a fresh board
 function exitProg(){ if (!S.prog) return; S.prog = null; S.progKey = null; S.progEntry = null; S.world = null; dealNewBoard(); renderHud(); }
@@ -1376,13 +1376,14 @@ function progShopHTML(r){
   if (p) chips.push(`<span class="prem" title="Premium enemy: not for sale, it joins the other side">${tokHTML(p, 24)}<b>Premium enemy:</b> ${esc(itemName(p))} ($${p.price})</span>`);
   const last = r.log[r.log.length - 1], recapOpen = S.progRecapOpen === r.log.length;
   const recap = last ? `<details class="recapbox" data-k="recap"${recapOpen ? ' open' : ''}><summary>Last fight: round ${last.k + 1} ${last.survived ? 'won' : 'lost'} · ${fmtT(last.t)}</summary><div class="recap">${recapHTML(r, last, true)}</div></details>` : '';
-  const intro = r.k === 0 && !r.attempt && !r.log.length ? `<details class="howrun" data-k="how"${S.progHowOpen !== false ? ' open' : ''}><summary>How a run works</summary><p class="notes">Seven rounds, each board a little richer: round 1 is all $100 animals, the giants come at the end. Whatever you don't buy fights you. Your survivors stay with you, wounds and all; they earn XP and level up. Each new round brings fresh money (+$${M.PROG.TOPUP[1]} or more, plus $${M.PROG.PER_KILL} a kill). Lose a round and you refight it from this shop; you get ${M.PROG.RETRIES} retries in the whole run.</p></details>` : '';
+  const intro = r.k === 0 && !r.attempt && !r.log.length ? `<details class="howrun" data-k="how"${S.progHowOpen ? ' open' : ''}><summary>How a run works</summary><p class="notes">Seven rounds, each board a little richer: round 1 is all $100 animals, the giants come at the end. Whatever you don't buy fights you. Your survivors stay with you, wounds and all; they earn XP and level up. Each new round brings fresh money (+$${M.PROG.TOPUP[1]} or more, plus $${M.PROG.PER_KILL} a kill). Lose a round and you refight it from this shop; you get ${M.PROG.RETRIES} retries in the whole run.</p></details>` : '';
   const carried = r.team.filter(e => !e.fresh), hurt = carried.filter(M.needsHeal), all = healAllCost(r);
   const healAll = hurt.length >= 2 ? `<button class="btn" id="progHealAll" ${all <= r.money ? '' : 'disabled'} title="Heal every wounded animal to 100%">Heal all ${hurt.length} wounded · $${all}${all <= r.money ? '' : ` (need $${all - r.money} more)`}</button>` : '';
   const sum = carried.length ? `${carried.length} survivor${carried.length > 1 ? 's' : ''}${hurt.length ? `, ${hurt.length} wounded` : ', all at full health'}. Rest heals ${M.PROG.REST * 100}% of a wound for free after each won fight; healing pays for the rest. Selling pays half the price × health; under ${M.PROG.SELL_MIN * 100}% nobody buys.` : '';
+  const noTeamPanel = !r.team.some(e => !e.fresh) && DUI.on && DUI.ui === 'versus'; // Versus shows your side itself: no empty panel above it
   return `<div class="panel"><div class="roundchips">${chips.join('')}</div>${recap}${intro}</div>`
-    + `<div class="panel"><div class="teamhead"><h3>Your team</h3>${healAll}</div>${sum ? `<p class="notes" style="margin-bottom:8px">${sum}</p>` : ''}<div class="progmsg" id="progMsg" role="status">${S.progMsg || ''}</div>${progTeamHTML(r, 'shop')}`
-    + `<details class="xphow" data-k="xp"${S.progXpOpen ? ' open' : ''}><summary>How XP and levels work</summary>${xpHowHTML()}</details></div>`;
+    + (noTeamPanel ? '' : `<div class="panel"><div class="teamhead"><h3>Your team</h3>${healAll}</div>${sum ? `<p class="notes" style="margin-bottom:8px">${sum}</p>` : ''}<div class="progmsg" id="progMsg" role="status">${S.progMsg || ''}</div>${progTeamHTML(r, 'shop')}`
+    + `<details class="xphow" data-k="xp"${S.progXpOpen ? ' open' : ''}><summary>How XP and levels work</summary>${xpHowHTML()}</details></div>`);
 }
 function progLede(r){
   const p = r.premium && A.BY_ID[r.premium];
@@ -1673,9 +1674,12 @@ const DUI_NAMES = {default: 'Default', versus: 'Versus', list: 'List', deck: 'De
 const DUI_KEY = 'wa-draftui';
 const DUI = (() => {
   let q = null; try { q = new URLSearchParams(location.search).get('draftui'); } catch(e){}
-  if (q == null) return {on: false, ui: 'default'};
+  let stored = null; try { stored = localStorage.getItem(DUI_KEY); } catch(e){}
+  // a choice made with the switcher sticks without the flag; the progressive shop uses Versus unless you chose otherwise (owner)
+  const prog = /[?&]progressive=1\b/.test(location.search);
+  if (q == null && !(stored && DUI_NAMES[stored] && stored !== 'default') && !prog) return {on: false, ui: 'default'};
   let ui = DUI_NAMES[q] ? q : null;
-  if (!ui) try { ui = localStorage.getItem(DUI_KEY); } catch(e){}
+  if (!ui) ui = stored && DUI_NAMES[stored] ? stored : prog ? 'versus' : null;
   return {on: true, ui: DUI_NAMES[ui] ? ui : 'default', sort: 'price', role: '', good: false, afford: false, open: null, flash: null, msg: '', deck: {key: null, i: 0, left: new Set()}};
 })();
 const DUI_HELP = {
