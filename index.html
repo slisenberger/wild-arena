@@ -248,7 +248,7 @@ th.n{text-align:right}
   <p class="notes">The other side is one team, and the pressure builds over time. Predators hunt you and your guards; herbivores charge intruders. Break their morale and animals bolt out of the arena. After 30 seconds a fire, flood or blizzard closes in from the edges and pushes everyone together. You score by how long you stay alive, up to five minutes.</p>
   <div class="panel migentry"><h3>Migration</h3><p class="notes">A run of seven fights across all four terrains. Start with $600; your survivors carry their wounds into the next fight, the dead stay dead, and you earn money for every fight you live through. Between fights: a trading post (buy, or sell for half price) and one of three boons. Fight 4 brings megafauna; fight 7 is the herd. Die and the run is over.</p>
     <div class="btnrow"><button class="btn primary" id="migNew">Start a migration</button><button class="btn" id="migDaily" title="Today's migration: the same maps, boards and fights for everyone">Daily migration</button><button class="btn" id="migResume" hidden>Resume</button></div><p class="notes" id="migBest"></p></div>
-  <div class="btnrow"><button class="btn primary" id="toDraft">Draft your team</button><button class="btn" id="daily" title="Same board, map and fight seed for everyone today">Daily challenge</button><button class="btn" id="dailyPick" title="Today's Pick-3: same board, map and fight seed for everyone; pick exactly 3">Daily Pick-3</button><span class="streak mono" id="streak" hidden></span></div>
+  <div class="btnrow"><button class="btn primary" id="toDraft">Draft your team</button><button class="btn" id="daily" title="Same board, map and fight seed for everyone today">Daily challenge</button><button class="btn" id="dailyPick" title="Today's Pick-3: same board, map and fight seed for everyone; pick exactly 3">Daily Pick-3</button><button class="btn" id="five" title="Five boards in a row, the same for everyone today: win them all (one retry)" hidden>5 in a Row</button><span class="streak mono" id="streak" hidden></span></div>
 </section>
 
 <!-- DEPLOY -->
@@ -2657,6 +2657,8 @@ const kmh = v => Math.round(v * 3.6);
 // Pick N draft mode and Daily Pick-3 are switched off (owner, Oct 27); ?pickn=1 shows them. Links with d:pN open as budget games.
 const PICK_ON = (() => { try { return /[?&]pickn=1\b/.test(location.search); } catch(e){ return false; } })();
 if (!PICK_ON) for (const el of [...document.querySelectorAll('.pickentry'), $('dailyPick'), $('pickRow')]) if (el){ el.hidden = true; el.style.display = 'none'; }
+// 5 in a Row (prototype, Oct 27): hidden unless ?five=1
+const FIVE_ON = (() => { try { return /[?&]five=1\b/.test(location.search); } catch(e){ return false; } })();
 // draft modes: 'budget' (spend up to the budget) or 'pick' (exactly S.pickN animals, prices ignored); the engine doesn't care
 const isPick = () => S.draft === 'pick';
 const canAdd = a => S.mig ? M.canBuy(S.mig, a.id) : isPick() ? S.team.size < S.pickN : a.price <= BUDGET - spent();
@@ -2685,7 +2687,7 @@ const groupOf = a => a.group || 1;
 const itemName = a => groupOf(a) > 1 ? `${a.groupName} (${groupOf(a)})` : a.name;
 const boardTotal = () => S.board.reduce((t, id) => t + A.BY_ID[id].price, 0);
 function dealNewBoard(seed){
-  S.daily = null; S.dailyKind = null; S.shared = null; hideNotice(); // a fresh board (or a different map) is no longer today's challenge or a shared game
+  S.daily = null; S.dailyKind = null; S.shared = null; S.five = null; hideNotice(); // a fresh board (or a different map) is no longer today's challenge or a shared game
   S.boardSeed = seed || newBoardSeed(); S.board = A.dealBoard(S.boardSeed, {terrain: S.terrain});
   S.team.clear(); S.pos = {}; S.youPos = null; S.mount = ''; S.world = null; S.focus = S.board[0];
 }
@@ -2697,7 +2699,7 @@ function go(screen){
   S.screen = screen;
   for (const id of ['arena','draft','deploy','fight','lab','mig']) $('s-' + id).hidden = id !== screen;
   if (screen === 'mig') renderMig();
-  $('newSeed').hidden = !!S.mig; // a migration's fights have fixed seeds
+  $('newSeed').hidden = !!(S.mig || S.five); // a migration's or a 5-in-a-row run's fights have fixed seeds
   renderHud(); renderBudget();
   document.querySelectorAll('#steps button[data-s]').forEach(b => b.setAttribute('aria-current', b.dataset.s === screen ? 'true' : 'false'));
   if (screen === 'deploy') { renderMounts(); sizeCanvas($('deployCanvas')); drawDeploy(); }
@@ -2732,12 +2734,14 @@ function renderDraft(){
   const tiers = $('tiers'); tiers.innerHTML = '';
   const left = BUDGET - spent();
   const onBoard = S.board.map(id => A.BY_ID[id]);
+  const five = S.five ? `5 in a Row ${S.five.date}, board ${S.five.k + 1} of 5 (${A.TERRAINS[S.terrain].name})${S.five.pending ? ', your retry' : ''}: win all five boards; one retry per run. Same boards and fight seeds for everyone today. ` : '';
   const daily = S.daily ? `${S.dailyKind === 'pick3' ? 'Daily Pick-3' : 'Daily challenge'} ${S.daily} (${A.TERRAINS[S.terrain].name}): the same board, map and fight seed for everyone today. ` : '';
   const R = S.mig;
   $('draftTitle').textContent = R ? `Trading post · fight ${R.k + 1} of ${M.MIG.FIGHTS}` : 'Build a team to protect you from the rest';
   for (const id of ['clearTeam', 'newBoard', 'copyDraft', 'copyDraftOut']) $(id).hidden = !!R;
+  if (S.five) $('newBoard').hidden = true;
   $('boardLede').textContent = R ? `${R.kind !== 'plain' ? M.KIND_NAME[R.kind] + '! ' : ''}Next stop: the ${A.TERRAINS[R.terrain].name.toLowerCase()}. ${onBoard.length} animals on the board, worth $${boardTotal().toLocaleString()}. Buy what your $${R.money.toLocaleString()} covers; whatever you don't buy is against you. Your team carries its wounds; sell an animal for half its price.`
-    : daily + (isPick()
+    : five + daily + (isPick()
     ? `This game's board: ${onBoard.length} animals. Pick exactly ${S.pickN}, whatever they cost; every board animal you don't pick ends up on the other side. Tap a card to draft it; the panel below shows the full stat line.`
     : `This game's board: ${onBoard.length} animals worth $${boardTotal().toLocaleString()}. Spend up to $${BUDGET.toLocaleString()}; every board animal you don't pick ends up on the other side. Tap a card to draft it; the panel below shows the full stat line.`);
   // budget mode groups the cards by price; Pick N ignores prices, so it's one grid (pricier first)
@@ -2879,6 +2883,62 @@ function startDaily(kind){
 }
 $('daily').addEventListener('click', () => startDaily('budget'));
 $('dailyPick').addEventListener('click', () => startDaily('pick3'));
+// ---------- 5 in a Row (prototype; FIVE_ON): five boards in a row, each with its own map, a full-budget draft each;
+// a board counts only if you survive to 5:00, one retry (a fresh fight seed, redraft allowed) per run. The UTC date seeds
+// every board, map and fight, so everyone plays the same five. The run is saved, so a reload resumes it.
+const FIVE_KEY = 'wa-five-run', fiveBestKey = d => 'wa-five-best:' + d;
+const fiveSeed = (d, k, what) => dateSeed(`wild-arena:five:${d}:${k}:${what}`);
+function fiveSave(){ try { localStorage.setItem(FIVE_KEY, JSON.stringify(S.five)); } catch(e){} }
+function fiveLoad(){ try { const r = JSON.parse(localStorage.getItem(FIVE_KEY) || 'null'); return r && r.date === todayUTC() && Array.isArray(r.res) ? r : null; } catch(e){ return null; } }
+function fiveBest(d){ try { return JSON.parse(localStorage.getItem(fiveBestKey(d)) || 'null'); } catch(e){ return null; } }
+// load board k of the run (or the same board again for the retry, keeping the team so it can be tweaked)
+function fiveBoard(run){
+  if (!run.pending){
+    const b = fiveSeed(run.date, run.k, 'board'), terr = Object.keys(A.TERRAINS);
+    S.terrain = terr[b % terr.length]; S.draft = 'budget'; dealNewBoard(b);
+  }
+  S.five = run; S.seed = fiveSeed(run.date, run.k, run.pending ? 'retry' : 'fight'); $('seedLbl').textContent = S.seed; S.world = null;
+}
+function startFive(){
+  exitMig();
+  const old = fiveLoad(), run = old && !old.over ? old : {date: todayUTC(), k: 0, retry: 1, pending: false, res: [], over: false};
+  fiveBoard(run); fiveSave(); renderAll(); go('draft');
+  if (old && !old.over) showNotice(`<b>5 in a Row resumed</b> <span>Board ${run.k + 1} of 5${run.pending ? ' (your retry)' : ''}.</span>`);
+}
+function fiveApply(w){
+  const R = S.five, res = w.result, won = !!res.survived;
+  R.res.push({k: R.k, won, score: res.score, retry: !!R.pending, team: [...S.team]});
+  if (won){ R.k++; R.pending = false; if (R.k >= 5) R.over = true; }
+  else if (R.retry){ R.retry = 0; R.pending = true; }
+  else R.over = true;
+  if (R.over){
+    const wins = R.res.filter(x => x.won).length, time = R.res.reduce((t, x) => t + x.score, 0), b = fiveBest(R.date);
+    if (!b || wins > b.wins || (wins === b.wins && time > b.time)){ try { localStorage.setItem(fiveBestKey(R.date), JSON.stringify({wins, time})); } catch(e){} }
+    bumpStreak(R.date);
+  }
+  fiveSave();
+}
+// 🟩 won first time, 🟨 won on the retry, 🟧 lost with the retry still to come, 🟥 lost, ⬜ not reached
+const fivePips = R => Array.from({length: 5}, (_, k) => { const t = R.res.filter(x => x.k === k); return t.some(x => x.won) ? (t.length > 1 ? '🟨' : '🟩') : t.length ? (R.pending && R.k === k && !R.over ? '🟧' : '🟥') : '⬜'; }).join('');
+function fiveShare(){ const R = S.five, wins = R.res.filter(x => x.won).length; return `Wild Arena 5 in a Row ${R.date}: ${wins}/5 ${fivePips(R)}`; }
+function fiveBanner(res){
+  const R = S.five, wins = R.res.filter(x => x.won).length, last = R.res[R.res.length - 1], b = fiveBest(R.date);
+  const head = res.survived ? `Board ${last.k + 1} won · ${fmtT(HZ)}` : `Board ${last.k + 1} lost · ${fmtT(res.score)}`;
+  let msg, btn;
+  if (R.over && wins === 5){ msg = `All five boards. A perfect run${R.retry ? ', without the retry' : ''}.`; btn = 'Back to the arena'; }
+  else if (R.over){ msg = `Run over: ${wins} of 5 boards${b ? ` (best today ${b.wins}/5)` : ''}.`; btn = 'Back to the arena'; }
+  else if (R.pending){ msg = `You get one retry per run, and this is it: same board, a new fight seed. Redraft if you like.`; btn = 'Retry this board'; }
+  else { msg = `${wins} of 5 down${R.retry ? ', retry still in hand' : ', retry used'}.`; btn = `Board ${R.k + 1} of 5`; }
+  const share = R.over ? `<div class="btnrow"><button class="btn" id="copyFive">Copy result</button><span class="copyOut" id="copyFiveOut"></span></div>` : '';
+  return `<div class="banner ${res.survived ? 'win' : 'lose'}"><span class="big">${head}</span><span class="mono">${fivePips(R)}</span><span>${res.survived ? '' : 'Killed by the ' + esc((A.BY_ID[res.killer] || {}).name || 'unknown') + '. '}${msg}</span><div class="btnrow"><button class="btn primary" id="fiveNext">${btn}</button></div>${share}</div>`;
+}
+function fiveNext(){
+  const R = S.five; if (!R) return;
+  if (R.over){ S.five = null; try { localStorage.removeItem(FIVE_KEY); } catch(e){} dealNewBoard(); renderAll(); go('arena'); return; }
+  fiveBoard(R); renderAll(); go('draft');
+}
+if (FIVE_ON) $('five').hidden = false;
+$('five').addEventListener('click', startFive);
 // daily streak: consecutive UTC days with at least one daily run (either kind)
 function prevDay(d){ const t = new Date(d + 'T00:00:00Z'); t.setUTCDate(t.getUTCDate() - 1); return t.toISOString().slice(0, 10); }
 function readStreak(){ try { const s = JSON.parse(localStorage.getItem('wa-streak') || 'null'); if (s && typeof s.last === 'string' && s.n >= 1) return s; } catch(e){} return null; }
@@ -3245,7 +3305,8 @@ function startBattle(){
   const w = recordFight(makeCfg()); // = A.simulate(cfg, true), plus timed signature moves for the callouts
   // migration: the result counts the moment the fight is simulated (a reload can't undo it)
   if (S.mig){ S.migWorld = w; S.migEntry = M.applyResult(S.mig, w); if (S.mig.over) recordMigEnd(); saveRun(); }
-  $('rematch').hidden = !!S.mig;
+  if (S.five){ S.fiveWorld = w; fiveApply(w); }
+  $('rematch').hidden = !!(S.mig || S.five);
   const cg = currentGame(); S.played = Object.assign(cg, {pos: Object.assign({}, S.pos), you: S.youPos && Object.assign({}, S.youPos), daily: S.daily, dailyKind: S.dailyKind}); // what the result banner's link replays
   S.world = w; S.dur = w.result.t; S.playT = 0; S.playing = true; S.sel = 0;
   $('scrub').max = S.dur.toFixed(1); $('scrub').value = 0;
@@ -3672,7 +3733,7 @@ function renderSide(){
   }
   if (S.playT >= S.dur - 1e-6 && $('report').hidden){ renderReport(true); }
 }
-$('banner').addEventListener('click', e => { if (e.target.id === 'migContinue'){ go('mig'); return; } if (e.target.id === 'copyResult' && S.world && S.played) copyLink(gameLink(S.played, S.world.result.score), $('copyResultOut')); });
+$('banner').addEventListener('click', e => { if (e.target.id === 'migContinue'){ go('mig'); return; } if (e.target.id === 'fiveNext'){ fiveNext(); return; } if (e.target.id === 'copyFive'){ copyLink(fiveShare(), $('copyFiveOut'), 'Result'); return; } if (e.target.id === 'copyResult' && S.world && S.played) copyLink(gameLink(S.played, S.world.result.score), $('copyResultOut')); });
 $('log').addEventListener('click', e => { const d = e.target.closest('[data-t]'); if (d){ S.playT = Math.max(0, +d.dataset.t - 1.5); S.playing = false; } });
 
 const HZ = A.MATCH_T;
@@ -3684,6 +3745,7 @@ function renderReport(show){
   const res = w.result; const sum = A.summarize(w);
   const b = $('banner');
   if (S.mig && S.migEntry && S.migWorld === w){ b.innerHTML = migBanner(S.migEntry, res); renderTeamReport(w, sum); return; }
+  if (S.five && S.fiveWorld === w){ b.innerHTML = fiveBanner(res); renderTeamReport(w, sum); return; }
   const score = res.score, prev = readBest(), isBest = score > prev + .05;
   if (isBest) writeBest(score);
   let dailyLine = '';

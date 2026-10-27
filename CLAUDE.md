@@ -313,3 +313,7 @@ round. Report ± standard errors.
      `#g=1,m:,b:,s:,d:b|pN[,t:,r:,p:][,sc:]` (`gameLink`/`parseLink`/`applyLink`; positions are stored to the cm at drag
      time and encoded exactly, so a link replays the same fight; bad links fall back to a fresh board with a notice),
      and a **daily streak** (`wa-streak`).
+   - Prototype (Oct 27, ui.js only, **hidden unless `?five=1`**, `FIVE_ON`): **5 in a Row**: today's five boards (each its own
+     map; `fiveSeed(date, k, 'board'|'fight'|'retry')`), full-budget draft each, a board counts only if you survive to 5:00,
+     one retry per run (new fight seed, redraft allowed). Run saved in `wa-five-run` (resumes after reload), best per day
+     `wa-five-best:<date>` ({wins, time}), share line with 🟩🟨🟧🟥⬜ pips. Owner to playtest before it goes on the arena screen.
