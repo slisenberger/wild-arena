@@ -62,7 +62,7 @@ the shipped policies and reprice after:
   update. Start with cats (weakest target choice, below).
   - [x] **Shipped Oct 27: learned target choice for chargers** (`charger_target_a1`, GCP milestone 4 on `m4/targeting-v2`;
     linear 'target-lin' scorer on top of `charger_v1` movement, live via `policy/weights/live.json` "target"). Owner approved
-    it under the two-teams premise. Main-engine re-check +0.090 ± 0.013 (6,000 fresh fights). Bulldozer/kicker/cat target
+    it under the two-teams premise. Re-check on the merged engine +0.094 ± 0.013 (6,000 fresh fights). Bulldozer/kicker/cat target
     runs found nothing clean so far (bulldozer +0.036 ± 0.028, cat +0.055 with a stillLong gate); guard targets on `m4/guard-target`.
   **Owner design direction (Oct 27): speciation from broad archetypes + species tuning + open control + a general
   reward.** (1) Move decisions out of engine rules into the policy (target, approach, attack, bluff, retreat, movement),
