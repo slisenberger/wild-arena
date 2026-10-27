@@ -3,18 +3,27 @@
 Each item has a recommendation; reply with a number and "yes", or your own call. Decided items move to the bottom.
 
 ## Open
-1. **Progressive mode: money.** A fixed top-up each round only, or plus a small per-kill bonus? Default if no answer:
-   fixed + $25 per kill, capped at $150 a round (XP already rewards kills). Design: `research/progressive_mode.md`.
-2. **Progressive mode replaces Migration** (switched off) rather than sitting beside it. Default if no answer: replace,
-   reusing Migration's engine hooks.
-3. **Personal stats screen** (per-animal kills, damage and win rates, per-map win rates, your nemesis, last games with
+1. **Progressive mode: what a retry undoes.** Built: a lost round goes back to the shop as the round opened (team,
+   wounds, XP and money as they were; only the time alive counts), then a new fight seed. The alternative (the dead stay
+   dead, no refund) made 17% of bot runs die in round 1 from a crippled retry. Recommendation: keep the undo.
+2. **Progressive mode: the premium herd.** In rounds 6–7 the round's top non-rare band is the $700 buffalo / bison herd
+   (3 animals), so the premium enemy is a whole herd; that's the run's wall (round 6 first-try win 44%). Option: cap the
+   premium at $400 (a rhino). Recommendation: playtest it as is first; the bot still completes 18% of runs.
+3. **Progressive mode: round 1 is a big-cat round, not a badger round.** The $100 tier includes the tiger, lion, jaguar
+   and croc; they dominate round 1 and the honey badger gets 0.02 kills a fight. Option: deal round 1 without them (badger,
+   boar, leopard, lone wolf, ostrich, cougar, hyena, black bear, gorilla...). Recommendation: try it; it changes the
+   round-1 balance, so re-run `progressive_bot.js` after.
+4. **Personal stats screen** (per-animal kills, damage and win rates, per-map win rates, your nemesis, last games with
    replay links, achievements, a bestiary; local storage). Recommendation: build it.
-4. **What replaces the Helps / Threat bars on the cards.** Options in the Oct 27 chat: signature move line, measured
+5. **What replaces the Helps / Threat bars on the cards.** Options in the Oct 27 chat: signature move line, measured
    "good against / struggles against" counters, a role tag. Recommendation: signature + counters.
-5. **5 in a Row:** the owner moved on to the progressive mode. Default: leave it hidden behind `?five=1`; delete later if
+6. **5 in a Row:** the owner moved on to the progressive mode. Default: leave it hidden behind `?five=1`; delete later if
    unused.
 
 ## Decided
+- Oct 27 (progressive build): money = fixed top-up + $25 per kill, capped at $150 a round (`PROG.PER_KILL/KILL_CAP`).
+  Progressive mode replaces Migration (`migration.js`, `migration_bot.js` and `?migration=1` removed; prototype behind
+  `?progressive=1`). Your own health resets every round (Migration carried it; the human stays as fragile as now).
 - Oct 27 (later): progressive mode adds one premium enemy (top price band, can't be bought) from round 3. The human
   stays as fragile as now. Pick N removed. The Helps / Threat bars go (replacement to pick).
 - Oct 27: progressive mode uses experience (XP and levels, capped, realistic), two retries per run; T. rex at most a

@@ -155,31 +155,48 @@ th.n{text-align:right}
 .banner .btnrow{flex-basis:100%}
 .streak{font-size:12px;color:var(--gold)}
 .tier.flat{grid-template-columns:1fr}
-/* migration: run HUD, team with health bars, boons, recap */
-.mighud{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;background:color-mix(in srgb, var(--you) 7%, var(--panel));border:1px solid color-mix(in srgb, var(--you) 45%, var(--line));border-radius:var(--r);padding:8px 12px;margin-bottom:16px;font-size:13.5px}
-.mighud b{font-family:var(--display);font-weight:900;font-size:18px;letter-spacing:.05em;text-transform:uppercase}
-.mighud .money{font-family:var(--mono);color:var(--gold);font-size:15px}
-.mighud .btnrow{margin-left:auto}
-.mighud .btn{padding:5px 11px}
-.migteam{display:flex;flex-wrap:wrap;gap:8px}
+/* progressive run: HUD, team with health and XP bars, level stars, recap */
+.proghud{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;background:color-mix(in srgb, var(--you) 7%, var(--panel));border:1px solid color-mix(in srgb, var(--you) 45%, var(--line));border-radius:var(--r);padding:8px 12px;margin-bottom:16px;font-size:13.5px}
+.proghud b{font-family:var(--display);font-weight:900;font-size:18px;letter-spacing:.05em;text-transform:uppercase}
+.proghud .money{font-family:var(--mono);color:var(--gold);font-size:15px}
+.proghud .btnrow{margin-left:auto}
+.proghud .btn{padding:5px 11px}
 .mt{display:flex;align-items:center;gap:8px;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:6px 8px;min-width:0;max-width:100%}
 .mt .nm{font-size:13px;line-height:1.15;min-width:0;overflow-wrap:anywhere}
 .mt .hpb{display:flex;gap:2px;margin-top:3px}
 .mt .hpb i{display:block;width:34px;height:5px;border-radius:3px;background:var(--line);overflow:hidden}
 .mt .hpb i b{display:block;height:100%}
 .mt .btn{padding:4px 9px;font-size:12.5px}
+.mt .mtb{min-width:0;flex:1}
+.mt .mta{display:flex;flex-direction:column;gap:4px;margin-left:auto}
+.mt .xpb{display:flex;align-items:center;gap:6px;margin-top:4px;font:11.5px/1.1 var(--mono);color:var(--muted)}
+.mt .xpb i{display:block;width:70px;height:6px;border-radius:3px;background:var(--line);overflow:hidden;flex:none}
+.mt .xpb i b{display:block;height:100%;background:#8fb8ff}
+.mt .sub{font-size:11.5px;color:var(--muted);margin-top:3px}
+.mt .scar{color:var(--orange)}
+.stars{color:var(--gold);font-size:14px;letter-spacing:1px;white-space:nowrap}
+.stars .off{color:var(--line)}
+.progteam{display:grid;grid-template-columns:repeat(auto-fill, minmax(260px, 1fr));gap:8px;flex:1 1 100%;width:100%}
+.hudteam{display:inline-flex;gap:6px;flex-wrap:wrap}
+.hudpick{display:inline-flex;flex-direction:column;align-items:center;gap:2px}
+.hudpick i{display:block;width:24px;height:3px;border-radius:2px;background:var(--line);overflow:hidden}
+.hudpick i b{display:block;height:100%}
+.hudpick .stars{font-size:10px;line-height:1}
+.lives{color:var(--red);font-size:15px;letter-spacing:1px}
+.lives .off{color:var(--line)}
+.card.premium{opacity:1;border-color:var(--foe, #ef6b4b)}
 .mt.fresh{border-color:var(--you)}
 .boons{display:flex;flex-wrap:wrap;gap:4px}
 .boon{font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;border:1px solid color-mix(in srgb, var(--gold) 55%, var(--line));color:var(--gold)}
 .opts.three{grid-template-columns:repeat(3, minmax(0,1fr))}
 .recap{display:flex;flex-direction:column;gap:8px}
 .recap .big{font-family:var(--display);font-weight:900;font-size:28px;text-transform:uppercase;letter-spacing:.03em;line-height:1}
-.migtrail{display:flex;gap:4px;flex-wrap:wrap}
-.migtrail span{font-family:var(--mono);font-size:11.5px;padding:3px 7px;border-radius:6px;border:1px solid var(--line);color:var(--muted)}
-.migtrail span.done{border-color:var(--you);color:var(--you)}
-.migtrail span.dead{border-color:var(--red);color:var(--red)}
-.migtrail span.now{border-color:var(--gold);color:var(--gold)}
-.migentry,.fiveentry{display:flex;flex-direction:column;gap:8px}
+.progtrail{display:flex;gap:4px;flex-wrap:wrap}
+.progtrail span{font-family:var(--mono);font-size:11.5px;padding:3px 7px;border-radius:6px;border:1px solid var(--line);color:var(--muted)}
+.progtrail span.done{border-color:var(--you);color:var(--you)}
+.progtrail span.dead{border-color:var(--red);color:var(--red)}
+.progtrail span.now{border-color:var(--gold);color:var(--gold)}
+.progentry,.fiveentry{display:flex;flex-direction:column;gap:8px}
 .fiveentry{margin-top:14px}
 .fivemaps{display:flex;flex-wrap:wrap;gap:6px}
 .fivemaps span{font:12px/1.2 var(--mono,monospace);padding:4px 8px;border:1px solid var(--line);border-radius:8px;color:var(--muted)}
@@ -201,7 +218,8 @@ th.n{text-align:right}
   .detail .stats{grid-template-columns:repeat(2, minmax(0,1fr))}
   .opts.two{grid-template-columns:1fr}
   .opts.three{grid-template-columns:1fr}
-  .mighud .btnrow{margin-left:0}
+  .proghud .btnrow{margin-left:0}
+  .progteam{grid-template-columns:1fr}
 }
 @media (prefers-reduced-motion: reduce){ *{transition:none!important} }
 </style>
@@ -217,14 +235,14 @@ th.n{text-align:right}
     <button data-s="draft">2 Draft</button>
     <button data-s="deploy">3 Deploy</button>
     <button data-s="fight">4 Fight</button>
-    <button data-s="mig" id="migStep" hidden>Run</button>
+    <button data-s="prog" id="progStep" hidden>Run</button>
     <button data-s="lab">Lab</button>
     <button id="startOver" class="startOver" title="New board, empty team, back to the map">Start over</button>
   </nav>
 </header>
 
 <main>
-<div class="mighud" id="migHud" hidden></div>
+<div class="proghud" id="progHud" hidden></div>
 <div class="notice" id="notice" role="status" hidden><span id="noticeText"></span><button class="btn" id="noticeClose">Dismiss</button></div>
 <!-- DRAFT -->
 <section class="screen" id="s-draft">
@@ -246,8 +264,8 @@ th.n{text-align:right}
   <div class="opts" id="terrainOpts"></div>
   <div id="modeOpts" hidden></div>
   <p class="notes">The other side is one team, and the pressure builds over time. Predators hunt you and your guards; herbivores charge intruders. Break their morale and animals bolt out of the arena. After 30 seconds a fire, flood or blizzard closes in from the edges and pushes everyone together. You score by how long you stay alive, up to five minutes.</p>
-  <div class="panel migentry"><h3>Migration</h3><p class="notes">A run of seven fights across all four terrains. Start with $600; your survivors carry their wounds into the next fight, the dead stay dead, and you earn money for every fight you live through. Between fights: a trading post (buy, or sell for half price) and one of three boons. Fight 4 brings megafauna; fight 7 is the herd. Die and the run is over.</p>
-    <div class="btnrow"><button class="btn primary" id="migNew">Start a migration</button><button class="btn" id="migDaily" title="Today's migration: the same maps, boards and fights for everyone">Daily migration</button><button class="btn" id="migResume" hidden>Resume</button></div><p class="notes" id="migBest"></p></div>
+  <div class="panel progentry"><h3>Progressive run <span class="label" style="color:var(--gold)">prototype</span></h3><p class="notes">Seven rounds up the price ladder: round 1 is all $100 animals (honey badgers, boars, leopards...), each round lets pricier animals onto the board, and the giants come at the end. Your survivors carry their wounds and scars, earn XP and level up. From round 3 one premium enemy joins the other side. Every round brings fresh money; you can heal, sell or buy. Two retries for the whole run.</p>
+    <div class="btnrow"><button class="btn primary" id="progNew">Start a run</button><button class="btn" id="progDaily" title="Today's run: the same maps, boards and fights for everyone">Daily run</button><button class="btn" id="progResume" hidden>Resume</button></div><p class="notes" id="progBest"></p></div>
   <div class="btnrow"><button class="btn primary" id="toDraft">Draft your team</button><button class="btn" id="daily" title="Same board, map and fight seed for everyone today">Daily challenge</button><span class="streak mono" id="streak" hidden></span></div>
   <div class="panel fiveentry" id="fivePanel" hidden><h3>5 in a Row</h3><p class="notes">Today's five boards, the same for everyone. Draft a full $1,200 team for each and survive to 5:00 on every one; one retry for the whole run.</p>
     <div class="fivemaps" id="fiveMaps"></div>
@@ -296,14 +314,13 @@ th.n{text-align:right}
   <div class="panel" id="report" hidden></div>
 </section>
 
-<!-- MIGRATION (run hub: recap, boon, next fight, end of run) -->
-<section class="screen" id="s-mig" hidden>
-  <div style="display:flex;flex-direction:column;gap:6px"><h2 id="migTitle">The migration</h2><div class="migtrail" id="migTrail"></div></div>
-  <div class="panel recap" id="migRecap" hidden></div>
-  <div class="panel" id="migBoonBox" hidden><h3 style="margin-bottom:4px">Choose a boon</h3><p class="notes" style="margin-bottom:10px">One of three. It lasts for the rest of the run.</p><div class="opts three" id="migBoons"></div></div>
-  <div class="panel" id="migTeamBox"><h3 style="margin-bottom:8px">Your team</h3><div class="migteam" id="migTeam"></div></div>
-  <div class="panel" id="migNext"></div>
-  <div class="btnrow" id="migActions"></div>
+<!-- PROGRESSIVE RUN (hub: recap, team, next round, end of run) -->
+<section class="screen" id="s-prog" hidden>
+  <div style="display:flex;flex-direction:column;gap:6px"><h2 id="progTitle">Progressive run</h2><div class="progtrail" id="progTrail"></div></div>
+  <div class="panel recap" id="progRecap" hidden></div>
+  <div class="panel" id="progTeamBox"><h3 style="margin-bottom:8px">Your team</h3><div id="progTeam"></div></div>
+  <div class="panel" id="progNext"></div>
+  <div class="btnrow" id="progActions"></div>
 </section>
 
 <!-- LAB -->

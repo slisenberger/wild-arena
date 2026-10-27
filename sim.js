@@ -204,6 +204,18 @@ function boonMods(ids){
   return {dmg: on('spear') ? 2 : 1, heat: on('waterskin') ? .7 : 1, snow: on('snowshoes') ? .5 : 1, whistle: on('whistle'), smoke: on('smoke') ? .1 : 0, hide: on('hide') ? .85 : 1, see: on('tower') ? 1.2 : 1};
 }
 
+// ---------- progressive-mode levels and scars (cfg.levels, cfg.maxHp; opt-in, absent = the plain game) ----------
+// cfg.levels = {id: 0-3}: experience, not superpowers. 1 Seasoned: morale breaks later (flee threshold x.75) and a fallen
+// packmate shakes it half as much; 2 Cunning: +15% sight range; 3 Veteran: +10% damage, +10% max health. Levels stack.
+// cfg.maxHp = {id: multiplier | [multiplier per surviving member]}: lasting scars (-10% each). Your side only.
+const LEVEL_FX = {flee: .75, shaken: .5, see: 1.15, dmg: 1.1, hp: 1.1};
+function progMods(cfg, aid, u, k){
+  const lv = (cfg.levels && cfg.levels[aid]) || 0, mh = cfg.maxHp && cfg.maxHp[aid], m = Array.isArray(mh) ? mh[k] : mh;
+  if (lv > 0) u.lv = lv;
+  const f = (lv >= 3 ? LEVEL_FX.hp : 1) * (m != null ? clamp(m, .1, 2) : 1);
+  if (f !== 1){ u.maxhp *= f; u.hp = u.maxhp; }
+}
+
 // ---------- world setup ----------
 function setup(cfg){
   // the live game's learned policies (policy/live.js) apply unless the cfg brings its own movePolicy or sets livePolicy:false
@@ -259,6 +271,7 @@ function setup(cfg){
     const u = mkUnit(s, 'P', pos.x, pos.y, w.nid++);
     // migration carry-over: startHp[id] = a fraction, or one fraction per surviving member of a pack/herd (its length is the group size)
     const hp0 = cfg.startHp && cfg.startHp[aid], hpAt = k => Array.isArray(hp0) ? hp0[k] : hp0, nGroup = Array.isArray(hp0) ? Math.max(1, hp0.length) : groupSize(cfg, s);
+    if (cfg.levels || cfg.maxHp) progMods(cfg, aid, u, 0);
     if (hp0 != null) u.hp = u.maxhp * clamp(hpAt(0), .01, 1);
     u.homeDx = pos.x - human.x; u.homeDy = pos.y - human.y; u.agit = .5;
     if (Math.hypot(u.homeDx, u.homeDy) > ESCORT_R && aid !== mountId) u.post = {x: pos.x, y: pos.y};
@@ -267,6 +280,7 @@ function setup(cfg){
     // a group item (wolf pack, hyena clan, lion pride) brings its packmates, placed around the leader
     for (let k = 1; k < nGroup; k++){
       const a = k * 2.4, q = clampPlace(T.id, s, pos.x + Math.cos(a) * 2.2, pos.y + Math.sin(a) * 2.2, V), m = mkUnit(s, 'P', q.x, q.y, w.nid++);
+      if (cfg.levels || cfg.maxHp) progMods(cfg, aid, m, k);
       if (hp0 != null) m.hp = m.maxhp * clamp(hpAt(k), .01, 1);
       m.homeDx = q.x - human.x; m.homeDy = q.y - human.y; m.agit = .5; if (u.post) m.post = {x: q.x, y: q.y};
       w.units.push(m);
@@ -404,7 +418,7 @@ function packStrength(w, u){ let s = strength(u); if (social(u)) for (const o of
 function yieldsTo(w, u, o){ const l = u.s.yieldsTo; if (!l || !l.includes(sp(o.s))) return false; return sp(o.s) !== 'wolf' || packMates(w, o) > 0; }
 function packMates(w, u){ let n = 0; for (const o of w.units) if (packMate(u, o) && dist(u, o) < 15) n++; return n; }
 // signature-move counter (for the identity audit): w.sig['tiger:pounce'] = how many times it happened this fight
-function sig(w, u, name){ if (!u || !u.s || u.side === 'H') return; const k = u.s.id + ':' + name; w.sig[k] = (w.sig[k] || 0) + 1; }
+function sig(w, u, name){ if (!u || !u.s || u.side === 'H') return; const k = u.s.id + ':' + name; w.sig[k] = (w.sig[k] || 0) + 1; u.st.sig = (u.st.sig || 0) + 1; } // u.st.sig: per-unit count (progressive-mode XP; stats only)
 function strength(u){ return Math.sqrt(Math.max(1,u.hp) * (u.s.dmg / u.s.cd)); }
 function pressure(w){ return w.mode === 'wild' ? Math.min(1, w.t / 150) : 1; }
 // water: w.band is the river (vertical band x0..x1 with shallow fords), w.ponds are ellipses; w.wet = any water at all
@@ -469,6 +483,7 @@ function reachable(att, t){
 function canSee(w, viewer, u){
   let range = viewer.s.vision * (w.T.vision || 1);
   if (w.bn && viewer.side !== 'E') range *= w.bn.see; // lookout tower
+  if (viewer.lv >= 2) range *= LEVEL_FX.see; // Cunning: reads the field sooner
   if (viewer.side !== 'E' && w.lookout) range *= 1.5;
   else if (w.alarm && w.alarm[viewer.side === 'H' ? 'P' : viewer.side] > 0) range *= 1.25; // a kangaroo's thump put everyone on alert
   // big cats find each other by scent: a hidden cat is no secret to another cat
@@ -755,6 +770,7 @@ function strike(w, a, t, opts){
   dmg *= (1 - armor);
   if (t.side === 'H' && t.riding) dmg *= 1;
   if (w.bn){ if (a.side === 'H') dmg *= w.bn.dmg; if (t.side === 'H') dmg *= w.bn.hide; } // spear, hide coat
+  if (a.lv >= 3) dmg *= LEVEL_FX.dmg; // Veteran: practised technique
   dmg = Math.max(1, dmg);
   applyDamage(w, a, t, dmg);
   // secondary effects
@@ -998,6 +1014,7 @@ function step(w){
   // morale
   for (const u of units){
     if (!active(u) || u.side === 'H') continue;
+    if (u.side === 'P' && !(u.st.low <= u.hp / u.maxhp)) u.st.low = u.hp / u.maxhp; // lowest health this fight (progressive-mode scars; stats only)
     const my = strength(u);
     let fear = 0, friends = 0;
     for (const o of units){
@@ -1016,7 +1033,7 @@ function step(w){
       if (o.side !== u.side || o === u || !(o.state === 'dead' || o.escaped)) continue;
       if (sp(o.s) === sp(u.s)) fallen += 1; else if (o.state === 'dead' && dist(o, u) < 15) fallen += .4;
     }
-    tgt -= (u.side === 'E' ? .05 : .03) * fallen;
+    tgt -= (u.side === 'E' ? .05 : .03) * fallen * (u.lv >= 1 ? LEVEL_FX.shaken : 1);
     if (u.side === 'E' && u.state !== 'flee') tgt += .25 * pressure(w);
     if (w.bn && w.bn.smoke && u.side === 'E' && w.t < 45) tgt -= w.bn.smoke; // smoke pots
     if (u.side === 'P') tgt += Math.min(.25, friends * .06);
@@ -1026,7 +1043,7 @@ function step(w){
     if (has(u,'vindictive') && u.grudge && active(u.grudge)) tgt += .3; // it does not give up on whoever hurt it
     if (has(u,'guardian') && u.side === 'P' && units.some(e => e.side === 'E' && active(e) && e.target === w.human && dist(e, u) < 15)) tgt = Math.max(tgt, .8); // fights to the death for you
     u.morale += (tgt - u.morale) * Math.min(1, .6 * DT);
-    if (u.state !== 'flee' && u.cornerT <= 0 && u.morale < u.s.flee && u.fleeT <= 0 && !u.withdrawn){
+    if (u.state !== 'flee' && u.cornerT <= 0 && u.morale < u.s.flee * (u.lv >= 1 ? LEVEL_FX.flee : 1) && u.fleeT <= 0 && !u.withdrawn){
       u.state = 'flee'; u.fleeT = 4 + R() * 4; release(w, u); u.mv = null;
       u.breaks = (u.breaks || 0) + 1;
       if (u.rider && R() < (u.state === 'carry' && !u.latchedBy ? .15 : .5)) throwRider(w, u, 'it panicked and bolted'); // a mount already running with you mostly just runs faster; one that's grabbed bucks
@@ -1602,7 +1619,8 @@ function dealBoard(seed, rules, prices){
   // cold-blooded animals (the croc) are never dealt on a cold map; each species appears once, solo or as a pack
   const cold = rules.terrain && (TERRAINS[rules.terrain] || {}).cold, ok = a => !(cold && a.cold < .3);
   const ex = rules.exclude || null; // ids never dealt (migration: animals you already own)
-  const forms = {}; for (const a of ANIMALS) if (ok(a) && !(ex && ex.includes(a.id))) (forms[sp(a)] = forms[sp(a)] || []).push(a.id);
+  const cap = rules.maxPrice || 0; // progressive mode: only animals at or under this price (0 = no cap)
+  const forms = {}; for (const a of ANIMALS) if (ok(a) && !(ex && ex.includes(a.id)) && !(cap && price(a.id) > cap)) (forms[sp(a)] = forms[sp(a)] || []).push(a.id);
   const common = Object.keys(forms).filter(k => !BY_ID[k].rare), rare = Object.keys(forms).filter(k => BY_ID[k].rare);
   // pick solo or pack by dealWeight (wolves come as a pack 3 times in 4: that's how real wolves hunt)
   const form = k => { const f = forms[k], tw = f.reduce((s, id) => s + (BY_ID[id].dealWeight || 1), 0); let r = R() * tw; for (const id of f){ r -= BY_ID[id].dealWeight || 1; if (r <= 0) return id; } return f[f.length - 1]; };
@@ -1868,7 +1886,7 @@ function policyChoose(w, u){
   INTERNALS.choose(w, u, w.cfg.policy);
 }
 
-const API = { _internals: INTERNALS, MEASURED, RULES, BOONS, dealBoard, defaultMount, mapVariant, baseVariant, ESCORT_R, POST_R, zoneAt, ZONE_T0, ZONE_T1, HAZARD_NAME, zoneFor, homeFor, placeOK, clampPlace, defaultPost, snowFactor, heatLoad, QUIET_T, STYLE, ANIMALS, HUMAN, BY_ID, TERRAINS, W, H, DT, MATCH_T, setup, step, simulate, snapshot, summarize, randomDraft, defaultPlacement, rng, hpOf, radiusOf };
+const API = { _internals: INTERNALS, MEASURED, RULES, BOONS, LEVEL_FX, dealBoard, defaultMount, mapVariant, baseVariant, ESCORT_R, POST_R, zoneAt, ZONE_T0, ZONE_T1, HAZARD_NAME, zoneFor, homeFor, placeOK, clampPlace, defaultPost, snowFactor, heatLoad, QUIET_T, STYLE, ANIMALS, HUMAN, BY_ID, TERRAINS, W, H, DT, MATCH_T, setup, step, simulate, snapshot, summarize, randomDraft, defaultPlacement, rng, hpOf, radiusOf };
 if (typeof module !== 'undefined' && module.exports){
   module.exports = API;
   try { require('./policy/live.js'); } catch (e){ if (e.code !== 'MODULE_NOT_FOUND') throw e; } // learned policies (absent next to a stray copy of sim.js)
