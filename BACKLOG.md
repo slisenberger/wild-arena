@@ -60,6 +60,12 @@ the shipped policies and reprice after:
   features (a trained hidden layer, `--mode=deep`, fits), under the side-level checkmate goal, with targeting realism
   metrics (cats favour isolated/running prey, herbivores defend rather than hunt). Bigger action space: more fights per
   update. Start with cats (weakest target choice, below).
+  Owner hypothesis: with dense inputs, some layers and compute, emergent targeting goals appear (kill the human's
+  mount, pick on what you beat). The inputs mostly exist (`policy/features.js`: isMount, riding, logStrVsSelf,
+  muchStronger, heightRatio, busyElsewhere, fleeing, hpFrac, guardRatio); add matchup inputs (weapon vs armor/pierce,
+  reach vs height, counters/yieldsTo, human HP, guards near the human). Optimizer: ES noise grows with parameter count,
+  so for a layered net use behaviour cloning of the heuristic (milestone 1 reached 99%) then policy-gradient RL (PPO)
+  under the checkmate goal, with a KL/drift penalty to the heuristic and the spec metrics as constraints.
   **Try first (owner idea): learned target choice for cats.** 82% of cat damage already goes to your animals, but 60%
   of cat approaches never reach contact and 1.1 cats die per fight (of ~1.7; 150 fights, realism engine): they pick
   fights they lose. Real cats take the isolated, hurt, busy or running animal. The milestone-2 target hook
