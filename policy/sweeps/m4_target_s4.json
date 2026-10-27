@@ -1,0 +1,21 @@
+{
+ "note": "Milestone 4 round 4 (Oct 27): chargers target choice on more seeds after ch_t_s1 confirmed (+0.158 ± 0.029 fresh). Same setup as m4_target_s2; a bigger population (24 pairs) and margin .5 (the later --margin wins).",
+ "runs": [
+  {
+   "name": "ch_t_s3",
+   "args": "--arch=charger --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --goal=checkmate --spec=true --target=true --thetaClip=1 --margin=.25 --pairs=16 --seed=1203"
+  },
+  {
+   "name": "ch_t_s4",
+   "args": "--arch=charger --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --goal=checkmate --spec=true --target=true --thetaClip=1 --margin=.25 --pairs=16 --seed=1204"
+  },
+  {
+   "name": "ch_t_p24",
+   "args": "--arch=charger --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --goal=checkmate --spec=true --target=true --thetaClip=1 --margin=.25 --pairs=24 --seed=1205"
+  },
+  {
+   "name": "ch_t_m5",
+   "args": "--arch=charger --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --goal=checkmate --spec=true --target=true --thetaClip=1 --margin=.25 --pairs=16 --margin=.5 --seed=1206"
+  }
+ ]
+}
