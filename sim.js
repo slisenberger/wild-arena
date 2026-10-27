@@ -233,6 +233,11 @@ function setup(cfg){
   if (cfg.movePolicy === undefined && cfg.livePolicy !== false && INTERNALS.moveChoose && Object.values(INTERNALS.LIVE).some(v => v)){
     const mp = {}; for (const k of Object.keys(INTERNALS.LIVE)) if (INTERNALS.LIVE[k]) mp[k] = INTERNALS.LIVE[k]; // any archetype with shipped weights
     cfg = Object.assign({}, cfg, {movePolicy: mp});
+    // the live game's learned target choice (milestone 4: policy/weights/live.json "target", e.g. chargers), same opt-outs, and a cfg.policy of its own wins
+    if (cfg.policy === undefined && INTERNALS.chooseHerb && Object.values(INTERNALS.LIVE_TARGET).some(v => v)){
+      const by = {}; for (const k of Object.keys(INTERNALS.LIVE_TARGET)) if (INTERNALS.LIVE_TARGET[k]) by[k] = INTERNALS.LIVE_TARGET[k];
+      cfg.policy = {byArch: by};
+    }
   }
   // cfg: {team:[ids], placements:{id:{dx,dy}}, terrain, mode:'wild'|'allout', ride:bool, seed, board:[ids] (optional: only these animals are in the game)}
   const R = rng(cfg.seed || 1);
@@ -615,6 +620,19 @@ function herbivoreTarget(w, u){
   if (best !== u.target && Math.hypot(best.vx, best.vy) > 2){ if (has(u,'chasesMovement')) sig(w, u, 'chases movement'); else if (has(u,'blindCharger') && !canSee(w, u, best)) sig(w, u, 'charges blind at a sound'); }
   return best;
 }
+// the targets herbivoreTarget can consider (hostile, not musk-repelled, the walrus's shore rule, seen or heard, reachable):
+// the learned herbivore chooser's candidates (milestone 4, policy/policy.js chooseHerb). Keep its filters in sync with herbivoreTarget's
+function herbCandidates(w, u){
+  const dr = drive(u), out = [];
+  for (const t of w.units){
+    if (!hostile(w, u, t) || (u.repelBy === t && u.repelUntil > w.t) || !reachable(u, t)) continue;
+    if (has(u,'shoreGuard') && w.wet && distWater(w, t) > 6 && u.grudge !== t) continue;
+    const d = dist(u, t);
+    if (u.grudge !== t && !canSee(w, u, t) && !(d < 30 + 50 * dr && (Math.hypot(t.vx, t.vy) > 2 || dr > .5))) continue;
+    out.push(t);
+  }
+  return out;
+}
 function nearestPlayer(w,u){ let b=null,bd=1e9; for(const t of w.units) if(t.side!=='E'&&active(t)){const d=dist(u,t); if(d<bd){bd=d;b=t;}} return b; }
 
 // battle drive (owner: every animal is here to win the fight): time spent with nothing to do builds up, and the
@@ -701,7 +719,7 @@ function chooseTarget(w, u){
       u.state = u.target ? 'engage' : 'rest';
       return;
     }
-    if (w.cfg.policy){ policyChoose(w, u); return; } // learned target selection (policy/), opt-in: off unless cfg.policy is given
+    if (w.cfg.policy && (!w.cfg.policy.byArch || w.cfg.policy.byArch[archetypeOf(u)])){ policyChoose(w, u); return; } // learned target selection (policy/), opt-in: off unless cfg.policy is given; {byArch} = only those archetypes
     const h = predatorTarget(w, u);
     if (w.mode === 'wild' && u.hunger > .3 && !u.sated){
       const c = bestCarcass(w, u);
@@ -712,6 +730,7 @@ function chooseTarget(w, u){
     if (u.cT){ if (w.t < u.cTT && active(u.cT) && hostile(w, u, u.cT)) u.target = u.cT; else u.cT = null; } // learned cat intent 'soften' (policy/), opt-in: holds the softer prey
     u.state = u.target ? 'engage' : 'roam';
   } else {
+    if (w.cfg.policy && w.cfg.policy.byArch && w.cfg.policy.byArch[archetypeOf(u)]){ if (!INTERNALS.chooseHerb) throw new Error('cfg.policy.byArch for a herbivore archetype needs policy/policy.js'); INTERNALS.chooseHerb(w, u, w.cfg.policy); return; } // learned herbivore target choice (milestone 4), opt-in
     u.target = herbivoreTarget(w, u);
     u.state = u.target ? 'engage' : 'roam';
   }
@@ -2036,7 +2055,7 @@ function guardIdleGo(w, u){
   return null;
 }
 const INTERNALS = { choose: null, predCandidates, predatorTarget, bestCarcass, guardsAround, packStrength, packMates, packMate, strength, hostile, canSee, reachable, distWater, inWater, busy, yieldsTo, wound, heightOf, pressure, active, has, dist, sp, social };
-Object.assign(INTERNALS, { moveChoose: null, LIVE: {harrier: null, guard: null}, INTENTS, CAT_INTENTS, CAT_GEO, catSoftness, catSofter, headingOf, archetypeOf, drive, locked, GUARD_INTENTS, GUARD_SPACE, guardThreat, guardHelpTarget, sideSees, evasiveMount, zoneAt });
+Object.assign(INTERNALS, { herbivoreTarget, herbCandidates, chooseHerb: null, LIVE_TARGET: {}, moveChoose: null, LIVE: {harrier: null, guard: null}, INTENTS, CAT_INTENTS, CAT_GEO, catSoftness, catSofter, headingOf, archetypeOf, drive, locked, GUARD_INTENTS, GUARD_SPACE, guardThreat, guardHelpTarget, sideSees, evasiveMount, zoneAt });
 function policyChoose(w, u){
   if (!INTERNALS.choose) throw new Error('cfg.policy is set but no policy is loaded: require policy/policy.js');
   INTERNALS.choose(w, u, w.cfg.policy);

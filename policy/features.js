@@ -53,9 +53,9 @@ function targetFeats(w, u, t, own, my){
     +(u.target === t), +(u.grudge === t), +(u.grudge === t && d < 8), +I.canSee(w, u, t), +I.inWater(w, t), +!!t.rider, +!!t.riding];
 }
 
-// {opts, X}: X[i] is the feature vector (length DIM) of option i
-function extract(w, u){
-  const opts = options(w, u);
+// {opts, X}: X[i] is the feature vector (length DIM) of option i; herb = a herbivore (candidates from herbCandidates, no feeding)
+function extract(w, u, herb){
+  const opts = herb ? [{kind: 'none'}, ...I.herbCandidates(w, u).map(t => ({kind: 'target', t}))] : options(w, u);
   const nCand = opts.filter(o => o.kind === 'target').length;
   const {c, own, my} = context(w, u, nCand);
   const zT = new Array(TGT.length).fill(0), zF = new Array(FEED.length).fill(0);
@@ -70,12 +70,14 @@ function extract(w, u){
 // what the hand-tuned heuristic in chooseTarget would pick, as an index into opts (mirrors chooseTarget exactly)
 function heuristicIndex(w, u, opts){
   const h = I.predatorTarget(w, u);
-  if (w.mode === 'wild' && u.hunger > .3){
+  if (w.mode === 'wild' && u.hunger > .3 && !u.sated){
     const c = I.bestCarcass(w, u);
     if (c.c && c.score > h.score * 1.0) return opts.findIndex(o => o.kind === 'feed');
   }
-  if (h.score * (.4 + u.s.aggr) > .3 && h.t){ const i = opts.findIndex(o => o.kind === 'target' && o.t === h.t); if (i < 0) throw new Error('heuristic target not among candidates'); return i; }
+  if (h.score * (.4 + u.s.aggr) > .3 * (1 - .8 * I.drive(u)) && h.t){ const i = opts.findIndex(o => o.kind === 'target' && o.t === h.t); if (i < 0) throw new Error('heuristic target not among candidates'); return i; }
   return 0;
 }
 
-module.exports = { NAMES, DIM, TERR, options, extract, heuristicIndex };
+// the herbivore heuristic's pick (herbivoreTarget, called once as the engine would): its index in opts, -1 if it isn't a candidate
+function herbHeuristic(w, u, opts){ const t = I.herbivoreTarget(w, u); if (!t) return {i: 0, t}; return {i: opts.findIndex(o => o.kind === 'target' && o.t === t), t}; }
+module.exports = { NAMES, DIM, TERR, options, extract, heuristicIndex, herbHeuristic };
