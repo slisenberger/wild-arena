@@ -22,7 +22,7 @@ const M = require('./move_model.js');
 const RW = require('./move_reward.js');
 const WK = require('./train_worker.js');
 const T = require('./train.js');
-const { arch: archOf } = require('./move_arch.js');
+const { arch: archOf, zerosFor } = require('./move_arch.js');
 
 const QUICK = process.argv.includes('--quick');
 const ONLY = (process.argv.find(a => a.startsWith('--arch=')) || '').slice(7) || null; // one archetype, or a comma list
@@ -40,19 +40,23 @@ const same = (a, b) => a.every((x, i) => x.fp === b[i].fp && x.t === b[i].t);
 const f3 = v => (v >= 0 ? '+' : '') + v.toFixed(3);
 
 // fingerprints with a given sim.js file, in a fresh thread (so it gets its own module instance); mp = cfg.movePolicy
-function plainFP(simPath, fights, mp){
+// live = true: no livePolicy:false, and the shipped policies (policy/live.js) are loaded for that sim.js too (a copy of an
+// old sim.js in tmp can't find them next to itself), i.e. the live game's default
+function plainFP(simPath, fights, mp, live){
   const code = `const {parentPort, workerData} = require('worker_threads'); const crypto = require('crypto'); const A = require(workerData.sim);
-    if (workerData.mp){ process.env.SIM = workerData.sim; require(workerData.pol); }
-    parentPort.postMessage(workerData.fights.map(f => { const c = {team: f.team, board: f.board, terrain: f.tr, mode: 'wild', mount: f.mount, seed: f.seed, livePolicy: false}; if (workerData.mp) c.movePolicy = workerData.mp;
+    if (workerData.mp || workerData.live){ process.env.SIM = workerData.sim; require(workerData.pol); if (workerData.live) require(workerData.live); }
+    parentPort.postMessage(workerData.fights.map(f => { const c = {team: f.team, board: f.board, terrain: f.tr, mode: 'wild', mount: f.mount, seed: f.seed}; if (!workerData.live) c.livePolicy = false; if (workerData.mp) c.movePolicy = workerData.mp;
       const w = A.simulate(c), h = crypto.createHash('sha1'); h.update(JSON.stringify(w.events)); h.update(JSON.stringify(w.units.map(u => [u.x, u.y, u.hp, u.state]))); return h.digest('hex').slice(0, 16) + '|' + w.result.t; }));`;
-  return new Promise((res, rej) => { const w = new Worker(code, {eval: true, workerData: {sim: simPath, fights, mp, pol: path.join(here, 'move_policy.js')}}); w.on('message', res); w.on('error', rej); });
+  return new Promise((res, rej) => { const w = new Worker(code, {eval: true, workerData: {sim: simPath, fights, mp, pol: path.join(here, 'move_policy.js'), live: live ? path.join(here, 'live.js') : null}}); w.on('message', res); w.on('error', rej); });
 }
-function refSim(){
-  if (process.env.REF_SIM) return path.resolve(process.env.REF_SIM);
+// the newest revision of sim.js without `marker` (default: the guard hook), or the path given
+function refSim(marker, given){
+  marker = marker || 'guardDecide'; given = given === undefined ? process.env.REF_SIM : given;
+  if (given) return path.resolve(given);
   const root = path.join(__dirname, '..');
   try {
     const revs = execFileSync('git', ['log', '--format=%H', '-n', '40', '--', 'sim.js'], {cwd: root}).toString().trim().split('\n');
-    for (const h of revs){ const src = execFileSync('git', ['show', h + ':sim.js'], {cwd: root, maxBuffer: 1 << 26}).toString(); if (!src.includes('guardDecide')){ const f = path.join(tmp, 'ref_sim.js'); fs.writeFileSync(f, src); return {f, h}; } }
+    for (const h of revs){ const src = execFileSync('git', ['show', h + ':sim.js'], {cwd: root, maxBuffer: 1 << 26}).toString(); if (!src.includes(marker)){ const f = path.join(tmp, 'ref_sim_' + marker + '.js'); fs.writeFileSync(f, src); return {f, h}; } }
   } catch (e) { /* no git */ }
   return null;
 }
@@ -103,6 +107,16 @@ const PROBES = {
   }},
 };
 for (const a of XARCH) PROBES[a] = xprobe(a);
+// the cat has its own intent set (sim.js CAT_INTENTS): commit / pounce / creep / abandon / soften / cover / blindside
+PROBES.cat = {names: ['commit', 'pounce', 'creep', 'abandon', 'soften', 'cover', 'blindside'], check(rows){
+  const [hc, , , ha, , hv] = rows;
+  ok(ha.P.diff < -2 * ha.P.se && hv.P.diff < -2 * hv.P.se, `cat: always abandon / always hold in cover: goal clearly worse (beyond 2 SE)`);
+  ok(ha.P.styleB.style < T.DEFAULTS.styleThr && hv.P.styleB.style < T.DEFAULTS.styleThr, `cat: always abandon / always cover: style ${ha.P.styleB.style.toFixed(2)} / ${hv.P.styleB.style.toFixed(2)} below the ${T.DEFAULTS.styleThr} threshold`);
+  ok(gateOf(ha, 'longIdle') && gateOf(hv, 'longIdle') && gateOf(hv, 'stillLong'), 'cat: always abandon / always cover fail the long-idle gate; lying in cover forever fails the long-hold gate');
+  ok(ha.P.driftB.length > 0 && hv.P.driftB.length > 0, 'cat: always abandon / always cover get telemetry drift flags: ' + rows.slice(1).map(r => `${r.name} ${r.P.driftB.length}`).join(', '));
+  ok(hv.P.mB.pounceRate < hc.P.mB.pounceRate && ha.P.mB.pounceRate < hc.P.mB.pounceRate, `cat: always cover / abandon pounce less (${hc.P.mB.pounceRate.toFixed(2)} -> ${hv.P.mB.pounceRate.toFixed(2)} / ${ha.P.mB.pounceRate.toFixed(2)} per engaged minute)`);
+  ok(hc.P.mB.stalkPounce > .3 && hc.P.mB.stalkPounceRate > 0 && hc.P.mB.rushPounceRate > 0, `cat: the heuristic's profile has stalked pounces (${(100 * hc.P.mB.stalkPounce).toFixed(0)}%) and pounce rates for both lions (${hc.P.mB.rushPounceRate.toFixed(2)}/min) and stalkers (${hc.P.mB.stalkPounceRate.toFixed(2)}/min)`);
+}};
 
 async function suite(arch, slow){
   const AR = archOf(arch), F = AR.F, NO = AR.nout;
@@ -111,8 +125,9 @@ async function suite(arch, slow){
   console.log(`${fights.length} probe fights (${[...new Set(fights.map(f => f.tr))].join('/')})`);
 
   console.log(`\n1. Determinism and plumbing [${arch}]`);
-  const Z = M.zeros(F.DIM, 0, 1, NO), ZH = M.withHidden(M.zeros(F.DIM, 16, 0, NO), R.A.rng(3));
-  const cands = [null, Z, {fixed: 0}, ZH, M.zeros(F.DIM, 0, 0, NO)];
+  const set = AR.set ? {set: AR.set} : {}; // the cat: its own intent set
+  const Z = zerosFor(arch, 0, 1), ZH = M.withHidden(zerosFor(arch, 16, 0), R.A.rng(3));
+  const cands = [null, Z, Object.assign({fixed: 0}, set), ZH, zerosFor(arch, 0, 0)];
   const t1 = Date.now(), res = await WK.runShard(jobsOf(cands, fights, arch), 0, 1, 4), fps = res.length / ((Date.now() - t1) / 1000);
   const [rn, rz, rc, rh, r0] = byCand(res, cands.length, fights.length);
   ok(same(rn, rz), 'zero weights (margin 1) = no policy, every fight (event log + final positions)');
@@ -150,7 +165,7 @@ async function suite(arch, slow){
   ok(sA.P0.nout === NO && sA.theta.length === NO * (F.DIM + 1) && sA.intents.length === NO, `state carries the ${arch} model shape (${NO} intents × ${F.DIM} features + bias)`);
 
   console.log(`\n2. Reward sanity [${arch}]`);
-  const PR = PROBES[arch], pr = [Z, ...PR.names.slice(1).map((_, i) => ({fixed: i + 1}))];
+  const PR = PROBES[arch], pr = [Z, ...PR.names.slice(1).map((_, i) => Object.assign({fixed: i + 1}, set))];
   const res2 = await WK.runShard(jobsOf(pr.slice(1), fights, arch), 0, 1, 4), arms = [rz, ...byCand(res2, pr.length - 1, fights.length)];
   const ref = RW.reference(rz);
   const rows = arms.map((a, i) => { const P = RW.paired(rz, a, ref); const parts = Object.keys(RW.goalParts(a[0])).map(k => [k, RW.mean(a.map(r => RW.goalParts(r)[k]))]);
@@ -201,26 +216,45 @@ async function suite(arch, slow){
   const t00 = Date.now();
   console.log(`harness test${QUICK ? ' (quick)' : ''}, tmp ${tmp}`);
   console.log('\n0. Engine: no policy = the engine before the guard hook; archetypes stay independent');
-  const rs = refSim();
+  // the hook must be inert without weights. The old check compared against the newest sim.js without the guard hook, but
+  // deliberate engine changes since (the light-picks pass) made that reference stale, so by default it now compares no policy
+  // with explicit zero weights for every archetype (zero = the heuristic); REF_SIM=path/to/pre-hook/sim.js restores the old one
   const fg = R.fightSet('probe', 0, NF, {seed: 1, arch: 'guard'}), fh = R.fightSet('probe', 0, NF, {seed: 1, arch: 'harrier'});
+  const all = QUICK ? fg.concat(fh) : fg.concat(fh, require('./common.js').boardJobs(2, 40, 31337)); // + check_identical.js's 320 board fights
+  const z0 = {harrier: zerosFor('harrier', 0, 1), guard: zerosFor('guard', 0, 1)}; for (const a of XARCH) z0[a] = zerosFor(a, 0, 1);
+  { const a = await plainFP(R.SIM, all), b = await plainFP(R.SIM, all, z0);
+    ok(a.every((x, i) => x === b[i]), `no movePolicy = zero weights for every archetype: ${all.length} fights identical (events, final positions/HP/states, end time)`); }
+  const rs = process.env.REF_SIM ? refSim() : null;
   if (rs){
-    const all = QUICK ? fg.concat(fh) : fg.concat(fh, require('./common.js').boardJobs(2, 40, 31337)); // + check_identical.js's 320 board fights
     const a = await plainFP(rs.f || rs, all), b = await plainFP(R.SIM, all);
     ok(a.every((x, i) => x === b[i]), `no movePolicy: ${all.length} fights identical to the pre-guard-hook engine (${rs.h ? 'git ' + rs.h.slice(0, 7) : rs}); events, final positions/HP/states, end time`);
     // a harrier-only policy must not touch your guards: the old engine with that policy = the new one
     const hp = {harrier: {fixed: 2}}, a2 = await plainFP(rs.f || rs, fh, hp), b2 = await plainFP(R.SIM, fh, hp);
     ok(a2.every((x, i) => x === b2[i]), `harrier-only policy (always flank): ${fh.length} fights identical to the pre-guard-hook engine (guards untouched)`);
-  } else console.log('  SKIP pre-hook comparison (set REF_SIM=path/to/pre-hook/sim.js)');
+  }
   const gOnly = await plainFP(R.SIM, fh, {guard: {fixed: 0}, harrier: {fixed: 2}}), hOnly = await plainFP(R.SIM, fh, {harrier: {fixed: 2}});
   ok(gOnly.every((x, i) => x === hOnly[i]), 'adding a zero (always-hold) guard policy next to a harrier policy changes nothing');
   // the other archetypes: zero weights for all five next to the live game's shipped harrier + guard weights = those alone
   // (so the live default is untouched by the new hooks), and each archetype's policy only moves its own units
   const LV = R.A._internals.LIVE, fxs = R.fightSet('probe', 0, QUICK ? 20 : 60, {seed: 3, arch: 'cat'}).concat(R.fightSet('probe', 0, QUICK ? 20 : 60, {seed: 3, arch: 'charger'}));
-  const zx = {}; for (const a of XARCH) zx[a] = M.zeros(archOf(a).F.DIM, 0, 1, archOf(a).nout);
-  const live = {harrier: LV.harrier, guard: LV.guard}, l0 = await plainFP(R.SIM, fxs, live), l1 = await plainFP(R.SIM, fxs, Object.assign({}, live, zx));
+  const zx = {}; for (const a of XARCH) zx[a] = zerosFor(a, 0, 1);
+  const live = {harrier: LV.harrier, guard: LV.guard}, l0 = await plainFP(R.SIM, fxs, live), l1 = await plainFP(R.SIM, fxs, Object.assign({}, live, zx)), l0n = await plainFP(R.SIM, fxs);
   ok(LV.harrier && LV.guard && l0.every((x, i) => x === l1[i]), `zero weights for ${XARCH.join(' / ')} next to the shipped harrier + guard policies: ${fxs.length} fights identical to the shipped policies alone`);
   const c1 = await plainFP(R.SIM, fxs, {cat: {fixed: 2}}), c2 = await plainFP(R.SIM, fxs, Object.assign({cat: {fixed: 2}}, zx, {cat: {fixed: 2}}));
   ok(c1.every((x, i) => x === c2[i]), `a cat-only policy (always flank) gives the same fights with zero weights for every other archetype next to it`);
+  const cb = {cat: {fixed: 6, set: 'cat'}}, c3 = await plainFP(R.SIM, fxs, cb), c4 = await plainFP(R.SIM, fxs, Object.assign({}, zx, cb)), c5 = await plainFP(R.SIM, fxs, {cat: {fixed: 0, set: 'cat'}});
+  ok(c3.every((x, i) => x === c4[i]) && c3.some((x, i) => x !== c1[i]) && c5.every((x, i) => x === l0n[i]), `cat intents: always blind side is unaffected by zero weights for the others and differs from the generic always flank; always commit (cat set) = no policy`);
+  // the cat intents (newest change): without cat weights, fights identical to the engine before them, with livePolicy:false
+  // and with the live default (shipped harrier + guard weights), on the board fights + these cat fights
+  const rc = refSim('CAT_INTENTS', process.env.REF_CAT_SIM);
+  if (rc){
+    const fb = fxs.concat(require('./common.js').boardJobs(2, QUICK ? 10 : 40, 31337));
+    // the live game now ships cat weights too (cat_v1), so the 'live' arm passes the shipped harrier + guard weights explicitly
+    for (const live of [false, true]){
+      const mp = live ? {harrier: LV.harrier, guard: LV.guard} : null, a = await plainFP(rc.f || rc, fb, mp), b = await plainFP(R.SIM, fb, mp);
+      ok(a.every((x, i) => x === b[i]), `no cat weights, ${live ? 'shipped harrier + guard weights' : 'livePolicy:false'}: ${fb.length} fights identical to the engine before the cat intents (${rc.h ? 'git ' + rc.h.slice(0, 7) : rc})`);
+    }
+  } else console.log('  SKIP pre-cat-intents comparison (set REF_CAT_SIM=path/to/sim.js)');
 
   let fA = null;
   // every archetype gets section 1's zero = heuristic and determinism checks; the slow ones (whole dry runs, resume, probe

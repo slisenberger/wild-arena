@@ -57,6 +57,20 @@ const INIT_RULES = {
   patient: [['wait', 'guardsBlock', 1], ['wait', 'tBusy', -1], ['wait', 'tEasy', -1]],
   flankBusy: [['flank', 'tBusy', 1], ['flank', 'tEasy', -1]],
   onlyOnMe: [['wait', 'bias', 1], ['wait', 'tOnMe', -2], ['wait', 'tEasy', -2]],
+  // the cat intents (probes/cat_rules.js; --arch=cat). Exact: blindFirst, coverAmbush, creepUnseen, forYou, busyPounce,
+  // cougarPounce, stalkerPounce; hurtLieLow is hurtBack's approximation (exact with one attacker).
+  // Linear approximations: softer (guardsBlock only, not guardLog > .5), reStalk (the 'spotted' or-term is graded).
+  blindFirst: [['blindside', 'bias', (k, m) => m], ['blindside', 'tHeadsMe', 1], ['blindside', 'inPounce', -3], ['blindside', 'behind', -3], ['blindside', 'tBusy', -3], ['blindside', 'tEasy', -3]],
+  coverAmbush: [['cover', 'bias', (k, m) => m - 2.5 * k], ['cover', 'ambushReady', 1], ['cover', 'treeNear', 1], ['cover', 'tHeadsMe', 1], ['cover', 'tSeesMe', -3], ['cover', 'inPounce', -3]],
+  creepUnseen: [['creep', 'bias', (k, m) => m - .5 * k], ['creep', 'ambushReady', 1], ['creep', 'tSeesMe', -3], ['creep', 'inPounce', -3], ['creep', 'tBusy', -3]],
+  forYou: [['soften', 'bias', (k, m) => m - 1.5 * k], ['soften', 'softExists', 1], ['soften', 'softHuman', 1], ['soften', 'tHuman', -2]],
+  busyPounce: [['pounce', 'bias', (k, m) => m - 2.25 * k], ['pounce', 'in13', 1], ['pounce', 'pounceReady', 1], ['pounce', 'tBusy', .5], ['pounce', 'tEasy', .5]],
+  cougarPounce: [['pounce', 'bias', (k, m) => m - 3.25 * k], ['pounce', 'sp_cougar', 1], ['pounce', 'in13', 1], ['pounce', 'pounceReady', 1], ['pounce', 'tBusy', .5], ['pounce', 'tEasy', .5]],
+  stalkerPounce: [['pounce', 'bias', (k, m) => m - 2.25 * k], ['pounce', 'sp_lion', -3], ['pounce', 'in13', 1], ['pounce', 'pounceReady', 1], ['pounce', 'tBusy', .5], ['pounce', 'tEasy', .5]],
+  hurtLieLow: [['abandon', 'bias', (k, m) => m], ['abandon', 'attackersOnMe', 4], ['abandon', 'hp', -8], ['abandon', 'tEasy', -8]],
+  softer: [['soften', 'bias', (k, m) => m - 1.5 * k], ['soften', 'softExists', 1], ['soften', 'guardsBlock', 1]],
+  reStalk: [['abandon', 'bias', (k, m) => m - 2.125 * k], ['abandon', 'hasAmbush', 1], ['abandon', 'tSeesMe', 1], ['abandon', 'tOnMe', .5], ['abandon', 'tHeadsMe', .5],
+    ['abandon', 'ambushReady', -3], ['abandon', 'inPounce', -3], ['abandon', 'tEasy', -3], ['abandon', 'tBusy', -3]],
 };
 const DRY = {calibFights: 24, calibPerturb: 1, pairs: 2, fights: 12, gens: 1, valEvery: 1, valFights: 12, testFights: 12};
 
@@ -75,11 +89,13 @@ function init(opts){
   const cfg = Object.assign({}, DEFAULTS, opts.dry ? DRY : {}, opts.cfg);
   const AR = archOf(cfg.arch), F = AR.F;
   let P0 = M.zeros(F.DIM, cfg.nh, cfg.margin, AR.nout); if (cfg.nh) M.withHidden(P0, R.A.rng(cfg.seed * 31 + 7));
+  if (AR.set) P0.set = AR.set; // an archetype with its own intent set (the cat): the engine reads the intents by it
   let theta0 = M.flat(P0, cfg.mode);
   if (cfg.initWeights){ // v2: continue from shipped weights (same shape: features, intents, hidden size)
     const W = JSON.parse(fs.readFileSync(cfg.initWeights, 'utf8'));
     const grow = !(W.nh || 0) && cfg.nh > 0; // linear weights into an MLP: keep bl/Wl, fresh random W1/b1, W2 = 0 (same behaviour)
     if (W.nin !== F.DIM || W.nout !== AR.nout || (!grow && (W.nh || 0) !== (cfg.nh || 0))) throw new Error(`initWeights ${cfg.initWeights}: shape ${W.nin}/${W.nout}/${W.nh} does not match ${F.DIM}/${AR.nout}/${cfg.nh || 0}`);
+    if ((W.set || null) !== (AR.set || null)) throw new Error(`initWeights ${cfg.initWeights}: intent set ${W.set || 'generic'} does not match ${AR.set || 'generic'}`);
     P0 = grow ? Object.assign(P0, {bl: W.bl.slice(), Wl: W.Wl.slice(), margin: W.margin}) : Object.assign({}, W); delete P0.meta; P0.margin = W.margin; theta0 = M.flat(P0, cfg.mode);
   }
   if (cfg.initRule){ // encode a hand-written rule in the linear term (the trainable vector starts [bl, Wl], Wl row-major per intent)

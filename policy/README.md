@@ -655,3 +655,122 @@ Run it with the `train` workflow, `sweep: policy/sweeps/m3_arch_s1.json`.
     shipped weights alone;
   - a cat-only policy is unaffected by zero weights for the other archetypes.
 - Section 5 runs a dry run per archetype.
+
+## Milestone 3, cat-specific intents (Oct 26)
+The generic intents were built for wolves; a big cat lives on decisions they can't express. The cat now has its own
+intent set, opt-in: `cfg.movePolicy.cat` weights with `set: 'cat'` (train.js writes it for `--arch=cat`;
+`move_arch.js` `zerosFor`). A cat policy without `set` (the old generic probes) still uses the generic intents.
+Harrier, guard and the other archetypes are untouched; harrier_v1 / guard_v1 load and play as before.
+
+### Engine (sim.js `CAT_INTENTS`, `CAT_GEO`, `catGo`, next to `intentGo`)
+Decisions run where the other intents' do: in the engage branch, only when no committed move (`u.mv`: pounce, charge,
+lunge) is running, every ~0.5 s or on a new target. 0 `commit` = the heuristic, so zero weights are the heuristic.
+An intent that doesn't apply this tick falls back to the heuristic.
+
+| # | intent | what it does |
+|---|---|---|
+| 1 | pounce | spring now from up to 1.3× pounce range (the heuristic waits for pounce range) |
+| 2 | creep | close at 30% speed (tall-grass cover holds) toward a point behind the target, swinging wide; pounce from range |
+| 3 | abandon | withdraw to ~18 m and lie low; the engine's own rule restores the ambush after ~8 s with nothing after the cat |
+| 4 | soften | switch to the softest reachable prey within 25 m (`catSoftness`: hurt, busy, held/running, few guards, within its strength; you ×1.3), held 4 s (`u.cT`, one guarded line in `chooseTarget`) |
+| 5 | cover | hold still beside a trunk within 10 m (the side away from the prey), else flat in the grass; prey in pounce range is pounced |
+| 6 | blindside | circle wide to the point behind the target (its heading: velocity, else toward its own target), then the heuristic pounce |
+
+### Features (`move_cat_features.js`, 95)
+The 61 archetype features, then: distance in pounce ranges, within 1.3× range, is the target heading at me, am I
+behind it, can it see me, its speed, a trunk within 10 m and its distance, softer prey (log softness gain, exists, is
+it you), your guards and distance, the target's softness, time since my last strike, anything after me, ambusher,
+climber, broken canine, letting a stabbed target bleed, species one-hot (tiger, lion, jaguar, cougar, leopard,
+smilodon), coalition, previous cat intent.
+
+### Style (`move_reward.js` cat metrics, telemetry in `move_run.js`, `CTEL`)
+On top of the cat profile (pounce rate, no long chases, no face-on brawls):
+- **stalkPounce** (gate, ±0.1): the share of pounces with a creep (moving below 45% of top speed) in the 3 s before.
+- **lion vs stalker profiles**: pounce rate per engaged minute and near share, separately for the lion (rush) and
+  the stalkers (±30% / ±0.1).
+- **stillLong** (gate): lying still (< 1 m/s) on a target for more than 12 s on end; longIdle still applies.
+- **sprintRate** (gate, +40%): metres run at more than 60% of top speed per engaged minute.
+
+### Headroom probe (`node policy/probes/cat_rules.js 800`, `LIVE=1`; `logs/m3_cat_headroom*.txt`, `logs/m3_cat_confirm.txt`)
+800 paired fights per arm (probe pool 7, the shipped harrier + guard policies on), 1.77 cats per fight, heuristic goal
+0.377, kills of you 12.8%. Per-species columns are the goal difference on the fights with that cat (n ≈ 210–280;
+smilodon 36). Fixed intents:
+
+| arm | goal ± SE | style | gates | kills of you |
+|---|---|---|---|---|
+| pounce | −0.010 ± 0.021 | 0.94 | – | −1.8 |
+| creep | −0.170 ± 0.030 * | 0.82 | longIdle | −5.8 |
+| abandon | −0.541 ± 0.030 * | 0.42 | longIdle, stalkPounce, stillLong | −12.8 |
+| soften | −0.038 ± 0.027 | 1.00 | – | −2.5 |
+| cover | −0.459 ± 0.030 * | 0.41 | longIdle, stalkPounce, stillLong | −11.1 |
+| blindside | −0.069 ± 0.027 * | 1.00 | – | −3.0 |
+
+Conditional rules (share of decisions that leave commit in brackets):
+
+| rule | when | goal ± SE | kills of you | notable species |
+|---|---|---|---|---|
+| reStalk (2%) | spotted with the ambush spent → abandon | +0.000 ± 0.008 | −0.3 | – |
+| softer (6%) | target guarded and softer prey near → soften | −0.049 ± 0.023 * | −2.3 | tiger −0.119 ± 0.046 |
+| blindFirst (26%) | target facing me, not busy → blindside | −0.025 ± 0.025 | −2.1 | – |
+| busyPounce (4%) | target busy/easy, within 1.3× → pounce | +0.014 ± 0.019 | −0.4 | cougar +0.088 ± 0.034 |
+| coverAmbush (4%) | ambush ready, unseen, trunk near, prey coming → cover | −0.022 ± 0.014 | −0.8 | – |
+| forYou (1%) | the softest prey near is you → soften | −0.004 ± 0.010 | +0.3 | – |
+| creepUnseen (42%) | ambush ready, unseen → creep | −0.028 ± 0.026 | −2.5 | – |
+| hurtLieLow (2%) | below half HP and mobbed → abandon | +0.002 ± 0.009 | +0.0 | – |
+| cougarPounce (<1%) | busyPounce, cougar only | +0.008 ± 0.005 | +0.4 | cougar +0.031 ± 0.018 |
+| stalkerPounce (2%) | busyPounce, not the lion | +0.008 ± 0.015 | +0.0 | cougar +0.059 ± 0.030 |
+
+**Fresh draw** (pool 8, 1,200 fights): busyPounce −0.001 ± 0.012, **cougarPounce +0.007 ± 0.005** (cougar fights
++0.026 ± 0.017), stalkerPounce +0.010 ± 0.011. **No cat rule is confirmed at 2 SE yet.** cougarPounce is positive in
+both draws (pooled about +0.0075 ± 0.0035, 2.1 SE; cougar fights +0.028 ± 0.013): the cougar's 12 m leap from a bit
+farther onto a busy target. It is tiny because it fires rarely.
+
+Reading: the heuristic cat is hard to beat with one-line rules. Every fixed intent lowers kills of you; the rules
+fire rarely (cats are mostly latched on or pouncing, where nothing decides). What I'd try next:
+1. learning (`m3_cat_s1`, below), which found +13 s for the guards where rules found nothing;
+2. per-species rules and features (the cougar is the only consistent signal; the tiger and leopard lose most from
+   detours);
+3. decisions while latched (let go / hold on / switch), where cats spend their fights and the hook has no say;
+4. a richer soften (prefer you when your guards are busy, not only when you're softest).
+
+### Training
+`node policy/train.js init run/x.json --arch=cat [--initRule=cougarPounce|stalkerPounce|busyPounce|creepUnseen|blindFirst|coverAmbush|forYou|softer|reStalk|hurtLieLow] ...`.
+The generic rules (patient, flankBusy, …) are refused for the cat now (no wait / flank intents). Exact encodings,
+checked 40 of 40 fights identical to the hand-written rule: blindFirst, coverAmbush, creepUnseen, forYou, busyPounce,
+cougarPounce, stalkerPounce. softer (31/40), reStalk (39/40) and hurtLieLow (33/40) are linear approximations.
+`--initWeights` must carry the same intent set.
+
+**Sweep** `policy/sweeps/m3_cat_s1.json`: 12 runs, all `--withLive=true`, val/test sizes as m3_arch_s1:
+- warm starts: cougarPounce (clip 1, clip 1 with σ .05, clip 2), stalkerPounce (clip 1, σ .1 and .05), busyPounce
+  and creepUnseen (clip 1, σ .05);
+- cold starts at clip 1: σ .1 ×2, σ .05 ×2, and a full MLP (16 hidden) at σ .05.
+
+### Tests
+`node policy/harness_test.js --arch=cat` 44/44 (`logs/m3_harness_test_cat.txt`); the full default run 179/179 in 32 min on a loaded machine (`logs/m3_harness_test_catset.txt`):
+- zero weights, always-commit, zero output over a random hidden layer, all with `set:'cat'`: identical to no policy;
+  serial = threads = shards; whole dry runs, CLI shards, resume; seed pools; drift.
+- Probe sanity: always abandon / always cover are clearly worse, below the style threshold, fail longIdle (cover also
+  stillLong), drift, pounce less; the heuristic's profile has stalked pounces and lion and stalker pounce rates.
+- Section 0: always blindside is unaffected by zero weights for the others and differs from generic always-flank;
+  always commit with the cat set = no policy.
+- **Byte-identical**: without cat weights, fights match the engine before the cat intents (the newest sim.js
+  revision without `CAT_INTENTS`, or `REF_CAT_SIM`) exactly, both with `livePolicy:false` and with the live default.
+
+## Milestone 3 v2 sweep (Oct 26, Actions run 40372090395, `policy/sweeps/m3_v2.json`): no v2 so far
+- Warm starts from the shipped weights (`--initWeights`, test bar = v1): guards stayed at init in 8 of 10 runs; the one that
+  moved, g2_c2_s1, measured +7.9 ± 3.7 s vs guard_v1 on 1,200 fresh fights (`eval_guard.js`, seed 4242) and +2.5 ± 2.8 s,
+  win −0.4 ± 1.1 pts on 2,000 more (seed 777123): not real. Harriers: h2_c1_s1 passed its training test (+0.033 ± 0.016)
+  but on 1,200 fresh probe fights (index 33) vs harrier_v1: +0.011 ± 0.014; h2_c2_s1 +0.031 ± 0.018; h2_c2_big +0.008 ± 0.017.
+- Cold runs with `--thetaClip` no longer collapse everywhere: harrier cold_c1 +0.052 ± 0.013, cold_c1_small +0.099 ± 0.016,
+  guard cold_c1_small +0.065 ± 0.021 vs the heuristic, i.e. the same level as v1 (guard cold_c1_small vs guard_v1:
+  −1.0 ± 3.3 s). Big-σ cold runs still ended at zero.
+- Reading: v1 sits at a plateau for the current features and intents, so far. Next lever is richer inputs/actions, not
+  more ES on the same space.
+
+## Cat sweep m3_cat_s1 (Oct 27, Actions run 40404764891): shipped as cat_v1
+Training tests vs heuristic (1,200 held-out fights): creepUnseen warm +0.120 ± 0.023, cougarPounce warm (cp_c1) +0.097 ± 0.024,
+stalkerPounce warm +0.079 ± 0.023, cold σ .05 +0.072 ± 0.024; the rest within 2 SE (cold σ .1 and the full MLP ended at zero).
+Independent check (`node policy/probes/eval_arch.js <state> 1500 41`, shipped policies on for everything else): creepUnseen
++0.094 ± 0.021 but fails the longIdle gate (0.010→0.037) and drifts on noContact, cp_c1 +0.080 ± 0.021 clean, stalkerPounce
++0.061 ± 0.020, cold +0.076 ± 0.020. Second fresh draw for cp_c1 (2,000, probe 53): +0.053 ± 0.017, style 1.00, no gate/drift;
+intent shares commit 24%, creep 74%, pounce/blindside ~1% each. Shipped as `policy/weights/cat_v1.json` (live.js, build.js).

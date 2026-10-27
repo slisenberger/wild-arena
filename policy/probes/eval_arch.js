@@ -20,4 +20,9 @@ Promise.all([...Array(T).keys()].map(k => new Promise(res => { const w = new Wor
   console.log(`  goal ${q.diff >= 0 ? '+' : ''}${q.diff.toFixed(3)} ± ${q.se.toFixed(3)} | parts ${parts.map(k => `${k} ${d(r => RW.goalParts(r)[k]) >= 0 ? '+' : ''}${d(r => RW.goalParts(r)[k]).toFixed(3)}`).join(', ')}`);
   console.log(`  style ${q.styleB.style.toFixed(3)} gates [${q.styleB.failed}] drift [${q.driftB.join('; ')}]`);
   console.log(`  human survival ${(100 * RW.mean(A.base.map(r => r.survived))).toFixed(1)}% -> ${(100 * RW.mean(A.learned.map(r => r.survived))).toFixed(1)}% | time alive ${d(alive) >= 0 ? '+' : ''}${d(alive).toFixed(1)} s | own deaths/fight ${d(r => r.deaths) >= 0 ? '+' : ''}${d(r => r.deaths).toFixed(3)}`);
+  console.log(`  kills of you by this archetype ${(100 * d(r => r.killedYou || 0)).toFixed(1)} pts, dmg to your side ${d(r => r.dmgFoe || 0).toFixed(0)}`);
+  const AR = require(path.join(__dirname, '..', 'move_arch.js')).arch(arch), names = AR.intents || [], c = []; // intent shares (from main's eval_arch)
+  for (const r of A.learned) (r.intents || []).forEach((v, k) => c[k] = (c[k] || 0) + v);
+  const tot = c.reduce((a, b) => a + (b || 0), 0);
+  if (tot) console.log('  intent shares: ' + c.map((v, k) => `${names[k] || k} ${(100 * (v || 0) / tot).toFixed(1)}%`).join(', '));
 });

@@ -29,6 +29,9 @@ const XTEL = {chaseSpd: .6, longChase: 8, far: 20};
 // spec telemetry (behavior-spec doc, reviewed Oct 26): a cat's rush starts within ~15-30 m (Laundre & Hernandez 2003;
 // Schaller 1967); pack kills follow the prey running (Mech 1966: 0 of 36 moose that stood were killed, 5 of 41 that ran)
 const STEL = {farRush: 30, sprint: .85, moving: 1.5};
+// cats: a pounce counts as stalked if the cat was creeping (moving below 45% of its top speed, the tall-grass cover
+// limit) within the 3 s before it; lying still (< 1 m/s) on a target for > 12 s on end is a long hold
+const CTEL = {stalkSpd: .45, stalkWin: 3, stillV: 1, stillT: 12};
 
 // ---------- fight sets (seed pools) ----------
 // Each pool is its own stream; a set is (pool, index). Fights: boards dealt with A.dealBoard per map, a player-like
@@ -79,6 +82,9 @@ function runFight(f, weights, arch){
   // the other non-harrier archetypes (records tagged with arch): signature-move starts and the realism-gate telemetry
   const X = arch !== 'harrier';
   if (X) Object.assign(r, {arch, charges: 0, pounces: 0, longChaseT: 0, farHuntT: 0, badgerLife: 0, badgerBackT: 0});
+  // cats: stalk-then-pounce, lion (rush) vs stalker profiles, long holds in cover, sprint distance
+  const CAT = arch === 'cat';
+  if (CAT) Object.assign(r, {stalkPounces: 0, pRush: 0, pStalk: 0, engRush: 0, engStalk: 0, nearRush: 0, nearStalk: 0, stillLongT: 0, sprintM: 0});
   let hp0 = H.hp;
   while (!w.over){
     A.step(w);
@@ -93,7 +99,14 @@ function runFight(f, weights, arch){
       if (eng){ const d = I.dist(u, t); r.engT += DT; r.distSum += d * DT; if (d <= TEL.near) r.nearT += DT; }
       const dart = !!(u.mv && u.mv.k === 'dart'); if (dart && !s.dart) r.darts++; s.dart = dart;
       if (X){
-        const mk = u.mv ? u.mv.k : null; if (mk !== s.mk){ if (mk === 'charge') r.charges++; else if (mk === 'pounce') r.pounces++; s.mk = mk; }
+        const mk = u.mv ? u.mv.k : null; if (mk !== s.mk){ if (mk === 'charge') r.charges++; else if (mk === 'pounce'){ r.pounces++; if (CAT){ if (w.t - (s.slowAt || -99) <= CTEL.stalkWin) r.stalkPounces++; r[u.s.gait === 'rush' ? 'pRush' : 'pStalk']++; } } s.mk = mk; }
+        if (CAT){
+          const v = Math.hypot(u.vx, u.vy), rush = u.s.gait === 'rush';
+          if (st === 'close' && v > .5 && v < CTEL.stalkSpd * u.s.spd) s.slowAt = w.t;            // creeping in (cover holds)
+          if (eng){ r[rush ? 'engRush' : 'engStalk'] += DT; if (I.dist(u, t) <= TEL.near) r[rush ? 'nearRush' : 'nearStalk'] += DT; }
+          if (eng && st === 'close' && v < CTEL.stillV){ s.still = (s.still || 0) + DT; if (s.still > CTEL.stillT) r.stillLongT += DT; } else s.still = 0; // lying still on a target
+          if (st === 'close' && v > XTEL.chaseSpd * u.s.spd) r.sprintM += v * DT;              // metres run down at speed
+        }
         // long chase: closing in at > 60% of its top speed for > 8 s on end
         if (st === 'close' && Math.hypot(u.vx, u.vy) > XTEL.chaseSpd * u.s.spd){ s.chase = (s.chase || 0) + DT; if (s.chase > XTEL.longChase) r.longChaseT += DT; } else s.chase = 0;
         if (st === 'close' && I.dist(u, t) > XTEL.far) r.farHuntT += DT;   // hunting something far across the field
@@ -181,7 +194,7 @@ function fingerprint(w){
 function runTasks(tasks, cands, fights, arch){ return tasks.map(k => ({k: k.k, rec: runFight(fights[k.f], cands[k.c], arch)})); }
 
 function fileHash(files){ const h = crypto.createHash('sha256'); for (const f of files) h.update(fs.readFileSync(f)); return h.digest('hex').slice(0, 16); }
-const HARNESS_FILES = ['move_features.js', 'move_guard_features.js', 'move_arch_features.js', 'move_arch.js', 'move_model.js', 'move_policy.js', 'move_run.js', 'move_reward.js'].map(f => path.join(__dirname, f));
+const HARNESS_FILES = ['move_features.js', 'move_guard_features.js', 'move_arch_features.js', 'move_cat_features.js', 'move_arch.js', 'move_model.js', 'move_policy.js', 'move_run.js', 'move_reward.js'].map(f => path.join(__dirname, f));
 const simHash = () => fileHash([SIM]);
 const harnessHash = () => fileHash(HARNESS_FILES);
-module.exports = { A, SIM, TERR, TEL, XTEL, GTEL, GCLASS, GSIG, guardClass, POOL, stateOf, fightSet, cfgOf, runFight, runTasks, fingerprint, simHash, harnessHash };
+module.exports = { A, SIM, TERR, TEL, XTEL, CTEL, GTEL, GCLASS, GSIG, guardClass, POOL, stateOf, fightSet, cfgOf, runFight, runTasks, fingerprint, simHash, harnessHash };

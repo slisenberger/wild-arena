@@ -228,6 +228,11 @@ Pick for new roles. Top three for design value: **honey badger, moose, Komodo dr
 - [ ] Identity check in audit.js: per-fight counts of each signature (sweeps, mock charges, stomps, tree drops,
   death rolls, holds, grudge kills, lookout spots).
 - [x] Decided against: leopard dragging kills up a tree (it would leave the fight: a liability on your side).
+- [x] **Light-pick signatures (Oct 26):** musk (honey badger), claw kick (ostrich), nape bite (cougar), swims in unseen
+  (jaguar), tester/leads a chase (lone wolf), cracks bone (hyena), repeat bluffs that run things off (black bear),
+  chest-beat (gorilla), upends (boar), leaps on its back (lion), hidden guard (leopard). ROSTER.md has rates and values.
+- [ ] Follow-ups: musk rarely fires (predators skip badgers); lone hyena lost value (−7 ± 5); black bear and ostrich
+  still barely move the score; jaguar needs a dry-map hook; reprice (big enemies' threat fell 4–10 s).
 
 ## 7b. Art and presentation
 - [ ] **Portraits for every animal** (in progress: public-domain/CC0 Commons images only, credited in CREDITS.md).
@@ -244,6 +249,18 @@ Pick for new roles. Top three for design value: **honey badger, moose, Komodo dr
 - [ ] Real frame animation needs drawn sprites: an original art project (don't trace others' photos).
 
 ## 8. Replayability
+- [x] **Roguelike "migration" mode (owner, Oct 26) — first playable done (Oct 26).** 7 fights, $600 start; earn $80/min alive
+  + $25 per enemy down + $50 for surviving (rounded to $50); survivors keep wounds (heal 40%, you 30%), the dead are gone,
+  packs carry their surviving members; death ends the run. Between fights: recap, 1-of-3 boons (8: spear, waterskin,
+  snowshoes, ranger's whistle, smoke pots, thick hide coat, field dressing, lookout tower), trading post (a fresh board
+  of 8 + 1.5/fight animals at $1,100 + $550/fight; buy, undo, sell for half). Fight 4 megafauna (a rare giant or
+  sabre-tooth guaranteed), fight 7 the herd (elephant + mammoth); maps rotate through all four terrains. Score: fights
+  survived, then total time; best run + daily migration in localStorage, share line. Rules in `migration.js`; greedy
+  bot `migration_bot.js` (200 runs: median 4 fights survived, 74% reach fight 4, 51% fight 5, 7% win).
+  Follow-ups: sell price by health; a smarter bot (does selling or boon choice matter?); boon balance (measure each
+  boon's swing; spear and hide are weak, whistle/tower/dressing likely matter most); events between fights (river
+  crossing, drought); "rest" option (skip the trading post to heal more); per-run leaderboard via the daily seed;
+  a migration share link that replays the run; scout the next board before buying; mount choice remembered per run.
 - [ ] **Daily challenge** (shared seed, shared map) + **verified leaderboard** (store the config,
   re-simulate to verify the score — cheap because the sim is deterministic).
 - [ ] **Mutators / rules cards:** drought, night, double predators, no mounts, half budget, random prices.
@@ -266,11 +283,20 @@ Pick for new roles. Top three for design value: **honey badger, moose, Komodo dr
   Engine: `cfg.board` (done). Probe: `board.js` (how winnable random boards are by K). Open: group items
   (multiple units per species), a winnability check when dealing a board (offline-verified daily boards, or a
   fast value model), UI for the board, and pricing measured in board mode.
-- [ ] **Fixed animal-count choices:** a rules option where you pick exactly N animals (e.g. 3 or 4)
-  instead of spending a budget — simpler, and a different puzzle. Can coexist with budget mode.
+- [x] **Fixed animal-count choices** (done Oct 2026, UI only; removed Oct 27: the owner found it bad): a "Pick N" draft mode on the arena screen next to
+  Budget — pick exactly N (2–5, default 3) board animals whatever they cost; everything unpicked is still the other
+  side. Header shows picks left, prices are hidden, bests are kept per mode (`|pickN` key suffix), and there's a
+  **Daily Pick-3** with its own seed and best key (`wa-daily-pick3:<date>`). Open: price-free winnability check
+  (some boards may be lopsided with 3 picks; not measured yet).
 - [ ] **Rotating sets with rare choices:** each day/week/seed offers a rotating roster; some animals are
   rare (appear in few rotations), so a game with the honey badger or an orca-in-the-river is an event.
-- [ ] Per-map score-attack leaderboards; shareable seed + team links.
+- [x] **Shareable game links** (done Oct 2026): `#g=1,m:<map>,b:<board seed>,s:<fight seed>,d:<b|pN>[,t:<ids>,r:<mount|->,p:you=x_y;id=x_y][,sc:<score>]`.
+  "Copy link" on the draft screen and in the result banner (Clipboard API, falls back to a selected field). Opening one
+  restores map, board, seed, mode and team/formation, shows "Shared game: can you beat 3:12?", and replays the same fight.
+  Versioned and lenient (missing fields default; unreadable links or unknown maps get a fresh board and a note).
+- [x] **Daily streak** (done Oct 2026): consecutive UTC days with a daily run (either kind), `wa-streak` in localStorage,
+  shown next to the Daily buttons.
+- [ ] Per-map score-attack leaderboards.
 
 ## 9. Learned AI (ambition)
 - [ ] **Cat headroom (owner: "no headroom, so far"):** rules over the generic intents found nothing for cats, but the guards
@@ -323,3 +349,11 @@ Pick for new roles. Top three for design value: **honey badger, moose, Komodo dr
 - [ ] Turn the probes into a regression suite run after every engine change (`quick.js`, `camp.js`,
   `idle.js`), with thresholds (e.g. quiet-win share, loiter time, corner advantage).
 - [ ] Record per-run telemetry once and reuse it across analyses.
+
+- [ ] **5 in a Row** (owner idea, Oct 27; prototype behind `?five=1`): five boards in a row, win all five, one retry.
+  Open after playtest: daily-only vs free play, best-of-3 per board instead of the retry, filtering out boards where even the
+  best team wins < ~70% (board.js-style check per daily board), whether a replay of today's run should count.
+
+- [x] **Elephant rare** (owner, Oct 27): dealt through the rare slot (~8% of boards); board total kept at $2,600 (harder,
+  median best team 88%, typical team 160 s). Next for variety: new mid-tier animals that can cost $200+ (research in
+  `research/mid_tier_candidates.md`).
