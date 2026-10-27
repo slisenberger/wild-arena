@@ -17,7 +17,7 @@ for (const a of A.ANIMALS){
   else p = Math.min(p, CAP - 100); // nothing ordinary costs as much as a giant
   prices[a.id] = p;
 }
-const common = A.ANIMALS.filter(a => !a.rare).map(a => a.id);
+const common = A.ANIMALS.filter(a => !a.rare && (a.dealWeight ?? 1) > 0).map(a => a.id); // (a form that is never dealt, like the lone musk ox, doesn't count)
 const total = Math.round(K * common.reduce((s, id) => s + prices[id], 0) / common.length / 100) * 100;
 fs.writeFileSync(out, JSON.stringify({prices, total, giantCap: CAP, secPer100: SEC}, null, 1));
 console.log(`scheme: ${SEC} s per $100, giants capped at $${CAP}; board total $${total} for ${K} animals`);

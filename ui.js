@@ -769,8 +769,9 @@ const SIGLABEL = {'killing stab':'Killing stab', 'snaps a canine':'Snaps a sabre
   'two-footed kick':'Two-footed kick', 'clinch and kick':'Clinch and kick', 'tree drop':'Drops from the tree', 'skull bite on a croc':'Skull bite',
   'lion killer':'Lion killer', 'grudge hit':'Grudge', 'foot-thump alarm':'Thump alarm', 'lookout spots a threat':'Lookout spots it',
   'charges blind at a sound':'Charges blind', 'chases movement':'Chases movement', 'rider knocked off':'Rider thrown', 'knockback':'Knocked back',
-  'twists free':'Twists free', 'lets it bleed':'Lets it bleed', 'tree escape':'Up a tree'};
-const SIGPRI = {'killing stab':3, 'death roll':3, 'holds it under':3, 'maul':2, 'sweep':2, 'mock charge':2, 'stomp':2, 'encircles':2, 'two-footed kick':2, 'snaps a canine':2};
+  'twists free':'Twists free', 'lets it bleed':'Lets it bleed', 'tree escape':'Up a tree',
+  'forms a ring':'Forms a ring', 'forms a line':'Shoulder to shoulder', 'sortie':'Sortie', 'ring broken':'Ring broken', 'faces down a stalker':'Faces it down', 'tusk stab':'Tusk stab'};
+const SIGPRI = {'killing stab':3, 'death roll':3, 'holds it under':3, 'maul':2, 'sweep':2, 'mock charge':2, 'stomp':2, 'encircles':2, 'two-footed kick':2, 'snaps a canine':2, 'forms a ring':3, 'forms a line':2, 'faces down a stalker':3, 'tusk stab':2, 'ring broken':2};
 const CALLOUT_LIFE = 1.6, CUE_MAX = 2;
 function cuesFor(w){
   if (w._cues) return w._cues;

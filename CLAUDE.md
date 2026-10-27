@@ -40,7 +40,7 @@ count as 5:00). Live site: GitHub Pages serves `index.html` from `main`.
   (Fight straight from the draft with auto formation, Skip to result, Play again / New board); `audit.js` re-measures taps
   and scroll on phone/360/desktop, `modes_check.js` checks the hidden modes, daily and share links through the bar.
 - `template.html` — page shell + CSS with placeholders `/*FACES*/`, `/*SIM*/`, `/*UI*/`.
-- `faces.json` — 28 base64 portraits (112×112) keyed by species id, cropped from public-domain/CC0 (giant kangaroo: CC BY 3.0)
+- `faces.json` — 31 base64 portraits (112×112) keyed by species id, cropped from public-domain/CC0 (giant kangaroo: CC BY 3.0; gaur: CC BY 2.0)
   Wikimedia Commons images (the original meme crops were replaced: unknown rights). `CREDITS.md` lists each
   source; `build.js` turns its table into the in-game Image credits panel. Pack items reuse their species' face.
 - `build.js` — `node build.js` assembles everything into the single self-contained `index.html`.
@@ -123,7 +123,7 @@ round. Report ± standard errors.
   the arena has fully closed. `zoneAt(w, t)` gives the box for rendering.
 - **Morale from losses** is species- and proximity-based: a death shakes its own kind fully and anything within
   15 m that saw it (0.4); it no longer demoralizes the whole side (that made weak animals and packs liabilities).
-- **Roster (28 species, 34 picks with packs/herds):** the original 16 plus black rhino (1.2 t, irritable blind charger — the white rhino is now
+- **Roster (31 species, 37 picks with packs/herds; the lone musk ox is never dealt):** the original 16 plus black rhino (1.2 t, irritable blind charger — the white rhino is now
   placid, no `blindCharger`), fighting bull (`bred`: always worked up), moose (snow-proof, strong swimmer,
   front-hoof stomper), ostrich (lookout + kicker, fast evasive mount), honey badger (`fearless`: morale never
   breaks, takes on anything), and the rare triceratops (`rare`, `giant`: 8 t charger, rideable at 3 m; only
@@ -140,6 +140,41 @@ round. Report ± standard errors.
   target) a killing stab ×3, half armor, 8 s bleed, then it lets go and circles at 8 m (`backT`) while it bleeds.
   Canine break 3% (+30% unheld or big fresh prey, +35% armor ≥ .45): dmg ×.7 for good. `bigGame` prey ×1.5 at
   1.5–4× its mass; avoids armor ×.3; cougar yields to it. $100, swing 27 ± 4 s (mine +17 vs tiger +14).
+  Then (29–31, Oct 27, subagent; from `research/mid_tier_candidates.md`, stat lines revised after an independent zoology review):
+  - **Habitat rule** in `dealBoard`: a species may carry `habitat: {terrain: weight}` (absent = every map, weight 1); it is dealt
+    only on those maps, drawn with that weight (`habitatWeight`, `dealsOn(id, terrain)` exported; no terrain given = not dealt).
+    It draws no extra random numbers: with no weight ≠ 1 in the pool the pick is the old `floor(R()·n)`, and on maps a habitat
+    species can't go the boards equal those of a roster without it (checked on 2,000 seeds × 4 maps). `dealWeight: 0` = a form
+    never dealt (`??` instead of `||`). Adding the gaur (no habitat) does change every board for a given seed (the pool grew).
+  - **Musk ox herd ×3** (`muskoxherd` $400; the lone `muskox` is `dealWeight: 0`: swing 24 ± 5 s, no signature alone), tundra only
+    (`habitat {tundra: 1.5}`, on ~62% of tundra boards). 285 kg (Wikipedia average), spd 11 / stam 15 (the 60 km/h figure is
+    unsourced; reviewer), dmg 100, armor .35, heat .3 (sweat glands only on the head; Copenhagen Zoo), snow .92. `ring`
+    (`ringUpdate`, `RING`): 2+ oxen within 15 m of you (their own centre on the other side) and a predator within 25 m coming for
+    the herd, you or anything of yours inside it → a **line** across its approach (one threat) or a **ring** (several), each ox
+    facing the nearest threat: front hits (±60°) +.25 armor (`horn boss`), morale floor .5, double weight in `guardsAround` (so
+    predators fall back on `waitForOpening`); every 6–10 s the ox nearest a predator within 8 m dashes ≤ 10 m at it (`sortie`)
+    and returns. Breaks (15 s cooldown) when a grizzly/polar (`RING_BREAKERS`: the herd bolts 2.5–4.5 s) or anything over 2× an
+    ox's mass hits a member, or a member drops below 30%; dissolves after 20 s with no predator within 8 m, or 2 s after the last
+    predator leaves. Ringing *you* is the game's abstraction (real rings shelter calves). Sources: NPS Gates of the Arctic
+    "circle defense" and Cape Krusenstern "defense strategy" (line vs circle, one ox charges out and rejoins, grizzlies break it),
+    ADF&G muskox guide (mass), Wikipedia "Muskox". Swing 79 ± 7 s (mine +57, theirs −22; 240 tundra boards); the ring itself is value-neutral (ablated: 86 ± 7): the herd body is the value. Rates per fight it is in (`audit.js 100 1200`): forms a line .78, a ring .18, sortie .49, horn-boss block .52, ring broken .46 (+ .04 by a bear). Stalling (paired with the ring stripped, 400 tundra fights per side): yours 2.8 s of ring per fight, longest no-damage stretch 8.1 vs 7.8 s median, enemy loiter and "gave up" endings unchanged; theirs 3.8 s/fight (it helps you, +14 s mean score), longest ring 22 s, no extra quiet endings.
+  - **Gaur** (`gaur` $300, every map): 1,200 kg (bulls 588–1,500), spd 12 (no measured top speed; reviewer), dmg 170, armor .4,
+    `placid` (no rising agitation floor on the other side), `forestRunner` (charges thread the trees; no forest slowdown),
+    no rival bonus (gaur don't hunt cats; reviewer). `facesDown` (`faceDown`): a stalker (stalk gait or ambush) it can see within
+    20 m creeping on it or on anything of its side within 10 m of it → it walks steadily at the cat for 3 s, the cat loses its
+    ambush and gives up that prey for 12 s and backs off with `FACEDOWN_P` (tiger .4, sabre-tooth .5, jaguar/cougar .7, leopard
+    .8), else attacks without the ambush bonus; 10 s cooldown; hidden cats aren't seen. Sources: Wikipedia "Gaur" (adults circle
+    and face a tiger; tigers "almost always abandon a hunt if detected and met in this manner"; Karanth's Nagarahole herd
+    walking a tiger off; "crash into the jungle at a surprising speed"). Swing 62 ± 7 s (mine +41, theirs −21; savanna 55, river 100, forest 55, tundra 38). Rates: faces down a stalker .22/fight (+ .09 spotted but the cat pressed on). facesDown is value-neutral within noise (stripped: score 215 vs 213 yours, 189 vs 193 theirs) and adds no stalling.
+  - **Walrus** (`walrus` $200, tundra only, `habitat {tundra: 2.5}`, on ~78% of tundra boards): 1,200 kg, land spd 2.5 with
+    stam 4 (a short burst, then ~1.1 m/s exhausted), swim 2.2 (cruise ~7 km/h) with a 7.5 m/s surge at prey within 6 m (the
+    aquatic lunge), dmg 150, armor .5 (10 cm hide, 15 cm blubber), `shoreGuard` (keeps to its water, waits in the water nearest
+    its target, only takes on what comes within 6 m of the water; not stealthy, unlike the croc), `territorial`. `tuskStab`: both
+    it and its target within 1.5 m of water → every other strike ×1.5, half armor, stuns ≤ 1.5× its mass 1 s; a rider on a
+    mount ≤ 2 m tall in water is thrown 30%. On a dry tundra (no lake, ~56%) it is a slow armored lump. Sources: Wikipedia
+    "Walrus" (mass, hide, tusks used for fighting; "even an injured walrus is a formidable opponent for a polar bear"), "Walrus
+    attack" (boats, a hunter stabbed at the ice edge), SeaWorld / NAMMCO (swim speeds). Unverified: land speed (no measurement
+    found). Swing 31 ± 5 s (mine +22, theirs −9; 240 tundra boards; lake maps 27 ± 8, dry 34 ± 8: on a lake it keeps to the water, on dry snow it is an armored lump beside you). Rates: tusk stab .49/fight, surges from the water .36. tuskStab alone adds ~1 s (stripped 30 ± 6). Left alone in its lake on their side it ends 4.5% of fights 'quiet' (moose 1.8%): honest, it won't leave the water; making it haul out instead turned those into slow crawls to 5:00 (reverted). A ×.6 land-damage penalty suggested by the reviewer was dropped: bulls fight with their tusks on haul-outs.
 - **Light-pick identity pass (Oct 26, subagent; ROSTER.md has the table):** one visible signature each, a `sig()` counter,
   no stat changes. Tags: `musk` (honey badger: a predator that bites it or closes to touch reels away, flees 2.5–4 s and
   ignores it 15 s via `repelBy/repelUntil`; 12 s cooldown), `clawKick` (ostrich: kicks on ≤ 4× its mass bleed 6 s and
@@ -161,7 +196,7 @@ round. Report ± standard errors.
   (price_abs N=240, paired): lion +8, leopard +7, gorilla +5 (mine +12), jaguar +3, others within ±4 except lone hyena
   −7 ± 5; big enemies' "theirs" rose 4–10 s (no single mechanic > 4 s). Boards without these species: byte-identical.
 - **Pack items:** `wolfpack` ×4 (dealt 3 in 4), rare `wolfpack6` ×6, `hyenapack` ×4, `lionpack` ×2 (coalition),
-  `buffaloherd` ×3, `bisonherd` ×3 are extra catalog entries (`species` points at the base animal, `group` = size,
+  `buffaloherd` ×3, `bisonherd` ×3, `muskoxherd` ×3 (herd only) are extra catalog entries (`species` points at the base animal, `group` = size,
   `dealWeight`; `sp(s)` gives the species for rivals/yields/snow checks). A board deals each species once, solo or
   as a group. One pick brings the whole group; left on the board, all of it is
   against you. Whole-roster mode (no `cfg.board`) ignores pack items.
@@ -302,7 +337,14 @@ round. Report ± standard errors.
   median board's best team 88% (min 33, p25 75), typical full-spend team 160 s, 16 distinct best teams over 16 boards, no
   elephant in any; best teams spread over rhino 6, hippo 6, tiger 4, giraffe 4, croc 4 (was elephant 5, rhino 4). For
   comparison, total $2,500 gave 96% / 181 s (not adopted: it would make the other side weaker).
-- **Current prices (`abs_r14`, with `cat_v1` live):** 20 s of swing per $100, board total $2,600, budget $1,200, rares 30%.
+- **Current prices (`abs_mid1`, Oct 27, with the musk ox herd, gaur and walrus):** 20 s of swing per $100, giants/herds capped
+  at $700 (triceratops $800), **board total $2,500** (was $2,600), budget $1,200, rares 30%, elephant rare. `price_abs.js 240`
+  (all items) + `price_abs.js 960` for the tundra-only items (240 tundra boards), merged. New: musk ox herd $400 (79 s), gaur
+  $300 (62), walrus $200 (31). Repriced: hippo $400, mammoth $500, croc $200; buffalo, bison $200; grizzly, lion coalition $100.
+  Validation (`RAREP=.3 board.js 16 2 24 12 1200 T`): at $2,500 median board's best team 92% (min 21, p25 79), typical
+  full-spend team 206 s, 79% of teams win a screen run, 16 distinct best teams; at $2,600 (same prices) 79% (min 29, p25 67),
+  166 s, 66%. Neither hits both targets (88–92%, 160–200 s); $2,500 is in range on the median and 6 s over on the typical team.
+- *Previous* prices (`abs_r14`, with `cat_v1` live): 20 s of swing per $100, board total $2,600, budget $1,200, rares 30%.
   Validation: median board's best team 92% (min 50, p25 79), typical full-spend team 175 s, 15 distinct best teams over 16
   boards. Changes: buffalo $300, grizzly $200, bull $200, lion coalition $200, black rhino $200. (22 s/$100 → $2,500: 96%,
   209 s, too easy.) Enemy tiger's threat −18 s (was the most threatening cat).

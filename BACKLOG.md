@@ -139,13 +139,13 @@ that gives you one of each animal, they're weaker by design.
   converges on its packmate's target and doesn't spread out; rivals (lion–hyena) excluded.
 - [x] **done** **Buffalo and bison herds:** `buffaloherd`, `bisonherd` (×3) items; `herd` animals bond with their
   own kind like packs (no lone penalty: a lone buffalo is grumpy, not nervous) and mob the same target.
-- [ ] Herd ideas next: ringing up around you (musk-ox style), stampede contagion, herd-class bonuses (e.g. any two
+- [ ] Herd ideas next: ~~ringing up around you (musk-ox style)~~ (done Oct 27: musk ox herd `ring`), stampede contagion, herd-class bonuses (e.g. any two
   bovids together hold their nerve).
 - [ ] **Sell some animals as groups** (rules option, bends "one of each"): "Wolf pack (4) $300",
   "Hyena clan (3) $300", "Lion pride (2 lionesses + male) $500", "Buffalo herd (3) $600". The pack
   orbits, flanks and hamstrings as a unit; skip it and the other side gets the whole pack.
-- [ ] **Emergent herd behavior:** cohesion, ringing up around the vulnerable one (musk-ox style, with
-  you as the calf), stampede contagion when one breaks. Most realistic and fun to watch, hardest to balance.
+- [ ] **Emergent herd behavior:** cohesion, ~~ringing up around the vulnerable one (musk-ox style, with
+  you as the calf)~~ (done for the musk ox herd, Oct 27), stampede contagion when one breaks. Most realistic and fun to watch, hardest to balance.
 
 ## 5. Maps and variety
 - [ ] **Moderately procedural maps:** seeded, bounded parameters per map type (not freeform) — river
@@ -370,3 +370,14 @@ Pick for new roles. Top three for design value: **honey badger, moose, Komodo dr
   the merged engine): "always wait / always disengage" brawler policies now score style 0.82 / 0.91 (threshold 0.9) and
   don't trip the long-idle gate. Brawlers have no live policy, so the game is unaffected; recalibrate the brawler style
   gates (or the check) before the next brawler training round.
+- [x] **Mid-tier animals, first three (Oct 27):** musk ox herd ×3 (tundra, `ring`), gaur (`facesDown`), walrus (tundra,
+  `tuskStab`), plus the `habitat` deal rule. Details and numbers in CLAUDE.md "Then (29–31)" and ROSTER.md.
+  Follow-ups from the zoology review, not built: a **walrus stampede** (a predator or person near hauled-out walruses sends
+  them all rushing to the water, crushing what's in the way: Kochnev 2002, 85% of Wrangel deaths were crush deaths; needs a
+  walrus herd item), gaur group mobbing of a tiger (several adults; needs a gaur herd), the ring as a liability against
+  human hunters (Inuit + dogs), a "solitary bull" gaur variant (aggr .5), a walrus aggression split (bold in water, flees to
+  water on land). Remaining research candidates: zebra harem ×4, gemsbok, Komodo/Megalania.
+- [ ] **Map-biased deal frequency (long term, owner):** the `habitat {terrain: weight}` field now exists (walrus and musk ox:
+  tundra only). Extend it to the rest of the roster where realism says so (croc/hippo heavier on the river, polar bear and
+  mammoth on the tundra, cats and gaur in the forest, savanna big game), re-measure each map's board strength, and decide
+  whether the board total should vary by map.

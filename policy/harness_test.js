@@ -254,9 +254,11 @@ async function suite(arch, slow){
     ok(a.every((x, i) => x === b[i]), `no cat weights = zero cat weights, ${live ? 'next to the shipped harrier + guard weights' : 'livePolicy:false'}: ${fb.length} fights identical`);
   }
   const rc = process.env.REF_CAT_SIM ? refSim('CAT_INTENTS', process.env.REF_CAT_SIM) : null;
+  // (only fights the older engine can run: boards dealt today may hold animals added since, e.g. the musk ox, gaur, walrus)
+  const refIds = rc ? new Set(Object.keys(require(rc.f || rc).BY_ID)) : null, fbr = rc ? fb.filter(f => f.board.concat(f.team).every(id => refIds.has(id))) : [];
   if (rc) for (const live of [false, true]){
-    const mp = live ? {harrier: LV.harrier, guard: LV.guard} : null, a = await plainFP(rc.f || rc, fb, mp), b = await plainFP(R.SIM, fb, mp);
-    ok(a.every((x, i) => x === b[i]), `no cat weights, ${live ? 'shipped harrier + guard weights' : 'livePolicy:false'}: ${fb.length} fights identical to the engine before the cat intents (${rc.h ? 'git ' + rc.h.slice(0, 7) : rc})`);
+    const mp = live ? {harrier: LV.harrier, guard: LV.guard} : null, a = await plainFP(rc.f || rc, fbr, mp), b = await plainFP(R.SIM, fbr, mp);
+    ok(a.every((x, i) => x === b[i]), `no cat weights, ${live ? 'shipped harrier + guard weights' : 'livePolicy:false'}: ${fbr.length} fights identical to the engine before the cat intents (${rc.h ? 'git ' + rc.h.slice(0, 7) : rc})`);
   }
 
   let fA = null;

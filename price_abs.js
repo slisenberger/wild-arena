@@ -14,7 +14,7 @@ const IDS = process.argv[4] ? process.argv[4].split(',') : A.ANIMALS.map(a => a.
 const jobs = [];
 for (const x of IDS) for (let i = 0; i < N; i++){
   const tr = TERR[i % 4], R = A.rng(i * 104729 + 17);
-  if (A.BY_ID[x].cold < .3 && A.TERRAINS[tr].cold) continue; // never dealt there
+  if (A.dealsOn ? !A.ANIMALS.some(a => (a.id === x || a.species === x) && A.dealsOn(a.id, tr)) : A.BY_ID[x].cold < .3 && A.TERRAINS[tr].cold) continue; // never dealt there (cold-blooded on the tundra, habitat); a lone form never dealt is measured where its group goes
   const base = A.dealBoard(i * 7919 + 5, {terrain: tr}).filter(id => sp(id) !== sp(x)).slice(0, 11);
   const order = base.slice(); for (let k = order.length - 1; k > 0; k--){ const q = Math.floor(R() * (k + 1)); [order[k], order[q]] = [order[q], order[k]]; }
   // base team: 3 random board animals (default), or with env BASE=<budget> a budget fill up to that many dollars (a team of
