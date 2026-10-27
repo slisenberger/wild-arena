@@ -444,3 +444,6 @@ round. Report ± standard errors.
      map; `fiveSeed(date, k, 'board'|'fight'|'retry')`), full-budget draft each, a board counts only if you survive to 5:00,
      one retry per run (new fight seed, redraft allowed). Run saved in `wa-five-run` (resumes after reload), best per day
      `wa-five-best:<date>` ({wins, time}), share line with 🟩🟨🟧🟥⬜ pips. Arena panel (`#fivePanel`) lists today's five maps up front and run progress. Owner to playtest before it goes on the arena screen.
+   - Prototype (Oct 27, ui.js `DRAFT_UIS` block, **hidden unless `?draftui=versus|list|deck|1`**): alternative draft screens with a
+     Default · Versus · List · Deck switcher (`wa-draftui`); one hook in `renderDraft` (`draftAlt`). All host the progressive shop.
+     `research/draft_ui/` (README, `check.js`, tap/scroll numbers). Owner to play and pick.

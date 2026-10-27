@@ -3087,6 +3087,7 @@ function renderDraft(){
   if (S.five) $('newBoard').hidden = true;
   $('boardLede').textContent = R ? progLede(R)
     : five + daily + (`This game's board: ${onBoard.length} animals worth $${boardTotal().toLocaleString()}. Spend up to $${BUDGET.toLocaleString()}; every board animal you don't pick ends up on the other side. Tap a card to draft it; the panel below shows the full stat line.`);
+  if (draftAlt()) return; // a prototype draft screen (?draftui=…, DRAFT_UIS below) renders instead of the cards
   // the cards are grouped by price, priciest first
   const groups = [...new Set(onBoard.map(a => a.price))].sort((x, y) => y - x).map(p => [p, onBoard.filter(x => x.price === p)]);
   for (const [p, items] of groups){
@@ -4488,6 +4489,381 @@ function renderActBar(){
   bar.hidden = !box.children.length;
   document.body.classList.toggle('hasbar', !bar.hidden);
 }
+
+// ---------- DRAFT_UIS: alternative draft screens (prototype Oct 27, hidden unless ?draftui=…; research/draft_ui/README.md) ----------
+// Versus board, compact list and deck. They read and write the same state as the default cards (S.team, S.mount, S.focus and
+// the progressive shop), so deploy and fight are unchanged. The only hook outside this block is `if (draftAlt()) return;` in
+// renderDraft. Their CSS is injected from here (DUI_CSS) so template.html stays untouched. ?draftui=versus|list|deck|default
+// picks one; ?draftui=1 uses the last choice (localStorage wa-draftui); a switcher on the draft screen flips between them.
+const DUI_NAMES = {default: 'Default', versus: 'Versus', list: 'List', deck: 'Deck'};
+const DUI_KEY = 'wa-draftui';
+const DUI = (() => {
+  let q = null; try { q = new URLSearchParams(location.search).get('draftui'); } catch(e){}
+  if (q == null) return {on: false, ui: 'default'};
+  let ui = DUI_NAMES[q] ? q : null;
+  if (!ui) try { ui = localStorage.getItem(DUI_KEY); } catch(e){}
+  return {on: true, ui: DUI_NAMES[ui] ? ui : 'default', sort: 'price', role: '', good: false, afford: false, open: null, flash: null, msg: '', deck: {key: null, i: 0, left: new Set()}};
+})();
+const DUI_HELP = {
+  versus: 'Tap an animal to move it across; ⓘ shows its full stat line.',
+  list: 'Tap a row to draft it, ▾ to open its stat line.',
+  deck: 'One animal at a time: Take or Leave (or swipe right / left). Back and the strip go to any card.',
+};
+const DUI_ROLE = a => a.tags.includes('shoreGuard') ? 'Lurkers' : ({charge: 'Chargers', lumber: 'Brawlers', stalk: 'Cats', rush: 'Cats', orbit: 'Harriers', keepaway: 'Kickers', lunge: 'Lurkers'})[a.gait] || 'Other';
+const duiFit = a => terrainFit(a, S.terrain).reduce((s, [k]) => s + (k === 'good' ? 1 : -1), 0);
+const duiByPrice = ids => ids.map(id => A.BY_ID[id]).sort((x, y) => y.price - x.price || itemName(x).localeCompare(itemName(y)));
+const duiPrem = id => !!(S.prog && id === S.prog.premium);
+const duiFresh = id => !!(S.prog && S.prog.team.some(e => e.id === id && e.fresh));
+const duiEntry = id => S.prog ? S.prog.team.find(e => e.id === id) : null;
+const duiLeft = () => S.prog ? S.prog.money : BUDGET - spent();
+
+// draft or undraft one item, with the same rules and side effects as tapping a default card; false when nothing changed
+function duiToggle(id){
+  const a = A.BY_ID[id]; S.focus = id; let ok;
+  if (S.prog){
+    const r = S.prog; if (duiPrem(id)) return false;
+    ok = duiFresh(id) ? M.unbuy(r, id) : M.buy(r, id);
+    if (!ok && !S.team.has(id)) duiNote(`Not enough money: $${r.money.toLocaleString()} left`);
+    if (ok){ saveRun(); progSync(); S.world = null; }
+    renderAll(); renderHud(); return ok;
+  }
+  ok = true;
+  if (S.team.has(id)) S.team.delete(id); else if (canAdd(a)) S.team.add(id); else { ok = false; duiNote(`${itemName(a)} costs $${a.price}: $${duiLeft().toLocaleString()} left`); }
+  S.world = null;
+  if (S.mount && !S.team.has(S.mount)) S.mount = bestMount();
+  if (!S.mount) S.mount = bestMount();
+  renderAll(); return ok;
+}
+// the progressive shop's sell / undo / heal buttons, wherever a design shows the run's team
+function duiShop(b){
+  if (!S.prog) return false;
+  if (b.dataset.sell) M.sell(S.prog, b.dataset.sell); else if (b.dataset.unbuy) M.unbuy(S.prog, b.dataset.unbuy); else if (b.dataset.heal) M.heal(S.prog, b.dataset.heal); else return false;
+  saveRun(); progSync(); S.world = null; renderAll(); renderHud(); return true;
+}
+let duiNoteT = 0;
+function duiNote(t){ DUI.msg = t; clearTimeout(duiNoteT); duiNoteT = setTimeout(() => { DUI.msg = ''; const n = document.querySelector('#draftAlt .duimsg'); if (n) n.textContent = ''; }, 2600); }
+function duiDetailHTML(id){ S.focus = id; renderDetail(); return $('detail').innerHTML; }
+function duiInfo(id){ $('duiDlgBody').innerHTML = duiDetailHTML(id); $('duiDlg').showModal(); }
+
+// both sides: money, head count and the summed measured value (A.MEASURED: seconds of survival an animal added on your side,
+// or cost you on theirs, each measured alone in paired test fights; a rough guide, since they don't simply add up)
+function duiScore(note){
+  const mine = [...S.team], theirs = S.board.filter(id => !S.team.has(id)), V = id => A.MEASURED[id] || {mine: 0, theirs: 0};
+  const mv = Math.round(mine.reduce((s, id) => s + Math.max(0, V(id).mine), 0)), tv = Math.round(theirs.reduce((s, id) => s + Math.max(0, -V(id).theirs), 0));
+  const cnt = ids => ids.length, $$ = ids => ids.reduce((s, id) => s + A.BY_ID[id].price, 0);
+  const share = mv + tv ? mv / (mv + tv) : .5;
+  const money = S.prog ? `<b>$${S.prog.money.toLocaleString()}</b><span class="sub">left to spend</span>` : `<b>$${spent().toLocaleString()}</b><span class="sub">of $${BUDGET.toLocaleString()} · $${duiLeft().toLocaleString()} left</span>`;
+  return `<div class="duiscore"><div class="sd you"><span class="label">Your side · ${cnt(mine)}</span>${money}<span class="v" title="Measured value">+${mv} s</span></div>`
+    + `<div class="sd foe"><span class="label">Their side · ${cnt(theirs)}</span><b>$${$$(theirs).toLocaleString()}</b><span class="sub">all you leave${S.prog && S.prog.premium ? ', + premium' : ''}</span><span class="v" title="Measured value">−${tv} s</span></div>`
+    + `<div class="tug" title="Measured value, yours vs theirs"><i style="width:${Math.round(share * 100)}%"></i><b></b></div>`
+    + (note ? `<div class="duinote">Measured value: seconds of survival each animal added on your side, or cost you on theirs, in test fights. Rough: they don't simply add up.</div>` : '')
+    + `<div class="duimsg" aria-live="polite">${esc(DUI.msg)}</div></div>`;
+}
+const duiSig = a => { const s = sigOf(a); return s ? `<b>${esc(s[0])}</b> ${esc(s[1])}` : esc(a.style); };
+const duiTags = a => (a.rare ? '<span class="bdg good">Rare</span>' : '') + (groupOf(a) > 1 ? `<span class="bdg good">×${groupOf(a)}</span>` : '');
+const duiPriceHTML = a => `<span class="dprice" style="color:${tierHex(a.price)}">$${a.price}</span>`;
+// a progressive animal's health bars and shop buttons
+function duiProgBits(id){
+  const e = duiEntry(id); if (!e) return '';
+  const a = A.BY_ID[id], heal = !e.fresh && M.needsHeal(e) ? `<button class="btn" data-heal="${id}" ${M.canHeal(S.prog, id) ? '' : 'disabled'}>Heal $${M.healCost(id)}</button>` : '';
+  const act = e.fresh ? `<button class="btn" data-unbuy="${id}">Undo $${a.price}</button>` : `${heal}<button class="btn" data-sell="${id}">Sell $${M.sellPrice(id)}</button>`;
+  return `<span class="hpb">${e.hp.map(hpBar).join('')}${e.lv ? ' ' + stars(e.lv) : ''}</span><span class="dacts">${act}</span>`;
+}
+
+// ---- 1. Versus board: your side and their side, tap to move an animal across ----
+function duiVersus(box){
+  const mine = duiByPrice([...S.team]), theirs = duiByPrice(S.board.filter(id => !S.team.has(id)));
+  const tile = (a, side) => {
+    const prem = duiPrem(a.id), carried = side === 'you' && S.prog && !duiFresh(a.id), cls = ['vt', side, !S.team.has(a.id) && !canAdd(a) ? 'cant' : '', prem ? 'prem' : '', DUI.flash === a.id ? 'flash' : ''].join(' ');
+    const lbl = prem ? 'Not for sale: it fights you' : side === 'foe' ? `Bring ${itemName(a)} to your side` : carried ? `${itemName(a)}: details` : `Send ${itemName(a)} to their side`;
+    return `<div class="${cls}"><button class="vtm" data-${prem || carried ? 'info' : 'id'}="${a.id}" aria-label="${esc(lbl)}">${tokHTML(a, 38)}<span class="vtb"><span class="vtn">${esc(itemName(a))}</span>`
+      + `<span class="vtl">${duiPriceHTML(a)}${duiTags(a)}${prem ? '<span class="bdg bad">Not for sale</span>' : ''}</span><span class="vts">${duiSig(a)}</span></span></button>`
+      + `<button class="vti" data-info="${a.id}" aria-label="${esc(itemName(a))} details"><span>i</span></button>${side === 'you' && S.prog ? `<div class="vtp">${duiProgBits(a.id)}</div>` : ''}</div>`;
+  };
+  box.innerHTML = duiScore(true) + `<div class="vs"><section class="vcol you"><h3>Your side</h3><p class="vh">${S.prog ? 'Undo, sell or heal below each' : 'Tap to send back'}</p><div class="vlist">${mine.map(a => tile(a, 'you')).join('') || '<p class="vempty">Nobody yet. Tap an animal on their side to bring it over.</p>'}</div></section>`
+    + `<section class="vcol foe"><h3>Their side</h3><p class="vh">Tap to bring across</p><div class="vlist">${theirs.map(a => tile(a, 'foe')).join('') || '<p class="vempty">Nobody left against you.</p>'}</div></section></div>`;
+  DUI.flash = null;
+}
+
+// ---- 2. Compact list: one row per animal, sort and filter, the stat line opens inline ----
+function duiList(box){
+  const all = S.board.map(id => A.BY_ID[id]), roles = [...new Set(all.map(DUI_ROLE))].sort();
+  if (DUI.role && !roles.includes(DUI.role)) DUI.role = '';
+  let rows = all.filter(a => (!DUI.role || DUI_ROLE(a) === DUI.role) && (!DUI.good || duiFit(a) > 0) && (!DUI.afford || S.team.has(a.id) || canAdd(a)));
+  const by = {price: (x, y) => y.price - x.price, cheap: (x, y) => x.price - y.price, fit: (x, y) => duiFit(y) - duiFit(x) || y.price - x.price, name: () => 0};
+  rows.sort((x, y) => by[DUI.sort](x, y) || itemName(x).localeCompare(itemName(y)));
+  const seg = [['price', 'Price ↓'], ['cheap', 'Price ↑'], ['fit', 'Map fit'], ['name', 'A–Z']].map(([k, t]) => `<button data-sort="${k}" aria-pressed="${DUI.sort === k}">${t}</button>`).join('');
+  const chips = `<button data-role="" aria-pressed="${!DUI.role}">All ${all.length}</button>` + roles.map(r => `<button data-role="${r}" aria-pressed="${DUI.role === r}">${r}</button>`).join('')
+    + `<button data-good="1" aria-pressed="${DUI.good}">Good on ${esc(A.TERRAINS[S.terrain].name.toLowerCase())}</button><button data-afford="1" aria-pressed="${DUI.afford}">Affordable</button>`;
+  const team = S.prog ? `<div class="label">Your team: undo, sell or heal</div>${progTeamHTML(S.prog, true)}`
+    : `<div class="lteam">${[...S.team].map(id => { const a = A.BY_ID[id]; return `<button class="chip" data-id="${id}" aria-label="Remove ${esc(itemName(a))}">${tokHTML(a, 26)}${esc(itemName(a))} <span class="x">×</span></button>`; }).join('') || '<span class="label">No animals drafted yet</span>'}</div>`;
+  const row = a => {
+    const picked = S.team.has(a.id), prem = duiPrem(a.id), carried = picked && S.prog && !duiFresh(a.id), open = DUI.open === a.id;
+    const fit = terrainFit(a, S.terrain).map(([k, t]) => `<span class="bdg ${k}">${t}</span>`).join(''), rec = recordLine(a.id);
+    const third = (prem ? '<span class="bdg bad">Not for sale: it fights you</span>' : '') + duiTags(a) + fit + (rec ? `<span class="recline">${esc(rec)}</span>` : '');
+    return `<div class="lr${picked ? ' picked' : ''}${!picked && !canAdd(a) ? ' cant' : ''}${prem ? ' prem' : ''}${open ? ' open' : ''}"><div class="lrh">`
+      + `<button class="lrm" data-${prem || carried ? 'open' : 'id'}="${a.id}" aria-pressed="${picked}">${tokHTML(a, 40)}<span class="lrt"><span class="lrn">${esc(itemName(a))}</span><span class="lrs">${duiSig(a)}</span>${third ? `<span class="lr3">${third}</span>` : ''}</span>`
+      + `<span class="lrr">${duiPriceHTML(a)}<span class="lradd">${prem ? '–' : picked ? '✓' : '+'}</span></span></button>`
+      + `<button class="lrx" data-open="${a.id}" aria-expanded="${open}" aria-label="${esc(itemName(a))} stat line">▾</button></div>`
+      + (open ? `<div class="detail lrd">${duiDetailHTML(a.id)}</div>` : '') + '</div>';
+  };
+  box.innerHTML = duiScore(false) + team + `<div class="ltools"><div class="seg lsort">${seg}</div><div class="chips">${chips}</div></div>`
+    + `<div class="lrows">${rows.map(row).join('') || '<p class="vempty">Nothing on this board matches. <button class="linkbtn" data-role="" data-clear="1">Show all</button></p>'}</div>`;
+}
+
+// ---- 3. Deck: one big card at a time, Take / Leave, swipe on touch, back to any card ----
+function duiDeckState(){
+  const key = [S.boardSeed, S.terrain, S.prog ? S.progKey : ''].join(':'), d = DUI.deck;
+  if (d.key !== key){ d.key = key; d.i = 0; d.left = new Set(); }
+  d.order = duiByPrice(S.board).map(a => a.id);
+  d.i = Math.max(0, Math.min(d.i, d.order.length));
+  return d;
+}
+function duiDeck(box){
+  const d = duiDeckState(), n = d.order.length, id = d.order[d.i], a = id && A.BY_ID[id];
+  const strip = d.order.map((x, k) => { const b = A.BY_ID[x], st = S.team.has(x) ? 'taken' : duiPrem(x) ? 'prem' : d.left.has(x) ? 'left' : ''; return `<button class="dkdot ${st}${k === d.i ? ' now' : ''}" data-jump="${k}" aria-label="${esc(itemName(b))}${st ? ' (' + (st === 'taken' ? 'yours' : st === 'prem' ? 'not for sale' : 'left') + ')' : ''}">${tokHTML(b, 30)}</button>`; }).join('');
+  let card, btns;
+  if (!a){
+    const mine = duiByPrice([...S.team]), theirs = duiByPrice(S.board.filter(x => !S.team.has(x)));
+    card = `<div class="dkcard dkend"><div class="dkname">That's the board</div><p class="notes">Your side: ${mine.map(b => esc(itemName(b))).join(', ') || 'just you'}.<br>Against you: ${theirs.length} ${theirs.length === 1 ? 'animal' : 'animals'}, $${theirs.reduce((s, b) => s + b.price, 0).toLocaleString()}.</p><p class="notes">Fight from the bar below, or go back through the deck.</p></div>`;
+    btns = `<button class="btn" data-back="1">‹ Back</button><button class="btn" data-jump="0">From the top</button>`;
+  } else {
+    const picked = S.team.has(id), prem = duiPrem(id), carried = picked && S.prog && !duiFresh(id), cant = !picked && !canAdd(a) && !prem;
+    const bars = [['Power', strengthOf(a) / maxStr], ['Armor', a.armor / .6], ['Speed', a.spd / 20], ['Stamina', Math.min(1, a.stam / 60)]].map(([k, v]) => `<span>${k}</span><div class="bar"><b style="width:${Math.round(Math.min(1, v) * 100)}%"></b></div>`).join('');
+    const sg = sigOf(a), rec = recordLine(id), fit = badgesHTML(a);
+    card = `<div class="dkcard${picked ? ' taken' : ''}${cant ? ' cant' : ''}${prem ? ' prem' : ''}" id="dkCard"><span class="stamp take">Take</span><span class="stamp leave">Leave</span>`
+      + `<div class="dkhd"><span class="dkface" style="${tokStyle(a)}">${faceOf(a) ? '' : a.abbr}</span><div class="dkhb"><div class="label">${d.i + 1} of ${n}${picked ? ' · <span style="color:var(--you)">on your side</span>' : prem ? ' · <span style="color:var(--foe)">not for sale</span>' : d.left.has(id) ? ' · left' : ''}</div><div class="dkname">${esc(itemName(a))}</div>`
+      + `<div class="dkprice" style="color:${tierHex(a.price)}">$${a.price}</div><div class="styleTag">${esc(a.style)}</div></div></div>`
+      + `<div class="badges">${prem ? '<span class="bdg bad">Not for sale: it fights you</span>' : ''}${a.rare ? '<span class="bdg good">Rare</span>' : ''}${groupOf(a) > 1 ? `<span class="bdg good">×${groupOf(a)}, hunt together</span>` : ''}${fit}</div>`
+      + (sg ? `<div class="dksig"><b>${esc(sg[0])}</b>${esc(sg[1])}</div>` : '')
+      + `<div class="bars">${bars}</div><div class="meta">${a.mass.toLocaleString()} kg · ${kmh(a.spd)} km/h${groupOf(a) > 1 ? ` · ${groupOf(a)} of them` : ''}</div>`
+      + (rec ? `<div class="recline">${esc(rec)}</div>` : '') + (S.prog && picked ? `<div class="vtp">${duiProgBits(id)}</div>` : '')
+      + `<button class="linkbtn dkmore" data-info="${id}">Full stat line</button></div>`;
+    const back = `<button class="btn" data-back="1" ${d.i ? '' : 'disabled'} aria-label="Back">‹</button>`;
+    btns = prem || carried ? `${back}<button class="btn dkleave" disabled>${prem ? 'Not for sale' : 'Sell it below'}</button><button class="btn dktake" data-next="1">Next ›</button>`
+      : picked ? `${back}<button class="btn dkleave" data-leave="1">Send back</button><button class="btn dktake" data-take="1">Keep ›</button>`
+      : `${back}<button class="btn dkleave" data-leave="1">Leave</button><button class="btn dktake" data-take="1" ${cant ? 'disabled' : ''}>${cant ? `$${(a.price - duiLeft()).toLocaleString()} short` : `Take $${a.price}`}</button>`;
+  }
+  box.innerHTML = `<div class="dk"><div class="dkstrip">${strip}</div>${card}<div class="dkbtns">${btns}</div>${a && !duiPrem(id) ? '<p class="dkhint">Swipe right to take, left to leave</p>' : ''}${duiScore(false)}`
+    + (S.prog ? `<div class="label">Your team: undo, sell or heal</div>${progTeamHTML(S.prog, true)}` : '') + '</div>';
+}
+// deck moves: take (draft it, next), leave (undraft if needed, next), next, back, jump
+function duiDeckMove(kind, k){
+  const d = duiDeckState(), id = d.order[d.i];
+  if (kind === 'jump'){ d.i = k; return renderDraft(); }
+  if (kind === 'back'){ d.i = Math.max(0, d.i - 1); return renderDraft(); }
+  if (!id) return;
+  if (kind === 'take'){ if (!S.team.has(id) && !duiToggle(id)) return renderDraft(); d.left.delete(id); }
+  if (kind === 'leave'){ if (S.team.has(id) && !duiToggle(id)) return; d.left.add(id); }
+  d.i = Math.min(d.order.length, d.i + 1); renderDraft(); renderActBar();
+}
+// swipe the deck card (pointer events, so touch and mouse both work); vertical scrolling stays with the page
+function duiSwipe(box){
+  let p = null;
+  box.addEventListener('pointerdown', e => { const c = e.target.closest('#dkCard'); if (!c || e.target.closest('button') || DUI.ui !== 'deck') return; p = {x: e.clientX, y: e.clientY, c, id: e.pointerId, dx: 0}; });
+  box.addEventListener('pointermove', e => {
+    if (!p || e.pointerId !== p.id) return; p.dx = e.clientX - p.x;
+    if (Math.abs(e.clientY - p.y) > 40 && Math.abs(p.dx) < 30){ p.c.style.transform = ''; p = null; return; } // a scroll, not a swipe
+    p.c.style.transition = 'none'; p.c.style.transform = `translateX(${p.dx}px) rotate(${p.dx / 25}deg)`;
+    p.c.querySelector('.take').style.opacity = clamp01(p.dx / 90); p.c.querySelector('.leave').style.opacity = clamp01(-p.dx / 90);
+  });
+  const end = e => {
+    if (!p || e.pointerId !== p.id) return; const {c, dx} = p; p = null; c.style.transition = '';
+    const take = dx > 80 && !c.classList.contains('cant') && !c.classList.contains('prem'), leave = dx < -80 && !c.classList.contains('prem');
+    if (take || leave){ c.style.transform = `translateX(${take ? 120 : -120}%) rotate(${take ? 12 : -12}deg)`; c.style.opacity = 0; setTimeout(() => duiDeckMove(take ? 'take' : 'leave'), 160); }
+    else { c.style.transform = ''; c.querySelectorAll('.stamp').forEach(s => { s.style.opacity = 0; }); }
+  };
+  box.addEventListener('pointerup', end); box.addEventListener('pointercancel', end);
+}
+
+// the switcher, the container and the one dialog; built the first time a draftui flag is seen
+function duiEls(){
+  let box = $('draftAlt'); if (box) return box;
+  const st = document.createElement('style'); st.textContent = DUI_CSS; document.head.appendChild(st);
+  const sw = document.createElement('div'); sw.id = 'duiSwitch'; sw.className = 'duisw'; $('teamline').before(sw);
+  sw.addEventListener('click', e => { const b = e.target.closest('button[data-ui]'); if (b && b.dataset.ui !== DUI.ui) duiSet(b.dataset.ui); });
+  box = document.createElement('div'); box.id = 'draftAlt'; box.className = 'dui'; $('tiers').after(box);
+  const dlg = document.createElement('dialog'); dlg.id = 'duiDlg'; dlg.innerHTML = '<div class="dlghd"><span class="label">Stat line</span><button class="btn" id="duiDlgX">Close</button></div><div class="detail" id="duiDlgBody"></div>'; document.body.appendChild(dlg);
+  $('duiDlgX').addEventListener('click', () => dlg.close()); dlg.addEventListener('click', e => { if (e.target === dlg) dlg.close(); });
+  box.addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    const ds = b.dataset;
+    if (duiShop(b)) return;
+    if (ds.info) return duiInfo(ds.info);
+    if (ds.sort){ DUI.sort = ds.sort; return renderDraft(); }
+    if ('role' in ds){ DUI.role = ds.role; if (ds.clear){ DUI.good = DUI.afford = false; } return renderDraft(); }
+    if (ds.good){ DUI.good = !DUI.good; return renderDraft(); }
+    if (ds.afford){ DUI.afford = !DUI.afford; return renderDraft(); }
+    if (ds.open){ DUI.open = DUI.open === ds.open ? null : ds.open; return renderDraft(); }
+    if (ds.jump != null) return duiDeckMove('jump', +ds.jump);
+    if (ds.back) return duiDeckMove('back');
+    if (ds.take) return duiDeckMove('take');
+    if (ds.leave) return duiDeckMove('leave');
+    if (ds.next) return duiDeckMove('next');
+    if (ds.id){
+      // keep the tapped row / tile in place when the page above it changes height
+      const sel = `[data-id="${ds.id}"]`, top = b.getBoundingClientRect().top;
+      DUI.flash = ds.id; duiToggle(ds.id); DUI.flash = null;
+      if (DUI.ui === 'list'){ const nb = box.querySelector('.lrows ' + sel); if (nb){ const dy = nb.getBoundingClientRect().top - top; if (Math.abs(dy) > .5) window.scrollBy(0, dy); } }
+    }
+  });
+  duiSwipe(box);
+  document.addEventListener('keydown', e => {
+    if (S.screen !== 'draft' || DUI.ui !== 'deck' || $('duiDlg').open || e.target.closest('input, textarea, select')) return;
+    if (e.key === 'ArrowRight'){ const c = $('dkCard'); if (c && !c.classList.contains('cant')) duiDeckMove(c.classList.contains('prem') ? 'next' : 'take'); }
+    else if (e.key === 'ArrowLeft'){ const c = $('dkCard'); if (c && !c.classList.contains('prem')) duiDeckMove('leave'); }
+    else if (e.key === 'Backspace') duiDeckMove('back');
+  });
+  return box;
+}
+function duiSet(ui){
+  DUI.ui = ui; DUI.open = null;
+  try { localStorage.setItem(DUI_KEY, ui); } catch(e){}
+  try { const u = new URL(location.href); u.searchParams.set('draftui', ui); history.replaceState(history.state, '', u.href); } catch(e){}
+  renderDraft(); renderActBar(); window.scrollTo({top: 0});
+}
+// the hook in renderDraft: false = the default cards render as usual
+function draftAlt(){
+  if (!DUI.on) return false;
+  const box = duiEls(), alt = DUI.ui !== 'default';
+  $('duiSwitch').innerHTML = `<span class="label">Draft screen <span style="color:var(--gold)">prototype</span></span><div class="seg">${Object.entries(DUI_NAMES).map(([k, t]) => `<button data-ui="${k}" aria-pressed="${DUI.ui === k}">${t}</button>`).join('')}</div>`;
+  box.hidden = !alt; for (const id of ['tiers', 'teamline', 'detail']) $(id).hidden = alt;
+  if (!alt) return false;
+  if (!S.prog) $('boardLede').textContent = $('boardLede').textContent.replace(/Tap a card to draft it;.*$/, DUI_HELP[DUI.ui]);
+  ({versus: duiVersus, list: duiList, deck: duiDeck})[DUI.ui](box);
+  return true;
+}
+const DUI_CSS = `
+.duisw{display:flex;align-items:center;gap:6px 10px;flex-wrap:wrap}
+.duisw .seg button{font-family:var(--display);font-weight:800;font-size:14px;letter-spacing:.05em;text-transform:uppercase;padding-inline:12px}
+.dui{display:flex;flex-direction:column;gap:12px;min-width:0}
+.dprice{font-family:var(--mono);font-size:12.5px;font-weight:600}
+.duiscore{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:3px 12px;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:9px 12px}
+.duiscore .sd{display:flex;flex-direction:column;gap:0;min-width:0}
+.duiscore .sd.foe{text-align:right;align-items:flex-end}
+.duiscore .sd.you .label{color:var(--you)} .duiscore .sd.foe .label{color:var(--foe)}
+.duiscore b{font-family:var(--mono);font-size:19px;font-weight:600;line-height:1.2}
+.duiscore .sub{font-size:11.5px;color:var(--muted)}
+.duiscore .v{font-family:var(--mono);font-size:12.5px;margin-top:2px}
+.duiscore .sd.you .v{color:var(--you)} .duiscore .sd.foe .v{color:var(--foe)}
+.duiscore .tug{grid-column:1/-1;display:flex;height:7px;border-radius:4px;overflow:hidden;background:var(--foe);margin-top:4px}
+.duiscore .tug i{display:block;background:var(--you);border-right:2px solid var(--bg)}
+.duinote{grid-column:1/-1;font-size:11px;line-height:1.35;color:var(--muted);margin-top:3px}
+.duimsg{grid-column:1/-1;font-size:12.5px;color:var(--gold);min-height:0}
+.duimsg:empty{display:none}
+.vempty{margin:4px 2px;font-size:12.5px;color:var(--muted)}
+/* versus */
+.vs{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;align-items:start}
+.vcol{border-radius:var(--r);padding:8px 6px 6px;display:flex;flex-direction:column;gap:4px;min-width:0;min-height:140px}
+.vcol h3{font-size:16px;padding-inline:4px}
+.vcol .vh{margin:0 4px 4px;font-size:11px;color:var(--muted)}
+.vcol.you{border:1.5px solid color-mix(in srgb, var(--you) 60%, var(--line));background:color-mix(in srgb, var(--you) 6%, var(--bg))}
+.vcol.you h3{color:var(--you)}
+.vcol.foe{border:1.5px solid color-mix(in srgb, var(--foe) 55%, var(--line));background:color-mix(in srgb, var(--foe) 6%, var(--bg))}
+.vcol.foe h3{color:var(--foe)}
+.vlist{display:grid;grid-template-columns:minmax(0,1fr);gap:6px}
+.vt{position:relative;min-width:0}
+.vtm{width:100%;display:grid;grid-template-columns:36px minmax(0,1fr);gap:7px;align-items:start;text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:7px 7px 8px;min-height:64px}
+.vtm .tok{width:36px!important;height:36px!important}
+.vtb{display:flex;flex-direction:column;gap:2px;min-width:0}
+.vtn{font-family:var(--display);font-weight:800;font-size:15px;line-height:1.05;text-transform:uppercase;letter-spacing:.02em;overflow-wrap:anywhere;padding-right:16px}
+.vtl{display:flex;flex-wrap:wrap;gap:3px;align-items:center}
+.vtl .bdg{font-size:9.5px;padding:0 5px}
+.vts{font-size:11px;line-height:1.3;color:var(--muted);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.vts b{color:var(--fg)}
+.vt.cant .vtm{opacity:.42}
+.vt.prem .vtm{border-color:var(--foe)}
+.vt.flash .vtm{animation:duiflash .7s ease-out}
+@keyframes duiflash{from{box-shadow:0 0 0 3px var(--gold)}to{box-shadow:0 0 0 0 transparent}}
+.vti{position:absolute;top:0;right:0;width:40px;height:44px;background:none;border:0;display:flex;align-items:flex-start;justify-content:flex-end;padding:5px}
+.vti span{display:block;width:18px;height:18px;border-radius:50%;border:1px solid var(--muted);font:600 11px/16px var(--mono);color:var(--muted);text-align:center;background:var(--panel)}
+.vtp{display:flex;flex-direction:column;gap:4px;padding:4px 2px 2px}
+.hpb{display:flex;gap:2px;align-items:center;flex-wrap:wrap}
+.hpb i{display:block;width:26px;height:5px;border-radius:3px;background:var(--line);overflow:hidden}
+.hpb i b{display:block;height:100%}
+.dacts{display:flex;gap:4px;flex-wrap:wrap}
+.dacts .btn{min-height:38px;padding:4px 9px;font-size:12.5px;flex:1 1 auto}
+@media (min-width:821px){ .vlist{grid-template-columns:repeat(2, minmax(0,1fr))} .vtm .tok{width:44px!important;height:44px!important} .vtm{grid-template-columns:44px minmax(0,1fr)} .vtn{font-size:16px} .vts{font-size:12px} }
+/* list */
+.lteam{display:flex;flex-wrap:wrap;gap:6px}
+.lteam .chip{min-height:40px;font-weight:600}
+.lteam .chip .x{color:var(--muted);font-size:15px;margin-left:2px}
+.ltools{display:flex;flex-direction:column;gap:8px;min-width:0}
+.lsort{display:flex;width:100%}
+.lsort button{flex:1 1 0;font-family:var(--body);font-weight:600;font-size:13px;padding-inline:4px}
+.chips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin-inline:-16px;padding-inline:16px}
+.chips::-webkit-scrollbar{display:none}
+.chips button{flex:0 0 auto;min-height:40px;border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:6px 13px;font-size:13px;font-weight:600;color:var(--muted)}
+.chips button[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.lrows{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.lr{border-top:1px solid var(--line);background:var(--panel);min-width:0}
+.lr:first-child{border-top:0}
+.lr.picked{background:color-mix(in srgb, var(--you) 10%, var(--panel));box-shadow:inset 3px 0 0 var(--you)}
+.lr.prem{box-shadow:inset 3px 0 0 var(--foe)}
+.lrh{display:flex;align-items:stretch;min-width:0}
+.lrm{flex:1 1 auto;min-width:0;display:grid;grid-template-columns:40px minmax(0,1fr) auto;gap:10px;align-items:center;text-align:left;background:none;border:0;padding:8px 6px 8px 10px;min-height:62px}
+.lrm .tok{width:40px!important;height:40px!important}
+.lr.cant .lrm{opacity:.45}
+.lrt{min-width:0;display:flex;flex-direction:column;gap:2px}
+.lrn{font-family:var(--display);font-weight:800;font-size:16px;line-height:1.1;text-transform:uppercase;letter-spacing:.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lrs{font-size:12px;line-height:1.3;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lrs b{color:var(--fg)}
+.lr.open .lrs{white-space:normal}
+.lr3{display:flex;gap:4px;flex-wrap:nowrap;overflow:hidden;align-items:center}
+.lr.open .lr3{flex-wrap:wrap}
+.lr3 .bdg{font-size:9.5px;padding:0 6px;white-space:nowrap}
+.lr3 .recline{white-space:nowrap;font-size:10px}
+.lrr{display:flex;flex-direction:column;align-items:flex-end;gap:5px}
+.lradd{width:28px;height:28px;border-radius:50%;border:1.5px solid var(--line);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;color:var(--muted)}
+.lr.picked .lradd{background:var(--you);border-color:var(--you);color:var(--bg)}
+.lrx{flex:0 0 44px;background:none;border:0;border-left:1px solid var(--line);color:var(--muted);font-size:17px}
+.lr.open .lrx{color:var(--gold);transform:rotate(180deg);border-left:0;border-right:1px solid var(--line)}
+.lrd{margin:0 8px 10px}
+/* deck */
+.dk{display:flex;flex-direction:column;gap:10px;max-width:560px;width:100%;margin-inline:auto;min-width:0}
+.dkstrip{display:flex;flex-wrap:wrap;gap:3px}
+.dkdot{position:relative;width:40px;height:40px;padding:0;border:0;background:none;display:flex;align-items:center;justify-content:center;border-radius:50%}
+.dkdot .tok{width:30px!important;height:30px!important;opacity:.85}
+.dkdot.taken .tok{box-shadow:0 0 0 2px var(--bg),0 0 0 4px var(--you);opacity:1}
+.dkdot.left .tok{filter:grayscale(1);opacity:.4}
+.dkdot.prem .tok{box-shadow:0 0 0 2px var(--bg),0 0 0 4px var(--foe)}
+.dkdot.now::after{content:"";position:absolute;left:12px;right:12px;bottom:0;height:3px;border-radius:2px;background:var(--gold)}
+.dkcard{position:relative;background:var(--panel);border:1.5px solid var(--line);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:9px;touch-action:pan-y;user-select:none;-webkit-user-select:none;transition:transform .16s ease-out, opacity .16s;overflow:hidden}
+.dkcard.taken{border-color:var(--you);background:color-mix(in srgb, var(--you) 7%, var(--panel))}
+.dkcard.prem{border-color:var(--foe)}
+.dkcard.cant .dkface{filter:grayscale(.6)}
+.dkhd{display:grid;grid-template-columns:104px minmax(0,1fr);gap:14px;align-items:center}
+.dkface{width:104px;height:104px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-family:var(--display);font-weight:900;font-size:30px;border-width:3px!important}
+.dkhb{min-width:0;display:flex;flex-direction:column;gap:3px}
+.dkname{font-family:var(--display);font-weight:900;font-size:28px;line-height:1;text-transform:uppercase;letter-spacing:.02em;overflow-wrap:anywhere}
+.dkprice{font-family:var(--mono);font-size:21px;font-weight:600;line-height:1.1}
+.dksig{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:9px 12px;font-size:14px;line-height:1.35;color:var(--muted)}
+.dksig b{display:block;font-family:var(--display);font-weight:800;font-size:18px;letter-spacing:.04em;text-transform:uppercase;color:var(--fg)}
+.dkcard .bars{grid-template-columns:62px 1fr;font-size:10.5px;gap:5px 8px}
+.dkcard .bar{height:7px}
+.dkcard .meta{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.dkmore{align-self:flex-start}
+.stamp{position:absolute;top:18px;z-index:2;font-family:var(--display);font-weight:900;font-size:30px;letter-spacing:.08em;text-transform:uppercase;padding:2px 12px;border:3px solid;border-radius:8px;opacity:0;pointer-events:none}
+.stamp.take{right:16px;color:var(--you);transform:rotate(10deg)}
+.stamp.leave{left:16px;color:var(--foe);transform:rotate(-10deg)}
+.dkend{gap:10px}
+.dkend .dkname{font-size:26px}
+.dkbtns{display:grid;grid-template-columns:52px minmax(0,1fr) minmax(0,1.3fr);gap:8px;position:sticky;bottom:calc(76px + env(safe-area-inset-bottom, 0px));z-index:5;background:var(--bg);padding-block:6px;margin-block:-6px}
+.dkbtns .btn{min-height:54px;font-size:16px}
+.dkbtns .btn:only-child{grid-column:1/-1}
+.dkbtns .btn[data-back]:first-child:nth-last-child(2){grid-column:1}
+.dkbtns .btn[data-jump]{grid-column:2/-1}
+.dkleave{color:var(--foe);border-color:color-mix(in srgb, var(--foe) 55%, var(--line))!important}
+.dktake{background:var(--you)!important;color:#0a201c!important;border-color:var(--you)!important;font-family:var(--display);font-weight:900;font-size:19px!important;letter-spacing:.05em;text-transform:uppercase}
+.dktake:disabled{background:var(--panel2)!important;color:var(--muted)!important;border-color:var(--line)!important}
+.dkhint{margin:-4px 0 0;text-align:center;font-size:11.5px;color:var(--muted)}
+#duiDlg{max-width:760px;width:calc(100% - 24px);max-height:86vh;background:var(--panel);color:var(--fg);border:1px solid var(--line);border-radius:12px;padding:12px}
+#duiDlg::backdrop{background:rgba(0,0,0,.6)}
+#duiDlg .dlghd{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+#duiDlg .detail{border:0;padding:4px}
+.dkbtns .btn:disabled{opacity:1;color:var(--dim);background:var(--panel)}
+@media (max-width:560px){ .dkhd{grid-template-columns:84px minmax(0,1fr)} .dkface{width:84px;height:84px} .dkname{font-size:25px} .dkprice{font-size:19px} .dkcard{padding:12px;gap:8px} .dksig{font-size:13px;padding:8px 10px} .dksig b{font-size:16px} }
+`;
 
 // ---------- init ----------
 function renderAll(){ renderBudget(); renderDraft(); renderArenaOpts(); renderActBar(); }
