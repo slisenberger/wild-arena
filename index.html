@@ -4477,7 +4477,7 @@ function renderActBar(){
   else if (sc === 'draft'){
     const n = S.prog ? M.teamIds(S.prog).length : S.team.size;
     const sum = document.createElement('span'); sum.className = 'sum';
-    sum.innerHTML = S.prog ? `<b>$${S.prog.money.toLocaleString()}</b><br>left` : `<b>$${spent().toLocaleString()}</b> / $${BUDGET.toLocaleString()}<br>${n} pick${n === 1 ? '' : 's'}`;
+    sum.innerHTML = S.prog ? `<b>$${S.prog.money.toLocaleString()}</b><br>left` : DUI.ui && DUI.ui !== 'default' ? `<b>$${(BUDGET - spent()).toLocaleString()}</b> left<br>${n} pick${n === 1 ? '' : 's'}` : `<b>$${spent().toLocaleString()}</b> / $${BUDGET.toLocaleString()}<br>${n} pick${n === 1 ? '' : 's'}`; // the prototype draft screens count down what's left (owner)
     add(sum, actBtn('Formation', () => go('deploy'), false, 'Place your animals (optional: Fight uses the auto formation)'), actBtn(n ? 'Fight' : 'Fight alone', () => startBattle(), true));
   }
   else if (sc === 'deploy') add(actBtn('Auto', () => $('autoForm').click(), false, 'Auto formation'), actBtn('Release the animals', () => startBattle(), true));
@@ -4545,19 +4545,14 @@ function duiNote(t){ DUI.msg = t; clearTimeout(duiNoteT); duiNoteT = setTimeout(
 function duiDetailHTML(id){ S.focus = id; renderDetail(); return $('detail').innerHTML; }
 function duiInfo(id){ $('duiDlgBody').innerHTML = duiDetailHTML(id); $('duiDlg').showModal(); }
 
-// both sides: money, head count and the summed measured value (A.MEASURED: seconds of survival an animal added on your side,
-// or cost you on theirs, each measured alone in paired test fights; a rough guide, since they don't simply add up)
+// both sides: head count, and the budget you have left
 function duiScore(note){
-  const mine = [...S.team], theirs = S.board.filter(id => !S.team.has(id)), V = id => A.MEASURED[id] || {mine: 0, theirs: 0};
-  const mv = Math.round(mine.reduce((s, id) => s + Math.max(0, V(id).mine), 0)), tv = Math.round(theirs.reduce((s, id) => s + Math.max(0, -V(id).theirs), 0));
-  const cnt = ids => ids.length, $$ = ids => ids.reduce((s, id) => s + A.BY_ID[id].price, 0);
-  const share = mv + tv ? mv / (mv + tv) : .5;
-  // owner (Oct 27): the money that matters is your budget left; their side shows no money
+  // owner (Oct 27): no measured values on screen (the +s / -s took away the fun of discovering what's good); just who's
+  // on each side and the budget you have left
+  const mine = [...S.team], theirs = S.board.filter(id => !S.team.has(id));
   const money = S.prog ? `<b>$${S.prog.money.toLocaleString()}</b><span class="sub">left to spend</span>` : `<b>$${duiLeft().toLocaleString()}</b><span class="sub">left of $${BUDGET.toLocaleString()}</span>`;
-  return `<div class="duiscore"><div class="sd you"><span class="label">Your side · ${cnt(mine)}</span>${money}<span class="v" title="Measured value">+${mv} s</span></div>`
-    + `<div class="sd foe"><span class="label">Their side · ${cnt(theirs)}</span><span class="sub">everything you leave${S.prog && S.prog.premium ? ', + premium' : ''}</span><span class="v" title="Measured value">−${tv} s</span></div>`
-    + `<div class="tug" title="Measured value, yours vs theirs"><i style="width:${Math.round(share * 100)}%"></i><b></b></div>`
-    + (note ? `<details class="duinote"><summary>What's the +s / −s?</summary>Measured value: seconds of survival each animal added on your side, or cost you on theirs, in test fights. Rough: they don't simply add up.</details>` : '')
+  return `<div class="duiscore"><div class="sd you"><span class="label">Your side · ${mine.length}</span>${money}</div>`
+    + `<div class="sd foe"><span class="label">Their side · ${theirs.length}</span><span class="sub">everything you leave${S.prog && S.prog.premium ? ', + premium' : ''}</span></div>`
     + `<div class="duimsg" aria-live="polite">${esc(DUI.msg)}</div></div>`;
 }
 const duiSig = a => { const s = sigOf(a); return s ? `<b>${esc(s[0])}</b> ${esc(s[1])}` : esc(a.style); };
@@ -4578,7 +4573,7 @@ function duiVersus(box){
     const prem = duiPrem(a.id), carried = side === 'you' && S.prog && !duiFresh(a.id), cls = ['vt', side, !S.team.has(a.id) && !canAdd(a) ? 'cant' : '', prem ? 'prem' : '', DUI.flash === a.id ? 'flash' : ''].join(' ');
     const lbl = prem ? 'Not for sale: it fights you' : side === 'foe' ? `Bring ${itemName(a)} to your side` : carried ? `${itemName(a)}: details` : `Send ${itemName(a)} to their side`;
     return `<div class="${cls}"><button class="vtm" data-${prem || carried ? 'info' : 'id'}="${a.id}" aria-label="${esc(lbl)}">${tokHTML(a, 38)}<span class="vtb"><span class="vtn">${esc(itemName(a))}</span>`
-      + `<span class="vtl">${duiPriceHTML(a)}${duiTags(a)}${prem ? '<span class="bdg bad">Not for sale</span>' : ''}</span><span class="vts">${duiSig(a)}</span></span></button>`
+      + `<span class="vtl">${duiPriceHTML(a)}${duiTags(a)}${prem ? '<span class="bdg bad">Not for sale</span>' : ''}</span></span></button>`
       + `<button class="vti" data-info="${a.id}" aria-label="${esc(itemName(a))} details"><span>i</span></button>${side === 'you' && S.prog ? `<div class="vtp">${duiProgBits(a.id)}</div>` : ''}</div>`;
   };
   box.innerHTML = duiScore(true) + `<div class="vs"><section class="vcol you"><h3>Your side</h3><p class="vh">${S.prog ? 'Undo, sell or heal below each' : 'Tap to send back'}</p><div class="vlist">${mine.map(a => tile(a, 'you')).join('') || '<p class="vempty">Nobody yet. Tap an animal on their side to bring it over.</p>'}</div></section>`
@@ -4732,6 +4727,7 @@ function draftAlt(){
   if (!alt) return false;
   if (!S.prog) $('boardLede').textContent = $('boardLede').textContent.replace(/Tap a card to draft it;.*$/, DUI_HELP[DUI.ui]);
   ({versus: duiVersus, list: duiList, deck: duiDeck})[DUI.ui](box);
+  { const h = document.querySelector('header.top'); if (h) document.documentElement.style.setProperty('--hdrH', h.offsetHeight + 'px'); } // the sticky scoreboard sits just under the header
   return true;
 }
 const DUI_CSS = `
@@ -4739,7 +4735,7 @@ const DUI_CSS = `
 .duisw .seg button{font-family:var(--display);font-weight:800;font-size:14px;letter-spacing:.05em;text-transform:uppercase;padding-inline:12px}
 .dui{display:flex;flex-direction:column;gap:12px;min-width:0}
 .dprice{font-family:var(--mono);font-size:12.5px;font-weight:600}
-.duiscore{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:3px 12px;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:9px 12px}
+.duiscore{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:3px 12px;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:9px 12px;position:sticky;top:var(--hdrH, 0px);z-index:15;box-shadow:0 6px 12px -8px rgba(0,0,0,.6)} /* stays under the header while you scroll (owner) */
 .duiscore .sd{display:flex;flex-direction:column;gap:0;min-width:0}
 .duiscore .sd.foe{text-align:right;align-items:flex-end}
 .duiscore .sd.you .label{color:var(--you)} .duiscore .sd.foe .label{color:var(--foe)}
@@ -4869,7 +4865,7 @@ const DUI_CSS = `
 
 // ---------- init ----------
 function renderAll(){ renderBudget(); renderDraft(); renderArenaOpts(); renderActBar(); }
-window.addEventListener('resize', () => { if (S.screen === 'deploy'){ sizeCanvas($('deployCanvas')); drawDeploy(); } if (S.screen === 'fight') sizeCanvas($('fightCanvas')); });
+window.addEventListener('resize', () => { { const h = document.querySelector('header.top'); if (h) document.documentElement.style.setProperty('--hdrH', h.offsetHeight + 'px'); } if (S.screen === 'deploy'){ sizeCanvas($('deployCanvas')); drawDeploy(); } if (S.screen === 'fight') sizeCanvas($('fightCanvas')); });
 $('seedLbl').textContent = S.seed;
 syncSpeed();
 if (!loadHash()){

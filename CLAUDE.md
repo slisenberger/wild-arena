@@ -23,6 +23,8 @@ count as 5:00). Live site: GitHub Pages serves `index.html` from `main`.
 - **Don't change knobs the owner didn't ask about.** When a proposal moves a number they care about, explain the why in
   one or two plain sentences ("the total is the other side's budget, so...").
 - **Science wording:** a null result is "none found **so far**", never "there's no headroom". Keep trying with better setups.
+- **No measured values on screen.** Discovering what's good is part of the fun (owner, Oct 27: hide the +s / −s): cards and
+  draft screens show signatures, stats and the player's own record, never `MEASURED` swing numbers.
 - **Mobile first.** The owner plays and screenshots on a phone (~412 px). Check every UI change with a Playwright
   screenshot at phone width and look at it, not just for page errors.
 - **Bug reports are terse** ("this is broken", "the streak was wrong"). Reproduce, fix the most likely cause, and say the
