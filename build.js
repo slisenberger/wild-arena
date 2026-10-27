@@ -13,6 +13,7 @@ const policyBundle = `;(function(){ var A = window.Arena, M = {}, C = {}, proces
   function req(n){ n = String(n).split('/').pop(); if (n === 'path') return path; if (n === 'sim.js') return A; if (!(n in C)){ var m = {exports: {}}; C[n] = m.exports; M[n](m, m.exports); C[n] = m.exports; } return C[n]; }
   M['harrier_v1.json'] = function(module){ module.exports = ${r('policy/weights/harrier_v1.json')}; };
   M['guard_v1.json'] = function(module){ module.exports = ${r('policy/weights/guard_v1.json')}; };
+  M['cat_v1.json'] = function(module){ module.exports = ${r('policy/weights/cat_v1.json')}; };
 ${POLICY.map(f => `  M['${f}'] = function(module, exports){ var require = req, __dirname = ''; ${r('policy/' + f)}\n  };`).join('\n')}
   req('live.js'); })();`;
 t = t.replace('/*FACES*/', () => r('faces.json')).replace('/*SIM*/', () => r('sim.js') + '\n' + policyBundle + '\n' + r('migration.js')).replace('/*UI*/', () => r('ui.js'));
