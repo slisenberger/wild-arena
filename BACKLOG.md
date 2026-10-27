@@ -293,3 +293,7 @@ Pick for new roles. Top three for design value: **honey badger, moose, Komodo dr
 - [ ] Turn the probes into a regression suite run after every engine change (`quick.js`, `camp.js`,
   `idle.js`), with thresholds (e.g. quiet-win share, loiter time, corner advantage).
 - [ ] Record per-run telemetry once and reuse it across analyses.
+
+- [ ] **5 in a Row** (owner idea, Oct 27; prototype behind `?five=1`): five boards in a row, win all five, one retry.
+  Open after playtest: daily-only vs free play, best-of-3 per board instead of the retry, filtering out boards where even the
+  best team wins < ~70% (board.js-style check per daily board), whether a replay of today's run should count.
