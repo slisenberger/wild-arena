@@ -15,7 +15,7 @@ const OUT = path.join(__dirname, 'after');
   // (prog UX pass, Oct 27: Start goes straight to round 1's shop; shop -> formation -> fight; the result goes to the next shop)
   await p.goto(FILE + '?progressive=1'); await p.click('#progNew'); await p.waitForTimeout(200);
   check('progressive: Start opens round 1\'s shop', await vis('s-draft'));
-  await p.locator('#tiers .card:not(.cant)').first().click();
+  await p.locator('#tiers .card:not(.cant), #draftAlt .vcol.foe .vt:not(.cant) .vtm').first().click(); // the progressive shop opens in Versus
   await p.screenshot({ path: path.join(OUT, 'phone_17_prog_shop.png'), scale: 'css' });
   await p.click('#actbar .primary'); await p.waitForTimeout(200);
   check('progressive: bar Formation opens the formation page', await vis('s-deploy'));
