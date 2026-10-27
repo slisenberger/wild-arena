@@ -292,6 +292,19 @@ round. Report ± standard errors.
     +0.080 ± 0.021 (1,500, probe 41) and +0.053 ± 0.017 (2,000, probe 53), style 1.00, no gate or drift. They creep closer on
     74% of decisions (commit 24%) and kill you +3 pts more often. Fights without an enemy cat are byte-identical. The cats'
     'no headroom found so far' held for hand-written rules only: the learner found it.
+  - **Milestone 4 shipped (Oct 27 night): learned target choice for enemy chargers (`charger_target_a1`)**, on top of
+    `charger_v1` movement; owner-approved under the two-teams premise. GCP run tgt2 ch_t_s1 (`m4/targeting-v2`; ES on a
+    'target-lin' scorer: score = .25·[heuristic's pick] + w·x over `policy/features.js`'s 63 per-candidate features, so zero
+    weights = the heuristic exactly). Hook (opt-in): `cfg.policy = {byArch: {charger: weights}}` → sim.js `chooseTarget` calls
+    `INTERNALS.chooseHerb` (policy/policy.js) over `herbCandidates` (mirrors `herbivoreTarget`'s filters: change both
+    together); predators use `byArch` too. Live: `policy/weights/live.json` `"target": {"charger": ...}` → `INTERNALS.LIVE_TARGET`,
+    applied in `setup` under the same opt-outs as the movement policies (and only if the cfg has no `policy`); harness fights
+    with `withLive` get it via `move_run.js setPolicy`. Without target weights the engine is byte-identical to main before it
+    (320 board fights, live on and `livePolicy:false`). Re-check on main's engine (`policy/probes/eval_target.js`, zero
+    weights as base, other policies live): +0.090 ± 0.013 goal over 6,000 fresh fights (draws +0.046 ± 0.024, +0.101 ± 0.022,
+    +0.123 ± 0.023; the branch's own +0.158 was on its older engine without the musk ox / gaur / walrus), style 1.00, no
+    gates or drift; your survival −3.1 ± 0.6 pts, time alive −10.4 ± 1.4 s, chargers' own deaths −0.07/fight; it deviates
+    from the heuristic on ~8% of decisions. Fights without an enemy charger are unchanged.
   - Training runs on GitHub Actions (`.github/workflows/train.yml`, sweeps in `policy/sweeps/`); `collect.yml` copies
     results to the `training-results` branch (artifact storage isn't reachable from the dev container).
   - GCP spot training: `policy/gcp/gcp.js` (launch/status/resume/stop/collect, failure handling in `policy/gcp/README.md`);
@@ -341,7 +354,17 @@ round. Report ± standard errors.
   median board's best team 88% (min 33, p25 75), typical full-spend team 160 s, 16 distinct best teams over 16 boards, no
   elephant in any; best teams spread over rhino 6, hippo 6, tiger 4, giraffe 4, croc 4 (was elephant 5, rhino 4). For
   comparison, total $2,500 gave 96% / 181 s (not adopted: it would make the other side weaker).
-- **Current prices (`abs_r16`, Oct 27 night, the final integrated engine: GCP realism pass + bulldozer_v1 + charger_v1 + cat_v1
+- **Current prices (`abs_r17`, Oct 27 night, with the learned charger target choice live):** **19 s of swing per $100**, giants/herds
+  capped at $700 (triceratops $800), **board total $2,600** (kept; `price_scheme` itself gives $2,600 at 19–20 s), budget $1,200,
+  rares 30%. `price_abs.js 240` (all items) + `price_abs.js 960` for the tundra-only items (240 tundra boards), merged.
+  Changes vs `abs_r16`: croc $200, bison $200, walrus $100, hyena clan $100, lion coalition $200. Validation
+  (`RAREP=.3 board.js 16 2 24 12 1200 2600`, same 16 boards each, median ±8 pts): 19 s/$100 median board's best team **83%**
+  (min 25, p25 67), typical full-spend team 173 s, 64% of teams win a screen run, 16 distinct best teams; 20 s/$100 79% / 173 s;
+  21 s/$100 79% / 166 s; 20 s/$100 at $2,500 83% / 173 s (no easier, so the total stays); the `abs_r16` prices on this engine
+  83% / 164 s (92% / 166 s before the charger policy). The median sits just under the 88–92% band: the other side got
+  smarter, not richer (DECISIONS 8). Largest swing moves vs `abs_r16` (each ±~10 s, mostly noise): croc 25 → 39 s, bison
+  56 → 43, buffalo 66 → 54, elephant 168 → 152; musk ox herd 84 ± 7, walrus 26 ± 6, gaur 60 ± 7.
+- *Previous* prices (`abs_r16`, Oct 27 night, the final integrated engine: GCP realism pass + bulldozer_v1 + charger_v1 + cat_v1
   live, rare elephant, musk ox herd / gaur / walrus, progressive hooks):** 20 s of swing per $100, giants/herds capped at $700
   (triceratops $800), **board total $2,600** (kept: `price_scheme` itself landed on $2,600), budget $1,200, rares 30%.
   Validation (`RAREP=.3 board.js 16 2 24 12 1200 2600`): median board's best team 92% (min 38, p25 71), typical full-spend
@@ -411,11 +434,15 @@ round. Report ± standard errors.
 
 ## Progressive mode (prototype Oct 27, `?progressive=1`; details and numbers in `research/progressive_mode.md`)
 - 7 rounds up a price ladder (round 1 $100 animals only … round 7 any, a giant for sale), premium enemy from round 3 (top
-  band, not for sale), $400 start (round 1 is all $100 animals: no stranded $50, owner) + top-ups 450/500/500/500/600/800, boards 10/10/10/10/11/11/12 worth
-  $1,000/1,200/1,500/1,800/2,100/2,300/2,600, $25/kill (cap $150), rest 30% / heal 25% of price,
+  band, not for sale), $400 start (round 1 is all $100 animals: no stranded $50, owner) + top-ups 450/500/550/550/650/800, boards 12/10/10/10/11/11/12 worth
+  $1,200/1,200/1,500/1,800/2,100/2,300/2,600, $25/kill (cap $150), rest 30% / heal 25% of price,
   scars, XP and levels (level 3 ≈ +8% of swing, `level_abs.js`), two retries (a loss restores the round's shop).
-- Bot on the final engine (`abs_r16`, all live policies; 500 runs): round 1 first-try 81%, median run ends in round 6,
-  15.8% complete; round 6 (herd premium) is the wall (first-try 32%). Before the integration: 83%, round 5, 16.4%.
+- Bot with the charger target policy live (`abs_r17` prices; `progressive_bot.js 500 4 1`): round 1 first-try **80%**, median
+  run ends in round 6, **19.6% complete**; round 6 (herd premium) is still the wall (first-try 41%). Retune (Oct 27 night): the
+  reprice moved the croc to $200 and the lion coalition to $200 (out of round 1) and the hyena clan and walrus to $100 (in),
+  so round 1 got easy (93%, 13.0% complete at the old constants); round 1's board went 10 → 12 animals ($1,000 → $1,200,
+  the other side gets 8 vs your 4; 11 gave 87%) and the round 4–6 top-ups +$50 each (complete 12.0% → 19.6%). START stays $400.
+  Earlier: `abs_r16` engine 81%, round 6, 15.8%; before the integration 83%, round 5, 16.4%.
   `PROG.R1_OUT` (species kept out of round 1) was tried with the $100 big cats + croc out: runs got harder (2.6% complete)
   and the badger still barely kills, so it's off. Earlier bot (pre-integration): Round 1 has real choices (random team
   40%, 9 best teams over 16 boards) but tiger/lion/croc dominate it; the honey badger gets 0.02 kills a fight (open).

@@ -60,6 +60,10 @@ the shipped policies and reprice after:
   features (a trained hidden layer, `--mode=deep`, fits), under the side-level checkmate goal, with targeting realism
   metrics (cats favour isolated/running prey, herbivores defend rather than hunt). Bigger action space: more fights per
   update. Start with cats (weakest target choice, below).
+  - [x] **Shipped Oct 27: learned target choice for chargers** (`charger_target_a1`, GCP milestone 4 on `m4/targeting-v2`;
+    linear 'target-lin' scorer on top of `charger_v1` movement, live via `policy/weights/live.json` "target"). Owner approved
+    it under the two-teams premise. Main-engine re-check +0.090 ± 0.013 (6,000 fresh fights). Bulldozer/kicker/cat target
+    runs found nothing clean so far (bulldozer +0.036 ± 0.028, cat +0.055 with a stillLong gate); guard targets on `m4/guard-target`.
   **Owner design direction (Oct 27): speciation from broad archetypes + species tuning + open control + a general
   reward.** (1) Move decisions out of engine rules into the policy (target, approach, attack, bluff, retreat, movement),
   keeping physics in the engine (speed, reach, stamina, armor, morale): bodies are what make species differ. (2) One

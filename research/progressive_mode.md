@@ -112,13 +112,16 @@ Migration (`migration.js`, `migration_bot.js`, `?migration=1`) was removed; old 
 ### Final constants (tuned with the bot)
 | Round | Cap | Board | Total | Money in | Premium enemy |
 |---|---|---|---|---|---|
-| 1 | $100 | 11 | $1,100 | $400 start | – |
-| 2 | $200 | 10 | $1,300 | +$400 | – |
-| 3 | $300 | 10 | $1,600 | +$500 | hippo / buffalo / bison |
-| 4 | $400 | 10 | $1,900 | +$500 | rhino (or mammoth) |
-| 5 | $400 | 11 | $2,200 | +$500 | rhino |
-| 6 | $700 | 11 | $2,400 | +$600 | buffalo or bison herd |
-| 7 | any | 12 | $2,700 | +$800 | herd; a giant (elephant/mammoth/triceratops) is on the board for sale |
+| 1 | $100 | 12 | $1,200 | $400 start | – |
+| 2 | $200 | 10 | $1,200 | +$450 | – |
+| 3 | $300 | 10 | $1,500 | +$500 | the round's top band (hippo / buffalo / gaur …) |
+| 4 | $400 | 10 | $1,800 | +$550 | rhino / hippo / musk ox herd |
+| 5 | $400 | 11 | $2,100 | +$550 | rhino / hippo / musk ox herd |
+| 6 | $700 | 11 | $2,300 | +$650 | buffalo or bison herd |
+| 7 | any | 12 | $2,600 | +$800 | herd; a giant (elephant/mammoth/triceratops) is on the board for sale |
+
+(Current as of Oct 27 night, with the learned charger target choice live and `abs_r17` prices: bot round 1 first-try 80%,
+median run ends in round 6, 19.6% complete. The bot results below are from an earlier tuning.)
 
 Plus $25 per kill, at most $150 a won round (`PER_KILL`, `KILL_CAP`). Rares on 10% → 30% of boards. Free rest heals 30% of
 missing health; full heal 25% of price (min $50); sell for half. Scar: below 25% health in a fight → −10% max health for

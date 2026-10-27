@@ -25,12 +25,17 @@ Each item has a recommendation; reply with a number and "yes", or your own call.
    low weight? The walrus won't leave its lake, so 4.5% of tundra-lake fights end "they gave up": acceptable as honest
    behaviour? Their signature moves are visible but barely move the numbers (the bodies carry the value): strengthen any
    only with a sourced reason (ideas: walrus stampede, gaur herd mobbing a tiger, lone-bull gaur).
-8. **(Decided, see below) Learned target choice for chargers** (GCP milestone 4, `policy/weights/charger_target_a1.json` on `m4/targeting-v2`, not
-   live): rhinos, buffalo, bison and co. pick targets with a learned scorer. +0.158 ± 0.029 on 1,200 fresh fights, style 1.00;
-   your survival 50% → 44%. It favours nearby, visible, heat-struck and already-busy targets and goes after you more.
-   Realism worry: herbivores choosing prey like predators (real ones charge what threatens or provokes them). Recommendation:
-   don't ship as is; retrain with herbivore-specific realism gates (only threats and intruders as targets), then reprice.
+8. **Board difficulty after the smarter chargers.** With charger target choice live, the median board's best team measures
+   83% (`abs_r17` prices, $2,600; was 92% before it), a little under the 88–92% band; typical full-spend team 173 s (in band).
+   A $2,500 total measured the same 83% (the median is ±8 pts noise), so the total stays $2,600 (it's the other side's
+   budget). Recommendation: accept (the other side got smarter, not richer); no knob change.
 
+- Oct 27 (night): **learned target choice for chargers ships** (owner: "I am fine with herbivores finishing off enemies ...
+  teams *are* known and goals *are* shared"; the two-teams premise in CLAUDE.md). `charger_target_a1` is live on top of
+  `charger_v1` movement (branch `charger-target`). Re-check on main's engine: +0.090 ± 0.013 goal over 6,000 fresh fights
+  (three draws: +0.046 ± 0.024, +0.101 ± 0.022, +0.123 ± 0.023), style 1.00, no gates or drift; your survival −3.1 ± 0.6 pts,
+  time alive −10.4 ± 1.4 s. Repriced (`abs_r17`, 19 s/$100, board total kept at $2,600) and progressive retuned; numbers
+  in CLAUDE.md.
 - Oct 27: cards show the signature move and your own record (built); personal stats panel built.
 - Oct 27 (progressive build): money = fixed top-up + $25 per kill, capped at $150 a round (`PROG.PER_KILL/KILL_CAP`).
   Progressive mode replaces Migration (`migration.js`, `migration_bot.js` and `?migration=1` removed; prototype behind
