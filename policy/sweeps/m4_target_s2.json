@@ -1,0 +1,37 @@
+{
+ "note": "Milestone 4, learned TARGET choice round 2 (Oct 27) on the merged engine (main + realism pass; harrier_v1, guard_v1, cat_v1, bulldozer_v1, charger_v1 live). New: herbivore archetypes (charger, bulldozer, kicker) through the herbivore hook; cats now on top of cat_v1's movement. Each archetype keeps its shipped movement policy; only whom it goes after is learned (zero weights = the heuristic exactly).",
+ "runs": [
+  {
+   "name": "ch_t_s1",
+   "args": "--arch=charger --pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --goal=checkmate --spec=true --target=true --thetaClip=1 --margin=.25 --seed=1201"
+  },
+  {
+   "name": "ch_t_s2",
+   "args": "--arch=charger --pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --goal=checkmate --spec=true --target=true --thetaClip=1 --margin=.25 --seed=1202"
+  },
+  {
+   "name": "bd_t_s1",
+   "args": "--arch=bulldozer --pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --goal=checkmate --spec=true --target=true --thetaClip=1 --margin=.25 --seed=1211"
+  },
+  {
+   "name": "bd_t_s2",
+   "args": "--arch=bulldozer --pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --goal=checkmate --spec=true --target=true --thetaClip=1 --margin=.25 --seed=1212"
+  },
+  {
+   "name": "ki_t_s1",
+   "args": "--arch=kicker --pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --goal=checkmate --spec=true --target=true --thetaClip=1 --margin=.25 --seed=1221"
+  },
+  {
+   "name": "ki_t_s2",
+   "args": "--arch=kicker --pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --goal=checkmate --spec=true --target=true --thetaClip=1 --margin=.25 --seed=1222"
+  },
+  {
+   "name": "cat_t_v1_s1",
+   "args": "--arch=cat --pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --goal=checkmate --spec=true --target=true --thetaClip=1 --margin=.25 --seed=1231"
+  },
+  {
+   "name": "cat_t_v1_s2",
+   "args": "--arch=cat --pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --goal=checkmate --spec=true --target=true --thetaClip=1 --margin=.25 --seed=1232"
+  }
+ ]
+}
