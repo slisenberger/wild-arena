@@ -183,8 +183,9 @@ function runGuardFight(f, weights){
   r.dealt = us.reduce((a, u) => a + u.st.dealt, 0); r.protect = us.reduce((a, u) => a + u.st.protect, 0);
   for (const [k, name] of Object.entries(GSIG)){ let n = 0; for (const id of ids) n += w.sig[id + ':' + name] || 0; r['sig_' + k] = n; }
   r.hmax = H.maxhp; r.t = +w.result.t.toFixed(1); r.survived = w.result.survived ? 1 : 0; r.why = w.result.why || null; r.killer = w.result.killer || null;
-  r.intents = weights && cfg.moveStats[arch] ? cfg.moveStats[arch] : null;
+  r.intents = weights && weights.kind === 'target-lin' ? (s => [s.agree || 0, (s.n || 0) - (s.agree || 0), 0, 0, 0, 0])(cfg.policyStats || {}) : weights && cfg.moveStats[arch] ? cfg.moveStats[arch] : null; // target scorer: [kept allyTarget's pick, deviated]
   r.fp = fingerprint(w);
+  if (cfg.policyTrace) r.trace = cfg.policyTrace;
   return r;
 }
 // a compact fingerprint of the whole fight (event log + final positions) for identity checks

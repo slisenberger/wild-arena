@@ -6,6 +6,7 @@
 //   cfg.policyLog = []    -> each decision with 2+ options is pushed as {X, y: heuristic choice, a: action taken, sp: species}
 //   cfg.policyStats = {}  -> counts decisions and agreement with the heuristic: {n, agree}
 const F = require('./features.js');
+const G = require('./guard_features.js');
 const M = require('./model.js');
 const path = require('path');
 const A = require(process.env.SIM ? path.resolve(process.env.SIM) : path.join(__dirname, '..', 'sim.js'));
@@ -51,7 +52,18 @@ function chooseHerb(w, u, policy){
   if (stats){ stats.n = (stats.n || 0) + 1; if (a === h.i) stats.agree = (stats.agree || 0) + 1; }
   u.target = a < 0 ? h.t : (opts[a].kind === 'target' ? opts[a].t : null); u.state = u.target ? 'engage' : 'roam';
 }
+// guards (your side, not carrying you): the heuristic's pick is allyTarget's (computed by the engine, passed as h); the
+// guard's features (policy/guard_features.js) differ from the predators'. Riders keep the heuristic. Zero weights = the engine
+function chooseGuard(w, u, policy, h){
+  const P = policy.byArch.guard, stats = w.cfg.policyStats;
+  if (u.rider) return;
+  const {opts, X} = G.extract(w, u), i = G.heuristic(opts, h);
+  const a = i < 0 ? -1 : pickLin(w, P, X, i);
+  if (stats){ stats.n = (stats.n || 0) + 1; if (a === i) stats.agree = (stats.agree || 0) + 1; }
+  if (a >= 0) u.target = opts[a].kind === 'target' ? opts[a].t : null;
+}
 A._internals.choose = choose;
+A._internals.chooseGuard = chooseGuard;
 A._internals.chooseHerb = chooseHerb;
 
-module.exports = { choose, chooseHerb, scoresLin, apply, load: f => JSON.parse(require('fs').readFileSync(f, 'utf8')) };
+module.exports = { choose, chooseHerb, chooseGuard, scoresLin, apply, load: f => JSON.parse(require('fs').readFileSync(f, 'utf8')) };

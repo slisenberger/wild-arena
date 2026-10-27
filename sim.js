@@ -655,6 +655,22 @@ function allyTarget(w, u){
   return bs > .5 * (1 - .5 * dr) ? best : null;
 }
 
+// the enemies allyTarget can consider (seen by your side or within 10 m of a post, the waterbound rule, the leash): the
+// learned guard chooser's candidates. Keep its filters in sync with allyTarget's (sideSees = teamSees without the lookout counter)
+function guardCandidates(w, u){
+  const H = w.human, anchor = u.post || H, dr = u.rider ? 0 : drive(u), out = [];
+  const leash = (u.post ? POST_R : u.rider ? 9 : has(u,'guardian') ? 12 : 24) + 30 * dr;
+  for (const e of w.units){
+    if (e.side !== 'E' || !active(e) || (u.repelBy === e && u.repelUntil > w.t)) continue;
+    if (!sideSees(w, e) && !(u.post && dist(u, e) < 10)) continue;
+    if (has(u,'waterbound') && w.wet && distWater(w, e) > 10) continue;
+    const dh = dist(e, anchor), called = !!(w.bn && w.bn.whistle && e.target === H && dist(e, H) < 25 && !u.rider);
+    if (dh > leash && !(u.target === e && dh < leash + 8) && u.grudge !== e && !called) continue;
+    out.push(e);
+  }
+  return out;
+}
+
 function bestCarcass(w, u){
   let best = null, bs = 0;
   for (const c of w.carcasses){
@@ -674,6 +690,7 @@ function chooseTarget(w, u){
     if (evasiveMount(u)){ u.target = null; u.state = 'carry'; return; }
     if (u.withdrawn){ u.target = null; u.state = 'withdraw'; return; }
     u.target = allyTarget(w, u);
+    if (w.cfg.policy && w.cfg.policy.byArch && w.cfg.policy.byArch.guard){ if (!INTERNALS.chooseGuard) throw new Error('cfg.policy.byArch.guard needs policy/policy.js'); INTERNALS.chooseGuard(w, u, w.cfg.policy, u.target); } // learned guard target choice (milestone 4), opt-in
     if (u.gT && active(u.gT)) u.target = u.gT; // learned guard intent (policy/, cfg.movePolicy.guard): intercept / help / screen target
     u.state = u.target ? 'engage' : 'guard';
     return;
@@ -1882,7 +1899,7 @@ function guardIdleGo(w, u){
   return null;
 }
 const INTERNALS = { choose: null, predCandidates, predatorTarget, bestCarcass, guardsAround, packStrength, packMates, packMate, strength, hostile, canSee, reachable, distWater, inWater, busy, yieldsTo, wound, heightOf, pressure, active, has, dist, sp, social };
-Object.assign(INTERNALS, { herbivoreTarget, herbCandidates, chooseHerb: null, moveChoose: null, LIVE: {harrier: null, guard: null}, INTENTS, CAT_INTENTS, CAT_GEO, catSoftness, catSofter, headingOf, archetypeOf, drive, locked, GUARD_INTENTS, GUARD_SPACE, guardThreat, guardHelpTarget, sideSees, evasiveMount, zoneAt });
+Object.assign(INTERNALS, { herbivoreTarget, herbCandidates, chooseHerb: null, guardCandidates, chooseGuard: null, allyTarget, POST_R, moveChoose: null, LIVE: {harrier: null, guard: null}, INTENTS, CAT_INTENTS, CAT_GEO, catSoftness, catSofter, headingOf, archetypeOf, drive, locked, GUARD_INTENTS, GUARD_SPACE, guardThreat, guardHelpTarget, sideSees, evasiveMount, zoneAt });
 function policyChoose(w, u){
   if (!INTERNALS.choose) throw new Error('cfg.policy is set but no policy is loaded: require policy/policy.js');
   INTERNALS.choose(w, u, w.cfg.policy);

@@ -1,0 +1,17 @@
+{
+ "note": "Milestone 4 round 3 (Oct 27): learned TARGET choice for your GUARDS (sim.js guardCandidates + policy/guard_features.js: 78 features incl. the enemy species trait vector). guard_v1 movement and every other shipped policy stay live; only whom each guard goes after is learned; zero weights = allyTarget exactly (policy/target_ident_test.js). Goal: the guard (protect) goal.",
+ "runs": [
+  {
+   "name": "gd_t_s1",
+   "args": "--arch=guard --pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --target=true --thetaClip=1 --margin=.25 --seed=1301"
+  },
+  {
+   "name": "gd_t_s2",
+   "args": "--arch=guard --pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --target=true --thetaClip=1 --margin=.25 --seed=1302"
+  },
+  {
+   "name": "gd_t_m5",
+   "args": "--arch=guard --pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --target=true --thetaClip=1 --margin=.5 --seed=1303"
+  }
+ ]
+}

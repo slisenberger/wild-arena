@@ -9,7 +9,7 @@
 //        --tau=1 --margin=.25 --beta=.5 --valEvery=5 --val=600 --test=1200 --seed=1 --goal=checkmate --spec=true]
 const { Worker, isMainThread, parentPort, workerData } = require('worker_threads');
 const fs = require('fs'), path = require('path'), os = require('os');
-const R = require('./move_run.js'), RW = require('./move_reward.js'), F = require('./features.js'), P = require('./policy.js');
+const R = require('./move_run.js'), RW = require('./move_reward.js'), P = require('./policy.js');
 if (!isMainThread){ parentPort.postMessage(workerData.jobs.map(j => ({k: j.k, i: j.i, rec: R.runFight(j.f, j.W, workerData.arch)}))); return; }
 
 const [file, ...rest] = process.argv.slice(2);
@@ -18,9 +18,11 @@ const DEF = {arch: 'cat', iters: 40, fights: 200, threads: Math.min(8, os.cpus()
   beta: .5, valEvery: 5, val: 600, test: 1200, seed: 1, goal: 'checkmate', spec: true, withLive: true, styleThr: .9};
 const log = m => { console.log(m); fs.appendFileSync(file + '.log', m + '\n'); };
 const save = s => { fs.writeFileSync(file + '.tmp', JSON.stringify(s)); fs.renameSync(file + '.tmp', file); };
+const archOf = () => (opt.arch || (fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, 'utf8')).config.arch : DEF.arch));
+const F = archOf() === 'guard' ? require('./guard_features.js') : require('./features.js'); // guards: their own options and features
 let s = fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, 'utf8')) : null;
 if (!s){
-  const c = Object.assign({}, DEF, opt, {target: true, mode: 'linear', trainer: 'ppo'});
+  const c = Object.assign({}, DEF, opt, {target: true, mode: 'linear', trainer: 'ppo'}); if (c.arch === 'guard'){ c.goal = null; c.spec = false; } // guards: the protect goal
   s = {format: 'wild-arena/ppo-target', simHash: R.simHash(), harnessHash: R.harnessHash(), config: c, features: F.NAMES,
     P0: {kind: 'target-lin', v: 1, nin: F.DIM, margin: c.margin, wt: new Array(F.DIM).fill(0)}, theta: new Array(F.DIM).fill(0),
     adam: {m: new Array(F.DIM).fill(0), v: new Array(F.DIM).fill(0), t: 0}, iter: 0, best: {theta: new Array(F.DIM).fill(0), it: -1, val: 0, from: 'zero'}, history: [], test: null};
