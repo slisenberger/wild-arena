@@ -19,6 +19,7 @@ const PROG = {
   BOARD: [11, 10, 10, 10, 11, 11, 12],
   TOTAL: [1100, 1300, 1600, 1900, 2200, 2400, 2700], // tuned with progressive_bot.js (Oct 27): see CLAUDE.md
   RARE:  [.1, .15, .2, .25, .3, .3, .3],
+  R1_OUT: [],                      // species kept out of round 1 (e.g. the $100 big cats, so it's the small fry's round)
   PREMIUM_FROM: 2,                 // round 3 on: one premium enemy from the round's top price band, not for sale
   START: 400, TOPUP: [0, 400, 500, 500, 500, 600, 800], // money: $START for round 1, then a fixed top-up for each later round you reach
   PER_KILL: 25, KILL_CAP: 150,     // + $25 per enemy killed, at most $150 a fight (owner may change these)
@@ -58,6 +59,7 @@ function dealRound(run){
   const ownedSp = run.team.map(e => spOf(e.id)), cold = A.TERRAINS[run.terrain].cold;
   const formsOf = s => A.ANIMALS.filter(a => spOf(a.id) === s).map(a => a.id);
   const exclude = [].concat(...ownedSp.map(formsOf));
+  if (k === 0) for (const sp of PROG.R1_OUT) exclude.push(...formsOf(sp));
   const ok = a => !(cold && a.cold < .3) && !exclude.includes(a.id) && (!cap || a.price <= cap);
   // the premium enemy: the round's top price band, non-rare if there is one, chosen by the seed
   let premium = null;
