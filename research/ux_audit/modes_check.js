@@ -12,13 +12,13 @@ const OUT = path.join(__dirname, 'after');
   const vis = id => p.evaluate(id => !document.getElementById(id).hidden, id);
   const finish = () => p.evaluate(() => { window.__wa.playT = window.__wa.dur; });
   // progressive
+  // (prog UX pass, Oct 27: Start goes straight to round 1's shop; shop -> formation -> fight; the result goes to the next shop)
   await p.goto(FILE + '?progressive=1'); await p.click('#progNew'); await p.waitForTimeout(200);
-  check('progressive: run hub opens', await vis('s-prog'));
-  check('progressive: bar hidden on the run hub', await p.evaluate(() => document.getElementById('actbar').hidden));
-  await p.click('#progToShop'); await p.waitForTimeout(150);
-  check('progressive: trading post', await vis('s-draft'));
+  check('progressive: Start opens round 1\'s shop', await vis('s-draft'));
   await p.locator('#tiers .card:not(.cant)').first().click();
   await p.screenshot({ path: path.join(OUT, 'phone_17_prog_shop.png'), scale: 'css' });
+  await p.click('#actbar .primary'); await p.waitForTimeout(200);
+  check('progressive: bar Formation opens the formation page', await vis('s-deploy'));
   await p.click('#actbar .primary'); await p.waitForTimeout(200);
   check('progressive: bar Fight starts the fight', await vis('s-fight'));
   await p.click('#actbar .primary'); await p.waitForTimeout(200); // skip to result
@@ -26,7 +26,10 @@ const OUT = path.join(__dirname, 'after');
   check('progressive: bar mirrors the banner (' + lbl + ')', /round|run|continue|shop/i.test(lbl));
   await p.screenshot({ path: path.join(OUT, 'phone_18_prog_result.png'), scale: 'css' });
   await p.click('#actbar .primary'); await p.waitForTimeout(200);
-  check('progressive: back on the run hub', await vis('s-prog'));
+  check('progressive: on to the next shop (or the end screen)', await vis('s-draft') || await vis('s-prog'));
+  await p.click('#progHud [data-hud="run"]'); await p.waitForTimeout(150);
+  check('progressive: run overview opens', await vis('s-prog'));
+  check('progressive: bar hidden on the run overview', await p.evaluate(() => document.getElementById('actbar').hidden));
   // 5 in a row
   await p.goto(FILE + '?five=1'); await p.evaluate(() => localStorage.removeItem('wa-five-run')); await p.reload();
   await p.click('#five'); await p.waitForTimeout(200);
