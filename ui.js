@@ -1,7 +1,7 @@
 (function(){
 'use strict';
 const A = window.Arena;
-const M = window.Migration; // the roguelike run's rules (migration.js)
+const M = window.Progressive; // progressive mode's rules (progressive.js)
 const $ = id => document.getElementById(id);
 // price-tier colors: $100 slate, $200 red, $300 orange, $400 gold, $500+ violet
 const tierHex = p => p >= 500 ? '#b48cf2' : p >= 400 ? '#f0b429' : p >= 300 ? '#ec7a2c' : p >= 200 ? '#d8473b' : '#8297aa';
@@ -13,7 +13,7 @@ const maxStr = Math.max(...A.ANIMALS.map(a => Math.sqrt(A.hpOf(a) * a.dmg / a.cd
 const S = window.__wa = {
   team: new Set(), boardSeed: newBoardSeed(), board: [], focus:'elephant', terrain:'savanna', mode:'wild', mount:'', pos:{}, youPos:null, seed: (Math.random()*1e6|0) + 1,
   daily:null, shared:null, played:null, screen:'draft', world:null, playT:0, playing:true, speed:2, sel:0, lastTs:0, dur:120,
-  mig:null, migKey:null // mig: the active migration run (null outside the mode)
+  prog:null, progKey:null // prog: the active progressive run (null outside the mode)
 };
 
 // ---------- helpers ----------
@@ -22,7 +22,7 @@ const fmtT = t => { t = Math.max(0, t); const m = Math.floor(t/60), s = Math.flo
 const kmh = v => Math.round(v * 3.6);
 // 5 in a Row (prototype, Oct 27): hidden unless ?five=1
 const FIVE_ON = (() => { try { return /[?&]five=1\b/.test(location.search); } catch(e){ return false; } })();
-const canAdd = a => S.mig ? M.canBuy(S.mig, a.id) : a.price <= BUDGET - spent();
+const canAdd = a => S.prog ? M.canBuy(S.prog, a.id) : a.price <= BUDGET - spent();
 function strengthOf(a){ return Math.sqrt(A.hpOf(a) * a.dmg / a.cd); }
 function tok(a, size){ const d = document.createElement('span'); d.className = 'tok'; d.style.cssText = tokStyle(a); d.title = a.name; if (size) { d.style.width = d.style.height = size + 'px'; } if (!faceOf(a)) d.textContent = a.abbr; return d; }
 const faceOf = a => FACES[a.species || a.id]; // pack items share their species' portrait
@@ -85,14 +85,14 @@ function dealNewBoard(seed){
 }
 // ---------- navigation ----------
 function go(screen){
-  if (S.mig && (screen === 'draft' || screen === 'deploy') && (S.mig.over || S.mig.boonOffer)) screen = 'mig'; // a boon to pick (or a finished run) comes first
-  if (!S.mig && screen === 'mig') screen = 'arena';
+  if (S.prog && (screen === 'draft' || screen === 'deploy') && S.prog.over) screen = 'prog'; // a finished run goes to the run screen
+  if (!S.prog && screen === 'prog') screen = 'arena';
   if (S.screen === 'draft') S.draftScroll = {board: S.boardSeed, y: window.scrollY}; // coming back to the same board keeps your place
-  if (S.mig && (screen === 'draft' || screen === 'deploy' || screen === 'mig')) migSync();
+  if (S.prog && (screen === 'draft' || screen === 'deploy' || screen === 'prog')) progSync();
   S.screen = screen;
-  for (const id of ['arena','draft','deploy','fight','lab','mig']) $('s-' + id).hidden = id !== screen;
-  if (screen === 'mig') renderMig();
-  $('newSeed').hidden = !!(S.mig || S.five); // a migration's or a 5-in-a-row run's fights have fixed seeds
+  for (const id of ['arena','draft','deploy','fight','lab','prog']) $('s-' + id).hidden = id !== screen;
+  if (screen === 'prog') renderProg();
+  $('newSeed').hidden = !!(S.prog || S.five); // a progressive run's or a 5-in-a-row run's fights have fixed seeds
   renderHud(); renderBudget();
   document.querySelectorAll('#steps button[data-s]').forEach(b => b.setAttribute('aria-current', b.dataset.s === screen ? 'true' : 'false'));
   if (screen === 'deploy') { renderMounts(); sizeCanvas($('deployCanvas')); drawDeploy(); }
@@ -109,7 +109,7 @@ document.querySelectorAll('#steps button[data-s]').forEach(b => b.addEventListen
 
 // ---------- draft ----------
 function renderBudget(){
-  if (S.mig){ const f = S.screen === 'fight'; $('spent').textContent = f ? '' : '$' + S.mig.money.toLocaleString(); $('meter').innerHTML = ''; $('budgetMax').textContent = f ? 'Migration' : 'to spend'; return; } // no spoilers during a fight
+  if (S.prog){ const f = S.screen === 'fight'; $('spent').textContent = f ? '' : '$' + S.prog.money.toLocaleString(); $('meter').innerHTML = ''; $('budgetMax').textContent = f ? 'Progressive' : 'to spend'; return; } // no spoilers during a fight
   const sp = spent();
   $('spent').textContent = '$' + sp.toLocaleString();
   const m = $('meter'); m.innerHTML = '';
@@ -122,11 +122,11 @@ function renderDraft(){
   const onBoard = S.board.map(id => A.BY_ID[id]);
   const five = S.five ? `5 in a Row ${S.five.date}, board ${S.five.k + 1} of 5 (${A.TERRAINS[S.terrain].name})${S.five.pending ? ', your retry' : ''}: win all five boards; one retry per run. Today's maps: ${Array.from({length: 5}, (_, k) => A.TERRAINS[fiveTerrain(S.five.date, k)].name).join(', ')}. ` : '';
   const daily = S.daily ? `Daily challenge ${S.daily} (${A.TERRAINS[S.terrain].name}): the same board, map and fight seed for everyone today. ` : '';
-  const R = S.mig;
-  $('draftTitle').textContent = R ? `Trading post · fight ${R.k + 1} of ${M.MIG.FIGHTS}` : 'Build a team to protect you from the rest';
+  const R = S.prog;
+  $('draftTitle').textContent = R ? `Round ${R.k + 1} of ${M.PROG.ROUNDS} · the shop` : 'Build a team to protect you from the rest';
   for (const id of ['clearTeam', 'newBoard', 'copyDraft', 'copyDraftOut']) $(id).hidden = !!R;
   if (S.five) $('newBoard').hidden = true;
-  $('boardLede').textContent = R ? `${R.kind !== 'plain' ? M.KIND_NAME[R.kind] + '! ' : ''}Next stop: the ${A.TERRAINS[R.terrain].name.toLowerCase()}. ${onBoard.length} animals on the board, worth $${boardTotal().toLocaleString()}. Buy what your $${R.money.toLocaleString()} covers; whatever you don't buy is against you. Your team carries its wounds; sell an animal for half its price.`
+  $('boardLede').textContent = R ? progLede(R)
     : five + daily + (`This game's board: ${onBoard.length} animals worth $${boardTotal().toLocaleString()}. Spend up to $${BUDGET.toLocaleString()}; every board animal you don't pick ends up on the other side. Tap a card to draft it; the panel below shows the full stat line.`);
   // the cards are grouped by price, priciest first
   const groups = [...new Set(onBoard.map(a => a.price))].sort((x, y) => y - x).map(p => [p, onBoard.filter(x => x.price === p)]);
@@ -142,7 +142,8 @@ function renderDraft(){
       const nm = document.createElement('div'); nm.className = 'nm'; nm.textContent = itemName(a); r1.appendChild(nm);
       c.appendChild(r1);
       const st = document.createElement('div'); st.className = 'styleTag'; st.textContent = a.style; c.appendChild(st);
-      const fit = (a.rare ? '<span class="bdg good">Rare</span>' : '') + (groupOf(a) > 1 ? `<span class="bdg good">×${groupOf(a)}, hunt together</span>` : '') + badgesHTML(a); if (fit){ const bd = document.createElement('div'); bd.className = 'badges'; bd.innerHTML = fit; c.appendChild(bd); }
+      const prem = R && a.id === R.premium; if (prem) c.classList.add('cant', 'premium');
+      const fit = (prem ? '<span class="bdg bad">Not for sale: it fights you</span>' : '') + (a.rare ? '<span class="bdg good">Rare</span>' : '') + (groupOf(a) > 1 ? `<span class="bdg good">×${groupOf(a)}, hunt together</span>` : '') + badgesHTML(a); if (fit){ const bd = document.createElement('div'); bd.className = 'badges'; bd.innerHTML = fit; c.appendChild(bd); }
       const meta = document.createElement('div'); meta.className = 'meta'; meta.textContent = `${a.mass.toLocaleString()} kg · ${kmh(a.spd)} km/h`; c.appendChild(meta);
       const bars = document.createElement('div'); bars.className = 'bars';
       const rows = [['Power', strengthOf(a)/maxStr], ['Armor', a.armor/.6], ['Speed', a.spd/20], ['Stamina', Math.min(1, a.stam/60)]];
@@ -153,7 +154,7 @@ function renderDraft(){
       const ck = document.createElement('span'); ck.className = 'check'; ck.textContent = '✓'; c.appendChild(ck);
       c.addEventListener('click', () => {
         S.focus = a.id;
-        if (S.mig){ if (picked) M.unbuy(S.mig, a.id); else M.buy(S.mig, a.id); saveRun(); migSync(); S.world = null; renderAll(); renderHud(); return; }
+        if (S.prog){ if (picked) M.unbuy(S.prog, a.id); else M.buy(S.prog, a.id); saveRun(); progSync(); S.world = null; renderAll(); renderHud(); return; }
         if (S.team.has(a.id)) S.team.delete(a.id);
         else if (canAdd(a)) S.team.add(a.id);
         S.world = null;
@@ -169,7 +170,7 @@ function renderDraft(){
   const tl = $('teamline'); tl.innerHTML = '';
   if (R){
     const foes = S.board.filter(id => !S.team.has(id));
-    tl.innerHTML = migTeamHTML(R, true) + `<span class="label" style="margin-left:6px">Against you: ${foes.length} animals, $${foes.reduce((t, id) => t + A.BY_ID[id].price, 0).toLocaleString()}</span>`;
+    tl.innerHTML = progTeamHTML(R, true) + `<span class="label" style="margin-left:6px">Against you: ${foes.length} animals, $${foes.reduce((t, id) => t + A.BY_ID[id].price, 0).toLocaleString()}${R.premium ? ' (with the ' + esc(itemName(A.BY_ID[R.premium])) + ')' : ''}</span>`;
     const btn = $('toDeployD'); btn.disabled = false; btn.textContent = 'Set formation';
     renderDetail(); return;
   }
@@ -184,7 +185,7 @@ function renderDetail(){
   const a = A.BY_ID[S.focus]; const d = $('detail');
   const hp = A.hpOf(a);
   const stats = [
-    ...([['Price', '$' + a.price + (S.mig && M.teamIds(S.mig).includes(a.id) && !S.board.includes(a.id) ? ' (sells for $' + M.sellPrice(a.id) + ')' : '')]]), ['Mass', a.mass.toLocaleString() + ' kg'], ['Top speed', kmh(a.spd) + ' km/h'],
+    ...([['Price', '$' + a.price + (S.prog && M.teamIds(S.prog).includes(a.id) && !S.board.includes(a.id) ? ' (sells for $' + M.sellPrice(a.id) + ')' : '')]]), ['Mass', a.mass.toLocaleString() + ' kg'], ['Top speed', kmh(a.spd) + ' km/h'],
     ['Durability', hp.toLocaleString() + ' hp'], ['Strike', a.dmg + ' / ' + a.cd + ' s'], ['Armor', Math.round(a.armor*100) + '%'],
     ['Reach', a.reach + ' m'], ['Sprint', a.stam + ' s'], ['Breaks at', Math.round(a.flee*100) + '% morale'],
     ['Heat tolerance', a.heat.toFixed(2)], ['Cold tolerance', a.cold.toFixed(2)], ['Strikes up to', a.strikeH + ' m'], ['Carries you at', a.mountH ? a.mountH + ' m' : 'too small'],
@@ -205,7 +206,7 @@ $('creditsBtn').addEventListener('click', () => {
 $('creditsClose').addEventListener('click', () => $('creditsDlg').close());
 // start over: fresh board and fight seed, empty team, default formation, back to the map screen
 $('copyDraft').addEventListener('click', () => copyLink(gameLink(currentGame()), $('copyDraftOut')));
-$('startOver').addEventListener('click', () => { exitMig(); S.seed = newBoardSeed(); $('seedLbl').textContent = S.seed; dealNewBoard(); S.playing = false; renderAll(); go('arena'); });
+$('startOver').addEventListener('click', () => { exitProg(); S.seed = newBoardSeed(); $('seedLbl').textContent = S.seed; dealNewBoard(); S.playing = false; renderAll(); go('arena'); });
 
 // ---------- arena setup ----------
 const TCOL = {savanna:'radial-gradient(circle at 70% 35%,#3d4a1f 0 14%,transparent 15%),linear-gradient(135deg,#5a4a1d,#2c2614)', river:'linear-gradient(90deg,#26341f 0 44%,#1f5165 44% 56%,#26341f 56%)', forest:'radial-gradient(circle at 30% 40%,#244a2c 0 18%,transparent 19%),radial-gradient(circle at 70% 60%,#244a2c 0 22%,transparent 23%),#17241a', tundra:'linear-gradient(135deg,#55606a,#2f363d)'};
@@ -227,10 +228,10 @@ function renderArenaOpts(){
     b.addEventListener('click', () => { S.mode = id; S.world = null; renderArenaOpts(); });
     mo.appendChild(b);
   }
-  renderStreak(); renderMigEntry(); renderFiveEntry(); renderStats();
+  renderStreak(); renderProgEntry(); renderFiveEntry(); renderStats();
   const td = $('terrainDesc'); if (td) td.textContent = A.TERRAINS[S.terrain].desc; // phones show only the picked map's blurb
 }
-$('toDraft').addEventListener('click', () => { exitMig(); go('draft'); });
+$('toDraft').addEventListener('click', () => { exitProg(); go('draft'); });
 // daily challenge: today's local date picks the map, the board and the fight seed, so everyone plays the same game
 // the day is the player's LOCAL date (like Wordle): the same date string gives the same daily everywhere, and it rolls over at
 // local midnight. (It used to be the UTC date, so evening play in the Americas counted as the next day and inflated the streak.)
@@ -239,7 +240,7 @@ function dateSeed(s){ let h = 2166136261; for (const c of s){ h ^= c.charCodeAt(
 const dailySeed = d => dateSeed('wild-arena:' + d);
 const dailyKey = d => 'wa-daily:' + d;
 function startDaily(){
-  exitMig();
+  exitProg();
   const d = todayLocal(), h = dailySeed(d), terr = Object.keys(A.TERRAINS);
   S.terrain = terr[h % terr.length]; S.seed = h; $('seedLbl').textContent = S.seed;
   dealNewBoard(h); S.daily = d; renderAll(); go('draft');
@@ -262,7 +263,7 @@ function fiveBoard(run){
   S.five = run; S.seed = fiveSeed(run.date, run.k, run.pending ? 'retry' : 'fight'); $('seedLbl').textContent = S.seed; S.world = null;
 }
 function startFive(){
-  exitMig();
+  exitProg();
   const old = fiveLoad(), run = old && !old.over ? old : {date: todayLocal(), k: 0, retry: 1, pending: false, res: [], over: false};
   fiveBoard(run); fiveSave(); renderAll(); go('draft');
   if (old && !old.over) showNotice(`<b>5 in a Row resumed</b> <span>Board ${run.k + 1} of 5${run.pending ? ' (your retry)' : ''}.</span>`);
@@ -388,7 +389,7 @@ function applyLink(g){
 function loadHash(){
   const g = parseLink(location.hash);
   if (!g) return false;
-  exitMig();
+  exitProg();
   try { history.replaceState(null, '', location.href.split('#')[0]); } catch(e){}
   if (g.bad){ dealNewBoard(); renderAll(); go('arena'); showNotice(g.why === 'map' ? "That game link names a map this version doesn't have, so here's a fresh board." : "That game link couldn't be read, so here's a fresh board.", true); return true; }
   applyLink(g); renderAll(); go('draft'); return true;
@@ -611,7 +612,7 @@ function absPlacements(){
 function currentPlacements(){ const y = youAt(), abs = absPlacements(), out = {}; for (const id in abs) out[id] = {dx: abs[id].x - y.x, dy: abs[id].y - y.y}; return out; }
 function makeCfg(){
   const c = { board:S.board.slice(), team:[...S.team], placements:currentPlacements(), human:youAt(), terrain:S.terrain, mode:S.mode, mount:(S.mount && S.team.has(S.mount)) ? S.mount : null, seed:S.seed };
-  if (S.mig){ const m = M.cfgFor(S.mig); c.startHp = m.startHp; c.humanHp = m.humanHp; c.boons = m.boons; } // carried wounds and boons (migration only)
+  if (S.prog){ const m = M.cfgFor(S.prog); c.startHp = m.startHp; if (m.maxHp) c.maxHp = m.maxHp; if (m.levels) c.levels = m.levels; } // carried wounds, scars and levels (progressive mode only)
   return c;
 }
 function drawDeploy(){
@@ -675,13 +676,13 @@ $('startFight').addEventListener('click', () => startBattle());
 
 // ---------- battle ----------
 function startBattle(){
-  if (S.mig){ if (S.mig.over || S.mig.boonOffer){ go('mig'); return; } migSync(); }
+  if (S.prog){ if (S.prog.over){ go('prog'); return; } progSync(); }
   const w = recordFight(makeCfg()); // = A.simulate(cfg, true), plus timed signature moves for the callouts
-  // migration: the result counts the moment the fight is simulated (a reload can't undo it)
-  if (S.mig){ S.migWorld = w; S.migEntry = M.applyResult(S.mig, w); if (S.mig.over) recordMigEnd(); saveRun(); }
+  // progressive mode: the result counts the moment the fight is simulated (a reload can't undo it)
+  if (S.prog){ S.progWorld = w; S.progEntry = M.applyResult(S.prog, w); if (S.prog.over) recordProgEnd(); saveRun(); }
   if (S.five){ S.fiveWorld = w; fiveApply(w); }
-  if (!S.mig) recordStats(w); // personal stats count the fight the moment it's simulated
-  $('rematch').hidden = !!(S.mig || S.five);
+  if (!S.prog) recordStats(w); // personal stats count the fight the moment it's simulated
+  $('rematch').hidden = !!(S.prog || S.five);
   const cg = currentGame(); S.played = Object.assign(cg, {pos: Object.assign({}, S.pos), you: S.youPos && Object.assign({}, S.youPos), daily: S.daily}); // what the result banner's link replays
   S.world = w; S.dur = w.result.t; S.playT = 0; S.playing = true; S.sel = 0;
   $('scrub').max = S.dur.toFixed(1); $('scrub').value = 0;
@@ -1108,7 +1109,7 @@ function renderSide(){
   }
   if (S.playT >= S.dur - 1e-6 && $('report').hidden){ renderReport(true); }
 }
-$('banner').addEventListener('click', e => { if (e.target.id === 'migContinue'){ go('mig'); return; } if (e.target.id === 'fiveNext'){ fiveNext(); return; } if (e.target.id === 'copyFive'){ copyLink(fiveShare(), $('copyFiveOut'), 'Result'); return; } if (e.target.id === 'copyResult' && S.world && S.played) copyLink(gameLink(S.played, S.world.result.score), $('copyResultOut')); });
+$('banner').addEventListener('click', e => { if (e.target.id === 'progContinue'){ go('prog'); return; } if (e.target.id === 'fiveNext'){ fiveNext(); return; } if (e.target.id === 'copyFive'){ copyLink(fiveShare(), $('copyFiveOut'), 'Result'); return; } if (e.target.id === 'copyResult' && S.world && S.played) copyLink(gameLink(S.played, S.world.result.score), $('copyResultOut')); });
 $('log').addEventListener('click', e => { const d = e.target.closest('[data-t]'); if (d){ S.playT = Math.max(0, +d.dataset.t - 1.5); S.playing = false; } });
 
 const HZ = A.MATCH_T;
@@ -1119,7 +1120,7 @@ function renderReport(show){
   const w = S.world; if (!w || !show) return;
   const res = w.result; const sum = A.summarize(w);
   const b = $('banner');
-  if (S.mig && S.migEntry && S.migWorld === w){ b.innerHTML = migBanner(S.migEntry, res); renderTeamReport(w, sum); return; }
+  if (S.prog && S.progEntry && S.progWorld === w){ b.innerHTML = progBanner(S.progEntry, res); renderTeamReport(w, sum); return; }
   if (S.five && S.fiveWorld === w){ b.innerHTML = fiveBanner(res); renderTeamReport(w, sum); return; }
   const score = res.score, prev = readBest(), isBest = score > prev + .05;
   if (isBest) writeBest(score);
@@ -1257,153 +1258,182 @@ $('runPrice').addEventListener('click', () => {
   });
 });
 
-// ---------- migration (the roguelike run: 7 fights, team and wounds carry over; rules in migration.js) ----------
-// owner (Oct 26): the migration mode is switched off until it's properly designed; ?migration=1 in the URL turns it on for testing
-const MIG_ON = (() => { try { return /[?&]migration=1\b/.test(location.search); } catch(e){ return false; } })();
-{ const p = document.querySelector('.migentry'); if (p && !MIG_ON){ p.hidden = true; p.style.display = 'none'; } }
-const MIG_KEY = 'wa-mig', MIG_BEST = 'wa-mig-best', migDailyKey = d => 'wa-mig-daily:' + d;
-const migDailySeed = d => dateSeed('wild-arena:migration:' + d);
+// ---------- progressive mode (a 7-round run up a price ladder; rules in progressive.js) ----------
+// prototype (Oct 27): replaces the switched-off Migration mode; hidden unless ?progressive=1 until the owner has played it
+const PROG_ON = (() => { try { return /[?&]progressive=1\b/.test(location.search); } catch(e){ return false; } })();
+{ const p = document.querySelector('.progentry'); if (p && !PROG_ON){ p.hidden = true; p.style.display = 'none'; } }
+const PROG_KEY = 'wa-prog', PROG_BEST = 'wa-prog-best', progDailyKey = d => 'wa-prog-daily:' + d;
+const progDailySeed = d => dateSeed('wild-arena:progressive:' + d);
+const RN = M.PROG.ROUNDS;
 function readJSON(k){ try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch(e){ return null; } }
 function writeJSON(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
 // a saved run is only trusted if everything in it still exists in this version
 function loadRun(){
-  const r = readJSON(MIG_KEY), ok = id => Object.prototype.hasOwnProperty.call(A.BY_ID, id);
-  if (!r || r.v !== 1 || !Array.isArray(r.team) || !Array.isArray(r.board) || !Array.isArray(r.boons) || !Array.isArray(r.log)) return null;
-  if (!r.board.every(ok) || !r.team.every(e => e && ok(e.id) && Array.isArray(e.hp)) || !A.TERRAINS[r.terrain]) return null;
+  const r = readJSON(PROG_KEY), ok = id => Object.prototype.hasOwnProperty.call(A.BY_ID, id);
+  if (!r || r.v !== 1 || r.mode !== 'progressive' || !Array.isArray(r.team) || !Array.isArray(r.board) || !Array.isArray(r.log) || typeof r.pre !== 'string') return null;
+  if (!r.board.every(ok) || (r.premium && !ok(r.premium)) || !r.team.every(e => e && ok(e.id) && Array.isArray(e.hp) && Array.isArray(e.scar)) || !A.TERRAINS[r.terrain]) return null;
   return r;
 }
-function saveRun(){ if (S.mig) writeJSON(MIG_KEY, S.mig); }
-// point the shared game state (board, team, map, fight seed) at the run's coming fight
-function migSync(){
-  const r = S.mig; if (!r) return;
+function saveRun(){ if (S.prog) writeJSON(PROG_KEY, S.prog); }
+// point the shared game state (board, team, map, fight seed) at the run's coming fight; the premium enemy sits on the board
+function progSync(){
+  const r = S.prog; if (!r) return;
   const key = r.seed + ':' + r.k;
   S.daily = null; S.shared = null;
-  S.terrain = r.terrain; S.board = r.board.slice(); S.boardSeed = r.boardSeed; S.seed = r.fightSeed; $('seedLbl').textContent = S.seed;
+  S.terrain = r.terrain; S.board = A.ANIMALS.map(a => a.id).filter(id => r.board.includes(id) || id === r.premium); S.boardSeed = r.boardSeed; S.seed = r.fightSeed; $('seedLbl').textContent = S.seed;
   S.team = new Set(M.teamIds(r));
-  if (S.migKey !== key){ S.migKey = key; S.pos = {}; S.youPos = null; S.mount = bestMount(); } // a new fight: fresh formation on the new map
+  if (S.progKey !== key){ S.progKey = key; S.pos = {}; S.youPos = null; S.mount = bestMount(); } // a new round: fresh formation on the new map (a retry keeps yours)
   for (const id in S.pos) if (!S.team.has(id)) delete S.pos[id];
   if (S.mount && !S.team.has(S.mount)) S.mount = bestMount();
-  if (!S.board.includes(S.focus) && !S.team.has(S.focus)) S.focus = S.board[0] || M.teamIds(r)[0] || 'elephant';
+  if (!S.board.includes(S.focus) && !S.team.has(S.focus)) S.focus = r.board[0] || M.teamIds(r)[0] || 'honeybadger';
 }
-function startMig(seed, daily){
-  hideNotice(); S.mig = M.newRun(seed, daily || null); S.migKey = null; S.migEntry = null; S.world = null; saveRun(); go('mig');
+function startProg(seed, daily){
+  hideNotice(); S.prog = M.newRun(seed, daily || null); S.progKey = null; S.progEntry = null; S.world = null; saveRun(); go('prog');
 }
 // leave the mode (the run stays saved, to resume from the arena screen); the normal game gets a fresh board
-function exitMig(){ if (!S.mig) return; S.mig = null; S.migKey = null; S.migEntry = null; S.world = null; dealNewBoard(); renderHud(); }
-function recordMigEnd(){
-  const r = S.mig, cur = {survived: r.survived, total: +r.total.toFixed(1), won: r.won, daily: r.daily};
-  const best = readJSON(MIG_BEST); r.prevBest = best; r.newBest = M.better(cur, best); if (r.newBest) writeJSON(MIG_BEST, cur);
-  if (r.daily){ const db = readJSON(migDailyKey(r.daily)); r.prevDaily = db; r.newDaily = M.better(cur, db); if (r.newDaily) writeJSON(migDailyKey(r.daily), cur); bumpStreak(r.daily); }
+function exitProg(){ if (!S.prog) return; S.prog = null; S.progKey = null; S.progEntry = null; S.world = null; dealNewBoard(); renderHud(); }
+function recordProgEnd(){
+  const r = S.prog, cur = {won: r.won, total: +r.total.toFixed(1), complete: r.complete, daily: r.daily};
+  const best = readJSON(PROG_BEST); r.prevBest = best; r.newBest = M.better(cur, best); if (r.newBest) writeJSON(PROG_BEST, cur);
+  if (r.daily){ const db = readJSON(progDailyKey(r.daily)); r.prevDaily = db; r.newDaily = M.better(cur, db); if (r.newDaily) writeJSON(progDailyKey(r.daily), cur); bumpStreak(r.daily); }
 }
 const hpCol = f => f > .5 ? '#d5f2cf' : f > .25 ? C.gold : C.red;
 const hpBar = f => `<i title="${Math.round(f * 100)}%"><b style="width:${Math.round(clamp01(f) * 100)}%;background:${hpCol(f)}"></b></i>`;
 const pctHp = f => Math.round(f * 100) + '%';
-function migTeamHTML(r, shop){
-  let h = `<div class="migteam"><div class="mt"><span class="tok" style="background:#f5f2ea;width:30px;height:30px;font-size:10px">YOU</span><div><div class="nm">You · ${pctHp(r.hp)}</div><div class="hpb">${hpBar(r.hp)}</div></div></div>`;
+const stars = lv => `<span class="stars" title="${M.LEVEL_NAME[lv]}" aria-label="level ${lv}">${'★'.repeat(lv)}<span class="off">${'★'.repeat(3 - lv)}</span></span>`;
+// XP toward the next level (a full bar at Veteran)
+function xpInfo(e){
+  const L = M.PROG.LEVELS, lo = e.lv ? L[e.lv - 1] : 0, hi = L[e.lv];
+  return hi == null ? {f: 1, txt: `${e.xp} XP`} : {f: (e.xp - lo) / (hi - lo), txt: `${e.xp}/${hi} XP`};
+}
+const retriesLeft = r => Math.max(0, M.PROG.RETRIES - r.losses);
+function progTeamHTML(r, shop){
+  let h = '<div class="progteam">';
   for (const e of r.team){
-    const a = A.BY_ID[e.id], g = M.groupOf(e.id), nm = g > 1 ? `${a.groupName} (${e.hp.length} of ${g})` : a.name;
-    const act = !shop ? '' : e.fresh ? `<button class="btn" data-unbuy="${a.id}" title="Undo: get the $${a.price} back">Undo</button>` : `<button class="btn" data-sell="${a.id}" title="Sell for half its price">Sell $${M.sellPrice(a.id)}</button>`;
-    h += `<div class="mt${e.fresh ? ' fresh' : ''}">${tokHTML(a, 30)}<div><div class="nm">${esc(nm)}${e.fresh ? ' <span class="label" style="color:var(--you)">new</span>' : ''}</div><div class="hpb">${e.hp.map(hpBar).join('')}</div></div>${act}</div>`;
+    const a = A.BY_ID[e.id], g = M.groupOf(e.id), nm = g > 1 ? `${a.groupName} (${e.hp.length} of ${g})` : a.name, x = xpInfo(e), scars = e.scar.reduce((s, n) => s + n, 0);
+    const heal = shop && !e.fresh && M.needsHeal(e) ? `<button class="btn" data-heal="${a.id}" ${M.canHeal(r, a.id) ? '' : 'disabled'} title="Full heal">Heal $${M.healCost(a.id)}</button>` : '';
+    const act = !shop ? '' : e.fresh ? `<button class="btn" data-unbuy="${a.id}" title="Undo: get the $${a.price} back">Undo</button>` : `${heal}<button class="btn" data-sell="${a.id}" title="Sell for half its price">Sell $${M.sellPrice(a.id)}</button>`;
+    const sub = [e.kills ? `${e.kills} kill${e.kills > 1 ? 's' : ''}` : '', scars ? `<span class="scar" title="Scars: −${M.PROG.SCAR * 100}% max health each">${scars} scar${scars > 1 ? 's' : ''}</span>` : ''].filter(Boolean).join(' · ');
+    h += `<div class="mt${e.fresh ? ' fresh' : ''}">${tokHTML(a, 34)}<div class="mtb"><div class="nm">${esc(nm)} ${stars(e.lv)}${e.fresh ? ' <span class="label" style="color:var(--you)">new</span>' : ''}</div>`
+      + `<div class="hpb">${e.hp.map(hpBar).join('')}</div><div class="xpb"><i><b style="width:${Math.round(clamp01(x.f) * 100)}%"></b></i><span>${x.txt}${e.lv ? ' · ' + M.LEVEL_NAME[e.lv] : ''}</span></div>${sub ? `<div class="sub">${sub}</div>` : ''}</div>${act ? `<div class="mta">${act}</div>` : ''}</div>`;
   }
-  if (!r.team.length) h += `<span class="label" style="align-self:center">No animals with you.</span>`;
+  if (!r.team.length) h += `<span class="label" style="align-self:center">${r.over ? 'None of your animals made it.' : 'No animals with you yet.'}</span>`;
   return h + '</div>';
 }
-// team-line buttons (trading post): sell a carried animal, undo a buy
+function progLede(r){
+  const cap = M.PROG.CAP[r.k], tot = r.board.reduce((s, id) => s + A.BY_ID[id].price, 0);
+  const prem = r.premium ? ` The ${itemName(A.BY_ID[r.premium])} is not for sale: it joins the other side.` : '';
+  return `${A.TERRAINS[r.terrain].name}. ${cap ? `Animals up to $${cap}` : 'Any animal'}: ${r.board.length} on the board, worth $${tot.toLocaleString()}. You have $${r.money.toLocaleString()}; whatever you don't buy is against you.${prem} Your team keeps its wounds: heal, sell for half price, or buy more.${r.attempt ? ` Retry ${r.attempt} of ${M.PROG.RETRIES}: a new fight seed.` : ''}`;
+}
+// team-line buttons (the shop): sell a carried animal, undo a buy, pay for a full heal
 $('teamline').addEventListener('click', e => {
-  const b = e.target.closest('button'); if (!b || !S.mig) return;
-  if (b.dataset.sell) M.sell(S.mig, b.dataset.sell); else if (b.dataset.unbuy) M.unbuy(S.mig, b.dataset.unbuy); else return;
-  saveRun(); migSync(); S.world = null; renderAll(); renderHud();
+  const b = e.target.closest('button'); if (!b || !S.prog) return;
+  if (b.dataset.sell) M.sell(S.prog, b.dataset.sell); else if (b.dataset.unbuy) M.unbuy(S.prog, b.dataset.unbuy); else if (b.dataset.heal) M.heal(S.prog, b.dataset.heal); else return;
+  saveRun(); progSync(); S.world = null; renderAll(); renderHud();
 });
-// the run HUD: fight k/7, money, your health, boons, team, and a way back to the run screen or out
+// the run HUD: round k/7, money, retries, team, and a way back to the run screen or out
 function renderHud(){
-  const r = S.mig, hud = $('migHud'); $('migStep').hidden = !r;
+  const r = S.prog, hud = $('progHud'); $('progStep').hidden = !r;
   if (!r || S.screen === 'fight'){ hud.hidden = true; return; } // no spoilers while a fight plays (its result already counts)
-  const fightTxt = r.over ? (r.won ? 'Run complete' : `Run over · ${r.survived} of ${M.MIG.FIGHTS} survived`) : `Fight ${r.k + 1}/${M.MIG.FIGHTS} · ${A.TERRAINS[r.terrain].name}${r.kind !== 'plain' ? ' · ' + M.KIND_NAME[r.kind] : ''}`;
-  const team = r.team.map(e => `<span title="${esc(itemName(A.BY_ID[e.id]))}: ${e.hp.map(pctHp).join(', ')}" style="display:inline-flex;flex-direction:column;align-items:center;gap:2px">${tokHTML(A.BY_ID[e.id], 22)}<span class="hpb" style="display:flex"><i style="display:block;width:22px;height:3px;border-radius:2px;background:var(--line);overflow:hidden"><b style="display:block;height:100%;width:${Math.round(e.hp.reduce((s, x) => s + x, 0) / e.hp.length * 100)}%;background:${hpCol(Math.min(...e.hp))}"></b></i></span></span>`).join('');
-  hud.innerHTML = `<b>Migration${r.daily ? ' · daily' : ''}</b><span>${fightTxt}</span><span class="money">$${r.money.toLocaleString()}</span><span>You ${pctHp(r.hp)}</span>`
-    + (team ? `<span style="display:inline-flex;gap:4px;flex-wrap:wrap">${team}</span>` : '')
-    + (r.boons.length ? `<span class="boons">${r.boons.map(b => `<span class="boon" title="${esc(A.BOONS[b].desc)}">${esc(A.BOONS[b].name)}</span>`).join('')}</span>` : '')
-    + `<span class="btnrow">${S.screen !== 'mig' ? '<button class="btn" data-hud="run">Run</button>' : ''}<button class="btn" data-hud="abandon">${r.over ? 'Close run' : 'Abandon'}</button></span>`;
+  const roundTxt = r.over ? (r.complete ? 'Run complete' : `Run over · ${r.won} of ${RN} rounds won`) : `Round ${r.k + 1}/${RN} · ${A.TERRAINS[r.terrain].name}`;
+  const team = r.team.map(e => `<span class="hudpick" title="${esc(itemName(A.BY_ID[e.id]))}: ${e.hp.map(pctHp).join(', ')}, ${M.LEVEL_NAME[e.lv]}">${tokHTML(A.BY_ID[e.id], 24)}<i><b style="width:${Math.round(e.hp.reduce((s, x) => s + x, 0) / e.hp.length * 100)}%;background:${hpCol(Math.min(...e.hp))}"></b></i>${e.lv ? `<span class="stars">${'★'.repeat(e.lv)}</span>` : ''}</span>`).join('');
+  const lives = `<span class="lives" title="Retries left">${'♥'.repeat(retriesLeft(r))}<span class="off">${'♥'.repeat(M.PROG.RETRIES - retriesLeft(r))}</span></span>`;
+  hud.innerHTML = `<b>Progressive${r.daily ? ' · daily' : ''}</b><span>${roundTxt}</span><span class="money">$${r.money.toLocaleString()}</span>${lives}`
+    + (team ? `<span class="hudteam">${team}</span>` : '')
+    + `<span class="btnrow">${S.screen !== 'prog' ? '<button class="btn" data-hud="run">Run</button>' : ''}<button class="btn" data-hud="abandon">${r.over ? 'Close run' : 'Abandon'}</button></span>`;
   hud.hidden = false;
 }
-$('migHud').addEventListener('click', e => {
+$('progHud').addEventListener('click', e => {
   const b = e.target.closest('button[data-hud]'); if (!b) return;
-  if (b.dataset.hud === 'run'){ go('mig'); return; }
-  if (!S.mig.over && b.dataset.armed !== '1'){ b.dataset.armed = '1'; b.textContent = 'Abandon this run?'; b.classList.add('on'); return; } // two clicks to throw a run away
-  try { localStorage.removeItem(MIG_KEY); } catch(err){}
-  exitMig(); renderAll(); go('arena');
+  if (b.dataset.hud === 'run'){ go('prog'); return; }
+  if (!S.prog.over && b.dataset.armed !== '1'){ b.dataset.armed = '1'; b.textContent = 'Abandon this run?'; b.classList.add('on'); return; } // two clicks to throw a run away
+  try { localStorage.removeItem(PROG_KEY); } catch(err){}
+  exitProg(); renderAll(); go('arena');
 });
-function migShare(r){
-  const last = r.log[r.log.length - 1], team = last ? last.team.map(id => A.BY_ID[id].abbr).join('+') || 'no animals' : 'no animals';
-  return `Wild Arena ${r.daily ? 'daily migration ' + r.daily : 'migration'}: ${r.won ? `made it through all ${M.MIG.FIGHTS} fights` : `survived ${r.survived} of ${M.MIG.FIGHTS} fights`}, ${fmtT(r.total)} alive in all${r.boons.length ? ', boons ' + r.boons.map(b => A.BOONS[b].name).join(', ') : ''}, last team ${team}.`;
+// the run's MVP: the pick that was MVP of the most fights
+function runMvp(r){ const e = Object.entries(r.mvp || {}).sort((a, b) => b[1] - a[1])[0]; return e ? A.BY_ID[e[0]] : null; }
+function progShare(r){
+  const last = r.log[r.log.length - 1], team = last ? last.team.map(id => A.BY_ID[id].abbr).join('+') || 'no animals' : 'no animals', mvp = runMvp(r);
+  return `Wild Arena ${r.daily ? 'daily progressive ' + r.daily : 'progressive'}: ${r.complete ? `all ${RN} rounds won` : `${r.won} of ${RN} rounds won`}, ${r.kills} kills, ${fmtT(r.total)} alive in all${mvp ? ', MVP ' + mvp.name : ''}, last team ${team}.`;
 }
-function migBanner(e, res){
-  const r = S.mig, n = e.k + 1, k = A.BY_ID[res.killer];
-  const cont = `<div class="btnrow"><button class="btn primary" id="migContinue">${r.over ? 'See how the run went' : 'Continue migration'}</button></div>`;
+const upsTxt = e => e.ups.map(u => `${itemName(A.BY_ID[u.id])} is now ${M.LEVEL_NAME[u.lv]}`).join('; ');
+function progBanner(e, res){
+  const r = S.prog, n = e.k + 1, k = A.BY_ID[res.killer];
+  const cont = `<div class="btnrow"><button class="btn primary" id="progContinue">${r.over ? 'See how the run went' : e.retry ? 'Back to the shop' : 'On to round ' + (r.k + 1)}</button></div>`;
   if (res.survived){
     const why = res.why === 'cleared' ? `The other side was dead, routed or full by ${fmtT(res.t)}.` : res.why === 'quiet' ? `Nothing came at you for ${A.QUIET_T} s, so the other side gave up at ${fmtT(res.t)}.` : `You held out the full ${fmtT(HZ)}.`;
-    return `<div class="banner win"><span class="big">Fight ${n} survived</span><span>${why} You earn $${e.earned}.${r.won ? ` That was the last fight: the migration is through.` : ''}</span>${cont}</div>`;
+    return `<div class="banner win"><span class="big">Round ${n} won</span><span>${why} ${e.down} kills: +$${e.earned}.${e.ups.length ? ' ' + esc(upsTxt(e)) + '.' : ''}${r.complete ? ' That was the last round: the run is complete.' : ''}</span>${cont}</div>`;
   }
-  return `<div class="banner lose"><span class="big">Killed in fight ${n}</span><span>You lasted ${fmtT(res.score)}, killed by the ${esc(k ? k.name : 'unknown')}. The migration ends here.</span>${cont}</div>`;
+  const tail = r.over ? 'That was your last retry: the run ends here.' : `Retry: the round starts again from the shop as it was (${retriesLeft(r)} retr${retriesLeft(r) === 1 ? 'y' : 'ies'} left after this one).`;
+  return `<div class="banner lose"><span class="big">Round ${n} lost</span><span>You lasted ${fmtT(res.score)}, killed by the ${esc(k ? k.name : 'unknown')}. ${tail}</span>${cont}</div>`;
 }
 function recapHTML(r, e){
-  const n = e.k + 1, lost = e.lost.map(l => { const a = A.BY_ID[l.id]; return M.groupOf(l.id) > 1 && !l.all ? `${l.n} of your ${a.groupName.toLowerCase()}` : `your ${a.groupName && M.groupOf(l.id) > 1 ? a.groupName.toLowerCase() : a.name}`; });
+  const n = e.k + 1, nm = id => itemName(A.BY_ID[id]);
+  const lost = e.lost.map(l => { const a = A.BY_ID[l.id]; return M.groupOf(l.id) > 1 && !l.all ? `${l.n} of your ${a.groupName.toLowerCase()}` : `your ${M.groupOf(l.id) > 1 ? a.groupName.toLowerCase() : a.name}`; });
   const kill = A.BY_ID[e.killer];
-  const head = e.survived ? `<span class="big" style="color:var(--you)">Fight ${n} survived · ${fmtT(e.t)}</span>` : `<span class="big" style="color:var(--red)">Killed in fight ${n} · ${fmtT(e.t)}</span>`;
+  const head = e.survived ? `<span class="big" style="color:var(--you)">Round ${n} won · ${fmtT(e.t)}</span>` : `<span class="big" style="color:var(--red)">Round ${n} lost · ${fmtT(e.t)}</span>`;
   const lines = [
-    `${A.TERRAINS[e.terrain].name}${e.kind !== 'plain' ? ' · ' + M.KIND_NAME[e.kind] : ''}. ${e.survived ? (e.why === 'cleared' ? 'You cleared the field.' : e.why === 'quiet' ? 'The other side gave up.' : 'You held out the full five minutes.') : `Killed by the ${esc(kill ? kill.name : 'unknown')}.`}`,
+    `${A.TERRAINS[e.terrain].name}${e.premium ? ' · with the ' + esc(nm(e.premium)) : ''}. ${e.survived ? (e.why === 'cleared' ? 'You cleared the field.' : e.why === 'quiet' ? 'The other side gave up.' : 'You held out the full five minutes.') : `Killed by the ${esc(kill ? kill.name : 'unknown')}.`}`,
     `Other side: ${e.down} down${e.routed ? ', ' + e.routed + ' routed' : ''}.` + (lost.length ? ` You lost ${esc(lost.join(', '))}.` : e.team.length ? ' Your whole team made it.' : ''),
   ];
-  if (e.survived) lines.push(`Earned <b class="mono" style="color:var(--gold)">$${e.earned}</b> ($${M.MIG.PER_MIN} a minute alive, $${M.MIG.PER_KILL} per enemy down, $${M.MIG.BONUS} for surviving). You were at ${pctHp(e.hpWas)} and patched up to ${pctHp(r.hp)}; survivors heal ${Math.round((M.MIG.HEAL + (r.boons.includes('dressing') ? M.MIG.DRESSING : 0)) * 100)}% of their wounds.`);
+  const ks = Object.entries(e.kills || {}).map(([id, c]) => `${esc(nm(id))} ${c}`);
+  if (ks.length) lines.push(`Kills: ${ks.join(', ')}.${e.mvp ? ` MVP: the ${esc(nm(e.mvp))}.` : ''}`);
+  if (e.survived){
+    const xp = Object.entries(e.xp).filter(([, v]) => v > 0).map(([id, v]) => `${esc(nm(id))} +${v}`);
+    if (xp.length) lines.push(`XP: ${xp.join(', ')}.${e.ups.length ? ` <b style="color:var(--gold)">${esc(upsTxt(e))}.</b>` : ''}`);
+    if (e.scars.length) lines.push(`Scarred (fell below ${M.PROG.SCAR_AT * 100}% health): ${e.scars.map(s => esc(nm(s.id))).join(', ')}, −${M.PROG.SCAR * 100}% max health for the run.`);
+    lines.push(`Money: +$${e.earned} for kills ($${M.PROG.PER_KILL} each, up to $${M.PROG.KILL_CAP})${e.topup ? `, +$${e.topup} for the new round` : ''}. Survivors rested and healed ${M.PROG.REST * 100}% of their wounds.`);
+  } else if (e.retry) lines.push('The lost fight is undone: your team, money, wounds and XP are back as they were when the round opened.');
   return head + lines.map(l => `<p class="notes" style="margin:0">${l}</p>`).join('');
 }
-function renderMig(){
-  const r = S.mig; if (!r) return;
-  $('migTitle').textContent = r.over ? (r.won ? 'Migration complete' : 'The migration ends') : `The migration · fight ${r.k + 1} of ${M.MIG.FIGHTS}`;
+function renderProg(){
+  const r = S.prog; if (!r) return;
+  $('progTitle').textContent = r.over ? (r.complete ? 'Run complete' : 'The run ends') : `Round ${r.k + 1} of ${RN}`;
   const order = M.terrainOrder(r.seed);
-  $('migTrail').innerHTML = Array.from({length: M.MIG.FIGHTS}, (_, i) => {
-    const cls = i < r.survived ? 'done' : r.over && !r.won && i === r.k ? 'dead' : !r.over && i === r.k ? 'now' : '';
-    return `<span class="${cls}">${i + 1} ${A.TERRAINS[order[i % 4]].name}${M.fightKind(i) !== 'plain' ? ' · ' + M.KIND_NAME[M.fightKind(i)].toLowerCase() : ''}</span>`;
+  $('progTrail').innerHTML = Array.from({length: RN}, (_, i) => {
+    const cls = i < r.won ? 'done' : r.over && !r.complete && i === r.k ? 'dead' : !r.over && i === r.k ? 'now' : '';
+    const cap = M.PROG.CAP[i];
+    return `<span class="${cls}">${i + 1} ${A.TERRAINS[order[i % 4]].name} · ${cap ? '$' + cap : 'all'}</span>`;
   }).join('');
   const last = r.log[r.log.length - 1];
-  $('migRecap').hidden = !last; $('migRecap').innerHTML = last ? recapHTML(r, last) : '';
-  // boon: one of three, before the trading post
-  const bb = $('migBoonBox'); bb.hidden = !r.boonOffer || r.over;
-  if (!bb.hidden) $('migBoons').innerHTML = r.boonOffer.map(id => `<button class="opt" data-boon="${id}"><h3>${esc(A.BOONS[id].name)}</h3><p>${esc(A.BOONS[id].desc)}</p></button>`).join('');
-  $('migTeam').innerHTML = migTeamHTML(r, false);
-  const nx = $('migNext'), act = $('migActions');
+  $('progRecap').hidden = !last; $('progRecap').innerHTML = last ? recapHTML(r, last) : '';
+  $('progTeam').innerHTML = progTeamHTML(r, false);
+  const nx = $('progNext'), act = $('progActions');
   if (!r.over){
-    const tot = r.board.reduce((s, id) => s + A.BY_ID[id].price, 0);
+    const tot = r.board.reduce((s, id) => s + A.BY_ID[id].price, 0), cap = M.PROG.CAP[r.k], p = r.premium && A.BY_ID[r.premium];
+    const intro = r.k === 0 && !r.attempt ? ` Seven rounds, each a little richer than the last: round 1 is all $100 animals, the giants come at the end. You keep your survivors (wounds and all), they earn XP and level up, and every round brings $${M.PROG.TOPUP[1]}+ more to spend. Lose a round and you can retry it twice in the whole run.` : '';
     nx.hidden = false;
-    nx.innerHTML = `<h3 style="margin-bottom:6px">Next: fight ${r.k + 1} · ${A.TERRAINS[r.terrain].name}${r.kind !== 'plain' ? ' · ' + M.KIND_NAME[r.kind] : ''}</h3><p class="notes">${r.kind === 'mega' ? 'Something huge and rare is on this board. ' : r.kind === 'herd' ? 'The last fight: the elephants are here, and the mammoth. ' : ''}The trading post has ${r.board.length} animals worth $${tot.toLocaleString()}; whatever you don't buy is against you. You have $${r.money.toLocaleString()}.${r.k === 0 ? ' After each fight you survive you earn money, pick a boon and trade again.' : ''}</p>`;
-    act.innerHTML = `<button class="btn primary" id="migToShop" ${r.boonOffer ? 'disabled' : ''}>${r.boonOffer ? 'Choose a boon first' : 'To the trading post'}</button>`;
+    nx.innerHTML = `<h3 style="margin-bottom:6px">Next: round ${r.k + 1} · ${A.TERRAINS[r.terrain].name}${r.attempt ? ' · retry ' + r.attempt : ''}</h3><p class="notes">${cap ? `Animals up to $${cap}` : 'Any animal'}: ${r.board.length} on the board, worth $${tot.toLocaleString()}.${p ? ` The premium enemy this round is the <b>${esc(itemName(p))}</b> ($${p.price}): it can't be bought and fights you.` : ''}${r.k === RN - 1 ? ' The last round: a giant is on the board.' : ''} You have $${r.money.toLocaleString()}.${intro}</p>`;
+    act.innerHTML = `<button class="btn primary" id="progToShop">To the shop</button>`;
   } else {
-    const best = r.newBest ? 'A new best run.' : r.prevBest ? `Best run: ${r.prevBest.survived} of ${M.MIG.FIGHTS} fights, ${fmtT(r.prevBest.total)} alive.` : '';
-    const daily = r.daily ? ` Daily migration ${r.daily}: ${r.newDaily ? 'your best today.' : r.prevDaily ? `best today ${r.prevDaily.survived} of ${M.MIG.FIGHTS}, ${fmtT(r.prevDaily.total)}.` : ''}` : '';
+    const fmtBest = b => `${b.complete ? 'all ' + RN : b.won + ' of ' + RN} rounds, ${fmtT(b.total)} alive`;
+    const best = r.newBest ? 'A new best run.' : r.prevBest ? `Best run: ${fmtBest(r.prevBest)}.` : '';
+    const daily = r.daily ? ` Daily run ${r.daily}: ${r.newDaily ? 'your best today.' : r.prevDaily ? `best today ${fmtBest(r.prevDaily)}.` : ''}` : '';
+    const mvp = runMvp(r);
     nx.hidden = false;
-    nx.innerHTML = `<h3 style="margin-bottom:6px">${r.won ? `All ${M.MIG.FIGHTS} fights survived` : `${r.survived} of ${M.MIG.FIGHTS} fights survived`} · ${fmtT(r.total)} alive</h3><p class="notes">${best}${daily}</p><p class="notes" style="margin-top:6px">Share: “${esc(migShare(r))}”</p>`;
-    act.innerHTML = `<button class="btn primary" id="migAgain">New migration</button><button class="btn" id="migAgainDaily">Daily migration</button><button class="btn" id="migCopy">Copy result</button><span class="copyOut" id="migCopyOut"></span><button class="btn" id="migHome">Back to the arena</button>`;
+    nx.innerHTML = `<h3 style="margin-bottom:6px">${r.complete ? `All ${RN} rounds won` : `${r.won} of ${RN} rounds won`} · ${r.kills} kills · ${fmtT(r.total)} alive</h3>${mvp ? `<p class="notes" style="display:flex;gap:8px;align-items:center">${tokHTML(mvp, 30)} MVP of the run: the ${esc(mvp.name)}.</p>` : ''}<p class="notes">${best}${daily}</p><p class="notes" style="margin-top:6px">Share: “${esc(progShare(r))}”</p>`;
+    act.innerHTML = `<button class="btn primary" id="progAgain">New run</button><button class="btn" id="progAgainDaily">Daily run</button><button class="btn" id="progCopy">Copy result</button><span class="copyOut" id="progCopyOut"></span><button class="btn" id="progHome">Back to the arena</button>`;
   }
 }
-$('migBoons').addEventListener('click', e => { const b = e.target.closest('[data-boon]'); if (!b || !S.mig) return; M.pickBoon(S.mig, b.dataset.boon); saveRun(); renderMig(); renderHud(); });
-$('migActions').addEventListener('click', e => {
+$('progActions').addEventListener('click', e => {
   const id = e.target.id;
-  if (id === 'migToShop') go('draft');
-  else if (id === 'migAgain') startMig(newBoardSeed());
-  else if (id === 'migAgainDaily') startMig(migDailySeed(todayLocal()), todayLocal());
-  else if (id === 'migCopy') copyLink(migShare(S.mig), $('migCopyOut'), 'Result');
-  else if (id === 'migHome'){ try { localStorage.removeItem(MIG_KEY); } catch(err){} exitMig(); renderAll(); go('arena'); }
+  if (id === 'progToShop') go('draft');
+  else if (id === 'progAgain') startProg(newBoardSeed());
+  else if (id === 'progAgainDaily') startProg(progDailySeed(todayLocal()), todayLocal());
+  else if (id === 'progCopy') copyLink(progShare(S.prog), $('progCopyOut'), 'Result');
+  else if (id === 'progHome'){ try { localStorage.removeItem(PROG_KEY); } catch(err){} exitProg(); renderAll(); go('arena'); }
 });
 // arena screen entry: start, daily, resume, best
-function renderMigEntry(){
-  const r = loadRun(), live = r && !r.over, rb = $('migResume');
-  rb.hidden = !live; if (live) rb.textContent = `Resume (fight ${r.k + 1}/${M.MIG.FIGHTS}, $${r.money.toLocaleString()})`;
-  const best = readJSON(MIG_BEST), db = readJSON(migDailyKey(todayLocal()));
-  $('migBest').textContent = (best ? `Best run: ${best.won ? 'all ' + M.MIG.FIGHTS + ' fights' : best.survived + ' of ' + M.MIG.FIGHTS + ' fights'} survived, ${fmtT(best.total)} alive.` : 'No migration finished yet.') + (db ? ` Today's daily: ${db.survived} of ${M.MIG.FIGHTS}, ${fmtT(db.total)}.` : '');
+function renderProgEntry(){
+  if (!PROG_ON) return;
+  const r = loadRun(), live = r && !r.over, rb = $('progResume');
+  rb.hidden = !live; if (live) rb.textContent = `Resume (round ${r.k + 1}/${RN}, $${r.money.toLocaleString()})`;
+  const best = readJSON(PROG_BEST), db = readJSON(progDailyKey(todayLocal()));
+  $('progBest').textContent = (best ? `Best run: ${best.complete ? 'all ' + RN : best.won + ' of ' + RN} rounds won, ${fmtT(best.total)} alive.` : 'No run finished yet.') + (db ? ` Today's daily: ${db.won} of ${RN}, ${fmtT(db.total)}.` : '');
 }
-$('migNew').addEventListener('click', () => startMig(newBoardSeed()));
-$('migDaily').addEventListener('click', () => startMig(migDailySeed(todayLocal()), todayLocal()));
-$('migResume').addEventListener('click', () => { const r = loadRun(); if (!r || r.over) return; hideNotice(); S.mig = r; S.migKey = null; S.migEntry = null; S.world = null; go('mig'); });
+$('progNew').addEventListener('click', () => startProg(newBoardSeed()));
+$('progDaily').addEventListener('click', () => startProg(progDailySeed(todayLocal()), todayLocal()));
+$('progResume').addEventListener('click', () => { const r = loadRun(); if (!r || r.over) return; hideNotice(); S.prog = r; S.progKey = null; S.progEntry = null; S.world = null; go('prog'); });
 
 // ---------- personal stats (localStorage 'wa-stats'): every fight played on this device ----------
 // per pick (catalog item): games, wins, kills, damage, protecting you, deaths, MVPs; per enemy: games faced, times it
@@ -1477,22 +1507,22 @@ function actBtn(label, fn, primary, title){ const b = document.createElement('bu
 let actKey = '';
 function renderActBar(){
   const bar = $('actbar'), sc = S.screen, ended = !!(S.world && S.playT >= S.dur - 1e-6), banner = $('banner').querySelector('.btn.primary');
-  const key = [sc, ended, !!banner && banner.id, banner && banner.textContent, sc === 'draft' ? spent() + ':' + S.team.size + ':' + (S.mig ? S.mig.money + ':' + M.teamIds(S.mig).length : '') : ''].join('|');
+  const key = [sc, ended, !!banner && banner.id, banner && banner.textContent, sc === 'draft' ? spent() + ':' + S.team.size + ':' + (S.prog ? S.prog.money + ':' + M.teamIds(S.prog).length : '') : ''].join('|');
   if (key === actKey) return; actKey = key;
   $('skipEnd').hidden = ended;
   const box = $('actbarIn'); box.innerHTML = '';
   const add = (...b) => b.forEach(x => box.appendChild(x));
   if (sc === 'arena') add(actBtn('Draft your team', () => $('toDraft').click(), true), actBtn('Daily', () => startDaily(), false, 'Daily challenge: same board, map and fight seed for everyone today'));
   else if (sc === 'draft'){
-    const n = S.mig ? M.teamIds(S.mig).length : S.team.size;
+    const n = S.prog ? M.teamIds(S.prog).length : S.team.size;
     const sum = document.createElement('span'); sum.className = 'sum';
-    sum.innerHTML = S.mig ? `<b>$${S.mig.money.toLocaleString()}</b><br>left` : `<b>$${spent().toLocaleString()}</b> / $${BUDGET.toLocaleString()}<br>${n} pick${n === 1 ? '' : 's'}`;
+    sum.innerHTML = S.prog ? `<b>$${S.prog.money.toLocaleString()}</b><br>left` : `<b>$${spent().toLocaleString()}</b> / $${BUDGET.toLocaleString()}<br>${n} pick${n === 1 ? '' : 's'}`;
     add(sum, actBtn('Formation', () => go('deploy'), false, 'Place your animals (optional: Fight uses the auto formation)'), actBtn(n ? 'Fight' : 'Fight alone', () => startBattle(), true));
   }
   else if (sc === 'deploy') add(actBtn('Auto', () => $('autoForm').click(), false, 'Auto formation'), actBtn('Release the animals', () => startBattle(), true));
   else if (sc === 'fight' && S.world){
     if (!ended) add(actBtn('Skip to result', skipToEnd, true));
-    else if (banner && (S.mig || S.five)) add(actBtn(banner.textContent, () => banner.click(), true));
+    else if (banner && (S.prog || S.five)) add(actBtn(banner.textContent, () => banner.click(), true));
     else if (banner) add(actBtn('Team', () => go('draft'), false, 'Change team'), actBtn('New board', playNewBoard), actBtn('Play again', playAgain, true));
   }
   bar.hidden = !box.children.length;
@@ -1506,8 +1536,8 @@ $('seedLbl').textContent = S.seed;
 syncSpeed();
 if (!loadHash()){
   dealNewBoard(); renderAll();
-  const run = loadRun(); // a migration in progress picks up where it left off after a reload
-  if (MIG_ON && run && !run.over){ S.mig = run; go('mig'); showNotice(`<b>Migration resumed</b> <span>Fight ${run.k + 1} of ${M.MIG.FIGHTS}, $${run.money.toLocaleString()} to spend.</span>`); }
+  const run = loadRun(); // a progressive run in progress picks up where it left off after a reload
+  if (PROG_ON && run && !run.over){ S.prog = run; go('prog'); showNotice(`<b>Run resumed</b> <span>Round ${run.k + 1} of ${RN}, $${run.money.toLocaleString()} to spend.</span>`); }
   else go('arena');
 }
 requestAnimationFrame(frame);

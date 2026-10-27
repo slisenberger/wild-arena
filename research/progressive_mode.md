@@ -1,7 +1,8 @@
 # Progressive mode: design draft (Oct 27)
 
-Status: **draft for the owner**, nothing built. It grows out of the owner's riffs (Oct 27) and reuses what the switched-off
-Migration mode (`migration.js`) already does well. Decisions the owner needs to make are marked **Q** with a recommendation.
+Status: **prototype built (Oct 27), behind `?progressive=1`**, waiting for the owner's playtest. What was built and measured
+is in "Built (Oct 27)" at the end; the sections in between are the original draft. It replaced the switched-off Migration
+mode (`migration.js` is gone; its engine hooks are reused).
 
 ## The idea in one paragraph
 A run of about 7 rounds. Early boards are dealt only from cheap animals, so the honey badger, boar, leopard and lone wolf
@@ -102,3 +103,62 @@ Decided (Oct 27): experience with XP and levels; two retries per run.
 3. Does this replace Migration (switched off), or sit beside it? Recommend **replacing it**: same engine hooks, a
    clearer hook.
 4. T. rex as a final-round boss: yes, later?
+
+## Built (Oct 27)
+Files: `progressive.js` (rules, `PROG` constants), UI in ui.js (`S.prog`, `s-prog` screen, the draft screen is the shop),
+`progressive_bot.js` (balance bot), `progressive_r1.js` (round-1 choices), `level_abs.js` (what a level is worth).
+Migration (`migration.js`, `migration_bot.js`, `?migration=1`) was removed; old `wa-mig` saves are ignored.
+
+### Final constants (tuned with the bot)
+| Round | Cap | Board | Total | Money in | Premium enemy |
+|---|---|---|---|---|---|
+| 1 | $100 | 11 | $1,100 | $400 start | – |
+| 2 | $200 | 10 | $1,300 | +$400 | – |
+| 3 | $300 | 10 | $1,600 | +$500 | hippo / buffalo / bison |
+| 4 | $400 | 10 | $1,900 | +$500 | rhino (or mammoth) |
+| 5 | $400 | 11 | $2,200 | +$500 | rhino |
+| 6 | $700 | 11 | $2,400 | +$600 | buffalo or bison herd |
+| 7 | any | 12 | $2,700 | +$800 | herd; a giant (elephant/mammoth/triceratops) is on the board for sale |
+
+Plus $25 per kill, at most $150 a won round (`PER_KILL`, `KILL_CAP`). Rares on 10% → 30% of boards. Free rest heals 30% of
+missing health; full heal 25% of price (min $50); sell for half. Scar: below 25% health in a fight → −10% max health for
+the run (max 3). XP: 1 per 50 damage (damage to something attacking you counts twice), 10 per kill, 5 for surviving, 5 per
+signature move (max 2 a fight), 10 for MVP; levels at 25 / 60 / 110 XP; packs share one pool. Your own health resets each
+round (the human stays as fragile as now). Premium: the round's top price band, non-rare if possible, chosen by the seed,
+never a species you own, never the last round's giant.
+
+**Retries (a design call, see DECISIONS.md):** a loss goes back to the shop as the round opened (team, wounds, XP, money)
+and refights on a new fight seed; only the time alive counts. With "the dead stay dead" instead, 17% of bot runs died in
+round 1 (a crippled retry can't win), so the retry restores the round.
+
+### Levels: experience, not superpowers (engine hook `cfg.levels`, `LEVEL_FX` in sim.js)
+Seasoned: flee threshold ×0.75 and a fallen packmate shakes it half as much. Cunning: +15% sight range. Veteran: +10%
+damage, +10% max health. Measured (`level_abs.js 120 3`, paired: same boards, 3-animal base teams and seeds, the item at
+level 0 vs level 3; 12,150 fights): level 3 adds **+3.95 ± 1.17 s** on average against a mean swing of 52 s, i.e. **~8% of
+the swing** pooled over all items (per item noisy, ±5–10 s SE). Within the ~15% cap, so the effects were kept as designed.
+
+### Bot results (`progressive_bot.js 500 4 1001`, fresh seeds)
+The bot heals any pick under 60%, buys by measured swing with ±50% seeded noise, and 1 buy in 4 is a random affordable
+animal (so it plays like a player with favourites); it never sells.
+- Rounds won: 0:6, 1:12, 2:40, 3:91, 4:104, 5:127, 6:38, 7:82 → **16.4% complete**; the run ends in round **5 (median)**,
+  p25 4, p75 6.
+- First-try win by round: 83%, 88%, 73%, 62%, 56%, 43%, 56%. Round 6 (the first herd premium) is the wall.
+- Levels: by round 4, 62% of picks are at least Seasoned and 21% Veteran; by round 7, 56% / 35%.
+- Round 1: 218 distinct bot teams over 500 runs. Win rate with the animal on the team: boar 88%, wolf pack 89%, croc 88%,
+  tiger 84%, ostrich 84%, lion 81%, gorilla 79%, leopard 75%, honey badger 62%, lone wolf 36%.
+- Kills per fight in rounds 1–2 (when on the team): tiger 1.75, croc 1.51, **boar 1.27**, lion 0.95, ostrich 0.61, wolf
+  pack 0.49, **leopard 0.47**, gorilla 0.44, **honey badger 0.02** (2 kills in 112 fights).
+- A honey badger is still on the team in round 4 in 10.6% of runs: 53 of the 83 runs that had one in rounds 1–2. It
+  survives (fearless, loose skin) but almost never finishes anything.
+
+### Round 1 needs real choices (`progressive_r1.js 16 4`: every 4-animal team on 16 dealt round-1 boards, 4 seeds each)
+A random full-spend team wins 40% (boards range 26–60%); on every board some teams never win and some always do. 9
+distinct best teams over 16 boards, but the $100 tier includes the tiger, lion and croc, and they dominate the top teams
+(top-5 appearances: tiger 75, lion 69, croc 50, boar 26, gorilla 17, wolf pack 17 … leopard 2, honey badger 2). So round 1
+is a big-cat round more than a badger round.
+
+### Open after the build
+- The badger story doesn't happen yet: in round 1 it gets 0.02 kills a fight. Options: deal round 1 without the $100 big
+  cats (tiger, lion, jaguar, croc; a "small animals" round), or give the badger a real finishing move. Needs the owner.
+- The premium herd in rounds 6–7 (DECISIONS.md).
+- Not built from the draft: paid "training", T. rex boss, a smarter bot (selling, saving).

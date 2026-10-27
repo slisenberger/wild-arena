@@ -68,15 +68,20 @@ count as 5:00). Live site: GitHub Pages serves `index.html` from `main`.
   fight each; least-squares fit of each animal's swing value (seconds gained by moving it from their side to
   yours), proposed prices ∝ swing ($100 steps, min $100). Note: the older whole-roster tools (`quick.js`,
   `camp.js`, `budget.js`, `tourney.js`) predate the board model and now fight all 22 animals.
-- `migration.js` — the roguelike **Migration** mode (**switched off in the UI by the owner, Oct 26, until properly designed**; `?migration=1` shows it; `MIG_ON` in ui.js)'s rules (pure JS, bundled by `build.js` after sim.js as
-  `window.Migration`): 7 fights, money, carry-over wounds, trading post, boons, escalation (`MIG` constants).
-  Engine hooks in sim.js `setup` (all opt-in; absent = byte-identical, checked on 80 fixed fights with and without the
-  live policies): `cfg.startHp = {id: fraction | [fraction per surviving pack member]}` (array length = group size),
-  `cfg.humanHp`, `cfg.boons = [ids of BOONS]` (read as `w.bn` in strike/heat/speedOf/canSee/morale/allyTarget), and
-  `dealBoard` `rules.exclude` (ids never dealt). `migration_bot.js [runs] [workers]` = greedy-bot balance probe
-  (env `MIG='{...}'` overrides constants). UI: arena "Migration" panel, `s-mig` run screen, the draft screen doubles as
-  the trading post; the run lives in localStorage `wa-mig` (resumes after reload), best `wa-mig-best`, daily
-  `wa-mig-daily:<date>`. A fight's result is applied the moment it's simulated.
+- `progressive.js` — **progressive mode** rules (prototype Oct 27, **hidden unless `?progressive=1`**, `PROG_ON` in ui.js; it
+  replaced the switched-off Migration mode, whose `migration.js`/`migration_bot.js` and `?migration=1` are gone). Pure JS,
+  bundled by `build.js` after sim.js as `window.Progressive`: 7 rounds up a price ladder (`PROG.CAP/BOARD/TOTAL`), a premium
+  enemy from round 3, top-ups, kill bonus, rest/heal, scars, XP/levels, two retries (`PROG` constants). Engine hooks in sim.js
+  `setup` (all opt-in; absent = byte-identical, checked on 120 fixed fights with and without the live policies against a
+  worktree of the base commit): `cfg.startHp = {id: fraction | [per surviving member]}` (wounds), `cfg.maxHp = {id: mult |
+  [per member]}` (scars), `cfg.levels = {id: 0-3}` (`LEVEL_FX`, read as `u.lv`), `dealBoard` `rules.exclude` and
+  `rules.maxPrice`; stats only: `u.st.sig` (per-unit signature count), `u.st.low` (lowest health fraction, your side).
+  The Migration-era `cfg.humanHp` / `cfg.boons` (`BOONS`) hooks are still in sim.js but unused. Tools:
+  `progressive_bot.js [runs] [workers] [seed0]` (greedy bot; env `PROG='{...}'` overrides constants, `NOISE`, `RAND`),
+  `progressive_r1.js [boards] [seeds]` (every full-spend round-1 team on dealt round-1 boards), `level_abs.js [N] [level]`
+  (paired level-L vs level-0 value per item). UI: arena panel `.progentry`, `s-prog` run screen, the draft screen is the
+  shop (heal/sell/undo on the team line, premium card marked "Not for sale"); run in localStorage `wa-prog` (resumes after
+  reload), best `wa-prog-best`, daily `wa-prog-daily:<date>`. A fight's result is applied the moment it's simulated.
 - `BACKLOG.md` — every idea captured so far (realism, anti-camping, pricing, herds, maps, animals,
   mechanics, replayability) with status and suggested order. Add new ideas there.
 
@@ -345,6 +350,13 @@ round. Report ± standard errors.
 - GCP: run `node policy/gcp/gcp.js check` (then `check --vm`) to confirm the credentials, then launch sweeps there.
 - Archetype policies (cats, chargers, bulldozers, brawlers, kickers) are being built in the original session's worktree;
   if that work isn't on the branch yet, it hasn't been merged.
+
+## Progressive mode (prototype Oct 27, `?progressive=1`; details and numbers in `research/progressive_mode.md`)
+- 7 rounds up a price ladder (round 1 $100 animals only … round 7 any, a giant for sale), premium enemy from round 3 (top
+  band, not for sale), $400 start + top-ups 400/500/500/500/600/800, $25/kill (cap $150), rest 30% / heal 25% of price,
+  scars, XP and levels (level 3 ≈ +8% of swing, `level_abs.js`), two retries (a loss restores the round's shop).
+- Bot (500 runs): round 1 first-try 83%, median run ends in round 5, 16.4% complete. Round 1 has real choices (random team
+  40%, 9 best teams over 16 boards) but tiger/lion/croc dominate it; the honey badger gets 0.02 kills a fight (open).
 
 ## Open threads (full list in BACKLOG.md)
 1. Realism: owner decision on a more fragile human. (Done Oct 2026: lion coalitions encircle — the second lion swings to

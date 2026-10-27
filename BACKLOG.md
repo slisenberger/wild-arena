@@ -249,7 +249,15 @@ Pick for new roles. Top three for design value: **honey badger, moose, Komodo dr
 - [ ] Real frame animation needs drawn sprites: an original art project (don't trace others' photos).
 
 ## 8. Replayability
-- [x] **Roguelike "migration" mode (owner, Oct 26) — first playable done (Oct 26).** 7 fights, $600 start; earn $80/min alive
+- [x] **Progressive mode (owner, Oct 27) — prototype built behind `?progressive=1` (Oct 27), replaces Migration.** 7 rounds
+  up a price ladder, premium enemy from round 3, fixed top-ups + $25/kill (cap $150), rest 30% / paid full heal, scars,
+  XP and levels (Seasoned / Cunning / Veteran), two retries. Rules `progressive.js`, bot `progressive_bot.js`, round-1
+  check `progressive_r1.js`, level value `level_abs.js`; numbers in `research/progressive_mode.md`. Follow-ups: owner
+  playtest; a smarter bot (does selling, healing or saving money matter?); "training" spend (XP for money) from the
+  design; T. rex final-round boss (owner: maybe, later); the premium herd in rounds 6–7 is the run's wall (see the doc);
+  per-run share link that replays the run; scout the next board before buying.
+- [x] ~~Roguelike "migration" mode~~ (removed Oct 27: progressive mode replaced it; its rules/bot files are gone).
+  Original entry: **(owner, Oct 26) — first playable done (Oct 26).** 7 fights, $600 start; earn $80/min alive
   + $25 per enemy down + $50 for surviving (rounded to $50); survivors keep wounds (heal 40%, you 30%), the dead are gone,
   packs carry their surviving members; death ends the run. Between fights: recap, 1-of-3 boons (8: spear, waterskin,
   snowshoes, ranger's whistle, smoke pots, thick hide coat, field dressing, lookout tower), trading post (a fresh board
