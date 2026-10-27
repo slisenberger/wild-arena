@@ -297,3 +297,7 @@ Pick for new roles. Top three for design value: **honey badger, moose, Komodo dr
 - [ ] **5 in a Row** (owner idea, Oct 27; prototype behind `?five=1`): five boards in a row, win all five, one retry.
   Open after playtest: daily-only vs free play, best-of-3 per board instead of the retry, filtering out boards where even the
   best team wins < ~70% (board.js-style check per daily board), whether a replay of today's run should count.
+
+- [x] **Elephant rare** (owner, Oct 27): dealt through the rare slot (~8% of boards); board total kept at $2,600 (harder,
+  median best team 88%, typical team 160 s). Next for variety: new mid-tier animals that can cost $200+ (research in
+  `research/mid_tier_candidates.md`).

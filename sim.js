@@ -11,7 +11,7 @@ const W = 100, H = 66, DT = 0.1, MATCH_T = 300, QUIET_T = 30;
 // swim = speed in deep water, m/s (real swimming/bottom-walking speed, not a fraction of sprint speed).
 // tag aquaStalk = hides submerged like a croc, lunges out of the water, first strike from the water is an ambush.
 const ANIMALS = [
- {id:'elephant', bluffP:0.6, name:'African Elephant', abbr:'ELE', price:700, mass:6000, spd:7, dmg:260, cd:1.6, armor:.35, reach:3.5, stam:20, heat:.8, cold:.6, water:.5, swim:1.5, aggr:.55, flee:.15, corner:1.3, pred:false, charge:true, vision:40, tags:['hatesPredators','sweep','bluff'],
+ {id:'elephant', rare:true, bluffP:0.6, name:'African Elephant', abbr:'ELE', price:700, mass:6000, spd:7, dmg:260, cd:1.6, armor:.35, reach:3.5, stam:20, heat:.8, cold:.6, water:.5, swim:1.5, aggr:.55, flee:.15, corner:1.3, pred:false, charge:true, vision:40, tags:['hatesPredators','sweep','bluff'],
   traits:['Rideable: you sit 3.2 m up, and its trunk reaches any rider','Matriarch: ears out and a mock charge first, then it tramples for real','Mobs predators on sight; momentum hits scatter anything smaller']},
  {id:'rhino', name:'White Rhino', abbr:'RHI', price:400, mass:2300, spd:12.5, dmg:180, cd:1.4, armor:.55, reach:2.6, stam:15, heat:.8, cold:.55, water:0, swim:1, aggr:.3, flee:.25, corner:1.3, pred:false, charge:true, vision:18, tags:[],
   traits:['Placid two-tonne grazer: slow to anger, and it gives way to elephants','Armor-thick hide (only the croc is tougher) and a horn charge that cannot steer','Poor eyesight: it charges what it hears or smells as much as what it sees']},
