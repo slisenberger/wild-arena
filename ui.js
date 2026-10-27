@@ -1313,7 +1313,7 @@ function progTeamHTML(r, shop){
   for (const e of r.team){
     const a = A.BY_ID[e.id], g = M.groupOf(e.id), nm = g > 1 ? `${a.groupName} (${e.hp.length} of ${g})` : a.name, x = xpInfo(e), scars = e.scar.reduce((s, n) => s + n, 0);
     const heal = shop && !e.fresh && M.needsHeal(e) ? `<button class="btn" data-heal="${a.id}" ${M.canHeal(r, a.id) ? '' : 'disabled'} title="Full heal">Heal $${M.healCost(a.id)}</button>` : '';
-    const act = !shop ? '' : e.fresh ? `<button class="btn" data-unbuy="${a.id}" title="Undo: get the $${a.price} back">Undo</button>` : `${heal}<button class="btn" data-sell="${a.id}" title="${M.sellPrice(a.id) ? 'Sell for half its price, rounded down to $100' : 'Let it go (a $100 animal sells for nothing)'}">${M.sellPrice(a.id) ? 'Sell $' + M.sellPrice(a.id) : 'Release'}</button>`;
+    const act = !shop ? '' : e.fresh ? `<button class="btn" data-unbuy="${a.id}" title="Undo: get the $${a.price} back">Undo</button>` : `${heal}<button class="btn" data-sell="${a.id}" title="Sell for half its price">Sell $${M.sellPrice(a.id)}</button>`;
     const sub = [e.kills ? `${e.kills} kill${e.kills > 1 ? 's' : ''}` : '', scars ? `<span class="scar" title="Scars: −${M.PROG.SCAR * 100}% max health each">${scars} scar${scars > 1 ? 's' : ''}</span>` : ''].filter(Boolean).join(' · ');
     h += `<div class="mt${e.fresh ? ' fresh' : ''}">${tokHTML(a, 34)}<div class="mtb"><div class="nm">${esc(nm)} ${stars(e.lv)}${e.fresh ? ' <span class="label" style="color:var(--you)">new</span>' : ''}</div>`
       + `<div class="hpb">${e.hp.map(hpBar).join('')}</div><div class="xpb"><i><b style="width:${Math.round(clamp01(x.f) * 100)}%"></b></i><span>${x.txt}${e.lv ? ' · ' + M.LEVEL_NAME[e.lv] : ''}</span></div>${sub ? `<div class="sub">${sub}</div>` : ''}</div>${act ? `<div class="mta">${act}</div>` : ''}</div>`;
@@ -1324,7 +1324,7 @@ function progTeamHTML(r, shop){
 function progLede(r){
   const cap = M.PROG.CAP[r.k], tot = r.board.reduce((s, id) => s + A.BY_ID[id].price, 0);
   const prem = r.premium ? ` The ${itemName(A.BY_ID[r.premium])} is not for sale: it joins the other side.` : '';
-  return `${A.TERRAINS[r.terrain].name}. ${cap ? `Animals up to $${cap}` : 'Any animal'}: ${r.board.length} on the board, worth $${tot.toLocaleString()}. You have $${r.money.toLocaleString()}; whatever you don't buy is against you.${prem} Your team keeps its wounds: heal, sell (half price, rounded down to $100), or buy more.${r.attempt ? ` Retry ${r.attempt} of ${M.PROG.RETRIES}: a new fight seed.` : ''}`;
+  return `${A.TERRAINS[r.terrain].name}. ${cap ? `Animals up to $${cap}` : 'Any animal'}: ${r.board.length} on the board, worth $${tot.toLocaleString()}. You have $${r.money.toLocaleString()}; whatever you don't buy is against you.${prem} Your team keeps its wounds: heal, sell for half price, or buy more.${r.attempt ? ` Retry ${r.attempt} of ${M.PROG.RETRIES}: a new fight seed.` : ''}`;
 }
 // team-line buttons (the shop): sell a carried animal, undo a buy, pay for a full heal
 $('teamline').addEventListener('click', e => {
@@ -1383,7 +1383,7 @@ function recapHTML(r, e){
     const xp = Object.entries(e.xp).filter(([, v]) => v > 0).map(([id, v]) => `${esc(nm(id))} +${v}`);
     if (xp.length) lines.push(`XP: ${xp.join(', ')}.${e.ups.length ? ` <b style="color:var(--gold)">${esc(upsTxt(e))}.</b>` : ''}`);
     if (e.scars.length) lines.push(`Scarred (fell below ${M.PROG.SCAR_AT * 100}% health): ${e.scars.map(s => esc(nm(s.id))).join(', ')}, −${M.PROG.SCAR * 100}% max health for the run.`);
-    lines.push(`Money: +$${e.earned} for kills ($${M.PROG.PER_KILL} each, paid in whole $100s)${e.topup ? `, +$${e.topup} for the new round` : ''}. Survivors rested and healed ${M.PROG.REST * 100}% of their wounds.`);
+    lines.push(`Money: +$${e.earned} for kills ($${M.PROG.PER_KILL} each, up to $${M.PROG.KILL_CAP})${e.topup ? `, +$${e.topup} for the new round` : ''}. Survivors rested and healed ${M.PROG.REST * 100}% of their wounds.`);
   } else if (e.retry) lines.push('The lost fight is undone: your team, money, wounds and XP are back as they were when the round opened.');
   return head + lines.map(l => `<p class="notes" style="margin:0">${l}</p>`).join('');
 }
