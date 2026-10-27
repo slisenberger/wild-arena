@@ -14,7 +14,10 @@ const fs = require('fs'), path = require('path'), os = require('os');
 const R = require('./move_run.js'), RW = require('./move_reward.js'), P = require('./policy.js'), TM = require('./target_model.js');
 if (!isMainThread){ parentPort.postMessage(workerData.jobs.map(j => ({k: j.k, i: j.i, rec: R.runFight(j.f, j.W, workerData.arch)}))); return; }
 
-const [file, ...rest] = process.argv.slice(2);
+// subcommands as in train.js (for policy/gcp/vm_runner.sh): init <state> [opts] | run <state> [--threads --hours] | report <state>;
+// without one: create the state if missing, then run
+const CMDS = ['init', 'run', 'report'], av = process.argv.slice(2), cmd = CMDS.includes(av[0]) ? av.shift() : 'auto';
+const [file, ...rest] = av;
 const opt = Object.fromEntries(rest.filter(a => a.startsWith('--')).map(a => { const [k, v] = a.slice(2).split('='); return [k, v === undefined ? true : isNaN(+v) ? (v === 'true' ? true : v === 'false' ? false : v) : +v]; }));
 const DEF = {arch: 'cat', iters: 40, fights: 200, threads: Math.min(8, os.cpus().length), lr: .02, clip: .2, epochs: 4, tau: .125, margin: .25,
   beta: .5, nh: 0, self: true, valEvery: 5, val: 600, test: 1200, seed: 1, goal: 'checkmate', spec: true, withLive: true, styleThr: .9};
@@ -23,15 +26,23 @@ const save = s => { fs.writeFileSync(file + '.tmp', JSON.stringify(s)); fs.renam
 const archOf = () => (opt.arch || (fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, 'utf8')).config.arch : DEF.arch));
 const F = archOf() === 'guard' ? require('./guard_features.js') : require('./features.js'); // guards: their own options and features
 let s = fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, 'utf8')) : null;
+if (cmd === 'report'){ if (!s) process.exit(1); const b = s.best, t = s.test;
+  console.log(`[it ${s.iter}/${s.config.iters}] best ${b.from} val ${b.val >= 0 ? '+' : ''}${(+b.val).toFixed(3)} | ${s.config.arch} ${s.P0.kind} ppo`);
+  if (t) console.log(`test: ${t.diff.toFixed(3)} ± ${t.se.toFixed(3)} (${Math.abs(t.diff) > 2 * t.se ? 'beyond' : 'within'} noise), style ${t.style.toFixed(3)}`);
+  process.exit(0); }
+if (cmd === 'init' && s) throw new Error(file + ' exists');
+if (cmd === 'run' && !s) throw new Error('no state ' + file);
 if (!s){
   const c = Object.assign({}, DEF, opt, {target: true, mode: 'linear', trainer: 'ppo'}); if (c.arch === 'guard'){ c.goal = null; c.spec = false; } // guards: the protect goal
   s = {format: 'wild-arena/ppo-target', simHash: R.simHash(), harnessHash: R.harnessHash(), config: c, features: F.NAMES,
     P0: c.nh ? TM.mlp(F.DIM + (c.self ? TM.TRAITS : 0), c.nh, c.margin, c.seed * 7 + 3, c.self) : {kind: 'target-lin', v: 1, nin: F.DIM, margin: c.margin, wt: new Array(F.DIM).fill(0)},
-    iter: 0, history: [], test: null};
+    iter: 0, phase: 'train', history: [], test: null};
   const n = TM.npar(s.P0), th0 = TM.thetaOf(s.P0).slice(); Object.assign(s, {theta: th0, adam: {m: new Array(n).fill(0), v: new Array(n).fill(0), t: 0}, best: {theta: th0.slice(), it: -1, val: 0, from: 'init'}});
   log(`[init] ${file}: ${c.arch}, ${s.P0.kind} ${n} weights (${s.P0.nin} inputs), ${JSON.stringify(c)}`); save(s);
 } else if (s.simHash !== R.simHash() && !process.env.ALLOW_ENGINE_MISMATCH) throw new Error(`${file} was made with sim ${s.simHash}; this checkout has ${R.simHash()}`);
-const c = s.config, fo = {arch: c.arch, seed: c.seed, withLive: c.withLive, goal: c.goal, spec: c.spec};
+if (cmd === 'init') process.exit(0);
+const c = s.config, T0 = Date.now(), HOURS = +opt.hours || 0; if (cmd === 'run' && opt.threads) c.threads = +opt.threads; // run's --threads / --hours apply to this run only
+const fo = {arch: c.arch, seed: c.seed, withLive: c.withLive, goal: c.goal, spec: c.spec};
 const NP = TM.npar(s.P0), ZW = {kind: 'target-lin', v: 1, nin: F.DIM, margin: c.margin, wt: new Array(F.DIM).fill(0)}; // the base arm: zero scorer = the heuristic's targets
 const Wof = (theta, sample) => theta === null ? ZW : Object.assign(TM.withTheta(s.P0, theta), {sample: !!sample, tau: c.tau});
 const ZERO = null;
@@ -77,6 +88,7 @@ async function evalGreedy(theta, pool, idx, n){
 }
 (async () => {
   while (s.iter < c.iters){
+    if (HOURS && Date.now() - T0 > HOURS * 3600e3){ log(`[time] ${HOURS} h used at it ${s.iter}; resume to continue`); return; }
     const t0 = Date.now(), fights = R.fightSet('train', s.iter, c.fights, fo), jobs = [];
     fights.forEach((f, i) => { jobs.push({k: 'base', i, f, W: Wof(null)}, {k: 'pol', i, f, W: Wof(s.theta, true)}); }); // base = zero scorer: the heuristic's targets, the arch's shipped movement kept
     const A = await run(jobs);
@@ -93,6 +105,6 @@ async function evalGreedy(theta, pool, idx, n){
     }
     save(s);
   }
-  if (!s.test){ const t = await evalGreedy(s.best.theta, 'test', 0, c.test); s.test = t; save(s);
+  if (!s.test){ const t = await evalGreedy(s.best.theta, 'test', 0, c.test); s.test = t; s.phase = 'done'; save(s);
     log(`[test] best (${s.best.from}) vs heuristic on ${t.n} held-out fights: ${t.diff >= 0 ? '+' : ''}${t.diff.toFixed(3)} ± ${t.se.toFixed(3)} (${Math.abs(t.diff) > 2 * t.se ? 'beyond' : 'within'} 2 SE) | style ${t.style.toFixed(3)} gates [${t.gates}] | survival ${(100 * t.surv).toFixed(1)} pts | deviates ${(100 * t.dev).toFixed(1)}%`); }
 })().catch(e => { console.error(e); process.exit(1); });

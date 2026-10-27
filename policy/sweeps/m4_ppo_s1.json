@@ -1,0 +1,25 @@
+{
+ "note": "Milestone 4 PPO pilot (Oct 27): learned target choice by PPO (policy/ppo_target.js), linear vs target-mlp (16 hidden, the unit species traits as inputs), anchor beta .1 vs .5 (a local beta .5 linear run sat at +0.00 with greedy deviation ~1%). Every shipped policy live; zero output = the heuristic.",
+ "runs": [
+  {
+   "name": "pp_cat_lin_b1",
+   "args": "--arch=cat --beta=.1 --seed=1401 --trainer=ppo --iters=60 --fights=200 --valEvery=5 --val=800 --test=1200"
+  },
+  {
+   "name": "pp_cat_mlp_b1",
+   "args": "--arch=cat --nh=16 --beta=.1 --seed=1402 --trainer=ppo --iters=60 --fights=200 --valEvery=5 --val=800 --test=1200"
+  },
+  {
+   "name": "pp_cat_mlp_b5",
+   "args": "--arch=cat --nh=16 --beta=.5 --seed=1403 --trainer=ppo --iters=60 --fights=200 --valEvery=5 --val=800 --test=1200"
+  },
+  {
+   "name": "pp_gd_mlp_b1",
+   "args": "--arch=guard --nh=16 --beta=.1 --seed=1404 --trainer=ppo --iters=60 --fights=200 --valEvery=5 --val=800 --test=1200"
+  },
+  {
+   "name": "pp_ch_mlp_b1",
+   "args": "--arch=charger --nh=16 --beta=.1 --seed=1405 --trainer=ppo --iters=60 --fights=200 --valEvery=5 --val=800 --test=1200"
+  }
+ ]
+}
