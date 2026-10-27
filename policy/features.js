@@ -70,11 +70,11 @@ function extract(w, u){
 // what the hand-tuned heuristic in chooseTarget would pick, as an index into opts (mirrors chooseTarget exactly)
 function heuristicIndex(w, u, opts){
   const h = I.predatorTarget(w, u);
-  if (w.mode === 'wild' && u.hunger > .3){
+  if (w.mode === 'wild' && u.hunger > .3 && !u.sated){
     const c = I.bestCarcass(w, u);
     if (c.c && c.score > h.score * 1.0) return opts.findIndex(o => o.kind === 'feed');
   }
-  if (h.score * (.4 + u.s.aggr) > .3 && h.t){ const i = opts.findIndex(o => o.kind === 'target' && o.t === h.t); if (i < 0) throw new Error('heuristic target not among candidates'); return i; }
+  if (h.score * (.4 + u.s.aggr) > .3 * (1 - .8 * I.drive(u)) && h.t){ const i = opts.findIndex(o => o.kind === 'target' && o.t === h.t); if (i < 0) throw new Error('heuristic target not among candidates'); return i; }
   return 0;
 }
 

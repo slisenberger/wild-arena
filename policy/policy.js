@@ -17,11 +17,16 @@ function apply(u, o){
   u.state = u.target ? 'engage' : 'roam';
 }
 
+// 'target-lin' (milestone 4 pilot): score(option i) = margin*[i = the heuristic's pick] + wt.x_i, argmax; zero wt = the
+// heuristic exactly, so training learns only where to deviate from it
+function scoreLin(P, X, teach){ let b = 0, bs = -Infinity; X.forEach((x, i) => { let s = i === teach ? P.margin : 0; for (let k = 0; k < x.length; k++) s += P.wt[k] * x[k]; if (s > bs){ bs = s; b = i; } }); return b; }
 function choose(w, u, policy){
   const cfg = w.cfg, log = cfg.policyLog, stats = cfg.policyStats;
+  if (policy.byArch) policy = policy.byArch[A._internals.archetypeOf(u)];
   const {opts, X} = F.extract(w, u);
-  const teach = policy.teacher || log || stats ? F.heuristicIndex(w, u, opts) : -1;
-  const a = policy.teacher ? teach : M.argmax(policy, X);
+  const lin = policy.kind === 'target-lin';
+  const teach = policy.teacher || log || stats || lin ? F.heuristicIndex(w, u, opts) : -1;
+  const a = policy.teacher ? teach : lin ? scoreLin(policy, X, teach) : M.argmax(policy, X);
   if (stats){ stats.n = (stats.n || 0) + 1; if (a === teach) stats.agree = (stats.agree || 0) + 1; }
   if (log && opts.length > 1) log.push({X, y: teach, a, sp: u.s.id});
   apply(u, opts[a]);

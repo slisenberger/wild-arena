@@ -39,6 +39,7 @@ const DEFAULTS = {
   initWeights: null,         // warm start from a weights file (e.g. policy/weights/guard_v1.json); 'best' starts there too, so validation must beat it
   thetaClip: 0,              // > 0: keep every weight within ±thetaClip of the start (stops the collapse into 'never deviate')
   spec: false,               // true: add the behavior-spec metrics (move_reward.js SPEC_X / SPEC_INFO)
+  target: false,             // true: train the archetype's target choice (milestone-4 pilot) instead of its movement intents
   goal: null,                // 'checkmate': side-level goal (kill the human, sooner is better; move_reward.js goalPartsCheckmate)
   withLive: false,           // the other archetypes use the shipped policies in every fight (train against the live game)
             // warm start: 'patient' = wait while stronger guards block and the target isn't busy or easy (probe winner, +0.06)
@@ -74,9 +75,11 @@ function logLine(file, line, quiet){ fs.appendFileSync(file + '.log', line + '\n
 function init(opts){
   const cfg = Object.assign({}, DEFAULTS, opts.dry ? DRY : {}, opts.cfg);
   const AR = archOf(cfg.arch), F = AR.F;
-  let P0 = M.zeros(F.DIM, cfg.nh, cfg.margin, AR.nout); if (cfg.nh) M.withHidden(P0, R.A.rng(cfg.seed * 31 + 7));
+  const TF = cfg.target ? require('./features.js') : null; // --target: train the archetype's target choice (policy/policy.js 'target-lin'), not its intents
+  if (cfg.target && (cfg.initRule || cfg.nh)) throw new Error('--target supports neither initRule nor nh yet');
+  let P0 = cfg.target ? M.zerosTarget(TF.DIM, cfg.margin) : M.zeros(F.DIM, cfg.nh, cfg.margin, AR.nout); if (cfg.nh) M.withHidden(P0, R.A.rng(cfg.seed * 31 + 7));
   let theta0 = M.flat(P0, cfg.mode);
-  if (cfg.initWeights){ // v2: continue from shipped weights (same shape: features, intents, hidden size)
+  if (cfg.initWeights && !cfg.target){ // v2: continue from shipped weights (same shape: features, intents, hidden size)
     const W = JSON.parse(fs.readFileSync(cfg.initWeights, 'utf8'));
     const grow = !(W.nh || 0) && cfg.nh > 0; // linear weights into an MLP: keep bl/Wl, fresh random W1/b1, W2 = 0 (same behaviour)
     if (W.nin !== F.DIM || W.nout !== AR.nout || (!grow && (W.nh || 0) !== (cfg.nh || 0))) throw new Error(`initWeights ${cfg.initWeights}: shape ${W.nin}/${W.nout}/${W.nh} does not match ${F.DIM}/${AR.nout}/${cfg.nh || 0}`);
@@ -91,7 +94,7 @@ function init(opts){
     if (cfg.arch === 'brawler') for (const a of new Set(rows.map(r => r[0]))) wl(a, 'fearless', -2 * k);
   }
   return {format: STATE_FORMAT, version: STATE_VERSION, simHash: R.simHash(), harnessHash: R.harnessHash(), created: new Date().toISOString(),
-    config: cfg, features: F.NAMES, intents: AR.intents, P0, phase: 'calib', gen: 0, theta: theta0,
+    config: cfg, features: (TF || F).NAMES, intents: cfg.target ? ['keep', 'deviate', '-', '-', '-'] : AR.intents, P0, phase: 'calib', gen: 0, theta: theta0,
     adam: {m: null, v: null, t: 0}, lambda: cfg.lambda0, best: {theta: theta0.slice(), gen: -1, from: cfg.initWeights ? 'init' : cfg.initRule ? 'rule ' + cfg.initRule : 'zero'}, theta0: theta0.slice(), valIndex: 0,
     calib: null, ref: null, N: null, history: [], val: [], test: null};
 }

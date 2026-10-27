@@ -35,12 +35,14 @@ function act(P, x){
 }
 // the trainable vector: mode 'linear' = [bl, Wl]; mode 'full' = [bl, Wl, W2] (W1/b1 stay fixed random features);
 // mode 'deep' = [bl, Wl, W2, W1, b1] (the hidden layer trains too). [bl, Wl] always lead, so warm-start rules index the same.
-function flat(P, mode){ return mode === 'deep' ? [...P.bl, ...P.Wl, ...P.W2, ...P.W1, ...P.b1] : mode === 'full' ? [...P.bl, ...P.Wl, ...P.W2] : [...P.bl, ...P.Wl]; }
+function zerosTarget(nin, margin){ return {kind: 'target-lin', v: 1, nin, margin: margin === undefined ? 1 : margin, wt: new Array(nin).fill(0)}; } // milestone-4 target scorer (policy/policy.js)
+function flat(P, mode){ if (P.kind === 'target-lin') return P.wt.slice(); return mode === 'deep' ? [...P.bl, ...P.Wl, ...P.W2, ...P.W1, ...P.b1] : mode === 'full' ? [...P.bl, ...P.Wl, ...P.W2] : [...P.bl, ...P.Wl]; }
 function unflat(P, v, mode){
+  if (P.kind === 'target-lin') return Object.assign({}, P, {wt: v.slice(0, P.nin)});
   const Q = JSON.parse(JSON.stringify(P)), a = P.nout, b = a + P.nout * P.nin, c = b + P.nout * P.nh, d = c + P.nh * P.nin;
   Q.bl = v.slice(0, a); Q.Wl = v.slice(a, b); if (mode === 'full' || mode === 'deep') Q.W2 = v.slice(b, c);
   if (mode === 'deep'){ Q.W1 = v.slice(c, d); Q.b1 = v.slice(d, d + P.nh); }
   return Q;
 }
-function isZero(P){ return P.fixed === undefined && [...P.bl, ...P.Wl, ...P.W2].every(v => v === 0); }
-module.exports = { NOUT, zeros, withHidden, logits, act, flat, unflat, isZero };
+function isZero(P){ if (P.kind === 'target-lin') return P.wt.every(v => v === 0); return P.fixed === undefined && [...P.bl, ...P.Wl, ...P.W2].every(v => v === 0); }
+module.exports = { NOUT, zeros, zerosTarget, withHidden, logits, act, flat, unflat, isZero };
