@@ -9,10 +9,10 @@ Each item has a recommendation; reply with a number and "yes", or your own call.
 2. **Progressive mode: the premium herd.** In rounds 6–7 the round's top non-rare band is the $700 buffalo / bison herd
    (3 animals), so the premium enemy is a whole herd; that's the run's wall (round 6 first-try win 44%). Option: cap the
    premium at $400 (a rhino). Recommendation: playtest it as is first; the bot still completes 18% of runs.
-3. **Progressive mode: round 1 is a big-cat round, not a badger round.** The $100 tier includes the tiger, lion, jaguar
-   and croc; they dominate round 1 and the honey badger gets 0.02 kills a fight. Option: deal round 1 without them (badger,
-   boar, leopard, lone wolf, ostrich, cougar, hyena, black bear, gorilla...). Recommendation: try it; it changes the
-   round-1 balance, so re-run `progressive_bot.js` after.
+3. **Progressive mode: the honey badger story.** Round 1 is a big-cat round (tiger, lion, croc fill the best teams); the badger
+   barely kills. Tried overnight: dealing round 1 without the $100 big cats and croc (`PROG.R1_OUT`) made runs harder (2.6%
+   complete) and the badger still didn't kill, so it's off. Real fix ideas: a badger-specific XP/kill source (it harries
+   and steals kills?), or accept that its story is surviving (12% of runs still have it in round 4). Your call.
 4. **Prehistoric animals to build** (`research/prehistoric_candidates.md`, all proposed as rares): giant short-faced bear,
    woolly rhino, Doedicurus (tail-club glyptodont), Utahraptor; alternates Homotherium pair, dire wolf pack, Protoceratops
    herd; Stegosaurus if you want another giant. Recommendation: woolly rhino + short-faced bear first (best evidence,
@@ -21,6 +21,10 @@ Each item has a recommendation; reply with a number and "yes", or your own call.
    (they stay in the detail panel) to cut the draft page roughly in half. Default if no answer: leave cards as they are.
 6. **5 in a Row:** the owner moved on to the progressive mode. Default: leave it hidden behind `?five=1`; delete later if
    unused.
+7. **New animals' open questions** (musk ox herd, gaur, walrus — now live): musk ox only on the tundra, or also the forest at a
+   low weight? The walrus won't leave its lake, so 4.5% of tundra-lake fights end "they gave up": acceptable as honest
+   behaviour? Their signature moves are visible but barely move the numbers (the bodies carry the value): strengthen any
+   only with a sourced reason (ideas: walrus stampede, gaur herd mobbing a tiger, lone-bull gaur).
 
 ## Decided
 - Oct 27: cards show the signature move and your own record (built); personal stats panel built.

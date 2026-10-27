@@ -16,12 +16,12 @@ const PROG = {
   ROUNDS: 7, RETRIES: 2,
   // the price ladder: round k (0-based) deals CAP[k] or cheaper (0 = no cap), BOARD[k] animals worth TOTAL[k] (± $100)
   CAP:   [100, 200, 300, 400, 400, 700, 0],
-  BOARD: [11, 10, 10, 10, 11, 11, 12],
-  TOTAL: [1100, 1300, 1600, 1900, 2200, 2400, 2700], // tuned with progressive_bot.js (Oct 27): see CLAUDE.md
+  BOARD: [10, 10, 10, 10, 11, 11, 12],
+  TOTAL: [1000, 1200, 1500, 1800, 2100, 2300, 2600], // retuned on the final engine (abs_r16 prices, Oct 27): see CLAUDE.md
   RARE:  [.1, .15, .2, .25, .3, .3, .3],
   R1_OUT: [],                      // species kept out of round 1 (e.g. the $100 big cats, so it's the small fry's round)
   PREMIUM_FROM: 2,                 // round 3 on: one premium enemy from the round's top price band, not for sale
-  START: 400, TOPUP: [0, 400, 500, 500, 500, 600, 800], // money: $START for round 1, then a fixed top-up for each later round you reach
+  START: 450, TOPUP: [0, 400, 500, 500, 500, 600, 800], // money: $START for round 1, then a fixed top-up for each later round you reach
   PER_KILL: 25, KILL_CAP: 150,     // + $25 per enemy killed, at most $150 a fight (owner may change these)
   REST: .3,                        // free rest between fights: heals 30% of the missing health
   HEAL_SHARE: .25, HEAL_MIN: 50,   // full heal: 25% of the price, at least $50

@@ -337,7 +337,14 @@ round. Report ± standard errors.
   median board's best team 88% (min 33, p25 75), typical full-spend team 160 s, 16 distinct best teams over 16 boards, no
   elephant in any; best teams spread over rhino 6, hippo 6, tiger 4, giraffe 4, croc 4 (was elephant 5, rhino 4). For
   comparison, total $2,500 gave 96% / 181 s (not adopted: it would make the other side weaker).
-- **Current prices (`abs_mid1`, Oct 27, with the musk ox herd, gaur and walrus):** 20 s of swing per $100, giants/herds capped
+- **Current prices (`abs_r16`, Oct 27 night, the final integrated engine: GCP realism pass + bulldozer_v1 + charger_v1 + cat_v1
+  live, rare elephant, musk ox herd / gaur / walrus, progressive hooks):** 20 s of swing per $100, giants/herds capped at $700
+  (triceratops $800), **board total $2,600** (kept: `price_scheme` itself landed on $2,600), budget $1,200, rares 30%.
+  Validation (`RAREP=.3 board.js 16 2 24 12 1200 2600`): median board's best team 92% (min 38, p25 71), typical full-spend
+  team 166 s, 60% of teams win a screen run, 16 distinct best teams over 16 boards. ($2,500: 92%, 176 s, 71%.) Changes vs
+  `abs_mid1`: croc $100, buffalo $300, bison $300, bull $200, mammoth $600, hyena clan $200, lion coalition $100. New items:
+  musk ox herd $400 (78 ± 13 s), gaur $300 (60 ± 7), walrus $200 (30 ± 10).
+- *Previous* prices (`abs_mid1`, Oct 27, on the animals branch before the integration, with the musk ox herd, gaur and walrus): 20 s of swing per $100, giants/herds capped
   at $700 (triceratops $800), **board total $2,500** (was $2,600), budget $1,200, rares 30%, elephant rare. `price_abs.js 240`
   (all items) + `price_abs.js 960` for the tundra-only items (240 tundra boards), merged. New: musk ox herd $400 (79 s), gaur
   $300 (62), walrus $200 (31). Repriced: hippo $400, mammoth $500, croc $200; buffalo, bison $200; grizzly, lion coalition $100.
@@ -380,7 +387,12 @@ round. Report ± standard errors.
   With full teams, 38% of your damage is collateral (charges and sweeps aimed at your animals hit you). Of 11 ideas only
   a stale-dodge bug fix survived on the current engine.
 
-## In flight (Oct 26, for a new session)
+## In flight (Oct 27, for a new session)
+- **Night of Oct 26–27 integration (one PR to main):** gcp/arch1 (bulldozer_v1, charger_v1, realism pass, GCP tooling) +
+  progressive-mode + animals-mid1 + the mobile UX pass (already on main), then one final reprice (`abs_r16`). Re-checks on
+  the merged engine (`policy/probes/eval_arch.js … 1000 61`): bulldozer +0.113 ± 0.029, charger +0.124 ± 0.037, cat
+  +0.067 ± 0.026 vs heuristic, style 1.00, no drift. guard round 3 (GCP) found no guard_v2; brawler/kicker stay heuristic.
+  The GCP session keeps training (milestone 4 learned targets on `m4/*` branches); it pushes only to its own branches.
 - **v2 sweep (run 40372090395, `m3_v2`) found nothing that beats v1 so far; v1 stays live.** Training tests: only the
   warm harrier run h2_c1_s1 passed (+0.033 ± 0.016 vs harrier_v1); on fresh fights (`eval_state.js … 1200 33`, v1 arm) the
   top three harriers were +0.011 ± 0.014, +0.031 ± 0.018, +0.008 ± 0.017 vs v1. Guards: the warm runs didn't move (most
@@ -395,9 +407,13 @@ round. Report ± standard errors.
 
 ## Progressive mode (prototype Oct 27, `?progressive=1`; details and numbers in `research/progressive_mode.md`)
 - 7 rounds up a price ladder (round 1 $100 animals only … round 7 any, a giant for sale), premium enemy from round 3 (top
-  band, not for sale), $400 start + top-ups 400/500/500/500/600/800, $25/kill (cap $150), rest 30% / heal 25% of price,
+  band, not for sale), $450 start + top-ups 400/500/500/500/600/800, boards 10/10/10/10/11/11/12 worth
+  $1,000/1,200/1,500/1,800/2,100/2,300/2,600, $25/kill (cap $150), rest 30% / heal 25% of price,
   scars, XP and levels (level 3 ≈ +8% of swing, `level_abs.js`), two retries (a loss restores the round's shop).
-- Bot (500 runs): round 1 first-try 83%, median run ends in round 5, 16.4% complete. Round 1 has real choices (random team
+- Bot on the final engine (`abs_r16`, all live policies; 500 runs): round 1 first-try 81%, median run ends in round 6,
+  15.8% complete; round 6 (herd premium) is the wall (first-try 32%). Before the integration: 83%, round 5, 16.4%.
+  `PROG.R1_OUT` (species kept out of round 1) was tried with the $100 big cats + croc out: runs got harder (2.6% complete)
+  and the badger still barely kills, so it's off. Earlier bot (pre-integration): Round 1 has real choices (random team
   40%, 9 best teams over 16 boards) but tiger/lion/croc dominate it; the honey badger gets 0.02 kills a fight (open).
 
 ## Open threads (full list in BACKLOG.md)
