@@ -22,13 +22,13 @@
    "long": {
     "n": 8,
     "taps": 8,
-    "scroll": 596,
+    "scroll": 420,
     "ok": true
    },
    "n": 3,
    "taps": 3,
    "scroll": 0,
-   "pageH": 1697,
+   "pageH": 1448,
    "spent": 1200,
    "team": "buffaloherd,bull,gaur",
    "hscroll": 0,
@@ -40,13 +40,13 @@
    "long": {
     "n": 8,
     "taps": 8,
-    "scroll": 625,
+    "scroll": 591,
     "ok": true
    },
    "n": 3,
    "taps": 3,
    "scroll": 0,
-   "pageH": 1697,
+   "pageH": 1663,
    "spent": 1200,
    "team": "buffaloherd,bull,gaur",
    "hscroll": 0,
@@ -64,7 +64,7 @@
    "n": 3,
    "taps": 3,
    "scroll": 0,
-   "pageH": 1297,
+   "pageH": 1263,
    "spent": 1200,
    "team": "buffaloherd,bull,gaur",
    "hscroll": 0,
@@ -94,13 +94,13 @@
    "long": {
     "n": 8,
     "taps": 8,
-    "scroll": 1065,
+    "scroll": 557,
     "ok": true
    },
    "n": 3,
    "taps": 3,
    "scroll": 0,
-   "pageH": 1867,
+   "pageH": 1617,
    "spent": 1200,
    "team": "buffaloherd,bull,gaur",
    "hscroll": 0,
@@ -112,13 +112,13 @@
    "long": {
     "n": 8,
     "taps": 8,
-    "scroll": 1618,
+    "scroll": 1584,
     "ok": true
    },
    "n": 3,
    "taps": 3,
-   "scroll": 305,
-   "pageH": 1789,
+   "scroll": 271,
+   "pageH": 1755,
    "spent": 1200,
    "team": "buffaloherd,bull,gaur",
    "hscroll": 0,
@@ -136,7 +136,7 @@
    "n": 3,
    "taps": 3,
    "scroll": 0,
-   "pageH": 1389,
+   "pageH": 1354,
    "spent": 1200,
    "team": "buffaloherd,bull,gaur",
    "hscroll": 0,
@@ -166,13 +166,13 @@
    "long": {
     "n": 8,
     "taps": 8,
-    "scroll": 284,
+    "scroll": 0,
     "ok": true
    },
    "n": 3,
    "taps": 3,
    "scroll": 0,
-   "pageH": 1184,
+   "pageH": 1066,
    "spent": 1200,
    "team": "buffaloherd,bull,gaur",
    "hscroll": 0,
@@ -184,13 +184,13 @@
    "long": {
     "n": 8,
     "taps": 8,
-    "scroll": 562,
+    "scroll": 942,
     "ok": true
    },
    "n": 3,
    "taps": 3,
    "scroll": 0,
-   "pageH": 1617,
+   "pageH": 1583,
    "spent": 1200,
    "team": "buffaloherd,bull,gaur",
    "hscroll": 0,
@@ -208,7 +208,7 @@
    "n": 3,
    "taps": 3,
    "scroll": 0,
-   "pageH": 1186,
+   "pageH": 1152,
    "spent": 1200,
    "team": "buffaloherd,bull,gaur",
    "hscroll": 0,
@@ -404,10 +404,6 @@
   ],
   [
    "deck prog: fight from the bar",
-   true
-  ],
-  [
-   "deck prog: sell a survivor in round 2",
    true
   ],
   [
