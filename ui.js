@@ -87,6 +87,7 @@ function dealNewBoard(seed){
 function go(screen){
   if (S.mig && (screen === 'draft' || screen === 'deploy') && (S.mig.over || S.mig.boonOffer)) screen = 'mig'; // a boon to pick (or a finished run) comes first
   if (!S.mig && screen === 'mig') screen = 'arena';
+  if (S.screen === 'draft') S.draftScroll = {board: S.boardSeed, y: window.scrollY}; // coming back to the same board keeps your place
   if (S.mig && (screen === 'draft' || screen === 'deploy' || screen === 'mig')) migSync();
   S.screen = screen;
   for (const id of ['arena','draft','deploy','fight','lab','mig']) $('s-' + id).hidden = id !== screen;
@@ -98,7 +99,8 @@ function go(screen){
   if (screen === 'draft') { renderBudget(); renderDraft(); }
   if (screen === 'fight') { sizeCanvas($('fightCanvas')); }
   if (screen === 'lab') renderLabDesc();
-  window.scrollTo({top:0});
+  window.scrollTo({top: screen === 'draft' && S.draftScroll && S.draftScroll.board === S.boardSeed ? S.draftScroll.y : 0});
+  renderActBar();
 }
 document.querySelectorAll('#steps button[data-s]').forEach(b => b.addEventListener('click', () => {
   if (b.dataset.s === 'fight' && !S.world) { startBattle(); return; }
@@ -226,6 +228,7 @@ function renderArenaOpts(){
     mo.appendChild(b);
   }
   renderStreak(); renderMigEntry(); renderFiveEntry(); renderStats();
+  const td = $('terrainDesc'); if (td) td.textContent = A.TERRAINS[S.terrain].desc; // phones show only the picked map's blurb
 }
 $('toDraft').addEventListener('click', () => { exitMig(); go('draft'); });
 // daily challenge: today's local date picks the map, the board and the fight seed, so everyone plays the same game
@@ -1132,7 +1135,7 @@ function renderReport(show){
   const draftWord = 'this draft';
   const bestLine = isBest ? (prev ? `New best for ${draftWord} here (was ${fmtT(prev)}).` : `First run of ${draftWord} here.`) : `Best for ${draftWord} here: ${fmtT(prev)}.`;
   const sharedLine = S.shared != null ? ` Shared score to beat: ${fmtT(S.shared)}${score > S.shared + .05 ? ', and you beat it.' : score >= S.shared - .05 ? ', and you matched it.' : '.'}` : '';
-  const shareRow = `<div class="btnrow"><button class="btn" id="copyResult">Copy link</button><span class="copyOut" id="copyResultOut"></span></div>`;
+  const shareRow = `<div class="btnrow"><button class="btn primary" id="playAgain" title="${S.daily ? 'Same team, same daily fight' : 'Same board and team, a new fight seed'}">Play again</button><button class="btn" id="playTeam">Change team</button><button class="btn" id="playNew">New board</button><button class="btn" id="copyResult">Copy link</button><span class="copyOut" id="copyResultOut"></span></div>`;
   if (res.survived){
     const why = res.why === 'cleared' ? `The other side was dead, routed or full by ${fmtT(res.t)}.` : res.why === 'quiet' ? `Nothing came at you for ${A.QUIET_T} s, so the other side gave up at ${fmtT(res.t)}.` : `You held out the full ${fmtT(HZ)}.`;
     b.innerHTML = `<div class="banner win"><span class="big">Survived · ${fmtT(HZ)}</span><span>${why} Full score. ${bestLine}${sharedLine}${dailyLine}</span>${shareRow}</div>`;
@@ -1160,6 +1163,7 @@ function frame(ts){
   if (S.screen === 'fight' && S.world){
     if (S.lastTs && S.playing){ S.playT = Math.min(S.dur, S.playT + (ts - S.lastTs) / 1000 * S.speed * slowAt(S.world, S.playT, S.speed)); if (S.playT >= S.dur) S.playing = false; }
     const t0 = performance.now(); drawFight(); S.perf[S.perfN++ % S.perf.length] = performance.now() - t0; renderSide();
+    renderActBar();
   }
   S.lastTs = ts;
   requestAnimationFrame(frame);
@@ -1450,8 +1454,53 @@ function renderStats(){
     <h4 style="margin:12px 0 6px">Recent games</h4><ul class="hist">${hist}</ul>`;
 }
 
+// ---------- action bar + one-tap replay (mobile UX pass, Oct 27) ----------
+// A sticky bar at the bottom with the next primary action of every step, so nothing important sits below the fold:
+// arena -> draft -> fight (auto formation; the formation step stays optional) -> skip to result -> play again / new board.
+// It mirrors existing buttons rather than adding new paths, and hides where a screen has its own flow (Migration hub, Lab).
+const SPEED_KEY = 'wa-speed';
+try { const v = +localStorage.getItem(SPEED_KEY); if ([1, 2, 4, 8, 16].includes(v)) S.speed = v; } catch(e){}
+document.querySelectorAll('#speedSeg button').forEach(b => b.addEventListener('click', () => { try { localStorage.setItem(SPEED_KEY, String(S.speed)); } catch(e){} }));
+function skipToEnd(){ if (!S.world) return; S.playT = S.dur; S.playing = false; }
+$('skipEnd').addEventListener('click', skipToEnd);
+function playAgain(){ $('rematch').click(); } // same board and team; a new fight seed (the daily keeps today's seed)
+function playNewBoard(){ dealNewBoard(); renderAll(); go('draft'); }
+$('banner').addEventListener('click', e => {
+  const id = e.target.id;
+  if (id === 'playAgain') playAgain(); else if (id === 'playNew') playNewBoard(); else if (id === 'playTeam') go('draft');
+});
+// drafting re-renders every card; keep the tapped card where it was on screen (the team line above it can grow a row)
+{ let anchor = null; const cardsIn = () => [...$('tiers').querySelectorAll('.card')];
+  $('tiers').addEventListener('click', e => { const c = e.target.closest('.card'); anchor = c ? {i: cardsIn().indexOf(c), top: c.getBoundingClientRect().top} : null; }, true);
+  $('tiers').addEventListener('click', () => { if (!anchor || S.screen !== 'draft') return; const c = cardsIn()[anchor.i]; if (c){ const d = c.getBoundingClientRect().top - anchor.top; if (Math.abs(d) > .5) window.scrollBy(0, d); } anchor = null; }); }
+function actBtn(label, fn, primary, title){ const b = document.createElement('button'); b.className = 'btn' + (primary ? ' primary' : ''); b.textContent = label; if (title) b.title = title; b.addEventListener('click', fn); return b; }
+let actKey = '';
+function renderActBar(){
+  const bar = $('actbar'), sc = S.screen, ended = !!(S.world && S.playT >= S.dur - 1e-6), banner = $('banner').querySelector('.btn.primary');
+  const key = [sc, ended, !!banner && banner.id, banner && banner.textContent, sc === 'draft' ? spent() + ':' + S.team.size + ':' + (S.mig ? S.mig.money + ':' + M.teamIds(S.mig).length : '') : ''].join('|');
+  if (key === actKey) return; actKey = key;
+  $('skipEnd').hidden = ended;
+  const box = $('actbarIn'); box.innerHTML = '';
+  const add = (...b) => b.forEach(x => box.appendChild(x));
+  if (sc === 'arena') add(actBtn('Draft your team', () => $('toDraft').click(), true), actBtn('Daily', () => startDaily(), false, 'Daily challenge: same board, map and fight seed for everyone today'));
+  else if (sc === 'draft'){
+    const n = S.mig ? M.teamIds(S.mig).length : S.team.size;
+    const sum = document.createElement('span'); sum.className = 'sum';
+    sum.innerHTML = S.mig ? `<b>$${S.mig.money.toLocaleString()}</b><br>left` : `<b>$${spent().toLocaleString()}</b> / $${BUDGET.toLocaleString()}<br>${n} pick${n === 1 ? '' : 's'}`;
+    add(sum, actBtn('Formation', () => go('deploy'), false, 'Place your animals (optional: Fight uses the auto formation)'), actBtn(n ? 'Fight' : 'Fight alone', () => startBattle(), true));
+  }
+  else if (sc === 'deploy') add(actBtn('Auto', () => $('autoForm').click(), false, 'Auto formation'), actBtn('Release the animals', () => startBattle(), true));
+  else if (sc === 'fight' && S.world){
+    if (!ended) add(actBtn('Skip to result', skipToEnd, true));
+    else if (banner && (S.mig || S.five)) add(actBtn(banner.textContent, () => banner.click(), true));
+    else if (banner) add(actBtn('Team', () => go('draft'), false, 'Change team'), actBtn('New board', playNewBoard), actBtn('Play again', playAgain, true));
+  }
+  bar.hidden = !box.children.length;
+  document.body.classList.toggle('hasbar', !bar.hidden);
+}
+
 // ---------- init ----------
-function renderAll(){ renderBudget(); renderDraft(); renderArenaOpts(); }
+function renderAll(){ renderBudget(); renderDraft(); renderArenaOpts(); renderActBar(); }
 window.addEventListener('resize', () => { if (S.screen === 'deploy'){ sizeCanvas($('deployCanvas')); drawDeploy(); } if (S.screen === 'fight') sizeCanvas($('fightCanvas')); });
 $('seedLbl').textContent = S.seed;
 syncSpeed();

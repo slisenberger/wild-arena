@@ -212,6 +212,52 @@ th.n{text-align:right}
   .opts.three{grid-template-columns:1fr}
   .mighud .btnrow{margin-left:0}
 }
+/* ---- mobile UX pass (Oct 27): sticky action bar, bigger tap targets, compact arena/header on phones ---- */
+.actbar{position:fixed;left:0;right:0;bottom:0;z-index:25;background:color-mix(in srgb, var(--bg) 92%, transparent);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border-top:1px solid var(--line);padding:10px max(16px, env(safe-area-inset-right, 0px)) calc(10px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px))}
+.actbar .in{max-width:1080px;margin:0 auto;display:flex;gap:8px;align-items:center}
+.actbar .btn{min-height:48px;flex:0 0 auto}
+.actbar .btn.primary{flex:1 1 auto;font-size:20px;min-width:0}
+.actbar .sum{font-family:var(--mono);font-size:12px;color:var(--muted);line-height:1.25;flex:0 1 auto;min-width:0}
+.actbar .sum b{color:var(--fg);font-weight:600}
+body.hasbar{padding-bottom:calc(96px + env(safe-area-inset-bottom, 0px))}
+.btn{min-height:44px}
+.timeline{height:44px}
+.timeline input{height:30px;top:2px}
+.mounts button{min-height:44px}
+.statsentry summary{padding-block:11px}
+.hist a{display:inline-block;padding:6px 2px}
+.seg button{min-height:44px;min-width:44px}
+#s-fight .btnrow label{min-height:44px;padding:0 4px}
+#s-fight .btnrow input[type=checkbox]{width:20px;height:20px}
+#skipEnd[hidden]{display:none}
+.linkbtn{display:inline-block;padding:12px 4px;margin:-12px -4px}
+body.hasbar #toDraft, body.hasbar #toDeployD, body.hasbar #startFight{display:none} /* the bar carries them */
+.notice .btn{min-height:40px}
+#creditsTbl td{white-space:normal;overflow-wrap:anywhere}
+.hist a{color:var(--fg)}
+.terrainDesc{display:none}
+@media (max-width:560px){
+  .opt{padding:10px;gap:4px}
+  .card .row1{flex-direction:row;align-items:center;gap:8px}
+  .card .row1 .tok{width:36px!important;height:36px!important}
+  .card{gap:6px;padding:9px 9px 10px}
+  .opt .sw{height:26px}
+  #terrainOpts .opt p{display:none}
+  .terrainDesc{display:block;margin:0}
+  #s-deploy .stage{order:1}
+  #s-deploy > .btnrow{order:2}
+  #mapNote{order:3}
+  #s-deploy > .panel{order:4}
+  #deployHelp{order:5}
+  .brand h1{font-size:25px}
+  header.top{padding-block:8px 8px;gap:8px}
+  .meter{gap:2px}
+  .meter i{width:9px}
+  .actbar .btn{padding-inline:12px}
+}
+@media (max-width:420px){ #budgetMax{display:none} }
+@media (max-width:400px){ .meter i{width:7px} .brand{gap:8px} .card .row1{flex-direction:column;align-items:flex-start;gap:6px} } /* too narrow for name beside face */
+@media (min-width:821px){ .actbar .in{justify-content:flex-end} .actbar .btn.primary{flex:0 1 340px} }
 @media (prefers-reduced-motion: reduce){ *{transition:none!important} }
 </style>
 
@@ -253,6 +299,7 @@ th.n{text-align:right}
   <p class="lede">The terrain decides who's strong. Pick it now and the draft will flag which animals thrive or wilt here.</p>
   <div class="label">Terrain</div>
   <div class="opts" id="terrainOpts"></div>
+  <p class="notes terrainDesc" id="terrainDesc"></p>
   <div id="modeOpts" hidden></div>
   <p class="notes">The other side is one team, and the pressure builds over time. Predators hunt you and your guards; herbivores charge intruders. Break their morale and animals bolt out of the arena. After 30 seconds a fire, flood or blizzard closes in from the edges and pushes everyone together. You score by how long you stay alive, up to five minutes.</p>
   <div class="panel migentry"><h3>Migration</h3><p class="notes">A run of seven fights across all four terrains. Start with $600; your survivors carry their wounds into the next fight, the dead stay dead, and you earn money for every fight you live through. Between fights: a trading post (buy, or sell for half price) and one of three boons. Fight 4 brings megafauna; fight 7 is the herd. Die and the run is over.</p>
@@ -268,8 +315,8 @@ th.n{text-align:right}
 <section class="screen" id="s-deploy" hidden>
   <div style="display:flex;flex-direction:column;gap:6px">
     <h2>Set your formation</h2>
-    <p class="lede">Drag anyone, including yourself, anywhere on your side of the map. Animals inside the escort ring move with you. Anything placed farther out holds that spot as a guard post and fights whatever comes within 14 m of it. On the river, swimmers can start in the water: a croc beside a ford ambushes whatever crosses.</p>
   </div>
+  <p class="lede" id="deployHelp">Drag anyone, including yourself, anywhere on your side of the map. Animals inside the escort ring move with you. Anything placed farther out holds that spot as a guard post and fights whatever comes within 14 m of it. On the river, swimmers can start in the water: a croc beside a ford ambushes whatever crosses.</p>
   <div class="panel" style="display:flex;flex-direction:column;gap:10px"><div class="label">Ride one of your animals</div><div class="mounts" id="mountOpts"></div><p class="notes" id="mountNote"></p></div>
   <div class="stage" id="deployStage"><canvas id="deployCanvas"></canvas></div>
   <p class="notes" id="mapNote" hidden></p>
@@ -285,6 +332,7 @@ th.n{text-align:right}
       <div class="timeline"><div class="marks" id="marks"></div><input type="range" id="scrub" min="0" max="300" step="0.1" value="0" aria-label="Battle time"></div>
       <div class="btnrow">
         <button class="btn" id="playBtn">Pause</button>
+        <button class="btn" id="skipEnd" title="Jump to the end of the fight">Skip to result</button>
         <span class="seg" id="speedSeg"><button data-v="1">1×</button><button data-v="2">2×</button><button data-v="4">4×</button><button data-v="8">8×</button><button data-v="16">16×</button></span>
         <span class="mono" id="clock" style="font-size:14px;margin-left:auto">0:00</span>
       </div>
@@ -338,6 +386,7 @@ th.n{text-align:right}
   </div>
 </section>
 </main>
+<div class="actbar" id="actbar" hidden><div class="in" id="actbarIn"></div></div>
 <footer class="credits">Wild Arena · Animal portraits from Wikimedia Commons (public domain, CC0 and CC BY), credited individually. <button class="linkbtn" id="creditsBtn">Image credits</button></footer>
 <dialog id="creditsDlg" aria-label="Image credits"><div class="dlghd"><h3>Image credits</h3><button class="btn" id="creditsClose">Close</button></div><p class="notes">Every portrait is a crop (cropped and resized) of a public-domain, CC0 or CC BY image from Wikimedia Commons. Authors are as stated on each file page.</p><div class="tblwrap"><table id="creditsTbl"><thead><tr><th>Animal</th><th>Source</th><th>Author</th><th>License</th></tr></thead><tbody></tbody></table></div></dialog>
 </div>
