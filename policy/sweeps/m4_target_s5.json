@@ -1,0 +1,29 @@
+{
+ "note": "Milestone 4 round 5 (Oct 27): species-aware target choice by ES: target-mlp (8 hidden units over the option features + the unit species traits, 907 weights; zero output = heuristic). Chargers (linear already +0.158 fresh), cats (the most species-diverse archetype), bulldozers, guards. 24 pairs for the larger model.",
+ "runs": [
+  {
+   "name": "ch_mlp_s1",
+   "args": "--arch=charger --goal=checkmate --spec=true --seed=1501 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --target=true --nh=8 --pairs=24 --thetaClip=1 --margin=.25"
+  },
+  {
+   "name": "ch_mlp_s2",
+   "args": "--arch=charger --goal=checkmate --spec=true --seed=1502 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --target=true --nh=8 --pairs=24 --thetaClip=1 --margin=.25"
+  },
+  {
+   "name": "cat_mlp_s1",
+   "args": "--arch=cat --goal=checkmate --spec=true --seed=1511 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --target=true --nh=8 --pairs=24 --thetaClip=1 --margin=.25"
+  },
+  {
+   "name": "cat_mlp_s2",
+   "args": "--arch=cat --goal=checkmate --spec=true --seed=1512 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --target=true --nh=8 --pairs=24 --thetaClip=1 --margin=.25"
+  },
+  {
+   "name": "bd_mlp_s1",
+   "args": "--arch=bulldozer --goal=checkmate --spec=true --seed=1521 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --target=true --nh=8 --pairs=24 --thetaClip=1 --margin=.25"
+  },
+  {
+   "name": "gd_mlp_s1",
+   "args": "--arch=guard --seed=1531 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --target=true --nh=8 --pairs=24 --thetaClip=1 --margin=.25"
+  }
+ ]
+}
