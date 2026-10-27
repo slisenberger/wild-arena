@@ -57,15 +57,23 @@ It stays "everything you don't buy". On top of that, two options:
 - **Lasting damage (owner: "maybe some damage persists"):** an animal that dropped below 25% health in a fight keeps a
   scar: −10% maximum health for the rest of the run, up to −30%. It's visible on the card.
 
-### 5. Upgrades: realistic, no superpowers
-Upgrades are experience, not mutations. Each one costs money and can be bought once per animal:
-- **Veteran:** after 2 fights survived, morale breaks 25% later and the animal won't panic at a death nearby.
-- **Bonded:** a pack or herd that survived together gets its packmate bonus at 20 m instead of 15 m.
-- **Rested:** starts the next fight with full stamina and heat tolerance +10%.
+### 5. Experience and levels (owner, Oct 27: "if the animal does stuff it gets exp points, and can level up")
+Animals earn XP for what they actually do in a fight. The fight already counts all of this (`A.summarize`):
+- damage dealt (1 XP per 50 damage), damage dealt to something attacking you (double), kills (10 XP), surviving the
+  fight (5 XP), its signature move landing (5 XP: musk, claw kick, chest-beat...), MVP of the fight (10 XP).
+- Cheap animals earn XP at the same rate as giants for the same deeds, so a badger kill is worth as much as an
+  elephant kill. The badger levels fastest by being in the thick of it.
 
-Hard cap: an upgraded animal is at most about 10–15% stronger in measured swing. That keeps a veteran honey badger a
-story, not a giant-killer. **Q:** is "experience" the flavour you want, or do you want gear-style upgrades? Experience
-fits the realism rule better.
+Levels (thresholds ~25 / 60 / 110 XP) give **experience, not superpowers**, all grounded in how real animals get better:
+- **Level 1, Seasoned:** morale breaks 25% later, and a death nearby shakes it less.
+- **Level 2, Cunning:** better reads: +15% sight range for threats and waits better for an opening (predators), or holds
+  position better near you (guards).
+- **Level 3, Veteran:** +10% damage from practised technique and +10% max health (it's a fit, battle-hardened adult).
+- A pack or herd levels as one: the group shares XP.
+
+Hard cap: a level-3 animal is at most about 15% stronger in measured swing, so a veteran honey badger stays a story,
+not a giant-killer. Scars (above) still apply, so a veteran can also be a battered one. Levels show on the card
+(★ to ★★★) with the XP bar.
 
 ### 6. The honey badger moment
 Round 1 is all $100 animals on both sides, so the badger's fearless, never-retreating fight is suddenly one of the
@@ -73,8 +81,12 @@ strongest things on the field. The kill counter and an end-of-run "MVP of the ru
 signature story: the badger that went the distance.
 
 ### 7. How a run ends
-- You die → the run ends. Score = rounds survived + total time alive. Survive all 7 rounds → a "migration complete" badge.
-- **Q:** one life, or Migration's rule (any death ends it)? Recommend **one free retry per run**, as in 5 in a Row.
+- **Two retries per run (owner, Oct 27).** Losing a round uses a retry: you refight it on a new fight seed and may change
+  your team first (and heal). A third loss ends the run.
+- Score = rounds won + total time alive. Survive all 7 rounds → a "run complete" badge.
+- **Endgame boss (optional, later):** T. rex is far too strong for the normal game ("good animals are too good"), but
+  it could be the final round's boss in this mode only: the other side gets a T. rex, and your levelled team has to
+  survive it.
 
 ## Balance plan before anyone playtests
 1. Adapt `migration_bot.js` to the ladder: a greedy bot drafts, heals and trains on 500 seeded runs.
@@ -84,9 +96,9 @@ signature story: the badger that went the distance.
 4. Tune caps, totals and top-ups until the targets hold, then let the owner playtest behind `?progressive=1`.
 
 ## Open questions for the owner
+Decided (Oct 27): experience with XP and levels; two retries per run.
 1. Option A or B for the other side? (Recommend B from round 3.)
-2. Fixed top-up only, or with a kill bonus? (Recommend fixed + $25/kill, capped.)
-3. Upgrade flavour: experience (recommended) or gear?
-4. One retry per run? (Recommend yes.)
-5. Does this replace Migration (switched off), or sit beside it? Recommend **replacing it**: same engine hooks, a
+2. Fixed top-up only, or with a kill bonus? (Recommend fixed + $25/kill, capped; XP already rewards kills.)
+3. Does this replace Migration (switched off), or sit beside it? Recommend **replacing it**: same engine hooks, a
    clearer hook.
+4. T. rex as a final-round boss: yes, later?
