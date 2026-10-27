@@ -248,7 +248,9 @@ async function suite(arch, slow){
   // and with the live default (shipped harrier + guard weights), on the board fights + these cat fights
   const rc = refSim('CAT_INTENTS', process.env.REF_CAT_SIM);
   if (rc){
-    const fb = fxs.concat(require('./common.js').boardJobs(2, QUICK ? 10 : 40, 31337));
+    // (only fights the older engine can run: boards dealt today may hold animals added since, e.g. the musk ox, gaur, walrus)
+    const refIds = new Set(Object.keys(require(rc.f || rc).BY_ID)), known = f => f.board.concat(f.team).every(id => refIds.has(id));
+    const fb = fxs.concat(require('./common.js').boardJobs(2, QUICK ? 10 : 40, 31337)).filter(known);
     // the live game now ships cat weights too (cat_v1), so the 'live' arm passes the shipped harrier + guard weights explicitly
     for (const live of [false, true]){
       const mp = live ? {harrier: LV.harrier, guard: LV.guard} : null, a = await plainFP(rc.f || rc, fb, mp), b = await plainFP(R.SIM, fb, mp);
