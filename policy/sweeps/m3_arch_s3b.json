@@ -1,0 +1,21 @@
+{
+ "note": "arch3b (Oct 27): brawlers and kickers collapsed from scratch / from rules under the checkmate goal in arch2 and arch3, so continue their arch1 winners (old goal) under checkmate + spec on the new engine. Test bar = the arch1 weights they start from.",
+ "runs": [
+  {
+   "name": "br_a1_cm_s1",
+   "args": "--pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --arch=brawler --thetaClip=1 --goal=checkmate --spec=true --initWeights=policy/weights/brawler_a1.json --seed=961"
+  },
+  {
+   "name": "br_a1_cm_s2",
+   "args": "--pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --arch=brawler --thetaClip=1 --goal=checkmate --spec=true --initWeights=policy/weights/brawler_a1.json --seed=962"
+  },
+  {
+   "name": "ki_a1_cm_s1",
+   "args": "--pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --arch=kicker  --thetaClip=1 --goal=checkmate --spec=true --initWeights=policy/weights/kicker_a1.json --seed=971"
+  },
+  {
+   "name": "ki_a1_cm_s2",
+   "args": "--pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --arch=kicker  --thetaClip=1 --goal=checkmate --spec=true --initWeights=policy/weights/kicker_a1.json --seed=972"
+  }
+ ]
+}
