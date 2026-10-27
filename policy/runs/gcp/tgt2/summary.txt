@@ -1,5 +1,5 @@
 ch_t_s1            [test] best (after 4 updates) vs zero weights on 1200 held-out fights: +0.143 ± 0.030 (beyond 2 SE) | style 1.000 gates [] drift []
-ch_t_s2            (no test yet)
+ch_t_s2            [test] best (after 8 updates) vs zero weights on 1200 held-out fights: +0.171 ± 0.037 (beyond 2 SE) | style 1.000 gates [] drift []
 bd_t_s1            [test] best (after 16 updates) vs zero weights on 1200 held-out fights: +0.036 ± 0.028 (within 2 SE) | style 1.000 gates [] drift []
 bd_t_s2            [test] best (after 4 updates) vs zero weights on 1200 held-out fights: -0.003 ± 0.017 (within 2 SE) | style 1.000 gates [] drift []
 ki_t_s1            [test] best (zero) vs zero weights on 1200 held-out fights: +0.000 ± 0.000 (within 2 SE) | style 1.000 gates [] drift []
