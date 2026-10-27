@@ -2879,15 +2879,17 @@ function setDraft(mode, n){
 }
 document.querySelectorAll('#pickSeg button').forEach(b => b.addEventListener('click', () => setDraft('pick', +b.dataset.n)));
 $('toDraft').addEventListener('click', () => { exitMig(); go('draft'); });
-// daily challenge: today's date (UTC) picks the map, the board and the fight seed, so everyone plays the same game
-const todayUTC = () => new Date().toISOString().slice(0, 10);
+// daily challenge: today's local date picks the map, the board and the fight seed, so everyone plays the same game
+// the day is the player's LOCAL date (like Wordle): the same date string gives the same daily everywhere, and it rolls over at
+// local midnight. (It used to be the UTC date, so evening play in the Americas counted as the next day and inflated the streak.)
+const todayLocal = () => { const t = new Date(); return `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(t.getDate()).padStart(2, '0')}`; };
 function dateSeed(s){ let h = 2166136261; for (const c of s){ h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); } return (h >>> 0) % 1e6 + 1; }
 // kind 'budget' (the original daily, unchanged) or 'pick3' (Daily Pick-3: its own map, board and seed)
 const dailySeed = (kind, d) => dateSeed(kind === 'pick3' ? 'wild-arena:pick3:' + d : 'wild-arena:' + d);
 const dailyKey = (kind, d) => (kind === 'pick3' ? 'wa-daily-pick3:' : 'wa-daily:') + d;
 function startDaily(kind){
   exitMig();
-  const d = todayUTC(), h = dailySeed(kind, d), terr = Object.keys(A.TERRAINS);
+  const d = todayLocal(), h = dailySeed(kind, d), terr = Object.keys(A.TERRAINS);
   S.draft = kind === 'pick3' ? 'pick' : 'budget'; if (kind === 'pick3') S.pickN = 3;
   S.terrain = terr[h % terr.length]; S.seed = h; $('seedLbl').textContent = S.seed;
   dealNewBoard(h); S.daily = d; S.dailyKind = kind; renderAll(); go('draft');
@@ -2895,12 +2897,12 @@ function startDaily(kind){
 $('daily').addEventListener('click', () => startDaily('budget'));
 $('dailyPick').addEventListener('click', () => startDaily('pick3'));
 // ---------- 5 in a Row (prototype; FIVE_ON): five boards in a row, each with its own map, a full-budget draft each;
-// a board counts only if you survive to 5:00, one retry (a fresh fight seed, redraft allowed) per run. The UTC date seeds
+// a board counts only if you survive to 5:00, one retry (a fresh fight seed, redraft allowed) per run. The local date seeds
 // every board, map and fight, so everyone plays the same five. The run is saved, so a reload resumes it.
 const FIVE_KEY = 'wa-five-run', fiveBestKey = d => 'wa-five-best:' + d;
 const fiveSeed = (d, k, what) => dateSeed(`wild-arena:five:${d}:${k}:${what}`);
 function fiveSave(){ try { localStorage.setItem(FIVE_KEY, JSON.stringify(S.five)); } catch(e){} }
-function fiveLoad(){ try { const r = JSON.parse(localStorage.getItem(FIVE_KEY) || 'null'); return r && r.date === todayUTC() && Array.isArray(r.res) ? r : null; } catch(e){ return null; } }
+function fiveLoad(){ try { const r = JSON.parse(localStorage.getItem(FIVE_KEY) || 'null'); return r && r.date === todayLocal() && Array.isArray(r.res) ? r : null; } catch(e){ return null; } }
 function fiveBest(d){ try { return JSON.parse(localStorage.getItem(fiveBestKey(d)) || 'null'); } catch(e){ return null; } }
 // load board k of the run (or the same board again for the retry, keeping the team so it can be tweaked)
 function fiveBoard(run){
@@ -2912,7 +2914,7 @@ function fiveBoard(run){
 }
 function startFive(){
   exitMig();
-  const old = fiveLoad(), run = old && !old.over ? old : {date: todayUTC(), k: 0, retry: 1, pending: false, res: [], over: false};
+  const old = fiveLoad(), run = old && !old.over ? old : {date: todayLocal(), k: 0, retry: 1, pending: false, res: [], over: false};
   fiveBoard(run); fiveSave(); renderAll(); go('draft');
   if (old && !old.over) showNotice(`<b>5 in a Row resumed</b> <span>Board ${run.k + 1} of 5${run.pending ? ' (your retry)' : ''}.</span>`);
 }
@@ -2958,14 +2960,14 @@ function fiveMapsHTML(R, d){
 }
 function renderFiveEntry(){
   const panel = $('fivePanel'); panel.hidden = !FIVE_ON; if (!FIVE_ON) return;
-  const d = todayUTC(), r = fiveLoad(), live = r && !r.over, b = fiveBest(d);
+  const d = todayLocal(), r = fiveLoad(), live = r && !r.over, b = fiveBest(d);
   $('fiveMaps').innerHTML = fiveMapsHTML(live ? r : null, d);
   $('five').textContent = live ? `Resume (board ${r.k + 1} of 5${r.pending ? ', retry' : ''})` : "Start today's run";
   $('fiveBest').textContent = b ? `Best today: ${b.wins}/5` : '';
 }
-// daily streak: consecutive UTC days with at least one daily run (either kind)
+// daily streak: consecutive local days with at least one daily run (either kind)
 function prevDay(d){ const t = new Date(d + 'T00:00:00Z'); t.setUTCDate(t.getUTCDate() - 1); return t.toISOString().slice(0, 10); }
-function readStreak(){ try { const s = JSON.parse(localStorage.getItem('wa-streak') || 'null'); if (s && typeof s.last === 'string' && s.n >= 1) return s; } catch(e){} return null; }
+function readStreak(){ try { const s = JSON.parse(localStorage.getItem('wa-streak') || 'null'); if (s && typeof s.last === 'string' && s.n >= 1){ const d = todayLocal(); if (s.last > d){ s.last = d; s.n = Math.max(1, s.n - 1); localStorage.setItem('wa-streak', JSON.stringify(s)); } return s; } } catch(e){} return null; } // a UTC-dated entry from the old rule can be a day ahead: count it as today, minus the day it gained
 function bumpStreak(day){
   const s = readStreak(); if (s && s.last === day) return;
   const n = s && s.last === prevDay(day) ? s.n + 1 : 1;
@@ -2973,7 +2975,7 @@ function bumpStreak(day){
   renderStreak();
 }
 function renderStreak(){
-  const s = readStreak(), d = todayUTC(), live = s && (s.last === d || s.last === prevDay(d)), el = $('streak');
+  const s = readStreak(), d = todayLocal(), live = s && (s.last === d || s.last === prevDay(d)), el = $('streak');
   el.hidden = !live; el.textContent = live ? `Streak: ${s.n} day${s.n === 1 ? '' : 's'}${s.last === d ? '' : ' (play today to keep it)'}` : '';
 }
 
@@ -4038,7 +4040,7 @@ $('migActions').addEventListener('click', e => {
   const id = e.target.id;
   if (id === 'migToShop') go('draft');
   else if (id === 'migAgain') startMig(newBoardSeed());
-  else if (id === 'migAgainDaily') startMig(migDailySeed(todayUTC()), todayUTC());
+  else if (id === 'migAgainDaily') startMig(migDailySeed(todayLocal()), todayLocal());
   else if (id === 'migCopy') copyLink(migShare(S.mig), $('migCopyOut'), 'Result');
   else if (id === 'migHome'){ try { localStorage.removeItem(MIG_KEY); } catch(err){} exitMig(); renderAll(); go('arena'); }
 });
@@ -4046,11 +4048,11 @@ $('migActions').addEventListener('click', e => {
 function renderMigEntry(){
   const r = loadRun(), live = r && !r.over, rb = $('migResume');
   rb.hidden = !live; if (live) rb.textContent = `Resume (fight ${r.k + 1}/${M.MIG.FIGHTS}, $${r.money.toLocaleString()})`;
-  const best = readJSON(MIG_BEST), db = readJSON(migDailyKey(todayUTC()));
+  const best = readJSON(MIG_BEST), db = readJSON(migDailyKey(todayLocal()));
   $('migBest').textContent = (best ? `Best run: ${best.won ? 'all ' + M.MIG.FIGHTS + ' fights' : best.survived + ' of ' + M.MIG.FIGHTS + ' fights'} survived, ${fmtT(best.total)} alive.` : 'No migration finished yet.') + (db ? ` Today's daily: ${db.survived} of ${M.MIG.FIGHTS}, ${fmtT(db.total)}.` : '');
 }
 $('migNew').addEventListener('click', () => startMig(newBoardSeed()));
-$('migDaily').addEventListener('click', () => startMig(migDailySeed(todayUTC()), todayUTC()));
+$('migDaily').addEventListener('click', () => startMig(migDailySeed(todayLocal()), todayLocal()));
 $('migResume').addEventListener('click', () => { const r = loadRun(); if (!r || r.over) return; hideNotice(); S.mig = r; S.migKey = null; S.migEntry = null; S.world = null; go('mig'); });
 
 // ---------- init ----------

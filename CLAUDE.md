@@ -315,7 +315,7 @@ round. Report ± standard errors.
 4. Identity: keep strengthening the light picks (ROSTER.md). (Done: counters 'lookout spots a threat' ~3/fight,
    'chases movement' (bull) ~2, 'charges blind at a sound' (black rhino) ~3 — telemetry only.)
 5. Replayability: verified leaderboard, rotating rosters, new animals. (Done: daily challenge —
-   `Daily challenge` button; the UTC date hashes to the map, board and fight seed; rematch keeps the seed; today's best in
+   `Daily challenge` button; the local date (Wordle-style, was UTC until Oct 27: evening play in the Americas inflated the streak) hashes to the map, board and fight seed; rematch keeps the seed; today's best in
    localStorage `wa-daily:<date>`; a share line in the result banner.)
    - Done (Oct 2026, ui.js only; **Pick N and Daily Pick-3 switched off by the owner, Oct 27**: `?pickn=1` shows them, `PICK_ON`
      in ui.js; links with `d:pN` open as budget games): **Pick N** draft mode (`S.draft`/`S.pickN`, exactly 2–5 picks, prices ignored; bests
