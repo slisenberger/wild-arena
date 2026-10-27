@@ -264,6 +264,11 @@ round. Report ± standard errors.
   Idle (audit, $1,200): yours 53.5% → ~40%, theirs 33.8% → ~23%. Cost: cats' value on your side fell (~+5–15 s).
   Ridden-mount experiments: evading with a non-giant mount made riding worse (reverted); giraffe/ostrich getaway ride
   (rarely throws you unless grabbed, kicks while carrying) is neutral within noise.
+- **Elephant is a rare (owner, Oct 27: more variety; keep the board total, the underdog side is the game):** `rare:true`, so it's
+  dealt only through the rare slot (~8% of boards, was 56%). Same prices, board total $2,600. Validation (16 boards, `RAREP=.3`):
+  median board's best team 88% (min 33, p25 75), typical full-spend team 160 s, 16 distinct best teams over 16 boards, no
+  elephant in any; best teams spread over rhino 6, hippo 6, tiger 4, giraffe 4, croc 4 (was elephant 5, rhino 4). For
+  comparison, total $2,500 gave 96% / 181 s (not adopted: it would make the other side weaker).
 - **Current prices (`abs_r14`, with `cat_v1` live):** 20 s of swing per $100, board total $2,600, budget $1,200, rares 30%.
   Validation: median board's best team 92% (min 50, p25 79), typical full-spend team 175 s, 15 distinct best teams over 16
   boards. Changes: buffalo $300, grizzly $200, bull $200, lion coalition $200, black rhino $200. (22 s/$100 → $2,500: 96%,
