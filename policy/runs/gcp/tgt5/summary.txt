@@ -1,6 +1,6 @@
 ch_mlp_s1          [test] best (after 44 updates) vs zero weights on 1200 held-out fights: +0.129 ± 0.034 (beyond 2 SE) | style 1.000 gates [] drift []
-ch_mlp_s2          (no test yet)
+ch_mlp_s2          [test] best (after 48 updates) vs zero weights on 1200 held-out fights: +0.174 ± 0.037 (beyond 2 SE) | style 1.000 gates [] drift []
 cat_mlp_s1         [test] best (after 24 updates) vs zero weights on 1200 held-out fights: +0.020 ± 0.029 (within 2 SE) | style 1.000 gates [] drift []
 cat_mlp_s2         [test] best (after 24 updates) vs zero weights on 1200 held-out fights: +0.040 ± 0.025 (within 2 SE) | style 1.000 gates [] drift []
 bd_mlp_s1          [test] best (zero) vs zero weights on 1200 held-out fights: +0.000 ± 0.000 (within 2 SE) | style 1.000 gates [] drift []
-gd_mlp_s1          (no test yet)
+gd_mlp_s1          [test] best (after 28 updates) vs zero weights on 1200 held-out fights: +0.065 ± 0.021 (beyond 2 SE) | style 1.000 gates [] drift []

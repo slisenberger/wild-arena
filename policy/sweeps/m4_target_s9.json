@@ -1,0 +1,21 @@
+{
+ "note": "Milestone 4 round 9 (Oct 27): YOUR cats free target choice, take 2. tgt8 (margin .05) was negative on all 5 runs at gen 25 (perturbations changed ~43% of decisions: too noisy). Here margin .25 (smoother local steps) but still no trust region (thetaClip 0) and no leash (wide), so any preference can grow without bound. Plus all guards, species-aware MLP, wide (tgt5 gd_mlp_s1, the leashed version, tested +0.065 ± 0.021).",
+ "runs": [
+  {
+   "name": "gcw_s1",
+   "args": "--arch=guard --target=true --wide=true --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --margin=.25 --thetaClip=0 --only=cat --pairs=24 --seed=1901"
+  },
+  {
+   "name": "gcw_s2",
+   "args": "--arch=guard --target=true --wide=true --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --margin=.25 --thetaClip=0 --only=cat --pairs=24 --seed=1902"
+  },
+  {
+   "name": "gcw_mlp",
+   "args": "--arch=guard --target=true --wide=true --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --margin=.25 --thetaClip=0 --only=cat --pairs=32 --nh=8 --seed=1903"
+  },
+  {
+   "name": "gaw_mlp",
+   "args": "--arch=guard --target=true --wide=true --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --margin=.25 --thetaClip=0 --pairs=32 --nh=8 --seed=1904"
+  }
+ ]
+}

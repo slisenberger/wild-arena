@@ -140,3 +140,9 @@
 [gen 55] goal mean 0.376 best 0.459 (heuristic 0.283: mean +0.093) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 18.2% | drift-flagged 0/48 | |θ| 18.706 | 8918 fights, 341 s, 26.1/s
 [gen 56] goal mean 0.384 best 0.457 (heuristic 0.356: mean +0.028) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 18.6% | drift-flagged 0/48 | |θ| 18.767 | 10918 fights, 391 s, 27.9/s
   [val #13] centre (after 56 updates, non-commit 17.1%) vs best (after 28 updates) on 1000 fresh fights: -0.003 ± 0.022 | style 1.000 gates [] drift [] -> keep best
+[gen 57] goal mean 0.400 best 0.479 (heuristic 0.308: mean +0.093) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 18.4% | drift-flagged 0/48 | |θ| 18.828 | 8918 fights, 347 s, 25.7/s
+[gen 58] goal mean 0.430 best 0.496 (heuristic 0.370: mean +0.060) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 17.7% | drift-flagged 0/48 | |θ| 18.884 | 8918 fights, 337 s, 26.5/s
+[gen 59] goal mean 0.429 best 0.495 (heuristic 0.346: mean +0.083) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 18.1% | drift-flagged 0/48 | |θ| 18.942 | 8918 fights, 323 s, 27.6/s
+  [val #14] centre (after 60 updates, non-commit 16.8%) vs best (after 28 updates) on 1000 fresh fights: +0.003 ± 0.021 | style 1.000 gates [] drift [] -> keep best
+[test] best (after 28 updates) vs zero weights on 1200 held-out fights: +0.065 ± 0.021 (beyond 2 SE) | style 1.000 gates [] drift []
+  per map: savanna 0.038±0.044 (n 300), river 0.071±0.040 (n 300), forest 0.050±0.045 (n 300), tundra 0.101±0.035 (n 300); your win% 47.1 -> 50.3
