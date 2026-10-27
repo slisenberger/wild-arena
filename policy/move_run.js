@@ -63,8 +63,8 @@ function cfgOf(f){ return {team: f.team, board: f.board, terrain: f.tr, mode: 'w
 // with f.live, the OTHER archetypes use the shipped policies (policy/live.js), so v2 trains against the live game
 function setPolicy(cfg, f, arch, weights){
   const mp = {};
-  if (f.live) for (const [k, v] of Object.entries(I.LIVE || {})) if (v && (k !== arch || (weights && weights.kind === 'target-lin'))) mp[k] = v;
-  if (weights && weights.kind === 'target-lin'){ cfg.policy = {byArch: {[arch]: weights}}; cfg.policyStats = {}; if (weights.sample) cfg.policyTrace = []; } // target scorer: the arch keeps its shipped movement policy; sample = PPO training
+  if (f.live) for (const [k, v] of Object.entries(I.LIVE || {})) if (v && (k !== arch || (weights && /^target-/.test(weights.kind)))) mp[k] = v;
+  if (weights && /^target-/.test(weights.kind)){ cfg.policy = {byArch: {[arch]: weights}}; cfg.policyStats = {}; if (weights.sample) cfg.policyTrace = []; } // target scorer: the arch keeps its shipped movement policy; sample = PPO training
   else if (weights) mp[arch] = weights;
   if (Object.keys(mp).length){ cfg.movePolicy = mp; cfg.moveStats = {}; }
 }
@@ -133,7 +133,7 @@ function runFight(f, weights, arch){
   r.deaths = us.filter(u => u.state === 'dead').length; r.escaped = us.filter(u => u.escaped).length;
   r.hmax = H.maxhp; r.killedYou = !w.result.survived && H.state === 'dead' && us.includes(H.lastHitBy) ? 1 : 0;
   r.t = +w.result.t.toFixed(1); r.survived = w.result.survived ? 1 : 0; r.why = w.result.why || null; r.killer = w.result.killer || null;
-  r.intents = weights && weights.kind === 'target-lin' ? (s => [s.agree || 0, (s.n || 0) - (s.agree || 0), 0, 0, 0])(cfg.policyStats || {}) : weights && cfg.moveStats && cfg.moveStats[arch] ? cfg.moveStats[arch] : null; // target scorer: [kept the heuristic's pick, deviated]
+  r.intents = weights && /^target-/.test(weights.kind) ? (s => [s.agree || 0, (s.n || 0) - (s.agree || 0), 0, 0, 0])(cfg.policyStats || {}) : weights && cfg.moveStats && cfg.moveStats[arch] ? cfg.moveStats[arch] : null; // target scorer: [kept the heuristic's pick, deviated]
   r.fp = fingerprint(w);
   if (cfg.policyTrace) r.trace = cfg.policyTrace; // PPO training: each sampled target decision
   return r;
@@ -183,7 +183,7 @@ function runGuardFight(f, weights){
   r.dealt = us.reduce((a, u) => a + u.st.dealt, 0); r.protect = us.reduce((a, u) => a + u.st.protect, 0);
   for (const [k, name] of Object.entries(GSIG)){ let n = 0; for (const id of ids) n += w.sig[id + ':' + name] || 0; r['sig_' + k] = n; }
   r.hmax = H.maxhp; r.t = +w.result.t.toFixed(1); r.survived = w.result.survived ? 1 : 0; r.why = w.result.why || null; r.killer = w.result.killer || null;
-  r.intents = weights && weights.kind === 'target-lin' ? (s => [s.agree || 0, (s.n || 0) - (s.agree || 0), 0, 0, 0, 0])(cfg.policyStats || {}) : weights && cfg.moveStats[arch] ? cfg.moveStats[arch] : null; // target scorer: [kept allyTarget's pick, deviated]
+  r.intents = weights && /^target-/.test(weights.kind) ? (s => [s.agree || 0, (s.n || 0) - (s.agree || 0), 0, 0, 0, 0])(cfg.policyStats || {}) : weights && cfg.moveStats[arch] ? cfg.moveStats[arch] : null; // target scorer: [kept allyTarget's pick, deviated]
   r.fp = fingerprint(w);
   if (cfg.policyTrace) r.trace = cfg.policyTrace;
   return r;
