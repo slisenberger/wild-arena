@@ -1092,7 +1092,10 @@ function speedOf(w, u){
     if (w.coldWater && inColdWater(w, u)) v *= .6 + .4 * u.s.cold; // near-freezing water stiffens anything not built for it
   }
   else if (onFord(w, u) && u.s.water < .8) v *= .8;
-  if (has(u,'waterbound') && !(w.wet && distWater(w, u) < 4)) v *= .7; // a croc on land is slow and tires fast (its bite is as strong as ever)
+  if (has(u,'waterbound') && !(w.wet && distWater(w, u) < 4)){ // a croc on land: a burst out of the water, then a slow walk (its bite is as strong as ever)
+    const dW = w.wet ? distWater(w, u) : 0;
+    v *= dW > 10 ? .25 : .7; // walk 2-4 km/h, exhausted before 100 m (IUCN CSG, Locomotion); no water on the map: as before
+  }
   if (w.T.id === 'forest' && u.s.mass > 800) v *= .78;
   if (w.T.snow){ const sf = snowFactor(u.s); v *= w.snowDepth === 1 ? sf : Math.max(.35, 1 - (1 - sf) * w.snowDepth); }
   if (u.slowT > 0) v *= (1 - u.slow);
