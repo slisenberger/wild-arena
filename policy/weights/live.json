@@ -1,8 +1,9 @@
 {
- "_note": "Which weights the live game ships per archetype (policy/live.js loads them, build.js bundles them). Training with --withLive plays against exactly these.",
+ "_note": "Which weights the live game ships per archetype (policy/live.js loads them, build.js bundles them). Training with --withLive plays against exactly these. \"target\" = learned target choice per archetype (milestone 4), on top of its movement policy.",
  "harrier": "harrier_v1.json",
  "guard": "guard_v1.json",
  "bulldozer": "bulldozer_v1.json",
  "charger": "charger_v1.json",
- "cat": "cat_v1.json"
+ "cat": "cat_v1.json",
+ "target": {"charger": "charger_target_a1.json"}
 }

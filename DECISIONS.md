@@ -21,11 +21,6 @@ Each item has a recommendation; reply with a number and "yes", or your own call.
    low weight? The walrus won't leave its lake, so 4.5% of tundra-lake fights end "they gave up": acceptable as honest
    behaviour? Their signature moves are visible but barely move the numbers (the bodies carry the value): strengthen any
    only with a sourced reason (ideas: walrus stampede, gaur herd mobbing a tiger, lone-bull gaur).
-8. **(Decided, see below) Learned target choice for chargers** (GCP milestone 4, `policy/weights/charger_target_a1.json` on `m4/targeting-v2`, not
-   live): rhinos, buffalo, bison and co. pick targets with a learned scorer. +0.158 ± 0.029 on 1,200 fresh fights, style 1.00;
-   your survival 50% → 44%. It favours nearby, visible, heat-struck and already-busy targets and goes after you more.
-   Realism worry: herbivores choosing prey like predators (real ones charge what threatens or provokes them). Recommendation:
-   don't ship as is; retrain with herbivore-specific realism gates (only threats and intruders as targets), then reprice.
 9. **Prehistoric batch 1 (built on `animals-prehist1`, not merged):** (a) the woolly rhino's snow furrow is speculative (the
    reviewer would rather have a side-to-side horn sweep, also inferred from the horn wear); it measured value-neutral and is
    the first map-changing effect. Recommendation: keep it, labelled speculative on the card. (b) The rhino measured 96 s of swing
@@ -34,6 +29,12 @@ Each item has a recommendation; reply with a number and "yes", or your own call.
    rares can now turn up on the tundra, so each one is rarer: a themed rare pool (Ice Age / Cretaceous) is an option. (e) The reprice drops the hyena clan to $100, so progressive round 1
    (the $100 round) gets easier: bot first-try 90% (target ~80%), completion 18% (in range). Left for the `prog-ux` work.
 
+- Oct 27 (night): **learned target choice for chargers ships** (owner: "I am fine with herbivores finishing off enemies ...
+  teams *are* known and goals *are* shared"; the two-teams premise in CLAUDE.md). `charger_target_a1` is live on top of
+  `charger_v1` movement (branch `charger-target`, merged with main a70aae9). Re-check on the merged engine: +0.094 ± 0.013 goal
+  over 6,000 fresh fights, style 1.00, no gates or drift; your survival −3.4 ± 0.5 pts, time alive −10.2 ± 1.3 s. Repriced
+  (`abs_r18`, 19 s/$100, board total kept at $2,600: median best team 92%, typical team 166 s) and progressive retuned
+  (round 1 board 13 / $1,300, round 5–6 top-ups −$50: round 1 79%, 21.4% complete); numbers in CLAUDE.md.
 - Oct 27 (built, branch `animals-prehist1`): prehistoric batch 1 approved and built as rares: woolly rhino (tundra), giant
   short-faced bear (tundra, forest), Utahraptor (forest, savanna). Remaining candidates (Doedicurus, Homotherium pair, dire
   wolf pack, Protoceratops herd, Stegosaurus) stay in `research/prehistoric_candidates.md`.

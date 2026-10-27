@@ -93,7 +93,9 @@ const team = p => p.evaluate(() => [...window.__wa.team].sort().join(','));
     const m0 = await p.evaluate(() => window.__wa.prog.money);
     await draftFull(p, ui, T, 1);
     const m1 = await p.evaluate(() => window.__wa.prog.money); ok(`${ui} prog: buy spends money (${m0} → ${m1})`, m1 < m0);
-    await p.locator('#s-draft [data-unbuy]').first().click(); await p.waitForTimeout(100);
+    // undo: the shop's Return button, or in Versus (no team panel before you have survivors) tapping the tile on your side
+    if (await p.locator('#s-draft [data-unbuy]').count()) await p.locator('#s-draft [data-unbuy]').first().click(); else await p.locator('#draftAlt .vcol.you .vt .vtm').first().click();
+    await p.waitForTimeout(100);
     ok(`${ui} prog: undo refunds`, await p.evaluate(() => window.__wa.prog.money) === m0);
     // premium: make one board animal the premium enemy (as round 3+ would) and check it can't be bought
     const prem = await p.evaluate(() => { const r = window.__wa.prog; r.premium = r.board[0]; return r.premium; });
@@ -151,7 +153,7 @@ const team = p => p.evaluate(() => [...window.__wa.team].sort().join(','));
     await swipe(-160); const second = await p.evaluate(() => document.querySelector('#dkCard [data-info]').dataset.info);
     ok('deck: swipe left leaves the card', second !== first && !(await p.evaluate(id => window.__wa.team.has(id), first)));
     await swipe(160); ok('deck: swipe right takes the card', await p.evaluate(id => window.__wa.team.has(id), second));
-    await p.goto(FILE); await p.click('#actbar .primary'); ok('no flag: the default cards, no switcher', !(await p.locator('#duiSwitch').count()) && await p.locator('#tiers .card').count());
+    await p.goto(FILE); await p.evaluate(() => localStorage.removeItem('wa-draftui')); await p.reload(); await p.click('#actbar .primary'); ok('no flag, nothing chosen: the default cards, no switcher', !(await p.locator('#duiSwitch').count()) && await p.locator('#tiers .card').count());
     await ctx.close(); }
   fs.writeFileSync(path.join(OUT, 'metrics.json'), JSON.stringify(res, null, 1));
   await b.close(); process.exit(res.checks.every(x => x[1]) ? 0 : 1);

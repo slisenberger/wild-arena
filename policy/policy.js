@@ -17,15 +17,41 @@ function apply(u, o){
   u.state = u.target ? 'engage' : 'roam';
 }
 
+// 'target-lin' (milestone 4 pilot): score(option i) = margin*[i = the heuristic's pick] + wt.x_i, argmax; zero wt = the
+// heuristic exactly, so training learns only where to deviate from it
+function scoresLin(P, X, teach){ return X.map((x, i) => { let s = i === teach ? P.margin : 0; for (let k = 0; k < x.length; k++) s += P.wt[k] * x[k]; return s; }); }
+function scoreLin(P, X, teach){ const s = scoresLin(P, X, teach); let b = 0; for (let i = 1; i < s.length; i++) if (s[i] > s[b]) b = i; return b; }
+// training only (P.sample, policy/ppo_target.js): sample from softmax(score / tau) with a private generator seeded by the fight
+// and the decision count (the engine's own RNG is untouched), and log {X, teach, a, p} into cfg.policyTrace
+function pickLin(w, P, X, teach){
+  if (!P.sample) return scoreLin(P, X, teach);
+  const s = scoresLin(P, X, teach), m = Math.max(...s), e = s.map(v => Math.exp((v - m) / (P.tau || 1))), z = e.reduce((a, b) => a + b, 0), p = e.map(v => v / z);
+  const k = w.cfg.policyTrace ? w.cfg.policyTrace.length : 0; let r = A.rng(((w.cfg.seed || 1) * 7919 + k * 104729 + 17) >>> 0)(), a = 0;
+  while (a < p.length - 1 && r >= p[a]){ r -= p[a]; a++; }
+  if (w.cfg.policyTrace) w.cfg.policyTrace.push({X, teach, a, p: p[a]});
+  return a;
+}
 function choose(w, u, policy){
   const cfg = w.cfg, log = cfg.policyLog, stats = cfg.policyStats;
+  if (policy.byArch) policy = policy.byArch[A._internals.archetypeOf(u)];
   const {opts, X} = F.extract(w, u);
-  const teach = policy.teacher || log || stats ? F.heuristicIndex(w, u, opts) : -1;
-  const a = policy.teacher ? teach : M.argmax(policy, X);
+  const lin = policy.kind === 'target-lin';
+  const teach = policy.teacher || log || stats || lin ? F.heuristicIndex(w, u, opts) : -1;
+  const a = policy.teacher ? teach : lin ? pickLin(w, policy, X, teach) : M.argmax(policy, X);
   if (stats){ stats.n = (stats.n || 0) + 1; if (a === teach) stats.agree = (stats.agree || 0) + 1; }
   if (log && opts.length > 1) log.push({X, y: teach, a, sp: u.s.id});
   apply(u, opts[a]);
 }
+// herbivores (bulldozer, charger, kicker): same scorer; the heuristic's pick is herbivoreTarget's, and if that isn't one
+// of the candidates the heuristic stands (so zero weights = the engine exactly)
+function chooseHerb(w, u, policy){
+  const P = policy.byArch[A._internals.archetypeOf(u)], stats = w.cfg.policyStats;
+  const {opts, X} = F.extract(w, u, true), h = F.herbHeuristic(w, u, opts);
+  const a = h.i < 0 ? -1 : pickLin(w, P, X, h.i);
+  if (stats){ stats.n = (stats.n || 0) + 1; if (a === h.i) stats.agree = (stats.agree || 0) + 1; }
+  u.target = a < 0 ? h.t : (opts[a].kind === 'target' ? opts[a].t : null); u.state = u.target ? 'engage' : 'roam';
+}
 A._internals.choose = choose;
+A._internals.chooseHerb = chooseHerb;
 
-module.exports = { choose, apply, load: f => JSON.parse(require('fs').readFileSync(f, 'utf8')) };
+module.exports = { choose, chooseHerb, scoresLin, apply, load: f => JSON.parse(require('fs').readFileSync(f, 'utf8')) };
