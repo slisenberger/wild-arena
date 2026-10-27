@@ -214,6 +214,52 @@ th.n{text-align:right}
   .opts.three{grid-template-columns:1fr}
   .mighud .btnrow{margin-left:0}
 }
+/* ---- mobile UX pass (Oct 27): sticky action bar, bigger tap targets, compact arena/header on phones ---- */
+.actbar{position:fixed;left:0;right:0;bottom:0;z-index:25;background:color-mix(in srgb, var(--bg) 92%, transparent);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border-top:1px solid var(--line);padding:10px max(16px, env(safe-area-inset-right, 0px)) calc(10px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px))}
+.actbar .in{max-width:1080px;margin:0 auto;display:flex;gap:8px;align-items:center}
+.actbar .btn{min-height:48px;flex:0 0 auto}
+.actbar .btn.primary{flex:1 1 auto;font-size:20px;min-width:0}
+.actbar .sum{font-family:var(--mono);font-size:12px;color:var(--muted);line-height:1.25;flex:0 1 auto;min-width:0}
+.actbar .sum b{color:var(--fg);font-weight:600}
+body.hasbar{padding-bottom:calc(96px + env(safe-area-inset-bottom, 0px))}
+.btn{min-height:44px}
+.timeline{height:44px}
+.timeline input{height:30px;top:2px}
+.mounts button{min-height:44px}
+.statsentry summary{padding-block:11px}
+.hist a{display:inline-block;padding:6px 2px}
+.seg button{min-height:44px;min-width:44px}
+#s-fight .btnrow label{min-height:44px;padding:0 4px}
+#s-fight .btnrow input[type=checkbox]{width:20px;height:20px}
+#skipEnd[hidden]{display:none}
+.linkbtn{display:inline-block;padding:12px 4px;margin:-12px -4px}
+body.hasbar #toDraft, body.hasbar #toDeployD, body.hasbar #startFight{display:none} /* the bar carries them */
+.notice .btn{min-height:40px}
+#creditsTbl td{white-space:normal;overflow-wrap:anywhere}
+.hist a{color:var(--fg)}
+.terrainDesc{display:none}
+@media (max-width:560px){
+  .opt{padding:10px;gap:4px}
+  .card .row1{flex-direction:row;align-items:center;gap:8px}
+  .card .row1 .tok{width:36px!important;height:36px!important}
+  .card{gap:6px;padding:9px 9px 10px}
+  .opt .sw{height:26px}
+  #terrainOpts .opt p{display:none}
+  .terrainDesc{display:block;margin:0}
+  #s-deploy .stage{order:1}
+  #s-deploy > .btnrow{order:2}
+  #mapNote{order:3}
+  #s-deploy > .panel{order:4}
+  #deployHelp{order:5}
+  .brand h1{font-size:25px}
+  header.top{padding-block:8px 8px;gap:8px}
+  .meter{gap:2px}
+  .meter i{width:9px}
+  .actbar .btn{padding-inline:12px}
+}
+@media (max-width:420px){ #budgetMax{display:none} }
+@media (max-width:400px){ .meter i{width:7px} .brand{gap:8px} .card .row1{flex-direction:column;align-items:flex-start;gap:6px} } /* too narrow for name beside face */
+@media (min-width:821px){ .actbar .in{justify-content:flex-end} .actbar .btn.primary{flex:0 1 340px} }
 @media (prefers-reduced-motion: reduce){ *{transition:none!important} }
 </style>
 
@@ -256,6 +302,7 @@ th.n{text-align:right}
   <p class="lede">The terrain decides who's strong. Pick it now and the draft will flag which animals thrive or wilt here.</p>
   <div class="label">Terrain</div>
   <div class="opts" id="terrainOpts"></div>
+  <p class="notes terrainDesc" id="terrainDesc"></p>
   <div id="modeOpts" hidden></div>
   <p class="notes">The other side is one team, and the pressure builds over time. Predators hunt you and your guards; herbivores charge intruders. Break their morale and animals bolt out of the arena. After 30 seconds a fire, flood or blizzard closes in from the edges and pushes everyone together. You score by how long you stay alive, up to five minutes.</p>
   <div class="panel migentry"><h3>Migration</h3><p class="notes">A run of seven fights across all four terrains. Start with $600; your survivors carry their wounds into the next fight, the dead stay dead, and you earn money for every fight you live through. Between fights: a trading post (buy, or sell for half price) and one of three boons. Fight 4 brings megafauna; fight 7 is the herd. Die and the run is over.</p>
@@ -271,8 +318,8 @@ th.n{text-align:right}
 <section class="screen" id="s-deploy" hidden>
   <div style="display:flex;flex-direction:column;gap:6px">
     <h2>Set your formation</h2>
-    <p class="lede">Drag anyone, including yourself, anywhere on your side of the map. Animals inside the escort ring move with you. Anything placed farther out holds that spot as a guard post and fights whatever comes within 14 m of it. On the river, swimmers can start in the water: a croc beside a ford ambushes whatever crosses.</p>
   </div>
+  <p class="lede" id="deployHelp">Drag anyone, including yourself, anywhere on your side of the map. Animals inside the escort ring move with you. Anything placed farther out holds that spot as a guard post and fights whatever comes within 14 m of it. On the river, swimmers can start in the water: a croc beside a ford ambushes whatever crosses.</p>
   <div class="panel" style="display:flex;flex-direction:column;gap:10px"><div class="label">Ride one of your animals</div><div class="mounts" id="mountOpts"></div><p class="notes" id="mountNote"></p></div>
   <div class="stage" id="deployStage"><canvas id="deployCanvas"></canvas></div>
   <p class="notes" id="mapNote" hidden></p>
@@ -288,6 +335,7 @@ th.n{text-align:right}
       <div class="timeline"><div class="marks" id="marks"></div><input type="range" id="scrub" min="0" max="300" step="0.1" value="0" aria-label="Battle time"></div>
       <div class="btnrow">
         <button class="btn" id="playBtn">Pause</button>
+        <button class="btn" id="skipEnd" title="Jump to the end of the fight">Skip to result</button>
         <span class="seg" id="speedSeg"><button data-v="1">1×</button><button data-v="2">2×</button><button data-v="4">4×</button><button data-v="8">8×</button><button data-v="16">16×</button></span>
         <span class="mono" id="clock" style="font-size:14px;margin-left:auto">0:00</span>
       </div>
@@ -341,6 +389,7 @@ th.n{text-align:right}
   </div>
 </section>
 </main>
+<div class="actbar" id="actbar" hidden><div class="in" id="actbarIn"></div></div>
 <footer class="credits">Wild Arena · Animal portraits from Wikimedia Commons (public domain, CC0 and CC BY), credited individually. <button class="linkbtn" id="creditsBtn">Image credits</button></footer>
 <dialog id="creditsDlg" aria-label="Image credits"><div class="dlghd"><h3>Image credits</h3><button class="btn" id="creditsClose">Close</button></div><p class="notes">Every portrait is a crop (cropped and resized) of a public-domain, CC0 or CC BY image from Wikimedia Commons. Authors are as stated on each file page.</p><div class="tblwrap"><table id="creditsTbl"><thead><tr><th>Animal</th><th>Source</th><th>Author</th><th>License</th></tr></thead><tbody></tbody></table></div></dialog>
 </div>
@@ -2759,6 +2808,7 @@ function dealNewBoard(seed){
 function go(screen){
   if (S.mig && (screen === 'draft' || screen === 'deploy') && (S.mig.over || S.mig.boonOffer)) screen = 'mig'; // a boon to pick (or a finished run) comes first
   if (!S.mig && screen === 'mig') screen = 'arena';
+  if (S.screen === 'draft') S.draftScroll = {board: S.boardSeed, y: window.scrollY}; // coming back to the same board keeps your place
   if (S.mig && (screen === 'draft' || screen === 'deploy' || screen === 'mig')) migSync();
   S.screen = screen;
   for (const id of ['arena','draft','deploy','fight','lab','mig']) $('s-' + id).hidden = id !== screen;
@@ -2770,7 +2820,8 @@ function go(screen){
   if (screen === 'draft') { renderBudget(); renderDraft(); }
   if (screen === 'fight') { sizeCanvas($('fightCanvas')); }
   if (screen === 'lab') renderLabDesc();
-  window.scrollTo({top:0});
+  window.scrollTo({top: screen === 'draft' && S.draftScroll && S.draftScroll.board === S.boardSeed ? S.draftScroll.y : 0});
+  renderActBar();
 }
 document.querySelectorAll('#steps button[data-s]').forEach(b => b.addEventListener('click', () => {
   if (b.dataset.s === 'fight' && !S.world) { startBattle(); return; }
@@ -2898,6 +2949,7 @@ function renderArenaOpts(){
     mo.appendChild(b);
   }
   renderStreak(); renderMigEntry(); renderFiveEntry(); renderStats();
+  const td = $('terrainDesc'); if (td) td.textContent = A.TERRAINS[S.terrain].desc; // phones show only the picked map's blurb
 }
 $('toDraft').addEventListener('click', () => { exitMig(); go('draft'); });
 // daily challenge: today's local date picks the map, the board and the fight seed, so everyone plays the same game
@@ -3804,7 +3856,7 @@ function renderReport(show){
   const draftWord = 'this draft';
   const bestLine = isBest ? (prev ? `New best for ${draftWord} here (was ${fmtT(prev)}).` : `First run of ${draftWord} here.`) : `Best for ${draftWord} here: ${fmtT(prev)}.`;
   const sharedLine = S.shared != null ? ` Shared score to beat: ${fmtT(S.shared)}${score > S.shared + .05 ? ', and you beat it.' : score >= S.shared - .05 ? ', and you matched it.' : '.'}` : '';
-  const shareRow = `<div class="btnrow"><button class="btn" id="copyResult">Copy link</button><span class="copyOut" id="copyResultOut"></span></div>`;
+  const shareRow = `<div class="btnrow"><button class="btn primary" id="playAgain" title="${S.daily ? 'Same team, same daily fight' : 'Same board and team, a new fight seed'}">Play again</button><button class="btn" id="playTeam">Change team</button><button class="btn" id="playNew">New board</button><button class="btn" id="copyResult">Copy link</button><span class="copyOut" id="copyResultOut"></span></div>`;
   if (res.survived){
     const why = res.why === 'cleared' ? `The other side was dead, routed or full by ${fmtT(res.t)}.` : res.why === 'quiet' ? `Nothing came at you for ${A.QUIET_T} s, so the other side gave up at ${fmtT(res.t)}.` : `You held out the full ${fmtT(HZ)}.`;
     b.innerHTML = `<div class="banner win"><span class="big">Survived · ${fmtT(HZ)}</span><span>${why} Full score. ${bestLine}${sharedLine}${dailyLine}</span>${shareRow}</div>`;
@@ -3832,6 +3884,7 @@ function frame(ts){
   if (S.screen === 'fight' && S.world){
     if (S.lastTs && S.playing){ S.playT = Math.min(S.dur, S.playT + (ts - S.lastTs) / 1000 * S.speed * slowAt(S.world, S.playT, S.speed)); if (S.playT >= S.dur) S.playing = false; }
     const t0 = performance.now(); drawFight(); S.perf[S.perfN++ % S.perf.length] = performance.now() - t0; renderSide();
+    renderActBar();
   }
   S.lastTs = ts;
   requestAnimationFrame(frame);
@@ -4122,8 +4175,53 @@ function renderStats(){
     <h4 style="margin:12px 0 6px">Recent games</h4><ul class="hist">${hist}</ul>`;
 }
 
+// ---------- action bar + one-tap replay (mobile UX pass, Oct 27) ----------
+// A sticky bar at the bottom with the next primary action of every step, so nothing important sits below the fold:
+// arena -> draft -> fight (auto formation; the formation step stays optional) -> skip to result -> play again / new board.
+// It mirrors existing buttons rather than adding new paths, and hides where a screen has its own flow (Migration hub, Lab).
+const SPEED_KEY = 'wa-speed';
+try { const v = +localStorage.getItem(SPEED_KEY); if ([1, 2, 4, 8, 16].includes(v)) S.speed = v; } catch(e){}
+document.querySelectorAll('#speedSeg button').forEach(b => b.addEventListener('click', () => { try { localStorage.setItem(SPEED_KEY, String(S.speed)); } catch(e){} }));
+function skipToEnd(){ if (!S.world) return; S.playT = S.dur; S.playing = false; }
+$('skipEnd').addEventListener('click', skipToEnd);
+function playAgain(){ $('rematch').click(); } // same board and team; a new fight seed (the daily keeps today's seed)
+function playNewBoard(){ dealNewBoard(); renderAll(); go('draft'); }
+$('banner').addEventListener('click', e => {
+  const id = e.target.id;
+  if (id === 'playAgain') playAgain(); else if (id === 'playNew') playNewBoard(); else if (id === 'playTeam') go('draft');
+});
+// drafting re-renders every card; keep the tapped card where it was on screen (the team line above it can grow a row)
+{ let anchor = null; const cardsIn = () => [...$('tiers').querySelectorAll('.card')];
+  $('tiers').addEventListener('click', e => { const c = e.target.closest('.card'); anchor = c ? {i: cardsIn().indexOf(c), top: c.getBoundingClientRect().top} : null; }, true);
+  $('tiers').addEventListener('click', () => { if (!anchor || S.screen !== 'draft') return; const c = cardsIn()[anchor.i]; if (c){ const d = c.getBoundingClientRect().top - anchor.top; if (Math.abs(d) > .5) window.scrollBy(0, d); } anchor = null; }); }
+function actBtn(label, fn, primary, title){ const b = document.createElement('button'); b.className = 'btn' + (primary ? ' primary' : ''); b.textContent = label; if (title) b.title = title; b.addEventListener('click', fn); return b; }
+let actKey = '';
+function renderActBar(){
+  const bar = $('actbar'), sc = S.screen, ended = !!(S.world && S.playT >= S.dur - 1e-6), banner = $('banner').querySelector('.btn.primary');
+  const key = [sc, ended, !!banner && banner.id, banner && banner.textContent, sc === 'draft' ? spent() + ':' + S.team.size + ':' + (S.mig ? S.mig.money + ':' + M.teamIds(S.mig).length : '') : ''].join('|');
+  if (key === actKey) return; actKey = key;
+  $('skipEnd').hidden = ended;
+  const box = $('actbarIn'); box.innerHTML = '';
+  const add = (...b) => b.forEach(x => box.appendChild(x));
+  if (sc === 'arena') add(actBtn('Draft your team', () => $('toDraft').click(), true), actBtn('Daily', () => startDaily(), false, 'Daily challenge: same board, map and fight seed for everyone today'));
+  else if (sc === 'draft'){
+    const n = S.mig ? M.teamIds(S.mig).length : S.team.size;
+    const sum = document.createElement('span'); sum.className = 'sum';
+    sum.innerHTML = S.mig ? `<b>$${S.mig.money.toLocaleString()}</b><br>left` : `<b>$${spent().toLocaleString()}</b> / $${BUDGET.toLocaleString()}<br>${n} pick${n === 1 ? '' : 's'}`;
+    add(sum, actBtn('Formation', () => go('deploy'), false, 'Place your animals (optional: Fight uses the auto formation)'), actBtn(n ? 'Fight' : 'Fight alone', () => startBattle(), true));
+  }
+  else if (sc === 'deploy') add(actBtn('Auto', () => $('autoForm').click(), false, 'Auto formation'), actBtn('Release the animals', () => startBattle(), true));
+  else if (sc === 'fight' && S.world){
+    if (!ended) add(actBtn('Skip to result', skipToEnd, true));
+    else if (banner && (S.mig || S.five)) add(actBtn(banner.textContent, () => banner.click(), true));
+    else if (banner) add(actBtn('Team', () => go('draft'), false, 'Change team'), actBtn('New board', playNewBoard), actBtn('Play again', playAgain, true));
+  }
+  bar.hidden = !box.children.length;
+  document.body.classList.toggle('hasbar', !bar.hidden);
+}
+
 // ---------- init ----------
-function renderAll(){ renderBudget(); renderDraft(); renderArenaOpts(); }
+function renderAll(){ renderBudget(); renderDraft(); renderArenaOpts(); renderActBar(); }
 window.addEventListener('resize', () => { if (S.screen === 'deploy'){ sizeCanvas($('deployCanvas')); drawDeploy(); } if (S.screen === 'fight') sizeCanvas($('fightCanvas')); });
 $('seedLbl').textContent = S.seed;
 syncSpeed();

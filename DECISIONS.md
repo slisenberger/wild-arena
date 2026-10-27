@@ -13,6 +13,8 @@ Each item has a recommendation; reply with a number and "yes", or your own call.
    woolly rhino, Doedicurus (tail-club glyptodont), Utahraptor; alternates Homotherium pair, dire wolf pack, Protoceratops
    herd; Stegosaurus if you want another giant. Recommendation: woolly rhino + short-faced bear first (best evidence,
    fill the tundra), after the musk ox / gaur / walrus batch is priced in.
+5. **Compact draft cards on phones** (mobile UX audit, `research/ux_audit/README.md`): hide the stat bars on phone cards
+   (they stay in the detail panel) to cut the draft page roughly in half. Default if no answer: leave cards as they are.
 
 ## Decided
 - Oct 27: cards show the signature move and your own record (built); personal stats panel built.
