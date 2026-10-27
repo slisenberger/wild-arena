@@ -53,6 +53,13 @@ the shipped policies and reprice after:
   sourced decisions the spec names: hold in cover until a guard is busy, abort a spotted stalk and reposition
   (Schaller 1967), switch to an isolated or running target (Mattson 2011), lion wing/centre roles (Stander 1992); warm
   start from a cover-waiting rule; more fights per candidate.
+  **Next milestone (owner): every archetype's policy chooses whom as well as how.** Today the target comes from engine
+  formulas (predators: meat x vulnerability / deterrence; herbivores: engage radius; guards: threat rank, with only
+  intercept/help able to switch) and the policy only picks the movement intent for that target. Joint policy: score
+  every (candidate target x intent) option from the milestone-2 per-candidate features + the milestone-3 intent
+  features (a trained hidden layer, `--mode=deep`, fits), under the side-level checkmate goal, with targeting realism
+  metrics (cats favour isolated/running prey, herbivores defend rather than hunt). Bigger action space: more fights per
+  update. Start with cats (weakest target choice, below).
   **Try first (owner idea): learned target choice for cats.** 82% of cat damage already goes to your animals, but 60%
   of cat approaches never reach contact and 1.1 cats die per fight (of ~1.7; 150 fights, realism engine): they pick
   fights they lose. Real cats take the isolated, hurt, busy or running animal. The milestone-2 target hook
