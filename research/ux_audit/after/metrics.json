@@ -1,0 +1,545 @@
+{
+ "phase": "after",
+ "devices": {
+  "phone": {
+   "screens": {
+    "arena": {
+     "docH": 915,
+     "hscroll": 0,
+     "small": [
+      "1 Arena 72x38",
+      "2 Draft 74x38",
+      "3 Deploy 81x38",
+      "4 Fight 71x38",
+      "Lab 48x38",
+      "#startOver Start over 95x38",
+      "#creditsBtn Image credits 82x42"
+     ]
+    },
+    "draft": {
+     "docH": 3190,
+     "hscroll": 0,
+     "small": [
+      "1 Arena 72x38",
+      "2 Draft 74x38",
+      "3 Deploy 81x38",
+      "4 Fight 71x38",
+      "Lab 48x38",
+      "#startOver Start over 95x38",
+      "#creditsBtn Image credits 82x42"
+     ]
+    },
+    "deploy": {
+     "docH": 1055,
+     "hscroll": 0,
+     "small": [
+      "1 Arena 72x38",
+      "2 Draft 74x38",
+      "3 Deploy 81x38",
+      "4 Fight 71x38",
+      "Lab 48x38",
+      "#startOver Start over 95x38",
+      "#creditsBtn Image credits 82x42"
+     ]
+    },
+    "fight": {
+     "docH": 1499,
+     "hscroll": 0,
+     "small": [
+      "1 Arena 72x38",
+      "2 Draft 74x38",
+      "3 Deploy 81x38",
+      "4 Fight 71x38",
+      "Lab 48x38",
+      "#startOver Start over 95x38",
+      "#scrub 2.5 364x30",
+      "#intentBox on 20x20",
+      "#calloutBox on 20x20",
+      "#creditsBtn Image credits 82x42"
+     ]
+    },
+    "result": {
+     "docH": 2084,
+     "hscroll": 0,
+     "small": [
+      "1 Arena 72x38",
+      "2 Draft 74x38",
+      "3 Deploy 81x38",
+      "4 Fight 71x38",
+      "Lab 48x38",
+      "#startOver Start over 95x38",
+      "#scrub 22 364x30",
+      "#intentBox on 20x20",
+      "#calloutBox on 20x20",
+      "#creditsBtn Image credits 82x42"
+     ]
+    },
+    "stats": {
+     "docH": 1547,
+     "hscroll": 0,
+     "small": [
+      "1 Arena 72x38",
+      "2 Draft 74x38",
+      "3 Deploy 81x38",
+      "4 Fight 71x38",
+      "Lab 48x38",
+      "#startOver Start over 95x38",
+      "#statsSum Your stats: 3 games, 100% su 334x44",
+      "replay 37x32",
+      "#creditsBtn Image credits 82x42"
+     ]
+    },
+    "sharelink": {
+     "docH": 3449,
+     "hscroll": 0,
+     "small": [
+      "1 Arena 72x38",
+      "2 Draft 74x38",
+      "3 Deploy 81x38",
+      "4 Fight 71x38",
+      "Lab 48x38",
+      "#startOver Start over 95x38",
+      "#noticeClose Dismiss 75x40",
+      "#creditsBtn Image credits 82x42"
+     ]
+    },
+    "lab": {
+     "docH": 966,
+     "hscroll": 0,
+     "small": [
+      "1 Arena 72x38",
+      "2 Draft 74x38",
+      "3 Deploy 81x38",
+      "4 Fight 71x38",
+      "Lab 48x38",
+      "#startOver Start over 95x38",
+      "#noticeClose Dismiss 75x40",
+      "#creditsBtn Image credits 82x42"
+     ]
+    }
+   },
+   "errors": [],
+   "load_ms": 800,
+   "arenaPrimaryY": 0,
+   "arenaPrimaryInView": true,
+   "draftPrimaryY": 0,
+   "cardShiftAfterPick0": 0,
+   "cardShiftAfterPick1": 0,
+   "cardShiftAfterPick2": 0,
+   "dragMoved": true,
+   "dragScrolledPage": false,
+   "draftScrollRestored": 519,
+   "tapsToFight": 5,
+   "scrollToFight": 495,
+   "timeToFight_ms": 5282,
+   "fightDur": 22.000000000000043,
+   "waitForResult_ms": 3,
+   "bannerY": 117,
+   "reportY": 1515,
+   "tapsToResult": 6,
+   "scrollToResult": 495,
+   "tapsLoop1": 7,
+   "scrollLoop1": 495,
+   "tapsNewBoardToFight": 5,
+   "scrollNewBoardToFight": 1116,
+   "steps": [
+    "Draft your team",
+    "card",
+    "card",
+    "card",
+    "action bar",
+    "Skip to result (bar)",
+    "Play again (same board)",
+    "New board (bar)",
+    "card",
+    "card",
+    "card",
+    "action bar",
+    "Arena step",
+    "Daily challenge",
+    "Arena step"
+   ],
+   "log": [
+    "tap Draft your team (314x49) after scrolling 0px",
+    "tap card (158x240) after scrolling 0px",
+    "tap card (158x255) after scrolling 239px",
+    "tap card (158x228) after scrolling 256px",
+    "tap action bar (162x49) after scrolling 0px",
+    "tap Skip to result (bar) (380x49) after scrolling 0px",
+    "tap Play again (same board) (206x49) after scrolling 0px",
+    "tap New board (bar) (97x48) after scrolling 0px",
+    "tap card (158x276) after scrolling 0px",
+    "tap card (158x255) after scrolling 276px",
+    "tap card (158x255) after scrolling 840px",
+    "tap action bar (162x49) after scrolling 0px",
+    "tap Arena step (72x38) after scrolling 0px",
+    "tap Daily challenge (129x44) after scrolling 0px",
+    "tap Arena step (72x38) after scrolling 0px"
+   ],
+   "shareLinkOpens": true,
+   "fivePanel": true,
+   "migrationPanel": true,
+   "maxHscroll": 0
+  },
+  "small": {
+   "screens": {
+    "arena": {
+     "docH": 957,
+     "hscroll": 0,
+     "small": [
+      "1 Arena 72x38",
+      "2 Draft 74x38",
+      "3 Deploy 81x38",
+      "4 Fight 71x38",
+      "Lab 48x38",
+      "#startOver Start over 95x38",
+      "#creditsBtn Image credits 82x42"
+     ]
+    },
+    "draft": {
+     "docH": 3551,
+     "hscroll": 0,
+     "small": [
+      "1 Arena 72x38",
+      "2 Draft 74x38",
+      "3 Deploy 81x38",
+      "4 Fight 71x38",
+      "Lab 48x38",
+      "#startOver Start over 95x38",
+      "#creditsBtn Image credits 82x42"
+     ]
+    },
+    "deploy": {
+     "docH": 1112,
+     "hscroll": 0,
+     "small": [
+      "1 Arena 72x38",
+      "2 Draft 74x38",
+      "3 Deploy 81x38",
+      "4 Fight 71x38",
+      "Lab 48x38",
+      "#startOver Start over 95x38",
+      "#creditsBtn Image credits 82x42"
+     ]
+    },
+    "fight": {
+     "docH": 1511,
+     "hscroll": 0,
+     "small": [
+      "1 Arena 72x38",
+      "2 Draft 74x38",
+      "3 Deploy 81x38",
+      "4 Fight 71x38",
+      "Lab 48x38",
+      "#startOver Start over 95x38",
+      "#scrub 2.5 312x30",
+      "#intentBox on 20x20",
+      "#calloutBox on 20x20",
+      "#creditsBtn Image credits 82x42"
+     ]
+    },
+    "result": {
+     "docH": 2121,
+     "hscroll": 0,
+     "small": [
+      "1 Arena 72x38",
+      "2 Draft 74x38",
+      "3 Deploy 81x38",
+      "4 Fight 71x38",
+      "Lab 48x38",
+      "#startOver Start over 95x38",
+      "#scrub 22 312x30",
+      "#intentBox on 20x20",
+      "#calloutBox on 20x20",
+      "#creditsBtn Image credits 82x42"
+     ]
+    },
+    "stats": {
+     "docH": 1656,
+     "hscroll": 0,
+     "small": [
+      "1 Arena 72x38",
+      "2 Draft 74x38",
+      "3 Deploy 81x38",
+      "4 Fight 71x38",
+      "Lab 48x38",
+      "#startOver Start over 95x38",
+      "#statsSum Your stats: 3 games, 100% su 282x44",
+      "replay 37x32",
+      "#creditsBtn Image credits 82x42"
+     ]
+    },
+    "sharelink": {
+     "docH": 3892,
+     "hscroll": 0,
+     "small": [
+      "1 Arena 72x38",
+      "2 Draft 74x38",
+      "3 Deploy 81x38",
+      "4 Fight 71x38",
+      "Lab 48x38",
+      "#startOver Start over 95x38",
+      "#noticeClose Dismiss 75x40",
+      "#creditsBtn Image credits 82x42"
+     ]
+    },
+    "lab": {
+     "docH": 1037,
+     "hscroll": 0,
+     "small": [
+      "1 Arena 72x38",
+      "2 Draft 74x38",
+      "3 Deploy 81x38",
+      "4 Fight 71x38",
+      "Lab 48x38",
+      "#startOver Start over 95x38",
+      "#noticeClose Dismiss 75x40",
+      "#creditsBtn Image credits 82x42"
+     ]
+    }
+   },
+   "errors": [],
+   "load_ms": 611,
+   "arenaPrimaryY": 0,
+   "arenaPrimaryInView": true,
+   "draftPrimaryY": 0,
+   "cardShiftAfterPick0": 0,
+   "cardShiftAfterPick1": 0,
+   "cardShiftAfterPick2": 0,
+   "dragMoved": true,
+   "dragScrolledPage": false,
+   "draftScrollRestored": 727,
+   "tapsToFight": 5,
+   "scrollToFight": 681,
+   "timeToFight_ms": 4477,
+   "fightDur": 22.000000000000043,
+   "waitForResult_ms": 7,
+   "bannerY": 117,
+   "reportY": 1533,
+   "tapsToResult": 6,
+   "scrollToResult": 681,
+   "tapsLoop1": 7,
+   "scrollLoop1": 681,
+   "tapsNewBoardToFight": 5,
+   "scrollNewBoardToFight": 1402,
+   "steps": [
+    "Draft your team",
+    "card",
+    "card",
+    "card",
+    "action bar",
+    "Skip to result (bar)",
+    "Play again (same board)",
+    "New board (bar)",
+    "card",
+    "card",
+    "card",
+    "action bar",
+    "Arena step",
+    "Daily challenge",
+    "Arena step"
+   ],
+   "log": [
+    "tap Draft your team (262x49) after scrolling 0px",
+    "tap card (132x278) after scrolling 0px",
+    "tap card (132x294) after scrolling 386px",
+    "tap card (132x267) after scrolling 295px",
+    "tap action bar (110x49) after scrolling 0px",
+    "tap Skip to result (bar) (328x49) after scrolling 0px",
+    "tap Play again (same board) (154x49) after scrolling 0px",
+    "tap New board (bar) (97x48) after scrolling 0px",
+    "tap card (132x330) after scrolling 112px",
+    "tap card (132x294) after scrolling 328px",
+    "tap card (132x341) after scrolling 962px",
+    "tap action bar (110x49) after scrolling 0px",
+    "tap Arena step (72x38) after scrolling 0px",
+    "tap Daily challenge (129x44) after scrolling 277px",
+    "tap Arena step (72x38) after scrolling 0px"
+   ],
+   "shareLinkOpens": true,
+   "fivePanel": true,
+   "migrationPanel": true,
+   "maxHscroll": 0
+  },
+  "desk": {
+   "screens": {
+    "arena": {
+     "docH": 900,
+     "hscroll": 0,
+     "small": [
+      "1 Arena 72x38",
+      "2 Draft 74x38",
+      "3 Deploy 81x38",
+      "4 Fight 71x38",
+      "Lab 48x38",
+      "#startOver Start over 95x38",
+      "#creditsBtn Image credits 82x42"
+     ]
+    },
+    "draft": {
+     "docH": 2209,
+     "hscroll": 0,
+     "small": [
+      "1 Arena 72x38",
+      "2 Draft 74x38",
+      "3 Deploy 81x38",
+      "4 Fight 71x38",
+      "Lab 48x38",
+      "#startOver Start over 95x38",
+      "#creditsBtn Image credits 82x42"
+     ]
+    },
+    "deploy": {
+     "docH": 1410,
+     "hscroll": 0,
+     "small": [
+      "1 Arena 72x38",
+      "2 Draft 74x38",
+      "3 Deploy 81x38",
+      "4 Fight 71x38",
+      "Lab 48x38",
+      "#startOver Start over 95x38",
+      "#creditsBtn Image credits 82x42"
+     ]
+    },
+    "fight": {
+     "docH": 1021,
+     "hscroll": 0,
+     "small": [
+      "1 Arena 72x38",
+      "2 Draft 74x38",
+      "3 Deploy 81x38",
+      "4 Fight 71x38",
+      "Lab 48x38",
+      "#startOver Start over 95x38",
+      "#scrub 2.6 766x30",
+      "#intentBox on 20x20",
+      "#calloutBox on 20x20",
+      "#creditsBtn Image credits 82x42"
+     ]
+    },
+    "result": {
+     "docH": 1511,
+     "hscroll": 0,
+     "small": [
+      "1 Arena 72x38",
+      "2 Draft 74x38",
+      "3 Deploy 81x38",
+      "4 Fight 71x38",
+      "Lab 48x38",
+      "#startOver Start over 95x38",
+      "#scrub 22 766x30",
+      "#intentBox on 20x20",
+      "#calloutBox on 20x20",
+      "#creditsBtn Image credits 82x42"
+     ]
+    },
+    "stats": {
+     "docH": 1495,
+     "hscroll": 0,
+     "small": [
+      "1 Arena 72x38",
+      "2 Draft 74x38",
+      "3 Deploy 81x38",
+      "4 Fight 71x38",
+      "Lab 48x38",
+      "#startOver Start over 95x38",
+      "#statsSum Your stats: 3 games, 100% su 1050x44",
+      "replay 37x32",
+      "#creditsBtn Image credits 82x42"
+     ]
+    },
+    "sharelink": {
+     "docH": 2374,
+     "hscroll": 0,
+     "small": [
+      "1 Arena 72x38",
+      "2 Draft 74x38",
+      "3 Deploy 81x38",
+      "4 Fight 71x38",
+      "Lab 48x38",
+      "#startOver Start over 95x38",
+      "#noticeClose Dismiss 75x40",
+      "#creditsBtn Image credits 82x42"
+     ]
+    },
+    "lab": {
+     "docH": 900,
+     "hscroll": 0,
+     "small": [
+      "1 Arena 72x38",
+      "2 Draft 74x38",
+      "3 Deploy 81x38",
+      "4 Fight 71x38",
+      "Lab 48x38",
+      "#startOver Start over 95x38",
+      "#noticeClose Dismiss 75x40",
+      "#creditsBtn Image credits 82x42"
+     ]
+    }
+   },
+   "errors": [],
+   "load_ms": 684,
+   "arenaPrimaryY": 0,
+   "arenaPrimaryInView": true,
+   "draftPrimaryY": 0,
+   "cardShiftAfterPick0": 0,
+   "cardShiftAfterPick1": 0,
+   "cardShiftAfterPick2": 0,
+   "dragMoved": true,
+   "dragScrolledPage": false,
+   "draftScrollRestored": 469,
+   "tapsToFight": 5,
+   "scrollToFight": 449,
+   "timeToFight_ms": 5161,
+   "fightDur": 22.000000000000043,
+   "waitForResult_ms": 3,
+   "bannerY": 133,
+   "reportY": 979,
+   "tapsToResult": 6,
+   "scrollToResult": 449,
+   "tapsLoop1": 7,
+   "scrollLoop1": 449,
+   "tapsNewBoardToFight": 5,
+   "scrollNewBoardToFight": 1030,
+   "steps": [
+    "Draft your team",
+    "card",
+    "card",
+    "card",
+    "action bar",
+    "Skip to result (bar)",
+    "Play again (same board)",
+    "New board (bar)",
+    "card",
+    "card",
+    "card",
+    "action bar",
+    "Arena step",
+    "Daily challenge",
+    "Arena step"
+   ],
+   "log": [
+    "tap Draft your team (340x49) after scrolling 0px",
+    "tap card (249x257) after scrolling 0px",
+    "tap card (249x257) after scrolling 0px",
+    "tap card (249x257) after scrolling 449px",
+    "tap action bar (340x49) after scrolling 0px",
+    "tap Skip to result (bar) (340x49) after scrolling 0px",
+    "tap Play again (same board) (340x49) after scrolling 0px",
+    "tap New board (bar) (101x48) after scrolling 0px",
+    "tap card (249x279) after scrolling 0px",
+    "tap card (249x257) after scrolling 202px",
+    "tap card (249x257) after scrolling 828px",
+    "tap action bar (340x49) after scrolling 0px",
+    "tap Arena step (72x38) after scrolling 0px",
+    "tap Daily challenge (129x44) after scrolling 0px",
+    "tap Arena step (72x38) after scrolling 0px"
+   ],
+   "shareLinkOpens": true,
+   "fivePanel": true,
+   "migrationPanel": true,
+   "maxHscroll": 0
+  }
+ }
+}

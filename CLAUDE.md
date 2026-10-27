@@ -36,6 +36,9 @@ count as 5:00). Live site: GitHub Pages serves `index.html` from `main`.
 - `sim.js` — the whole simulation engine. Pure JS, no DOM, deterministic per seed (`rng(seed)`).
   Exports `window.Arena` in the browser and `module.exports` in Node.
 - `ui.js` — the game UI (arena → draft → deploy → fight → lab), canvas rendering, Lab batch runs.
+  Mobile UX pass (Oct 27, `research/ux_audit/`): a sticky bottom action bar (`renderActBar`) carries each step's next action
+  (Fight straight from the draft with auto formation, Skip to result, Play again / New board); `audit.js` re-measures taps
+  and scroll on phone/360/desktop, `modes_check.js` checks the hidden modes, daily and share links through the bar.
 - `template.html` — page shell + CSS with placeholders `/*FACES*/`, `/*SIM*/`, `/*UI*/`.
 - `faces.json` — 28 base64 portraits (112×112) keyed by species id, cropped from public-domain/CC0 (giant kangaroo: CC BY 3.0)
   Wikimedia Commons images (the original meme crops were replaced: unknown rights). `CREDITS.md` lists each

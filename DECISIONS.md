@@ -9,6 +9,8 @@ Each item has a recommendation; reply with a number and "yes", or your own call.
    reusing Migration's engine hooks.
 3. **5 in a Row:** the owner moved on to the progressive mode. Default: leave it hidden behind `?five=1`; delete later if
    unused.
+4. **Compact draft cards on phones** (mobile UX audit, `research/ux_audit/README.md`): hide the stat bars on phone cards
+   (they stay in the detail panel) to cut the draft page roughly in half. Default if no answer: leave cards as they are.
 
 ## Decided
 - Oct 27: cards show the signature move and your own record (built); personal stats panel built.
