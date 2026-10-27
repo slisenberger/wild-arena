@@ -46,7 +46,7 @@ count as 5:00). Live site: GitHub Pages serves `index.html` from `main`.
   (Fight straight from the draft with auto formation, Skip to result, Play again / New board); `audit.js` re-measures taps
   and scroll on phone/360/desktop, `modes_check.js` checks the hidden modes, daily and share links through the bar.
 - `template.html` — page shell + CSS with placeholders `/*FACES*/`, `/*SIM*/`, `/*UI*/`.
-- `faces.json` — 31 base64 portraits (112×112) keyed by species id, cropped from public-domain/CC0 (giant kangaroo: CC BY 3.0; gaur: CC BY 2.0)
+- `faces.json` — 34 base64 portraits (112×112) keyed by species id, cropped from public-domain/CC0 (giant kangaroo: CC BY 3.0; gaur: CC BY 2.0; woolly rhino: CC BY 2.5)
   Wikimedia Commons images (the original meme crops were replaced: unknown rights). `CREDITS.md` lists each
   source; `build.js` turns its table into the in-game Image credits panel. Pack items reuse their species' face.
 - `build.js` — `node build.js` assembles everything into the single self-contained `index.html`.
@@ -129,7 +129,7 @@ round. Report ± standard errors.
   the arena has fully closed. `zoneAt(w, t)` gives the box for rendering.
 - **Morale from losses** is species- and proximity-based: a death shakes its own kind fully and anything within
   15 m that saw it (0.4); it no longer demoralizes the whole side (that made weak animals and packs liabilities).
-- **Roster (31 species, 37 picks with packs/herds; the lone musk ox is never dealt):** the original 16 plus black rhino (1.2 t, irritable blind charger — the white rhino is now
+- **Roster (34 species, 40 picks with packs/herds; the lone musk ox is never dealt):** the original 16 plus black rhino (1.2 t, irritable blind charger — the white rhino is now
   placid, no `blindCharger`), fighting bull (`bred`: always worked up), moose (snow-proof, strong swimmer,
   front-hoof stomper), ostrich (lookout + kicker, fast evasive mount), honey badger (`fearless`: morale never
   breaks, takes on anything), and the rare triceratops (`rare`, `giant`: 8 t charger, rideable at 3 m; only
@@ -181,6 +181,47 @@ round. Report ± standard errors.
     "Walrus" (mass, hide, tusks used for fighting; "even an injured walrus is a formidable opponent for a polar bear"), "Walrus
     attack" (boats, a hunter stabbed at the ice edge), SeaWorld / NAMMCO (swim speeds). Unverified: land speed (no measurement
     found). Swing 31 ± 5 s (mine +22, theirs −9; 240 tundra boards; lake maps 27 ± 8, dry 34 ± 8: on a lake it keeps to the water, on dry snow it is an armored lump beside you). Rates: tusk stab .49/fight, surges from the water .36. tuskStab alone adds ~1 s (stripped 30 ± 6). Left alone in its lake on their side it ends 4.5% of fights 'quiet' (moose 1.8%): honest, it won't leave the water; making it haul out instead turned those into slow crawls to 5:00 (reverted). A ×.6 land-damage penalty suggested by the reviewer was dropped: bulls fight with their tusks on haul-outs.
+  Then (32–34, Oct 27, subagent, branch `animals-prehist1`; from `research/prehistoric_candidates.md`, all **rares**, stat lines
+  revised after an independent paleontology review: what it changed is in brackets). Adding three rares changes the rare draw:
+  with the same seed, boards on the savanna, forest and tundra that had or now get a rare are dealt differently (20%, 31%, 30% of
+  4,000 seeds per map); river boards and every rare-less board are unchanged, and boards without the new species fight
+  byte-identically to the base commit (1,600 fights, live policies on and off). New rares are on ~5% of savanna, ~9% of forest,
+  ~10% of tundra boards (the rare slot is uniform over the rares that can go on that map).
+  - **Woolly rhinoceros** (`woollyrhino`, rare, tundra only `habitat {tundra: 1}`): 2,000 kg (1.5–2 t typical, European mean
+    2–2.5 t), spd 10 [12; no measured speed, short legs], dmg 175, armor .5 (skin 5–15 mm over 1.5–3 cm of fat), reach 2.8 (nasal
+    horn 1–1.35 m), cold 1, heat .4, charger (overshoot 7, turn .3); snow speed by mass (.65: likely intolerant of deep snow).
+    `snowPlough` (`plough`/`furrowAt`, `FURROW`): moving on snow it drops a trail point every 0.5 s lasting 12 s [20]; anything
+    within 1.2 m [1.5] (either side, you included; not the rhino on its own fresh trail) has the snow's drag halved. Speculative
+    (reviewer): the basis is horn abrasion read as sweeping snow aside (Fortelius 1983) plus trail-following in living hoofed
+    animals; the card says so. Rendered as a pale trail that fades (`drawFurrows`, `w.furrowAll`). Sources: Wikipedia "Woolly
+    rhinoceros" (frozen carcasses, horn, skin, deep-snow intolerance, healed fight wounds). Swing 96 ± 8 s (mine +74, theirs −22;
+    240 tundra boards) → $500. Rates (yours / theirs): `opens a lane` 5.3 / 3.1 per fight. The furrow is value-neutral (stripped:
+    −5 ± 5 yours, −3 ± 4 theirs) and adds no stalling (longest no-damage p90 26 vs 30 s, quiet endings 0 vs .7%, enemy loiter
+    lower).
+  - **Giant short-faced bear** (`shortface`, rare, tundra + forest): 650 kg (adults 317–957, mean ~625; Christiansen 1999,
+    Figueirido et al. 2010), spd 12 (Matheus: 40–45 km/h), stam 15 [25: the pacing gait is a travel gait, not sprint endurance],
+    dmg 160, armor .35, hp ×1.1, strikeH 4.3 (vertical arm reach ~4.3 m standing, a reconstruction: it reaches riders on giants),
+    maul every 3rd swipe, mock charge .5, prey human .5 (a game assumption; diet debated: Fox-Dobbs et al. 2008 isotopes vs
+    Figueirido et al. 2010 omnivore). `usurps` (`usurp`, `killInHand`, `USURP`): an enemy predator within 35 m it can see that
+    holds prey or is biting a downed target (stunned or < 30% health), ≤ .5× [.6] the bear's mass → it goes over (≤ 8 s) and rears
+    up; the holder lets go and backs off (ignores that prey 15 s) with p .4 if the prey is down, .25 [.4] if it is still fighting,
+    +.2 if ≤ .3× the bear, −.15 per packmate within 15 m (Gunther & Smith 2004), never a honey badger; else the bear's next swipe
+    mauls. 8 s cooldown. Basis: bears displaced cougars at 11 of 27 kills they reached (Murphy et al. 1998, Ursus 10); Arctodus
+    kleptoparasitism is a hypothesis (Matheus 1995), flagged on the card. Swing 58 ± 5 s (mine +42, theirs −16; 480 tundra +
+    forest boards) → $300. Rates: `makes it let go` .11 / .08, `rears over a kill` .14 / .09 per fight (holds near it are rare).
+    Value-neutral (stripped −2 ± 4, +0 ± 4), no stalling (p90 29 vs 33 s yours).
+  - **Utahraptor** (`utahraptor`, rare, forest + savanna): 350 kg (estimates 280–500: Kirkland et al. 1993, Paul, Makovicky),
+    spd 8 [11; robust legs, an ambusher; dromaeosaurids score low on cursorial indices, Persons & Currie 2016], stam 8, dmg 120,
+    armor .1, pierce .2, strikeH 2.8, stalk gait with a 6 m pounce, `ambush` (×1.7, ×2 in forest; it re-arms like the cats' after
+    ~8 s out of the action), feathered (inferred). `pinDown`: any hold (latchMax 1 [1.3]: prey up to its own mass) pins the
+    prey (stun 1.2 s, .8 s above .6× its mass [new]) and halves its chance to shake free; bigger prey it only bites. Basis:
+    Fowler et al. 2011 (PLoS ONE 6: e28964), raptor prey restraint. Savanna = the Yellow Cat Member's open seasonal floodplain
+    (no grass yet; reviewer's note). The enemy one is driven by `cat_v1` (stalk gait = cat archetype; its species one-hot is all
+    zero). Swing 24 ± 4 s (mine +15, theirs −9; 480 forest + savanna boards) → $100. Rates: `pins it down` .23 / .18 per fight
+    (mostly you, cats, wolves). Value-neutral (stripped −2 ± 2, −3 ± 2), no stalling.
+  - Portraits: woolly rhino Mauricio Antón (CC BY 2.5, via PLoS Biology), short-faced bear museum model (Hunsvotti, CC0),
+    Utahraptor (PaleoNeolitic, CC0; Commons flags minor inaccuracies: jaw, eye). Musk ox, gaur and walrus got their card
+    signature lines (they were missing from `SIGNATURE`).
 - **Light-pick identity pass (Oct 26, subagent; ROSTER.md has the table):** one visible signature each, a `sig()` counter,
   no stat changes. Tags: `musk` (honey badger: a predator that bites it or closes to touch reels away, flees 2.5–4 s and
   ignores it 15 s via `repelBy/repelUntil`; 12 s cooldown), `clawKick` (ostrich: kicks on ≤ 4× its mass bleed 6 s and
@@ -343,7 +384,14 @@ round. Report ± standard errors.
   median board's best team 88% (min 33, p25 75), typical full-spend team 160 s, 16 distinct best teams over 16 boards, no
   elephant in any; best teams spread over rhino 6, hippo 6, tiger 4, giraffe 4, croc 4 (was elephant 5, rhino 4). For
   comparison, total $2,500 gave 96% / 181 s (not adopted: it would make the other side weaker).
-- **Current prices (`abs_r16`, Oct 27 night, the final integrated engine: GCP realism pass + bulldozer_v1 + charger_v1 + cat_v1
+- **Prices on `animals-prehist1` (`abs_p1`, Oct 27, after adding the woolly rhino, short-faced bear and Utahraptor; a separate
+  commit, the main session reprices again after merging):** 20 s of swing per $100, giants/herds capped at $700 (triceratops $800),
+  board total $2,600 (kept: `price_scheme` landed on it), budget $1,200, rares 30%. `price_abs.js 240` (all items) merged with
+  `price_abs.js 960` for the map-limited items. Validation (`RAREP=.3 board.js 16 2 24 12 1200 2600`): median board's best team
+  88% (min 42, p25 79), typical full-spend team 169 s, 63% of teams win a screen run, 16 distinct best teams over 16 boards.
+  New: woolly rhino $500 (96 ± 8), short-faced bear $300 (58 ± 5), Utahraptor $100 (24 ± 4). Changed: hippo $300, black rhino
+  $200, croc $200, Smilodon $200, lion coalition $200, hyena clan $100.
+- ***Previous* prices (`abs_r16`, Oct 27 night, the final integrated engine: GCP realism pass + bulldozer_v1 + charger_v1 + cat_v1
   live, rare elephant, musk ox herd / gaur / walrus, progressive hooks):** 20 s of swing per $100, giants/herds capped at $700
   (triceratops $800), **board total $2,600** (kept: `price_scheme` itself landed on $2,600), budget $1,200, rares 30%.
   Validation (`RAREP=.3 board.js 16 2 24 12 1200 2600`): median board's best team 92% (min 38, p25 71), typical full-spend

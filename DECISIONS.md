@@ -13,10 +13,6 @@ Each item has a recommendation; reply with a number and "yes", or your own call.
    barely kills. Tried overnight: dealing round 1 without the $100 big cats and croc (`PROG.R1_OUT`) made runs harder (2.6%
    complete) and the badger still didn't kill, so it's off. Real fix ideas: a badger-specific XP/kill source (it harries
    and steals kills?), or accept that its story is surviving (12% of runs still have it in round 4). Your call.
-4. **Prehistoric animals to build** (`research/prehistoric_candidates.md`, all proposed as rares): giant short-faced bear,
-   woolly rhino, Doedicurus (tail-club glyptodont), Utahraptor; alternates Homotherium pair, dire wolf pack, Protoceratops
-   herd; Stegosaurus if you want another giant. Recommendation: woolly rhino + short-faced bear first (best evidence,
-   fill the tundra), after the musk ox / gaur / walrus batch is priced in.
 5. **Compact draft cards on phones** (mobile UX audit, `research/ux_audit/README.md`): hide the stat bars on phone cards
    (they stay in the detail panel) to cut the draft page roughly in half. Default if no answer: leave cards as they are.
 6. **5 in a Row:** the owner moved on to the progressive mode. Default: leave it hidden behind `?five=1`; delete later if
@@ -30,7 +26,17 @@ Each item has a recommendation; reply with a number and "yes", or your own call.
    your survival 50% → 44%. It favours nearby, visible, heat-struck and already-busy targets and goes after you more.
    Realism worry: herbivores choosing prey like predators (real ones charge what threatens or provokes them). Recommendation:
    don't ship as is; retrain with herbivore-specific realism gates (only threats and intruders as targets), then reprice.
+9. **Prehistoric batch 1 (built on `animals-prehist1`, not merged):** (a) the woolly rhino's snow furrow is speculative (the
+   reviewer would rather have a side-to-side horn sweep, also inferred from the horn wear); it measured value-neutral and is
+   the first map-changing effect. Recommendation: keep it, labelled speculative on the card. (b) The rhino measured 96 s of swing
+   on the tundra, so it prices at $500 (a $300 guess before). (c) Utahraptor on the savanna: there was no grass in its world
+   (open floodplain with ferns); recommendation: keep it there as the open-floodplain stand-in, say so in its text. (d) Eight
+   rares can now turn up on the tundra, so each one is rarer: a themed rare pool (Ice Age / Cretaceous) is an option. (e) The reprice drops the hyena clan to $100, so progressive round 1
+   (the $100 round) gets easier: bot first-try 90% (target ~80%), completion 18% (in range). Left for the `prog-ux` work.
 
+- Oct 27 (built, branch `animals-prehist1`): prehistoric batch 1 approved and built as rares: woolly rhino (tundra), giant
+  short-faced bear (tundra, forest), Utahraptor (forest, savanna). Remaining candidates (Doedicurus, Homotherium pair, dire
+  wolf pack, Protoceratops herd, Stegosaurus) stay in `research/prehistoric_candidates.md`.
 - Oct 27: cards show the signature move and your own record (built); personal stats panel built.
 - Oct 27 (progressive build): money = fixed top-up + $25 per kill, capped at $150 a round (`PROG.PER_KILL/KILL_CAP`).
   Progressive mode replaces Migration (`migration.js`, `migration_bot.js` and `?migration=1` removed; prototype behind
