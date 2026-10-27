@@ -47,6 +47,12 @@ the shipped policies and reprice after:
   predators for minutes to hours. Buffalo face lions backed into thickets.
 - [ ] Ostrich kicks only forward (a rear approach is safe); giraffe safer standing than running (lions trip a galloping
   giraffe); big male kangaroos challenge an upright person as a rival (Coulson).
+- [ ] **Cats need ambush decisions, not more training.** Every sweep (arch1, arch2, arch3) left cats at or near zero.
+  Cats deal 28% of the damage to you but are in contact only 8% of the time (150 fights); the engine gait already makes
+  the stalk/pounce/wait-for-opening calls, so commit/wait/flank/regroup/disengage barely change anything. Add the
+  sourced decisions the spec names: hold in cover until a guard is busy, abort a spotted stalk and reposition
+  (Schaller 1967), switch to an isolated or running target (Mattson 2011), lion wing/centre roles (Stander 1992); warm
+  start from a cover-waiting rule; more fights per candidate.
 - [ ] No source for: jaguar 7 m and cougar 12 m horizontal pounces (cougar: 5.5 m vertical documented), hippo ~30 km/h
   (never measured), any rhino or boar bluff share.
 
