@@ -357,3 +357,8 @@ Pick for new roles. Top three for design value: **honey badger, moose, Komodo dr
 - [x] **Elephant rare** (owner, Oct 27): dealt through the rare slot (~8% of boards); board total kept at $2,600 (harder,
   median best team 88%, typical team 160 s). Next for variety: new mid-tier animals that can cost $200+ (research in
   `research/mid_tier_candidates.md`).
+
+- [ ] **Harness: brawler style-sensitivity checks fail after the realism pass** (Oct 27, `harness_test.js --quick` 176/178 on
+  the merged engine): "always wait / always disengage" brawler policies now score style 0.82 / 0.91 (threshold 0.9) and
+  don't trip the long-idle gate. Brawlers have no live policy, so the game is unaffected; recalibrate the brawler style
+  gates (or the check) before the next brawler training round.
