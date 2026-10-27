@@ -53,9 +53,9 @@ function targetFeats(w, u, t, own, my){
     +(u.target === t), +(u.grudge === t), +(u.grudge === t && d < 8), +I.canSee(w, u, t), +I.inWater(w, t), +!!t.rider, +!!t.riding];
 }
 
-// {opts, X}: X[i] is the feature vector (length DIM) of option i
-function extract(w, u){
-  const opts = options(w, u);
+// {opts, X}: X[i] is the feature vector (length DIM) of option i; herb = a herbivore (candidates from herbCandidates, no feeding)
+function extract(w, u, herb){
+  const opts = herb ? [{kind: 'none'}, ...I.herbCandidates(w, u).map(t => ({kind: 'target', t}))] : options(w, u);
   const nCand = opts.filter(o => o.kind === 'target').length;
   const {c, own, my} = context(w, u, nCand);
   const zT = new Array(TGT.length).fill(0), zF = new Array(FEED.length).fill(0);
@@ -78,4 +78,6 @@ function heuristicIndex(w, u, opts){
   return 0;
 }
 
-module.exports = { NAMES, DIM, TERR, options, extract, heuristicIndex };
+// the herbivore heuristic's pick (herbivoreTarget, called once as the engine would): its index in opts, -1 if it isn't a candidate
+function herbHeuristic(w, u, opts){ const t = I.herbivoreTarget(w, u); if (!t) return {i: 0, t}; return {i: opts.findIndex(o => o.kind === 'target' && o.t === t), t}; }
+module.exports = { NAMES, DIM, TERR, options, extract, heuristicIndex, herbHeuristic };

@@ -31,6 +31,16 @@ function choose(w, u, policy){
   if (log && opts.length > 1) log.push({X, y: teach, a, sp: u.s.id});
   apply(u, opts[a]);
 }
+// herbivores (bulldozer, charger, kicker): same scorer; the heuristic's pick is herbivoreTarget's, and if that isn't one
+// of the candidates the heuristic stands (so zero weights = the engine exactly)
+function chooseHerb(w, u, policy){
+  const P = policy.byArch[A._internals.archetypeOf(u)], stats = w.cfg.policyStats;
+  const {opts, X} = F.extract(w, u, true), h = F.herbHeuristic(w, u, opts);
+  const a = h.i < 0 ? -1 : scoreLin(P, X, h.i);
+  if (stats){ stats.n = (stats.n || 0) + 1; if (a === h.i) stats.agree = (stats.agree || 0) + 1; }
+  u.target = a < 0 ? h.t : (opts[a].kind === 'target' ? opts[a].t : null); u.state = u.target ? 'engage' : 'roam';
+}
 A._internals.choose = choose;
+A._internals.chooseHerb = chooseHerb;
 
 module.exports = { choose, apply, load: f => JSON.parse(require('fs').readFileSync(f, 'utf8')) };
