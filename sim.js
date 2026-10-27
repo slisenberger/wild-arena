@@ -1773,6 +1773,7 @@ function dealBoard(seed, rules, prices){
   const ex = rules.exclude || null; // ids never dealt (migration: animals you already own)
   const cap = rules.maxPrice || 0; // progressive mode: only animals at or under this price (0 = no cap)
   const forms = {}; for (const a of ANIMALS) if (ok(a) && !(ex && ex.includes(a.id)) && !(cap && price(a.id) > cap)) (forms[sp(a)] = forms[sp(a)] || []).push(a.id);
+  for (const k of Object.keys(forms)) if (forms[k].every(id => (BY_ID[id].dealWeight ?? 1) === 0)) delete forms[k]; // only never-dealt forms left (a lone musk ox once a price cap removes the herd)
   const common = Object.keys(forms).filter(k => !BY_ID[k].rare), rare = Object.keys(forms).filter(k => BY_ID[k].rare);
   // pick solo or pack by dealWeight (wolves come as a pack 3 times in 4: that's how real wolves hunt)
   const dw = id => BY_ID[id].dealWeight ?? 1; // 0 = never dealt in that form (the lone musk ox)

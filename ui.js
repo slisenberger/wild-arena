@@ -1765,13 +1765,18 @@ function draftAlt(){
   const box = duiEls(), alt = DUI.ui !== 'default';
   $('duiSwitch').innerHTML = `<span class="label">Draft screen <span style="color:var(--gold)">prototype</span></span><div class="seg">${Object.entries(DUI_NAMES).map(([k, t]) => `<button data-ui="${k}" aria-pressed="${DUI.ui === k}">${t}</button>`).join('')}</div>`;
   box.hidden = !alt; for (const id of ['tiers', 'teamline', 'detail']) $(id).hidden = alt;
+  // the explanatory text folds behind a tap on the prototype screens (owner: less to scroll past)
+  let help = $('duiHelp'); if (!help){ help = document.createElement('details'); help.id = 'duiHelp'; help.className = 'duihelp'; $('boardLede').after(help); help.addEventListener('toggle', () => { DUI.helpOpen = help.open; }); }
+  $('boardLede').hidden = alt; help.hidden = !alt;
   if (!alt) return false;
-  if (!S.prog) $('boardLede').textContent = $('boardLede').textContent.replace(/Tap a card to draft it;.*$/, DUI_HELP[DUI.ui]);
+  const lede = S.prog ? $('boardLede').textContent : $('boardLede').textContent.replace(/Tap a card to draft it;.*$/, DUI_HELP[DUI.ui]);
+  help.innerHTML = `<summary>How this works</summary><p>${esc(lede)}</p>`; help.open = !!DUI.helpOpen;
   ({versus: duiVersus, list: duiList, deck: duiDeck})[DUI.ui](box);
   { const h = document.querySelector('header.top'); if (h) document.documentElement.style.setProperty('--hdrH', h.offsetHeight + 'px'); } // the sticky scoreboard sits just under the header
   return true;
 }
 const DUI_CSS = `
+.duihelp{font-size:13.5px;color:var(--muted)} .duihelp summary{cursor:pointer;min-height:36px;display:flex;align-items:center;gap:6px;font-weight:600;color:var(--fg);list-style:none} .duihelp summary::-webkit-details-marker{display:none} .duihelp summary::before{content:'▸';color:var(--gold);transition:transform .15s} .duihelp[open] summary::before{transform:rotate(90deg)} .duihelp p{margin:4px 0 0;line-height:1.45}
 .duisw{display:flex;align-items:center;gap:6px 10px;flex-wrap:wrap}
 .duisw .seg button{font-family:var(--display);font-weight:800;font-size:14px;letter-spacing:.05em;text-transform:uppercase;padding-inline:12px}
 .dui{display:flex;flex-direction:column;gap:12px;min-width:0}
