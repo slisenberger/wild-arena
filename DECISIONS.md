@@ -3,23 +3,20 @@
 Each item has a recommendation; reply with a number and "yes", or your own call. Decided items move to the bottom.
 
 ## Open
-1. **Progressive mode: an extra premium enemy.** The other side gets one animal from the round's top price band that you
-   can't buy. Recommendation: yes, from round 3 (needs a bigger top-up). Design: `research/progressive_mode.md`.
-2. **Progressive mode: money.** A fixed top-up each round only, or plus a small per-kill bonus? Recommendation: fixed +
-   $25 per kill, capped at $150 a round.
-3. **Progressive mode replaces Migration** (switched off) rather than sitting beside it. Recommendation: replace.
-4. **Personal stats screen** (per-animal kills, damage and win rates, per-map win rates, your nemesis, last games with
+1. **Progressive mode: money.** A fixed top-up each round only, or plus a small per-kill bonus? Default if no answer:
+   fixed + $25 per kill, capped at $150 a round (XP already rewards kills). Design: `research/progressive_mode.md`.
+2. **Progressive mode replaces Migration** (switched off) rather than sitting beside it. Default if no answer: replace,
+   reusing Migration's engine hooks.
+3. **Personal stats screen** (per-animal kills, damage and win rates, per-map win rates, your nemesis, last games with
    replay links, achievements, a bestiary; local storage). Recommendation: build it.
-5. **5 in a Row after playtest:** put it on the arena screen? One retry or two (the progressive mode has two)? Filter out
-   boards that are too hard? Recommendation: two retries, keep raw boards for now, show it once you like it.
-6. **A more fragile human** (open since the realism audit). Recommendation: leave as is; the underdog feel is already
-   strong.
-7. **Card bars ("Helps you" / "Threat if left")** are measured with small 3-animal base teams; full $1,200 teams flip
-   giants' numbers. Recommendation: measure with full teams, the way players actually draft.
-8. **Pick N and Migration code** (both switched off): delete or keep hidden behind URL flags? Recommendation: keep
-   Migration's engine hooks for the progressive mode; delete Pick N's UI code.
+4. **What replaces the Helps / Threat bars on the cards.** Options in the Oct 27 chat: signature move line, measured
+   "good against / struggles against" counters, a role tag. Recommendation: signature + counters.
+5. **5 in a Row:** the owner moved on to the progressive mode. Default: leave it hidden behind `?five=1`; delete later if
+   unused.
 
 ## Decided
+- Oct 27 (later): progressive mode adds one premium enemy (top price band, can't be bought) from round 3. The human
+  stays as fragile as now. Pick N removed. The Helps / Threat bars go (replacement to pick).
 - Oct 27: progressive mode uses experience (XP and levels, capped, realistic), two retries per run; T. rex at most a
   final-round boss. Elephant is a rare; board total stays $2,600 (the player stays the underdog). Pick N switched off.
   Dailies use the local date. Musk ox herd, gaur and tundra-only walrus approved for building; smaller real dinosaurs

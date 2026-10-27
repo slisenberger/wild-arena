@@ -347,9 +347,8 @@ round. Report ± standard errors.
 5. Replayability: verified leaderboard, rotating rosters, new animals. (Done: daily challenge —
    `Daily challenge` button; the local date (Wordle-style, was UTC until Oct 27: evening play in the Americas inflated the streak) hashes to the map, board and fight seed; rematch keeps the seed; today's best in
    localStorage `wa-daily:<date>`; a share line in the result banner.)
-   - Done (Oct 2026, ui.js only; **Pick N and Daily Pick-3 switched off by the owner, Oct 27**: `?pickn=1` shows them, `PICK_ON`
-     in ui.js; links with `d:pN` open as budget games): **Pick N** draft mode (`S.draft`/`S.pickN`, exactly 2–5 picks, prices ignored; bests
-     keyed `|pickN`; **Daily Pick-3** seeds `wild-arena:pick3:<date>`, best `wa-daily-pick3:<date>`), **game links**
+   - Done (Oct 2026, ui.js only): **Pick N** draft mode and Daily Pick-3 were built, then **removed by the owner (Oct 27: "Pick N is
+     bad")**; old links with `d:pN` open as budget games. **Game links**
      `#g=1,m:,b:,s:,d:b|pN[,t:,r:,p:][,sc:]` (`gameLink`/`parseLink`/`applyLink`; positions are stored to the cm at drag
      time and encoded exactly, so a link replays the same fight; bad links fall back to a fresh board with a notice),
      and a **daily streak** (`wa-streak`).
