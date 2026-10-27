@@ -1,0 +1,25 @@
+{
+ "note": "Milestone 4 round 8 (Oct 27, owner: give the cats freedom to discover maximally helpful target selection): YOUR big cats target choice with the constraints loosened: no leash (wide: any enemy your side sees), margin .05 (zero weights still = today, any learned preference overrides it), no trust region (thetaClip 0) or a loose one (3), linear and species-aware MLP (8 / 16 hidden). Realism gates and the guard (protect) goal kept. Replaces m4_target_s7 (tighter settings).",
+ "runs": [
+  {
+   "name": "gcf_free_s1",
+   "args": "--arch=guard --target=true --only=cat --wide=true --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --margin=.05 --pairs=24 --thetaClip=0 --seed=1801"
+  },
+  {
+   "name": "gcf_free_s2",
+   "args": "--arch=guard --target=true --only=cat --wide=true --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --margin=.05 --pairs=24 --thetaClip=0 --seed=1802"
+  },
+  {
+   "name": "gcf_tc3",
+   "args": "--arch=guard --target=true --only=cat --wide=true --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --margin=.05 --pairs=24 --thetaClip=3 --seed=1803"
+  },
+  {
+   "name": "gcf_mlp_free",
+   "args": "--arch=guard --target=true --only=cat --wide=true --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --margin=.05 --pairs=32 --nh=8 --thetaClip=0 --seed=1804"
+  },
+  {
+   "name": "gcf_mlp16_tc3",
+   "args": "--arch=guard --target=true --only=cat --wide=true --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --margin=.05 --pairs=32 --nh=16 --thetaClip=3 --seed=1805"
+  }
+ ]
+}

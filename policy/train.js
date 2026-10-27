@@ -42,6 +42,7 @@ const DEFAULTS = {
   target: false,             // true: train the archetype's target choice (milestone-4 pilot) instead of its movement intents
   feat: null,                // with target: 'plus' = features_plus.js (+ the guard situation around each target)
   only: null,                // with target, arch guard: 'cat' = only your big cats learn (the rest keep today's targets), fights with your cat only
+  wide: false,               // with target, arch guard: true = candidates are any enemy your side sees (no leash)
   goal: null,                // 'checkmate': side-level goal (kill the human, sooner is better; move_reward.js goalPartsCheckmate)
   withLive: false,           // the other archetypes use the shipped policies in every fight (train against the live game)
             // warm start: 'patient' = wait while stronger guards block and the target isn't busy or easy (probe winner, +0.06)
@@ -96,7 +97,7 @@ function init(opts){
   // --target --nh=K: the 'target-mlp' scorer (policy/target_model.js), K hidden units over the option's features + the unit's species traits
   let P0 = cfg.target ? (cfg.nh ? require('./target_model.js').mlp(TF.DIM + require('./target_model.js').TRAITS, cfg.nh, cfg.margin, cfg.seed * 31 + 7, true) : M.zerosTarget(TF.DIM, cfg.margin))
     : M.zeros(F.DIM, cfg.nh, cfg.margin, AR.nout);
-  if (cfg.target && cfg.feat) P0.feat = cfg.feat; if (cfg.target && cfg.only) P0.only = cfg.only; if (cfg.nh && !cfg.target) M.withHidden(P0, R.A.rng(cfg.seed * 31 + 7));
+  if (cfg.target && cfg.feat) P0.feat = cfg.feat; if (cfg.target && cfg.only) P0.only = cfg.only; if (cfg.target && cfg.wide) P0.wide = true; if (cfg.nh && !cfg.target) M.withHidden(P0, R.A.rng(cfg.seed * 31 + 7));
   let theta0 = M.flat(P0, cfg.mode);
   if (cfg.initWeights && !cfg.target){ // v2: continue from shipped weights (same shape: features, intents, hidden size)
     const W = JSON.parse(fs.readFileSync(cfg.initWeights, 'utf8'));

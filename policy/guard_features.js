@@ -36,8 +36,15 @@ function targetFeats(w, u, e, own, my){
     +(!!u.s.pred && !!u.s.latch && !!e.s.pred), +(!!u.s.charge && !e.s.pred), +(es > 3 * my && I.has(e, 'giant')), Math.min(3, pack) / 3];
 }
 // {opts, X}: X[i] is option i's feature vector (length DIM)
-function extract(w, u){
-  const H = w.human, cands = I.guardCandidates(w, u), opts = [{kind: 'none'}, ...cands.map(t => ({kind: 'target', t}))];
+// wide (P.wide): no leash — any enemy your side can see (or within 10 m), so the learner is free to go after anything;
+// the heuristic's pick is always among them
+function wideCandidates(w, u){
+  const out = [];
+  for (const e of w.units) if (e.side === 'E' && I.active(e) && !(u.repelBy === e && u.repelUntil > w.t) && (I.sideSees(w, e) || I.dist(u, e) < 10)) out.push(e);
+  return out;
+}
+function extract(w, u, wide){
+  const H = w.human, cands = wide ? wideCandidates(w, u) : I.guardCandidates(w, u), opts = [{kind: 'none'}, ...cands.map(t => ({kind: 'target', t}))];
   const own = I.strength(u), my = I.packStrength(w, u);
   let nComing = 0; for (const e of cands) if (e.target === H || coming(e, H)) nComing++;
   const none = [u.hp / u.maxhp, I.drive(u), u.morale, Math.min(3, nComing) / 3, H.hp / H.maxhp, +!!u.post, Math.min(1, I.dist(u, H) / 30),
