@@ -76,6 +76,19 @@ each species develop its own realistic fighting style. This note is the plan; th
     The cat lever is likely joint (timing + target: go for you when your guards are busy elsewhere, together with the
     chargers), i.e. the joint target+intent decision with features of the guards around the human, not target choice alone.
 
+- Afternoon (Oct 27), fresh re-checks on 1,200 probe fights (index 23) after held-out tests:
+  - Chargers, species-aware (ch_mlp_s2): **+0.239 ± 0.036** (you survive 50.3% -> 41.6%, -27.5 s) -> charger_target_m1.
+  - Your guards, species-aware (gd_mlp_s1): +0.044 ± 0.021 overall; on fights with your cat +0.084 ± 0.027 (you +5.1 pts,
+    +12.3 s; your cats deal 424 -> 472, die 75% -> 77%) -> guard_target_m1. Learning all guards together helps your cat
+    fights more than cat-only learning: the cat-only runs (tgt7/8/9, leash on or off, margin .05/.25, trust region 0/1/3)
+    have found nothing so far (best = zero weights on every finished run).
+  - Enemy cats with the guard situation (features_plus): two held-out passes (+0.083 ± 0.028, +0.084 ± 0.033) shrank to
+    +0.042 ± 0.028 and +0.016 ± 0.032 on fresh fights. With ~16 cat runs, two 2-SE passes is about chance. Enemy cat target
+    choice: none confirmed so far. Their learned direction (both runs): avoid stronger targets and strong free guards, prefer
+    close / visible targets, rivals and feuds, go for you more when your guards are busy.
+  - Your cats die ~75% of fights whatever they target: 46-68% of their time on big herbivores comes from guard_v1's help /
+    intercept intent (the chooser now re-judges those). Refusing giants saves cats (78% -> 61% deaths) but costs you 4-5 pts.
+
 ## Phases (each measured before the next)
 1. Plumbing: joint (target, intent) hook for every archetype, zero/heuristic policy byte-identical to today
    (`check_identical.js`), features + trait vector, harness tests.

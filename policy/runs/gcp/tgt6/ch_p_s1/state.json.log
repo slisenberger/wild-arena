@@ -909,3 +909,5 @@
     flagged: goal 1.339 style 0.844 gates [] drift [closeShare 0.483→0.321; idleShare 0.215→0.407]
     flagged: goal 1.296 style 0.818 gates [] drift [closeShare 0.483→0.215; idleShare 0.215→0.577]
   [val #14] centre (after 60 updates, non-commit 58.4%) vs best (after 12 updates) on 1000 fresh fights: +0.038 ± 0.042 | style 0.818 gates [] drift [closeShare 0.483→0.268; idleShare 0.215→0.488] -> keep best
+[test] best (after 12 updates) vs zero weights on 1200 held-out fights: +0.112 ± 0.035 (beyond 2 SE) | style 1.000 gates [] drift [fruitless 0.620→0.730]
+  per map: savanna 0.138±0.070 (n 300), river 0.146±0.071 (n 300), forest 0.113±0.074 (n 300), tundra 0.049±0.068 (n 300); your win% 47.7 -> 44.1

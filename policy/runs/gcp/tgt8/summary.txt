@@ -1,0 +1,5 @@
+gcf_free_s1        [test] best (zero) vs zero weights on 1200 held-out fights: +0.000 ± 0.000 (within 2 SE) | style 1.000 gates [] drift []
+gcf_free_s2        [test] best (zero) vs zero weights on 1200 held-out fights: +0.000 ± 0.000 (within 2 SE) | style 1.000 gates [] drift []
+gcf_tc3            [test] best (zero) vs zero weights on 1200 held-out fights: +0.000 ± 0.000 (within 2 SE) | style 1.000 gates [] drift []
+gcf_mlp_free       (no test yet)
+gcf_mlp16_tc3      (no test yet)
