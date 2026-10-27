@@ -64,7 +64,7 @@ function cfgOf(f){ return {team: f.team, board: f.board, terrain: f.tr, mode: 'w
 function setPolicy(cfg, f, arch, weights){
   const mp = {};
   if (f.live) for (const [k, v] of Object.entries(I.LIVE || {})) if (v && (k !== arch || (weights && weights.kind === 'target-lin'))) mp[k] = v;
-  if (weights && weights.kind === 'target-lin'){ cfg.policy = {byArch: {[arch]: weights}}; cfg.policyStats = {}; } // target scorer: the arch keeps its shipped movement policy
+  if (weights && weights.kind === 'target-lin'){ cfg.policy = {byArch: {[arch]: weights}}; cfg.policyStats = {}; if (weights.sample) cfg.policyTrace = []; } // target scorer: the arch keeps its shipped movement policy; sample = PPO training
   else if (weights) mp[arch] = weights;
   if (Object.keys(mp).length){ cfg.movePolicy = mp; cfg.moveStats = {}; }
 }
@@ -135,6 +135,7 @@ function runFight(f, weights, arch){
   r.t = +w.result.t.toFixed(1); r.survived = w.result.survived ? 1 : 0; r.why = w.result.why || null; r.killer = w.result.killer || null;
   r.intents = weights && weights.kind === 'target-lin' ? (s => [s.agree || 0, (s.n || 0) - (s.agree || 0), 0, 0, 0])(cfg.policyStats || {}) : weights && cfg.moveStats && cfg.moveStats[arch] ? cfg.moveStats[arch] : null; // target scorer: [kept the heuristic's pick, deviated]
   r.fp = fingerprint(w);
+  if (cfg.policyTrace) r.trace = cfg.policyTrace; // PPO training: each sampled target decision
   return r;
 }
 // ---------- guard archetype telemetry ----------

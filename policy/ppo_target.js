@@ -1,0 +1,91 @@
+// Milestone 4: policy-gradient (PPO-style) training of an archetype's learned TARGET choice ('target-lin', policy/policy.js),
+// the scalable alternative to ES (train.js) for larger models. Each iteration: N fresh fights played twice, by the heuristic
+// and by the stochastic policy (softmax over candidates, private sampling stream); the fight's advantage is the paired goal
+// difference (checkmate goal by default); every sampled decision gets its fight's advantage; clipped-ratio update with Adam,
+// plus a penalty beta * (1 - p(heuristic's pick)) that anchors the policy to today's behaviour. Validation: the greedy policy
+// vs the heuristic on fixed fresh fights, accepted only with the style gates passing (move_reward.js grade, spec on).
+// State JSON is train.js-compatible (P0, best.theta, config), so export_weights.js and probes/eval_arch.js read it.
+//   node policy/ppo_target.js <state.json> [--arch=cat --iters=40 --fights=200 --threads=4 --lr=.02 --clip=.2 --epochs=4
+//        --tau=1 --margin=.25 --beta=.5 --valEvery=5 --val=600 --test=1200 --seed=1 --goal=checkmate --spec=true]
+const { Worker, isMainThread, parentPort, workerData } = require('worker_threads');
+const fs = require('fs'), path = require('path'), os = require('os');
+const R = require('./move_run.js'), RW = require('./move_reward.js'), F = require('./features.js'), P = require('./policy.js');
+if (!isMainThread){ parentPort.postMessage(workerData.jobs.map(j => ({k: j.k, i: j.i, rec: R.runFight(j.f, j.W, workerData.arch)}))); return; }
+
+const [file, ...rest] = process.argv.slice(2);
+const opt = Object.fromEntries(rest.filter(a => a.startsWith('--')).map(a => { const [k, v] = a.slice(2).split('='); return [k, v === undefined ? true : isNaN(+v) ? (v === 'true' ? true : v === 'false' ? false : v) : +v]; }));
+const DEF = {arch: 'cat', iters: 40, fights: 200, threads: Math.min(8, os.cpus().length), lr: .02, clip: .2, epochs: 4, tau: 1, margin: .25,
+  beta: .5, valEvery: 5, val: 600, test: 1200, seed: 1, goal: 'checkmate', spec: true, withLive: true, styleThr: .9};
+const log = m => { console.log(m); fs.appendFileSync(file + '.log', m + '\n'); };
+const save = s => { fs.writeFileSync(file + '.tmp', JSON.stringify(s)); fs.renameSync(file + '.tmp', file); };
+let s = fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, 'utf8')) : null;
+if (!s){
+  const c = Object.assign({}, DEF, opt, {target: true, mode: 'linear', trainer: 'ppo'});
+  s = {format: 'wild-arena/ppo-target', simHash: R.simHash(), harnessHash: R.harnessHash(), config: c, features: F.NAMES,
+    P0: {kind: 'target-lin', v: 1, nin: F.DIM, margin: c.margin, wt: new Array(F.DIM).fill(0)}, theta: new Array(F.DIM).fill(0),
+    adam: {m: new Array(F.DIM).fill(0), v: new Array(F.DIM).fill(0), t: 0}, iter: 0, best: {theta: new Array(F.DIM).fill(0), it: -1, val: 0, from: 'zero'}, history: [], test: null};
+  log(`[init] ${file}: ${c.arch}, ${F.DIM} weights, ${JSON.stringify(c)}`); save(s);
+} else if (s.simHash !== R.simHash() && !process.env.ALLOW_ENGINE_MISMATCH) throw new Error(`${file} was made with sim ${s.simHash}; this checkout has ${R.simHash()}`);
+const c = s.config, fo = {arch: c.arch, seed: c.seed, withLive: c.withLive, goal: c.goal, spec: c.spec};
+const ZERO = new Array(F.DIM).fill(0);
+const Wof = (theta, sample) => ({kind: 'target-lin', v: 1, nin: F.DIM, margin: c.margin, wt: theta.slice(), sample: !!sample, tau: c.tau});
+
+function run(jobs){
+  const T = c.threads;
+  return Promise.all([...Array(T).keys()].map(k => new Promise((res, rej) => { const w = new Worker(__filename, {workerData: {arch: c.arch, jobs: jobs.filter((_, q) => q % T === k)}}); w.on('message', res); w.on('error', rej); })))
+    .then(p => { const A = {}; p.flat().forEach(o => { (A[o.k] = A[o.k] || [])[o.i] = o.rec; }); return A; });
+}
+// softmax over one decision's options with the current weights: {p, xbar}
+function soft(theta, d){
+  const sc = d.X.map((x, i) => { let v = i === d.teach ? c.margin : 0; for (let k = 0; k < x.length; k++) v += theta[k] * x[k]; return v / c.tau; });
+  const m = Math.max(...sc), e = sc.map(v => Math.exp(v - m)), z = e.reduce((a, b) => a + b, 0), p = e.map(v => v / z);
+  const xbar = new Array(F.DIM).fill(0); d.X.forEach((x, i) => { for (let k = 0; k < F.DIM; k++) xbar[k] += p[i] * x[k]; });
+  return {p, xbar};
+}
+function update(dec){ // dec: [{X, teach, a, p (old prob of a), A (advantage)}]
+  for (let ep = 0; ep < c.epochs; ep++){
+    const g = new Array(F.DIM).fill(0); let clipped = 0, dev = 0;
+    for (const d of dec){
+      const {p, xbar} = soft(s.theta, d), r = p[d.a] / Math.max(1e-9, d.p);
+      const live = !((d.A > 0 && r > 1 + c.clip) || (d.A < 0 && r < 1 - c.clip)); if (!live) clipped++;
+      for (let k = 0; k < F.DIM; k++){
+        if (live) g[k] += d.A * r * (d.X[d.a][k] - xbar[k]) / c.tau;                       // ascent on the clipped surrogate
+        g[k] += c.beta * p[d.teach] * (d.X[d.teach][k] - xbar[k]) / c.tau;               // ascent on beta * p(heuristic's pick)
+      }
+      dev += 1 - p[d.teach];
+    }
+    const ad = s.adam; ad.t++;
+    for (let k = 0; k < F.DIM; k++){ const gk = g[k] / dec.length; ad.m[k] = .9 * ad.m[k] + .1 * gk; ad.v[k] = .999 * ad.v[k] + .001 * gk * gk;
+      s.theta[k] += c.lr * (ad.m[k] / (1 - Math.pow(.9, ad.t))) / (Math.sqrt(ad.v[k] / (1 - Math.pow(.999, ad.t))) + 1e-8); }
+    if (ep === c.epochs - 1) return {clipped: clipped / dec.length, dev: dev / dec.length};
+  }
+}
+async function evalGreedy(theta, pool, idx, n){
+  const fights = R.fightSet(pool, idx, n, fo), jobs = [];
+  fights.forEach((f, i) => { jobs.push({k: 'base', i, f, W: Wof(ZERO, false)}, {k: 'pol', i, f, W: Wof(theta, false)}); });
+  const A = await run(jobs), ref = RW.reference(A.base), q = RW.paired(A.base, A.pol, ref);
+  const surv = RW.mean(A.pol.map(r => r.survived)) - RW.mean(A.base.map(r => r.survived));
+  const dev = RW.mean(A.pol.map(r => { const t = r.intents || [0, 0]; return (t[1] || 0) / Math.max(1, (t[0] || 0) + (t[1] || 0)); }));
+  return {diff: q.diff, se: q.se, style: q.styleB.style, gates: q.styleB.failed, drift: q.driftB, surv, dev, n};
+}
+(async () => {
+  while (s.iter < c.iters){
+    const t0 = Date.now(), fights = R.fightSet('train', s.iter, c.fights, fo), jobs = [];
+    fights.forEach((f, i) => { jobs.push({k: 'base', i, f, W: Wof(ZERO, false)}, {k: 'pol', i, f, W: Wof(s.theta, true)}); }); // base = zero scorer: the heuristic's targets, the arch's shipped movement kept
+    const A = await run(jobs);
+    const adv = A.pol.map((r, i) => RW.goal(r) - RW.goal(A.base[i])), mu = RW.mean(adv), sd = RW.sd(adv) || 1;
+    const dec = []; A.pol.forEach((r, i) => { for (const d of r.trace || []) dec.push(Object.assign(d, {A: (adv[i] - mu) / sd})); });
+    const u = dec.length ? update(dec) : {clipped: 0, dev: 0};
+    const h = {it: s.iter, goal: mu, se: sd / Math.sqrt(adv.length), decisions: dec.length, dev: u.dev, clipped: u.clipped, norm: Math.hypot(...s.theta), sec: (Date.now() - t0) / 1000};
+    s.history.push(h); s.iter++;
+    log(`[it ${h.it}] sampled policy vs heuristic ${mu >= 0 ? '+' : ''}${mu.toFixed(3)} ± ${h.se.toFixed(3)} | ${dec.length} decisions, deviates ${(100 * u.dev).toFixed(1)}%, clipped ${(100 * u.clipped).toFixed(0)}% | |w| ${h.norm.toFixed(3)} | ${h.sec.toFixed(0)} s`);
+    if (s.iter % c.valEvery === 0 || s.iter === c.iters){
+      const v = await evalGreedy(s.theta, 'val', 0, c.val), ok = !v.gates.length && v.style >= c.styleThr;
+      log(`  [val] greedy vs heuristic on ${v.n} fights: ${v.diff >= 0 ? '+' : ''}${v.diff.toFixed(3)} ± ${v.se.toFixed(3)} | style ${v.style.toFixed(3)} gates [${v.gates}] drift [${v.drift.join('; ')}] | survival ${(100 * v.surv).toFixed(1)} pts | deviates ${(100 * v.dev).toFixed(1)}%${ok && v.diff > s.best.val ? '  -> new best' : ''}`);
+      if (ok && v.diff > s.best.val){ s.best = {theta: s.theta.slice(), it: s.iter, val: v.diff, from: 'after ' + s.iter + ' iterations'}; }
+    }
+    save(s);
+  }
+  if (!s.test){ const t = await evalGreedy(s.best.theta, 'test', 0, c.test); s.test = t; save(s);
+    log(`[test] best (${s.best.from}) vs heuristic on ${t.n} held-out fights: ${t.diff >= 0 ? '+' : ''}${t.diff.toFixed(3)} ± ${t.se.toFixed(3)} (${Math.abs(t.diff) > 2 * t.se ? 'beyond' : 'within'} 2 SE) | style ${t.style.toFixed(3)} gates [${t.gates}] | survival ${(100 * t.surv).toFixed(1)} pts | deviates ${(100 * t.dev).toFixed(1)}%`); }
+})().catch(e => { console.error(e); process.exit(1); });
