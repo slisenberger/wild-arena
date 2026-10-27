@@ -21,7 +21,7 @@ const PROG = {
   RARE:  [.1, .15, .2, .25, .3, .3, .3],
   R1_OUT: [],                      // species kept out of round 1 (e.g. the $100 big cats, so it's the small fry's round)
   PREMIUM_FROM: 2,                 // round 3 on: one premium enemy from the round's top price band, not for sale
-  START: 450, TOPUP: [0, 400, 500, 500, 500, 600, 800], // money: $START for round 1, then a fixed top-up for each later round you reach
+  START: 400, TOPUP: [0, 450, 500, 500, 500, 600, 800], // round 1 is all $100 animals, so it starts on a whole $100 (owner); money: $START for round 1, then a fixed top-up for each later round you reach
   PER_KILL: 25, KILL_CAP: 150,     // + $25 per enemy killed, at most $150 a fight (owner may change these)
   REST: .3,                        // free rest between fights: heals 30% of the missing health
   HEAL_SHARE: .25, HEAL_MIN: 50,   // full heal: 25% of the price, at least $50

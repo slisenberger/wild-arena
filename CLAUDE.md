@@ -29,6 +29,10 @@ count as 5:00). Live site: GitHub Pages serves `index.html` from `main`.
   assumption in one line, so they can correct it if it's wrong. Don't block on clarifying questions.
 - **One decisions list.** Keep the owner's pending decisions in `DECISIONS.md` (with a recommendation each) instead of
   repeating questions across messages. End a report with at most a 3-item "needs you" list pointing there.
+- **The game's premise: two teams, known to everyone, with shared goals.** Every animal treats the other side as the enemy
+  (owner, Oct 27: "all animals believe they are enemies with the other team ... teams *are* known and goals *are* shared").
+  So herbivores finishing off enemies, or picking targets for the team, is in-premise; realism applies to *how* each animal
+  fights (gait, weapons, temperament, sourced behaviour), not to whether it takes part.
 - **Pricing rules:** $100 steps, the elephant stays affordable ($700 cap), budget $1,200. Re-measure after any roster or
   behaviour change.
 
@@ -407,7 +411,7 @@ round. Report ± standard errors.
 
 ## Progressive mode (prototype Oct 27, `?progressive=1`; details and numbers in `research/progressive_mode.md`)
 - 7 rounds up a price ladder (round 1 $100 animals only … round 7 any, a giant for sale), premium enemy from round 3 (top
-  band, not for sale), $450 start + top-ups 400/500/500/500/600/800, boards 10/10/10/10/11/11/12 worth
+  band, not for sale), $400 start (round 1 is all $100 animals: no stranded $50, owner) + top-ups 450/500/500/500/600/800, boards 10/10/10/10/11/11/12 worth
   $1,000/1,200/1,500/1,800/2,100/2,300/2,600, $25/kill (cap $150), rest 30% / heal 25% of price,
   scars, XP and levels (level 3 ≈ +8% of swing, `level_abs.js`), two retries (a loss restores the round's shop).
 - Bot on the final engine (`abs_r16`, all live policies; 500 runs): round 1 first-try 81%, median run ends in round 6,

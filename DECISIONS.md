@@ -25,7 +25,7 @@ Each item has a recommendation; reply with a number and "yes", or your own call.
    low weight? The walrus won't leave its lake, so 4.5% of tundra-lake fights end "they gave up": acceptable as honest
    behaviour? Their signature moves are visible but barely move the numbers (the bodies carry the value): strengthen any
    only with a sourced reason (ideas: walrus stampede, gaur herd mobbing a tiger, lone-bull gaur).
-8. **Learned target choice for chargers** (GCP milestone 4, `policy/weights/charger_target_a1.json` on `m4/targeting-v2`, not
+8. **(Decided, see below) Learned target choice for chargers** (GCP milestone 4, `policy/weights/charger_target_a1.json` on `m4/targeting-v2`, not
    live): rhinos, buffalo, bison and co. pick targets with a learned scorer. +0.158 ± 0.029 on 1,200 fresh fights, style 1.00;
    your survival 50% → 44%. It favours nearby, visible, heat-struck and already-busy targets and goes after you more.
    Realism worry: herbivores choosing prey like predators (real ones charge what threatens or provokes them). Recommendation:
