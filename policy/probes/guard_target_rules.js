@@ -19,7 +19,9 @@ if (process.env.RULES) RULES = JSON.parse(process.env.RULES);
 // fights where your team has a big cat: draw extra and keep those
 const isCat = id => { const s = R.A.ANIMALS.find(a => a.id === id); return !!(s && s.pred && s.latch); };
 const all = R.fightSet('probe', +idx || 61, 3 * N, {arch: 'guard', seed: 13, withLive: true}), fights = all.filter(f => f.team.some(isCat)).slice(0, N), jobs = [];
-fights.forEach((f, i) => { for (const r of Object.keys(RULES)) jobs.push({k: r, i, f, W: W(RULES[r])}); });
+const FILES = (process.env.WFILES || '').split(',').filter(Boolean); // WFILES=a.json,b.json: also run these weights files (as they are: all guards unless the file says only)
+for (const p of FILES){ const k = path.basename(p, '.json'); RULES[k] = null; }
+fights.forEach((f, i) => { for (const r of Object.keys(RULES)) jobs.push({k: r, i, f, W: RULES[r] ? W(RULES[r]) : RULES[r] === null ? (({meta, ...x}) => x)(require(path.resolve(FILES.find(p => path.basename(p, '.json') === r)))) : W({})}); });
 const T = Math.max(1, Math.min(8, os.cpus().length));
 Promise.all([...Array(T).keys()].map(k => new Promise(res => { const w = new Worker(__filename, {workerData: {jobs: jobs.filter((_, q) => q % T === k)}}); w.on('message', res); }))).then(p => {
   const A = {}; p.flat().forEach(o => { (A[o.k] = A[o.k] || [])[o.i] = o.rec; });
