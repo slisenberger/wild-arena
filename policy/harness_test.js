@@ -216,16 +216,22 @@ async function suite(arch, slow){
   const t00 = Date.now();
   console.log(`harness test${QUICK ? ' (quick)' : ''}, tmp ${tmp}`);
   console.log('\n0. Engine: no policy = the engine before the guard hook; archetypes stay independent');
-  const rs = refSim();
+  // the hook must be inert without weights. The old check compared against the newest sim.js without the guard hook, but
+  // deliberate engine changes since (the light-picks pass) made that reference stale, so by default it now compares no policy
+  // with explicit zero weights for every archetype (zero = the heuristic); REF_SIM=path/to/pre-hook/sim.js restores the old one
   const fg = R.fightSet('probe', 0, NF, {seed: 1, arch: 'guard'}), fh = R.fightSet('probe', 0, NF, {seed: 1, arch: 'harrier'});
+  const all = QUICK ? fg.concat(fh) : fg.concat(fh, require('./common.js').boardJobs(2, 40, 31337)); // + check_identical.js's 320 board fights
+  const z0 = {harrier: zerosFor('harrier', 0, 1), guard: zerosFor('guard', 0, 1)}; for (const a of XARCH) z0[a] = zerosFor(a, 0, 1);
+  { const a = await plainFP(R.SIM, all), b = await plainFP(R.SIM, all, z0);
+    ok(a.every((x, i) => x === b[i]), `no movePolicy = zero weights for every archetype: ${all.length} fights identical (events, final positions/HP/states, end time)`); }
+  const rs = process.env.REF_SIM ? refSim() : null;
   if (rs){
-    const all = QUICK ? fg.concat(fh) : fg.concat(fh, require('./common.js').boardJobs(2, 40, 31337)); // + check_identical.js's 320 board fights
     const a = await plainFP(rs.f || rs, all), b = await plainFP(R.SIM, all);
     ok(a.every((x, i) => x === b[i]), `no movePolicy: ${all.length} fights identical to the pre-guard-hook engine (${rs.h ? 'git ' + rs.h.slice(0, 7) : rs}); events, final positions/HP/states, end time`);
     // a harrier-only policy must not touch your guards: the old engine with that policy = the new one
     const hp = {harrier: {fixed: 2}}, a2 = await plainFP(rs.f || rs, fh, hp), b2 = await plainFP(R.SIM, fh, hp);
     ok(a2.every((x, i) => x === b2[i]), `harrier-only policy (always flank): ${fh.length} fights identical to the pre-guard-hook engine (guards untouched)`);
-  } else console.log('  SKIP pre-hook comparison (set REF_SIM=path/to/pre-hook/sim.js)');
+  }
   const gOnly = await plainFP(R.SIM, fh, {guard: {fixed: 0}, harrier: {fixed: 2}}), hOnly = await plainFP(R.SIM, fh, {harrier: {fixed: 2}});
   ok(gOnly.every((x, i) => x === hOnly[i]), 'adding a zero (always-hold) guard policy next to a harrier policy changes nothing');
   // the other archetypes: zero weights for all five next to the live game's shipped harrier + guard weights = those alone
@@ -243,9 +249,10 @@ async function suite(arch, slow){
   const rc = refSim('CAT_INTENTS', process.env.REF_CAT_SIM);
   if (rc){
     const fb = fxs.concat(require('./common.js').boardJobs(2, QUICK ? 10 : 40, 31337));
+    // the live game now ships cat weights too (cat_v1), so the 'live' arm passes the shipped harrier + guard weights explicitly
     for (const live of [false, true]){
-      const a = await plainFP(rc.f || rc, fb, null, live), b = await plainFP(R.SIM, fb, null, live);
-      ok(a.every((x, i) => x === b[i]), `no cat weights, ${live ? 'live default (harrier_v1 + guard_v1)' : 'livePolicy:false'}: ${fb.length} fights identical to the engine before the cat intents (${rc.h ? 'git ' + rc.h.slice(0, 7) : rc})`);
+      const mp = live ? {harrier: LV.harrier, guard: LV.guard} : null, a = await plainFP(rc.f || rc, fb, mp), b = await plainFP(R.SIM, fb, mp);
+      ok(a.every((x, i) => x === b[i]), `no cat weights, ${live ? 'shipped harrier + guard weights' : 'livePolicy:false'}: ${fb.length} fights identical to the engine before the cat intents (${rc.h ? 'git ' + rc.h.slice(0, 7) : rc})`);
     }
   } else console.log('  SKIP pre-cat-intents comparison (set REF_CAT_SIM=path/to/sim.js)');
 
