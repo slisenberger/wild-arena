@@ -72,6 +72,12 @@ const SIGNATURE = {
   giantkangaroo: ['Kickboxer', 'grabs, then a two-footed kick; holds attackers under water'],
   smilodon: ['Sabre stab', 'pins prey, stabs it, then circles while it bleeds'],
   croc: ['Death roll', 'invisible in water until 7 m; lunges, rolls, drags prey under'],
+  muskox: ['Living wall', 'lines up or rings you, horns out, when predators close in'],
+  gaur: ['Faces it down', 'walks straight at a stalking cat, which usually slinks off'],
+  walrus: ['Tusk stab', 'waits in the icy lake and stabs whatever comes to the edge'],
+  woollyrhino: ['Snow plough', 'ploughs a furrow others wade through faster (speculative: from its horn wear)'],
+  shortface: ['Kill thief?', 'rears over predators holding prey to make them let go (a hypothesis)'],
+  utahraptor: ['Pin', 'leaps onto prey its own size and pins it under its sickle claws'],
 };
 const sigOf = a => SIGNATURE[a.species || a.id] || null;
 // a pick of a pack animal brings its whole group when the rules use groups
@@ -774,8 +780,9 @@ const SIGLABEL = {'killing stab':'Killing stab', 'snaps a canine':'Snaps a sabre
   'lion killer':'Lion killer', 'grudge hit':'Grudge', 'foot-thump alarm':'Thump alarm', 'lookout spots a threat':'Lookout spots it',
   'charges blind at a sound':'Charges blind', 'chases movement':'Chases movement', 'rider knocked off':'Rider thrown', 'knockback':'Knocked back',
   'twists free':'Twists free', 'lets it bleed':'Lets it bleed', 'tree escape':'Up a tree',
-  'forms a ring':'Forms a ring', 'forms a line':'Shoulder to shoulder', 'sortie':'Sortie', 'ring broken':'Ring broken', 'faces down a stalker':'Faces it down', 'tusk stab':'Tusk stab'};
-const SIGPRI = {'killing stab':3, 'death roll':3, 'holds it under':3, 'maul':2, 'sweep':2, 'mock charge':2, 'stomp':2, 'encircles':2, 'two-footed kick':2, 'snaps a canine':2, 'forms a ring':3, 'forms a line':2, 'faces down a stalker':3, 'tusk stab':2, 'ring broken':2};
+  'forms a ring':'Forms a ring', 'forms a line':'Shoulder to shoulder', 'sortie':'Sortie', 'ring broken':'Ring broken', 'faces down a stalker':'Faces it down', 'tusk stab':'Tusk stab',
+  'opens a lane':'Snow furrow', 'makes it let go':'Makes it let go', 'rears over a kill':'Rears up', 'pins it down':'Pins it down'};
+const SIGPRI = {'killing stab':3, 'death roll':3, 'holds it under':3, 'maul':2, 'sweep':2, 'mock charge':2, 'stomp':2, 'encircles':2, 'two-footed kick':2, 'snaps a canine':2, 'forms a ring':3, 'forms a line':2, 'faces down a stalker':3, 'tusk stab':2, 'ring broken':2, 'makes it let go':3, 'pins it down':3, 'rears over a kill':2};
 const CALLOUT_LIFE = 1.6, CUE_MAX = 2;
 function cuesFor(w){
   if (w._cues) return w._cues;
@@ -1075,10 +1082,19 @@ function drawFight(){
   const wall = REDUCED ? 0 : performance.now() / 1000;
   if (FX.weather) drawWater(g, sc, w, wall);
   drawHazard(g, sc, w, S.playT);
+  if (w.furrowAll) drawFurrows(g, sc, w.furrowAll, S.playT);
   const fr = frameAt(S.playT);
   drawUnits(g, sc, w, fr, w.events, S.playT, {});
   if (FX.weather && w.T.id === 'tundra') drawSnowfall(g, sc, cv.width, cv.height, wall);
   g.setTransform(1, 0, 0, 1, 0, 0);
+}
+// a woolly rhino's furrow through the snow: a pale trampled trail that fades over its 12 s (sim.js FURROW.life)
+function drawFurrows(g, sc, pts, t){
+  g.save(); g.lineCap = 'round';
+  for (const p of pts){ const age = t - p.t; if (age < 0) continue;
+    const k = 1 - age / 12; if (k <= 0) continue;
+    g.fillStyle = `rgba(232,240,248,${(.42 * k).toFixed(3)})`; g.beginPath(); g.arc(p.x * sc, p.y * sc, sc * 1.2, 0, 7); g.fill(); }
+  g.restore();
 }
 // closing arena: tint everything outside the safe box, with a bright edge
 const HAZCOL = {fire: ['rgba(214,84,30,.38)', '#ff8a3d'], flood: ['rgba(38,104,190,.42)', '#6fb4ff'], blizzard: ['rgba(236,242,250,.5)', '#ffffff']};

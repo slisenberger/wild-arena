@@ -16,8 +16,8 @@ const PROG = {
   ROUNDS: 7, RETRIES: 2,
   // the price ladder: round k (0-based) deals CAP[k] or cheaper (0 = no cap), BOARD[k] animals worth TOTAL[k] (± $100)
   CAP:   [100, 200, 300, 400, 400, 700, 0],
-  BOARD: [10, 10, 10, 10, 11, 11, 12],
-  TOTAL: [1000, 1200, 1500, 1800, 2100, 2300, 2600], // retuned on the final engine (abs_r16 prices, Oct 27): see CLAUDE.md
+  BOARD: [11, 10, 10, 10, 11, 11, 12],
+  TOTAL: [1100, 1200, 1500, 1800, 2100, 2300, 2600], // retuned on the final engine (abs_r16 prices, Oct 27): see CLAUDE.md
   RARE:  [.1, .15, .2, .25, .3, .3, .3],
   R1_OUT: [],                      // species kept out of round 1 (e.g. the $100 big cats, so it's the small fry's round)
   PREMIUM_FROM: 2,                 // round 3 on: one premium enemy from the round's top price band, not for sale
