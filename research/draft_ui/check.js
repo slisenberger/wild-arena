@@ -88,12 +88,12 @@ const team = p => p.evaluate(() => [...window.__wa.team].sort().join(','));
     const vis = id => p.evaluate(id => !document.getElementById(id).hidden, id), T = thumb(p);
     // progressive shop: buy, undo, buy again, premium not for sale, fight, then sell in the next shop
     await p.goto(FILE + '?progressive=1&draftui=' + ui); await p.evaluate(() => localStorage.removeItem('wa-prog')); await p.reload();
-    await p.click('#progNew'); await p.waitForTimeout(150); await p.click('#progToShop'); await p.waitForTimeout(150);
+    await p.click('#progNew'); await p.waitForTimeout(150); if (await p.locator('#progToShop').count() && await p.locator('#progToShop').isVisible()){ await p.click('#progToShop'); await p.waitForTimeout(150); } // the new flow opens the shop directly
     ok(`${ui} prog: the shop is this design`, await vis('s-draft') && await p.locator('#draftAlt:not([hidden])').count());
     const m0 = await p.evaluate(() => window.__wa.prog.money);
     await draftFull(p, ui, T, 1);
     const m1 = await p.evaluate(() => window.__wa.prog.money); ok(`${ui} prog: buy spends money (${m0} → ${m1})`, m1 < m0);
-    await p.locator('#draftAlt [data-unbuy]').first().click(); await p.waitForTimeout(100);
+    await p.locator('#s-draft [data-unbuy]').first().click(); await p.waitForTimeout(100);
     ok(`${ui} prog: undo refunds`, await p.evaluate(() => window.__wa.prog.money) === m0);
     // premium: make one board animal the premium enemy (as round 3+ would) and check it can't be bought
     const prem = await p.evaluate(() => { const r = window.__wa.prog; r.premium = r.board[0]; return r.premium; });
@@ -107,20 +107,20 @@ const team = p => p.evaluate(() => [...window.__wa.team].sort().join(','));
     await p.evaluate(() => { const r = window.__wa.prog; r.premium = null; }); await p.click('#steps button[data-s="draft"]'); await p.waitForTimeout(100);
     // a carried, wounded animal (as after a won round): heal it, then sell it
     await draftFull(p, ui, T, 1); await p.evaluate(() => { const e = window.__wa.prog.team[0]; e.fresh = false; e.hp = e.hp.map(() => .4); window.__wa.prog.money += 300; }); await p.click('#steps button[data-s="draft"]'); await p.waitForTimeout(100);
-    { const h0 = await p.evaluate(() => window.__wa.prog.money); await p.locator('#draftAlt [data-heal]').first().click(); await p.waitForTimeout(80);
+    { const h0 = await p.evaluate(() => window.__wa.prog.money); await p.locator('#s-draft [data-heal]').first().click(); await p.waitForTimeout(80);
       ok(`${ui} prog: heal a wounded carried animal`, await p.evaluate(() => window.__wa.prog.team[0].hp.every(h => h === 1)) && await p.evaluate(() => window.__wa.prog.money) < h0);
       await p.screenshot({ path: path.join(OUT, `phone_${ui}_6_prog_carried.png`), scale: 'css' });
-      const s0 = await p.evaluate(() => window.__wa.prog.money); await p.locator('#draftAlt [data-sell]').first().click(); await p.waitForTimeout(80);
+      const s0 = await p.evaluate(() => window.__wa.prog.money); await p.locator('#s-draft [data-sell]').first().click(); await p.waitForTimeout(80); await p.locator('#s-draft [data-sell]').first().click(); await p.waitForTimeout(80); // selling takes two taps
       ok(`${ui} prog: sell a carried animal`, await p.evaluate(() => window.__wa.prog.money) > s0 && await p.evaluate(() => window.__wa.prog.team.length === 0)); }
     if (ui === 'deck') await p.locator('.dkdot').first().click();
     await draftFull(p, ui, T, 3);
     await p.screenshot({ path: path.join(OUT, `phone_${ui}_5_prog_shop.png`), scale: 'css' });
-    await p.click('#actbar .primary'); await p.waitForTimeout(150); ok(`${ui} prog: fight from the bar`, await vis('s-fight'));
+    await p.locator('#actbar button', {hasText: 'Fight now'}).click(); await p.waitForTimeout(150); ok(`${ui} prog: Fight now from the bar`, await vis('s-fight'));
     await p.click('#actbar .primary'); await p.waitForTimeout(150); await p.click('#actbar .primary'); await p.waitForTimeout(150);
     if (await vis('s-prog') && await p.locator('#progToShop').count()){
       await p.click('#progToShop'); await p.waitForTimeout(150);
-      const sell = p.locator('#draftAlt [data-sell]');
-      if (await sell.count()){ const a = await p.evaluate(() => window.__wa.prog.money); await sell.first().click(); await p.waitForTimeout(100); ok(`${ui} prog: sell a survivor in round 2`, await p.evaluate(() => window.__wa.prog.money) > a); await p.screenshot({ path: path.join(OUT, `phone_${ui}_6_prog_round2.png`), scale: 'css' }); }
+      const sell = p.locator('#s-draft [data-sell]');
+      if (await sell.count()){ const a = await p.evaluate(() => window.__wa.prog.money); await sell.first().click(); await p.waitForTimeout(100); await sell.first().click(); await p.waitForTimeout(100); ok(`${ui} prog: sell a survivor in round 2`, await p.evaluate(() => window.__wa.prog.money) > a); await p.screenshot({ path: path.join(OUT, `phone_${ui}_6_prog_round2.png`), scale: 'css' }); }
       else console.log(ui, 'prog: no survivor to sell (lost round 1)');
     }
     // 5 in a Row
