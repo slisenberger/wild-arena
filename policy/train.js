@@ -41,6 +41,7 @@ const DEFAULTS = {
   spec: false,               // true: add the behavior-spec metrics (move_reward.js SPEC_X / SPEC_INFO)
   target: false,             // true: train the archetype's target choice (milestone-4 pilot) instead of its movement intents
   feat: null,                // with target: 'plus' = features_plus.js (+ the guard situation around each target)
+  only: null,                // with target, arch guard: 'cat' = only your big cats learn (the rest keep today's targets), fights with your cat only
   goal: null,                // 'checkmate': side-level goal (kill the human, sooner is better; move_reward.js goalPartsCheckmate)
   withLive: false,           // the other archetypes use the shipped policies in every fight (train against the live game)
             // warm start: 'patient' = wait while stronger guards block and the target isn't busy or easy (probe winner, +0.06)
@@ -95,7 +96,7 @@ function init(opts){
   // --target --nh=K: the 'target-mlp' scorer (policy/target_model.js), K hidden units over the option's features + the unit's species traits
   let P0 = cfg.target ? (cfg.nh ? require('./target_model.js').mlp(TF.DIM + require('./target_model.js').TRAITS, cfg.nh, cfg.margin, cfg.seed * 31 + 7, true) : M.zerosTarget(TF.DIM, cfg.margin))
     : M.zeros(F.DIM, cfg.nh, cfg.margin, AR.nout);
-  if (cfg.target && cfg.feat) P0.feat = cfg.feat; if (cfg.nh && !cfg.target) M.withHidden(P0, R.A.rng(cfg.seed * 31 + 7));
+  if (cfg.target && cfg.feat) P0.feat = cfg.feat; if (cfg.target && cfg.only) P0.only = cfg.only; if (cfg.nh && !cfg.target) M.withHidden(P0, R.A.rng(cfg.seed * 31 + 7));
   let theta0 = M.flat(P0, cfg.mode);
   if (cfg.initWeights && !cfg.target){ // v2: continue from shipped weights (same shape: features, intents, hidden size)
     const W = JSON.parse(fs.readFileSync(cfg.initWeights, 'utf8'));
@@ -122,7 +123,7 @@ const weightsOf = (s, theta) => M.unflat(s.P0, theta, s.config.mode);
 // ES noise for generation g: deterministic from (seed, g), so a resumed run draws the same perturbations
 function gauss(R0){ let u = 0; while (!u) u = R0(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * R0()); }
 function noise(s, g, salt){ const R0 = R.A.rng((s.config.seed * 1000003 + g * 7919 + (salt || 0)) >>> 0); return [...Array(s.config.pairs)].map(() => s.theta.map(() => gauss(R0))); }
-const fopts = s => ({seed: s.config.seed, arch: s.config.arch, holdMap: s.config.holdMap, withLive: !!s.config.withLive, goal: s.config.goal || null, spec: !!s.config.spec});
+const fopts = s => ({seed: s.config.seed, arch: s.config.arch, holdMap: s.config.holdMap, withLive: !!s.config.withLive, goal: s.config.goal || null, spec: !!s.config.spec, withCat: s.config.only === 'cat'});
 
 // ---------- jobs ----------
 // validation: the current centre vs the best so far, on a fresh draw from the validation pool (each check its own draw)

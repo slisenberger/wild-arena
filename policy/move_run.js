@@ -52,6 +52,7 @@ function fightSet(pool, index, n, opts){
     const team = []; let left = A.RULES.budget; for (const id of order) if (A.BY_ID[id].price <= left){ team.push(id); left -= A.BY_ID[id].price; }
     const seed = Math.floor(R() * 2e9) + 1;
     if (!hasArch(board, team, arch)) continue;
+    if (opts.withCat && !team.some(id => A.BY_ID[id].pred && A.BY_ID[id].latch)) continue; // only fights where your team has a big cat
     out.push({pool, index, i: out.length, tr, bseed, board, team, mount: A.defaultMount(team), seed, live: !!opts.withLive, goal: opts.goal || null, spec: !!opts.spec}); k++;
   }
   return out;
@@ -180,6 +181,7 @@ function runGuardFight(f, weights){
     });
   }
   r.deaths = us.filter(u => u.state === 'dead').length; r.withdrawn = us.filter(u => u.withdrawn).length;
+  { const cats = us.filter((u, i) => S[i].cat); r.catN = cats.length; r.catDeaths = cats.filter(u => u.state === 'dead').length; r.catDealt = cats.reduce((x, u) => x + u.st.dealt, 0); } // your big cats (telemetry)
   r.dealt = us.reduce((a, u) => a + u.st.dealt, 0); r.protect = us.reduce((a, u) => a + u.st.protect, 0);
   for (const [k, name] of Object.entries(GSIG)){ let n = 0; for (const id of ids) n += w.sig[id + ':' + name] || 0; r['sig_' + k] = n; }
   r.hmax = H.maxhp; r.t = +w.result.t.toFixed(1); r.survived = w.result.survived ? 1 : 0; r.why = w.result.why || null; r.killer = w.result.killer || null;

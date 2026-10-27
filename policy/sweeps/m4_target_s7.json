@@ -1,0 +1,25 @@
+{
+ "note": "Milestone 4 round 7 (Oct 27, owner: the cats I pick should do okay too, it is about target selection): YOUR big cats learn whom to fight (guard target hook, only:cat; the chooser now also re-judges the guard intents help / intercept targets, which sent cats onto big herbivores 46-68% of their big-herbivore time). Fights with your cat only. Goal: the guard (protect) goal. Hand rules: refusing giants saves cats (deaths 78% -> 61%) but costs you 4-5 pts of survival; prefer predators +0.020 ± 0.016. MLP runs see the species traits (lion coalition vs cougar).",
+ "runs": [
+  {
+   "name": "gcat_s1",
+   "args": "--arch=guard --target=true --only=cat --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --thetaClip=1 --margin=.25 --pairs=16 --seed=1701"
+  },
+  {
+   "name": "gcat_s2",
+   "args": "--arch=guard --target=true --only=cat --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --thetaClip=1 --margin=.25 --pairs=16 --seed=1702"
+  },
+  {
+   "name": "gcat_p24",
+   "args": "--arch=guard --target=true --only=cat --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --thetaClip=1 --margin=.25 --pairs=24 --seed=1703"
+  },
+  {
+   "name": "gcat_mlp_s1",
+   "args": "--arch=guard --target=true --only=cat --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --thetaClip=1 --margin=.25 --pairs=24 --nh=8 --seed=1704"
+  },
+  {
+   "name": "gcat_mlp_s2",
+   "args": "--arch=guard --target=true --only=cat --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --thetaClip=1 --margin=.25 --pairs=24 --nh=8 --seed=1705"
+  }
+ ]
+}

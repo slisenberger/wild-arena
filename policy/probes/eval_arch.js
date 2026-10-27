@@ -9,7 +9,7 @@ require(path.join(__dirname, '..', 'live.js'));
 if (!isMainThread){ parentPort.postMessage(workerData.jobs.map(j => ({k: j.k, i: j.i, rec: R.runFight(j.f, j.W, workerData.arch)}))); return; }
 const [file, n, idx] = process.argv.slice(2), N = +n || 1200, s = require(path.resolve(file)), c = s.config, arch = c.arch;
 const W = M.unflat(s.P0, s.best.theta, c.mode), B = c.initWeights ? M.unflat(s.P0, s.theta0, c.mode) : /^target-/.test(s.P0.kind) ? {kind: 'target-lin', v: 1, nin: s.P0.nin, margin: s.P0.margin, wt: new Array(s.P0.nin).fill(0)} : null; // a target scorer's base = zero weights (the heuristic's targets, shipped movement kept)
-const fights = R.fightSet('probe', +idx || 23, N, {arch, seed: 91, withLive: c.withLive !== false, goal: c.goal, spec: c.spec}), jobs = [];
+const fights = R.fightSet('probe', +idx || 23, N, {arch, seed: 91, withLive: c.withLive !== false, goal: c.goal, spec: c.spec, withCat: c.only === 'cat'}), jobs = [];
 fights.forEach((f, i) => { jobs.push({k: 'base', i, f, W: B}, {k: 'learned', i, f, W}); });
 const T = Math.max(1, Math.min(8, os.cpus().length));
 Promise.all([...Array(T).keys()].map(k => new Promise(res => { const w = new Worker(__filename, {workerData: {arch, jobs: jobs.filter((_, q) => q % T === k)}}); w.on('message', res); }))).then(p => {

@@ -56,15 +56,15 @@ function chooseHerb(w, u, policy){
   if (stats){ stats.n = (stats.n || 0) + 1; if (a === h.i) stats.agree = (stats.agree || 0) + 1; }
   u.target = a < 0 ? h.t : (opts[a].kind === 'target' ? opts[a].t : null); u.state = u.target ? 'engage' : 'roam';
 }
-// guards (your side, not carrying you): the heuristic's pick is allyTarget's (computed by the engine, passed as h); the
-// guard's features (policy/guard_features.js) differ from the predators'. Riders keep the heuristic. Zero weights = the engine
-function chooseGuard(w, u, policy, h){
+// guards (your side, not carrying you): the heuristic's pick (allyTarget's, or a guard intent's intercept / help target) is
+// passed as h; the guard's features (policy/guard_features.js) differ from the predators'. Riders keep the heuristic. Zero weights = the engine
+function chooseGuard(w, u, policy, h){ // returns the target to take (h = the heuristic's, or the guard intent's: unchanged)
   const P = policy.byArch.guard, stats = w.cfg.policyStats;
-  if (u.rider) return;
+  if (u.rider || (P.only === 'cat' && !(u.s.pred && u.s.latch))) return h; // P.only 'cat': only your big cats learn; the rest keep the heuristic
   const {opts, X} = G.extract(w, u), i = G.heuristic(opts, h);
   const a = i < 0 ? -1 : pickLin(w, P, X, i, u);
   if (stats){ stats.n = (stats.n || 0) + 1; if (a === i) stats.agree = (stats.agree || 0) + 1; }
-  if (a >= 0) u.target = opts[a].kind === 'target' ? opts[a].t : null;
+  return a < 0 ? h : opts[a].kind === 'target' ? opts[a].t : null;
 }
 A._internals.choose = choose;
 A._internals.chooseGuard = chooseGuard;

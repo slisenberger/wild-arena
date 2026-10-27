@@ -690,8 +690,8 @@ function chooseTarget(w, u){
     if (evasiveMount(u)){ u.target = null; u.state = 'carry'; return; }
     if (u.withdrawn){ u.target = null; u.state = 'withdraw'; return; }
     u.target = allyTarget(w, u);
-    if (w.cfg.policy && w.cfg.policy.byArch && w.cfg.policy.byArch.guard){ if (!INTERNALS.chooseGuard) throw new Error('cfg.policy.byArch.guard needs policy/policy.js'); INTERNALS.chooseGuard(w, u, w.cfg.policy, u.target); } // learned guard target choice (milestone 4), opt-in
     if (u.gT && active(u.gT)) u.target = u.gT; // learned guard intent (policy/, cfg.movePolicy.guard): intercept / help / screen target
+    if (w.cfg.policy && w.cfg.policy.byArch && w.cfg.policy.byArch.guard){ if (!INTERNALS.chooseGuard) throw new Error('cfg.policy.byArch.guard needs policy/policy.js'); u.target = INTERNALS.chooseGuard(w, u, w.cfg.policy, u.target); } // learned guard target choice (milestone 4), opt-in: has the last word, over the guard intents' targets too
     u.state = u.target ? 'engage' : 'guard';
     return;
   }
@@ -1865,6 +1865,7 @@ function guardDecide(w, u){
   const t = u.target && active(u.target) ? u.target : null;
   const k = u.gIntent = INTERNALS.moveChoose(w, u, t, t ? dist(u, t) : 0, w.cfg.movePolicy.guard, 'guard');
   u.gT = k === 1 ? guardThreat(w, u, false) : k === 2 ? guardThreat(w, u, true) : k === 4 ? guardHelpTarget(w, u) : null;
+  if (u.gT && w.cfg.policy && w.cfg.policy.byArch && w.cfg.policy.byArch.guard) u.gT = INTERNALS.chooseGuard(w, u, w.cfg.policy, u.gT); // learned target choice re-judges the intent's target (milestone 4)
   if (u.gT){ u.target = u.gT; u.state = 'engage'; }
 }
 function guardSpot(u, H, dx, dy, r, near){ // a point r m from you in direction (dx, dy); null when already there
