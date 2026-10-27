@@ -181,7 +181,13 @@ th.n{text-align:right}
 .migtrail span.done{border-color:var(--you);color:var(--you)}
 .migtrail span.dead{border-color:var(--red);color:var(--red)}
 .migtrail span.now{border-color:var(--gold);color:var(--gold)}
-.migentry{display:flex;flex-direction:column;gap:8px}
+.migentry,.fiveentry{display:flex;flex-direction:column;gap:8px}
+.fiveentry{margin-top:14px}
+.fivemaps{display:flex;flex-wrap:wrap;gap:6px}
+.fivemaps span{font:12px/1.2 var(--mono,monospace);padding:4px 8px;border:1px solid var(--line);border-radius:8px;color:var(--muted)}
+.fivemaps span.done{color:var(--ink,#eee);border-color:var(--gold)}
+.fivemaps span.now{color:var(--gold);border-color:var(--gold)}
+.fivemaps span.lost{text-decoration:line-through}
 @media (max-width:820px){
   .fightgrid{grid-template-columns:1fr}
   .opts{grid-template-columns:repeat(2, minmax(0,1fr))}
@@ -248,7 +254,10 @@ th.n{text-align:right}
   <p class="notes">The other side is one team, and the pressure builds over time. Predators hunt you and your guards; herbivores charge intruders. Break their morale and animals bolt out of the arena. After 30 seconds a fire, flood or blizzard closes in from the edges and pushes everyone together. You score by how long you stay alive, up to five minutes.</p>
   <div class="panel migentry"><h3>Migration</h3><p class="notes">A run of seven fights across all four terrains. Start with $600; your survivors carry their wounds into the next fight, the dead stay dead, and you earn money for every fight you live through. Between fights: a trading post (buy, or sell for half price) and one of three boons. Fight 4 brings megafauna; fight 7 is the herd. Die and the run is over.</p>
     <div class="btnrow"><button class="btn primary" id="migNew">Start a migration</button><button class="btn" id="migDaily" title="Today's migration: the same maps, boards and fights for everyone">Daily migration</button><button class="btn" id="migResume" hidden>Resume</button></div><p class="notes" id="migBest"></p></div>
-  <div class="btnrow"><button class="btn primary" id="toDraft">Draft your team</button><button class="btn" id="daily" title="Same board, map and fight seed for everyone today">Daily challenge</button><button class="btn" id="dailyPick" title="Today's Pick-3: same board, map and fight seed for everyone; pick exactly 3">Daily Pick-3</button><button class="btn" id="five" title="Five boards in a row, the same for everyone today: win them all (one retry)" hidden>5 in a Row</button><span class="streak mono" id="streak" hidden></span></div>
+  <div class="btnrow"><button class="btn primary" id="toDraft">Draft your team</button><button class="btn" id="daily" title="Same board, map and fight seed for everyone today">Daily challenge</button><button class="btn" id="dailyPick" title="Today's Pick-3: same board, map and fight seed for everyone; pick exactly 3">Daily Pick-3</button><span class="streak mono" id="streak" hidden></span></div>
+  <div class="panel fiveentry" id="fivePanel" hidden><h3>5 in a Row</h3><p class="notes">Today's five boards, the same for everyone. Draft a full $1,200 team for each and survive to 5:00 on every one; one retry for the whole run.</p>
+    <div class="fivemaps" id="fiveMaps"></div>
+    <div class="btnrow"><button class="btn primary" id="five">Start today's run</button><span class="label" id="fiveBest"></span></div></div>
 </section>
 
 <!-- DEPLOY -->
@@ -2736,7 +2745,7 @@ function renderDraft(){
   const tiers = $('tiers'); tiers.innerHTML = '';
   const left = BUDGET - spent();
   const onBoard = S.board.map(id => A.BY_ID[id]);
-  const five = S.five ? `5 in a Row ${S.five.date}, board ${S.five.k + 1} of 5 (${A.TERRAINS[S.terrain].name})${S.five.pending ? ', your retry' : ''}: win all five boards; one retry per run. Same boards and fight seeds for everyone today. ` : '';
+  const five = S.five ? `5 in a Row ${S.five.date}, board ${S.five.k + 1} of 5 (${A.TERRAINS[S.terrain].name})${S.five.pending ? ', your retry' : ''}: win all five boards; one retry per run. Today's maps: ${Array.from({length: 5}, (_, k) => A.TERRAINS[fiveTerrain(S.five.date, k)].name).join(', ')}. ` : '';
   const daily = S.daily ? `${S.dailyKind === 'pick3' ? 'Daily Pick-3' : 'Daily challenge'} ${S.daily} (${A.TERRAINS[S.terrain].name}): the same board, map and fight seed for everyone today. ` : '';
   const R = S.mig;
   $('draftTitle').textContent = R ? `Trading post · fight ${R.k + 1} of ${M.MIG.FIGHTS}` : 'Build a team to protect you from the rest';
@@ -2857,7 +2866,7 @@ function renderArenaOpts(){
   }
   $('pickRow').hidden = !isPick();
   document.querySelectorAll('#pickSeg button').forEach(b => b.setAttribute('aria-pressed', +b.dataset.n === S.pickN));
-  renderStreak(); renderMigEntry();
+  renderStreak(); renderMigEntry(); renderFiveEntry();
 }
 // switch draft mode (or N): a team that no longer fits is trimmed, and it's no longer today's daily
 function setDraft(mode, n){
@@ -2939,8 +2948,21 @@ function fiveNext(){
   if (R.over){ S.five = null; try { localStorage.removeItem(FIVE_KEY); } catch(e){} dealNewBoard(); renderAll(); go('arena'); return; }
   fiveBoard(R); renderAll(); go('draft');
 }
-if (FIVE_ON) $('five').hidden = false;
 $('five').addEventListener('click', startFive);
+// today's five maps, shown up front (arena panel) and in the draft text
+const fiveTerrain = (d, k) => { const terr = Object.keys(A.TERRAINS); return terr[fiveSeed(d, k, 'board') % terr.length]; };
+function fiveMapsHTML(R, d){
+  return Array.from({length: 5}, (_, k) => { const t = R ? R.res.filter(x => x.k === k) : [], won = t.some(x => x.won), lost = !won && t.length && (!R.pending || R.k !== k || R.over);
+    const cls = won ? 'done' : lost ? 'lost' : R && !R.over && R.k === k ? 'now' : '';
+    return `<span class="${cls}">${k + 1} ${esc(A.TERRAINS[fiveTerrain(d, k)].name)}${won ? ' ✓' : ''}</span>`; }).join('');
+}
+function renderFiveEntry(){
+  const panel = $('fivePanel'); panel.hidden = !FIVE_ON; if (!FIVE_ON) return;
+  const d = todayUTC(), r = fiveLoad(), live = r && !r.over, b = fiveBest(d);
+  $('fiveMaps').innerHTML = fiveMapsHTML(live ? r : null, d);
+  $('five').textContent = live ? `Resume (board ${r.k + 1} of 5${r.pending ? ', retry' : ''})` : "Start today's run";
+  $('fiveBest').textContent = b ? `Best today: ${b.wins}/5` : '';
+}
 // daily streak: consecutive UTC days with at least one daily run (either kind)
 function prevDay(d){ const t = new Date(d + 'T00:00:00Z'); t.setUTCDate(t.getUTCDate() - 1); return t.toISOString().slice(0, 10); }
 function readStreak(){ try { const s = JSON.parse(localStorage.getItem('wa-streak') || 'null'); if (s && typeof s.last === 'string' && s.n >= 1) return s; } catch(e){} return null; }

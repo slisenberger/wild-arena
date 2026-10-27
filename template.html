@@ -179,7 +179,13 @@ th.n{text-align:right}
 .migtrail span.done{border-color:var(--you);color:var(--you)}
 .migtrail span.dead{border-color:var(--red);color:var(--red)}
 .migtrail span.now{border-color:var(--gold);color:var(--gold)}
-.migentry{display:flex;flex-direction:column;gap:8px}
+.migentry,.fiveentry{display:flex;flex-direction:column;gap:8px}
+.fiveentry{margin-top:14px}
+.fivemaps{display:flex;flex-wrap:wrap;gap:6px}
+.fivemaps span{font:12px/1.2 var(--mono,monospace);padding:4px 8px;border:1px solid var(--line);border-radius:8px;color:var(--muted)}
+.fivemaps span.done{color:var(--ink,#eee);border-color:var(--gold)}
+.fivemaps span.now{color:var(--gold);border-color:var(--gold)}
+.fivemaps span.lost{text-decoration:line-through}
 @media (max-width:820px){
   .fightgrid{grid-template-columns:1fr}
   .opts{grid-template-columns:repeat(2, minmax(0,1fr))}
@@ -245,7 +251,10 @@ th.n{text-align:right}
   <p class="notes">The other side is one team, and the pressure builds over time. Predators hunt you and your guards; herbivores charge intruders. Break their morale and animals bolt out of the arena. After 30 seconds a fire, flood or blizzard closes in from the edges and pushes everyone together. You score by how long you stay alive, up to five minutes.</p>
   <div class="panel migentry"><h3>Migration</h3><p class="notes">A run of seven fights across all four terrains. Start with $600; your survivors carry their wounds into the next fight, the dead stay dead, and you earn money for every fight you live through. Between fights: a trading post (buy, or sell for half price) and one of three boons. Fight 4 brings megafauna; fight 7 is the herd. Die and the run is over.</p>
     <div class="btnrow"><button class="btn primary" id="migNew">Start a migration</button><button class="btn" id="migDaily" title="Today's migration: the same maps, boards and fights for everyone">Daily migration</button><button class="btn" id="migResume" hidden>Resume</button></div><p class="notes" id="migBest"></p></div>
-  <div class="btnrow"><button class="btn primary" id="toDraft">Draft your team</button><button class="btn" id="daily" title="Same board, map and fight seed for everyone today">Daily challenge</button><button class="btn" id="dailyPick" title="Today's Pick-3: same board, map and fight seed for everyone; pick exactly 3">Daily Pick-3</button><button class="btn" id="five" title="Five boards in a row, the same for everyone today: win them all (one retry)" hidden>5 in a Row</button><span class="streak mono" id="streak" hidden></span></div>
+  <div class="btnrow"><button class="btn primary" id="toDraft">Draft your team</button><button class="btn" id="daily" title="Same board, map and fight seed for everyone today">Daily challenge</button><button class="btn" id="dailyPick" title="Today's Pick-3: same board, map and fight seed for everyone; pick exactly 3">Daily Pick-3</button><span class="streak mono" id="streak" hidden></span></div>
+  <div class="panel fiveentry" id="fivePanel" hidden><h3>5 in a Row</h3><p class="notes">Today's five boards, the same for everyone. Draft a full $1,200 team for each and survive to 5:00 on every one; one retry for the whole run.</p>
+    <div class="fivemaps" id="fiveMaps"></div>
+    <div class="btnrow"><button class="btn primary" id="five">Start today's run</button><span class="label" id="fiveBest"></span></div></div>
 </section>
 
 <!-- DEPLOY -->

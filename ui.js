@@ -101,7 +101,7 @@ function renderDraft(){
   const tiers = $('tiers'); tiers.innerHTML = '';
   const left = BUDGET - spent();
   const onBoard = S.board.map(id => A.BY_ID[id]);
-  const five = S.five ? `5 in a Row ${S.five.date}, board ${S.five.k + 1} of 5 (${A.TERRAINS[S.terrain].name})${S.five.pending ? ', your retry' : ''}: win all five boards; one retry per run. Same boards and fight seeds for everyone today. ` : '';
+  const five = S.five ? `5 in a Row ${S.five.date}, board ${S.five.k + 1} of 5 (${A.TERRAINS[S.terrain].name})${S.five.pending ? ', your retry' : ''}: win all five boards; one retry per run. Today's maps: ${Array.from({length: 5}, (_, k) => A.TERRAINS[fiveTerrain(S.five.date, k)].name).join(', ')}. ` : '';
   const daily = S.daily ? `${S.dailyKind === 'pick3' ? 'Daily Pick-3' : 'Daily challenge'} ${S.daily} (${A.TERRAINS[S.terrain].name}): the same board, map and fight seed for everyone today. ` : '';
   const R = S.mig;
   $('draftTitle').textContent = R ? `Trading post · fight ${R.k + 1} of ${M.MIG.FIGHTS}` : 'Build a team to protect you from the rest';
@@ -222,7 +222,7 @@ function renderArenaOpts(){
   }
   $('pickRow').hidden = !isPick();
   document.querySelectorAll('#pickSeg button').forEach(b => b.setAttribute('aria-pressed', +b.dataset.n === S.pickN));
-  renderStreak(); renderMigEntry();
+  renderStreak(); renderMigEntry(); renderFiveEntry();
 }
 // switch draft mode (or N): a team that no longer fits is trimmed, and it's no longer today's daily
 function setDraft(mode, n){
@@ -304,8 +304,21 @@ function fiveNext(){
   if (R.over){ S.five = null; try { localStorage.removeItem(FIVE_KEY); } catch(e){} dealNewBoard(); renderAll(); go('arena'); return; }
   fiveBoard(R); renderAll(); go('draft');
 }
-if (FIVE_ON) $('five').hidden = false;
 $('five').addEventListener('click', startFive);
+// today's five maps, shown up front (arena panel) and in the draft text
+const fiveTerrain = (d, k) => { const terr = Object.keys(A.TERRAINS); return terr[fiveSeed(d, k, 'board') % terr.length]; };
+function fiveMapsHTML(R, d){
+  return Array.from({length: 5}, (_, k) => { const t = R ? R.res.filter(x => x.k === k) : [], won = t.some(x => x.won), lost = !won && t.length && (!R.pending || R.k !== k || R.over);
+    const cls = won ? 'done' : lost ? 'lost' : R && !R.over && R.k === k ? 'now' : '';
+    return `<span class="${cls}">${k + 1} ${esc(A.TERRAINS[fiveTerrain(d, k)].name)}${won ? ' ✓' : ''}</span>`; }).join('');
+}
+function renderFiveEntry(){
+  const panel = $('fivePanel'); panel.hidden = !FIVE_ON; if (!FIVE_ON) return;
+  const d = todayUTC(), r = fiveLoad(), live = r && !r.over, b = fiveBest(d);
+  $('fiveMaps').innerHTML = fiveMapsHTML(live ? r : null, d);
+  $('five').textContent = live ? `Resume (board ${r.k + 1} of 5${r.pending ? ', retry' : ''})` : "Start today's run";
+  $('fiveBest').textContent = b ? `Best today: ${b.wins}/5` : '';
+}
 // daily streak: consecutive UTC days with at least one daily run (either kind)
 function prevDay(d){ const t = new Date(d + 'T00:00:00Z'); t.setUTCDate(t.getUTCDate() - 1); return t.toISOString().slice(0, 10); }
 function readStreak(){ try { const s = JSON.parse(localStorage.getItem('wa-streak') || 'null'); if (s && typeof s.last === 'string' && s.n >= 1) return s; } catch(e){} return null; }
