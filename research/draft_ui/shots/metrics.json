@@ -22,13 +22,13 @@
    "long": {
     "n": 8,
     "taps": 8,
-    "scroll": 775,
+    "scroll": 596,
     "ok": true
    },
    "n": 3,
    "taps": 3,
    "scroll": 0,
-   "pageH": 1989,
+   "pageH": 1697,
    "spent": 1200,
    "team": "buffaloherd,bull,gaur",
    "hscroll": 0,
@@ -94,13 +94,13 @@
    "long": {
     "n": 8,
     "taps": 8,
-    "scroll": 1642,
+    "scroll": 1065,
     "ok": true
    },
    "n": 3,
    "taps": 3,
-   "scroll": 243,
-   "pageH": 2209,
+   "scroll": 0,
+   "pageH": 1867,
    "spent": 1200,
    "team": "buffaloherd,bull,gaur",
    "hscroll": 0,
@@ -166,13 +166,13 @@
    "long": {
     "n": 8,
     "taps": 8,
-    "scroll": 335,
+    "scroll": 284,
     "ok": true
    },
    "n": 3,
    "taps": 3,
    "scroll": 0,
-   "pageH": 1314,
+   "pageH": 1184,
    "spent": 1200,
    "team": "buffaloherd,bull,gaur",
    "hscroll": 0,
@@ -404,6 +404,10 @@
   ],
   [
    "deck prog: fight from the bar",
+   true
+  ],
+  [
+   "deck prog: sell a survivor in round 2",
    true
   ],
   [
