@@ -36,6 +36,11 @@ each species develop its own realistic fighting style. This note is the plan; no
    on a downed target, white rhinos don't; wolves commit on fleeing prey), plus the goal on held-out fights and the
    human's survival and time alive.
 
+## Pilot notes
+- tgt1 (Oct 27): the 'target-lin' scorer only reaches predators (cat, brawler, harrier): kickers and bulldozers
+  (herbivores) pick targets in `herbivoreTarget`, so their --target runs were no-ops and were stopped. Phase 1 must add a
+  herbivore (and guard) target hook before those archetypes can learn whom.
+
 ## Phases (each measured before the next)
 1. Plumbing: joint (target, intent) hook for every archetype, zero/heuristic policy byte-identical to today
    (`check_identical.js`), features + trait vector, harness tests.

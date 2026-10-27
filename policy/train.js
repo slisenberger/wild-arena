@@ -91,6 +91,7 @@ function init(opts){
   const AR = archOf(cfg.arch), F = AR.F;
   const TF = cfg.target ? require('./features.js') : null; // --target: train the archetype's target choice (policy/policy.js 'target-lin'), not its intents
   if (cfg.target && (cfg.initRule || cfg.nh)) throw new Error('--target supports neither initRule nor nh yet');
+  if (cfg.target && !['cat', 'brawler', 'harrier'].includes(cfg.arch)) throw new Error(`--target: ${cfg.arch} are herbivores, which pick targets in herbivoreTarget (no learned hook yet)`);
   let P0 = cfg.target ? M.zerosTarget(TF.DIM, cfg.margin) : M.zeros(F.DIM, cfg.nh, cfg.margin, AR.nout); if (cfg.nh) M.withHidden(P0, R.A.rng(cfg.seed * 31 + 7));
   let theta0 = M.flat(P0, cfg.mode);
   if (cfg.initWeights && !cfg.target){ // v2: continue from shipped weights (same shape: features, intents, hidden size)
