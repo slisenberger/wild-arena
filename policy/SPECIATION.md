@@ -1,7 +1,7 @@
 # Milestone 4: speciation from open control (design, Oct 27)
 
 Owner direction: broad archetypes + species tuning + open control over every decision + a general reward should make
-each species develop its own realistic fighting style. This note is the plan; nothing here is built yet.
+each species develop its own realistic fighting style. This note is the plan; the pilot notes below say what is built.
 
 ## Where decisions live today (sim.js)
 | Decision | Who decides | Hook |
@@ -40,6 +40,17 @@ each species develop its own realistic fighting style. This note is the plan; no
 - tgt1 (Oct 27): the 'target-lin' scorer only reaches predators (cat, brawler, harrier): kickers and bulldozers
   (herbivores) pick targets in `herbivoreTarget`, so their --target runs were no-ops and were stopped. Phase 1 must add a
   herbivore (and guard) target hook before those archetypes can learn whom.
+
+- Built (Oct 27, branch m4/guard-target): target hooks for all three sides of the decision: enemy predators (`cfg.policy.byArch`,
+  `predCandidates`), enemy herbivores (`herbCandidates`, `chooseHerb`) and your guards (`guardCandidates`, `chooseGuard`,
+  `policy/guard_features.js`: 78 features incl. the enemy's species trait vector). Zero weights reproduce the shipped game
+  byte for byte, every live policy on (`policy/target_ident_test.js`). tgt3 (GCP) trains guard targeting with ES.
+- Linear scorers can't speciate: a feature that is the same for every option (the unit's own context, its species) adds
+  the same amount to every score and cancels. `target-mlp` (`policy/target_model.js`) puts the unit's trait vector through
+  a hidden layer with the candidate's features, so a cougar and a lion coalition can weigh the same prey differently. Zero
+  output layer = heuristic; trained by PPO (`ppo_target.js --nh=16`), exact gradient (checked numerically).
+- PPO sampling temperature: at tau 1 the sampled policy deviated from the heuristic on 55% of decisions (noise swamps the
+  paired advantage); tau = margin / 2 = .125 gives ~14%.
 
 ## Phases (each measured before the next)
 1. Plumbing: joint (target, intent) hook for every archetype, zero/heuristic policy byte-identical to today
