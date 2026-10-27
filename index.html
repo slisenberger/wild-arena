@@ -4552,11 +4552,12 @@ function duiScore(note){
   const mv = Math.round(mine.reduce((s, id) => s + Math.max(0, V(id).mine), 0)), tv = Math.round(theirs.reduce((s, id) => s + Math.max(0, -V(id).theirs), 0));
   const cnt = ids => ids.length, $$ = ids => ids.reduce((s, id) => s + A.BY_ID[id].price, 0);
   const share = mv + tv ? mv / (mv + tv) : .5;
-  const money = S.prog ? `<b>$${S.prog.money.toLocaleString()}</b><span class="sub">left to spend</span>` : `<b>$${spent().toLocaleString()}</b><span class="sub">of $${BUDGET.toLocaleString()} · $${duiLeft().toLocaleString()} left</span>`;
+  // owner (Oct 27): the money that matters is your budget left; their side shows no money
+  const money = S.prog ? `<b>$${S.prog.money.toLocaleString()}</b><span class="sub">left to spend</span>` : `<b>$${duiLeft().toLocaleString()}</b><span class="sub">left of $${BUDGET.toLocaleString()}</span>`;
   return `<div class="duiscore"><div class="sd you"><span class="label">Your side · ${cnt(mine)}</span>${money}<span class="v" title="Measured value">+${mv} s</span></div>`
-    + `<div class="sd foe"><span class="label">Their side · ${cnt(theirs)}</span><b>$${$$(theirs).toLocaleString()}</b><span class="sub">all you leave${S.prog && S.prog.premium ? ', + premium' : ''}</span><span class="v" title="Measured value">−${tv} s</span></div>`
+    + `<div class="sd foe"><span class="label">Their side · ${cnt(theirs)}</span><span class="sub">everything you leave${S.prog && S.prog.premium ? ', + premium' : ''}</span><span class="v" title="Measured value">−${tv} s</span></div>`
     + `<div class="tug" title="Measured value, yours vs theirs"><i style="width:${Math.round(share * 100)}%"></i><b></b></div>`
-    + (note ? `<div class="duinote">Measured value: seconds of survival each animal added on your side, or cost you on theirs, in test fights. Rough: they don't simply add up.</div>` : '')
+    + (note ? `<details class="duinote"><summary>What's the +s / −s?</summary>Measured value: seconds of survival each animal added on your side, or cost you on theirs, in test fights. Rough: they don't simply add up.</details>` : '')
     + `<div class="duimsg" aria-live="polite">${esc(DUI.msg)}</div></div>`;
 }
 const duiSig = a => { const s = sigOf(a); return s ? `<b>${esc(s[0])}</b> ${esc(s[1])}` : esc(a.style); };
@@ -4749,6 +4750,7 @@ const DUI_CSS = `
 .duiscore .tug{grid-column:1/-1;display:flex;height:7px;border-radius:4px;overflow:hidden;background:var(--foe);margin-top:4px}
 .duiscore .tug i{display:block;background:var(--you);border-right:2px solid var(--bg)}
 .duinote{grid-column:1/-1;font-size:11px;line-height:1.35;color:var(--muted);margin-top:3px}
+.duinote summary{cursor:pointer;color:var(--muted)}
 .duimsg{grid-column:1/-1;font-size:12.5px;color:var(--gold);min-height:0}
 .duimsg:empty{display:none}
 .vempty{margin:4px 2px;font-size:12.5px;color:var(--muted)}
@@ -4756,20 +4758,20 @@ const DUI_CSS = `
 .vs{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;align-items:start}
 .vcol{border-radius:var(--r);padding:8px 6px 6px;display:flex;flex-direction:column;gap:4px;min-width:0;min-height:140px}
 .vcol h3{font-size:16px;padding-inline:4px}
-.vcol .vh{margin:0 4px 4px;font-size:11px;color:var(--muted)}
+.vcol .vh{margin:0 4px 2px;font-size:11px;color:var(--muted)}
 .vcol.you{border:1.5px solid color-mix(in srgb, var(--you) 60%, var(--line));background:color-mix(in srgb, var(--you) 6%, var(--bg))}
 .vcol.you h3{color:var(--you)}
 .vcol.foe{border:1.5px solid color-mix(in srgb, var(--foe) 55%, var(--line));background:color-mix(in srgb, var(--foe) 6%, var(--bg))}
 .vcol.foe h3{color:var(--foe)}
-.vlist{display:grid;grid-template-columns:minmax(0,1fr);gap:6px}
+.vlist{display:grid;grid-template-columns:minmax(0,1fr);gap:4px}
 .vt{position:relative;min-width:0}
-.vtm{width:100%;display:grid;grid-template-columns:36px minmax(0,1fr);gap:7px;align-items:start;text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:7px 7px 8px;min-height:64px}
-.vtm .tok{width:36px!important;height:36px!important}
+.vtm{width:100%;display:grid;grid-template-columns:30px minmax(0,1fr);gap:6px;align-items:start;text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:5px 6px 6px;min-height:48px}
+.vtm .tok{width:30px!important;height:30px!important}
 .vtb{display:flex;flex-direction:column;gap:2px;min-width:0}
-.vtn{font-family:var(--display);font-weight:800;font-size:15px;line-height:1.05;text-transform:uppercase;letter-spacing:.02em;overflow-wrap:anywhere;padding-right:16px}
+.vtn{font-family:var(--display);font-weight:800;font-size:14px;line-height:1.05;text-transform:uppercase;letter-spacing:.02em;overflow-wrap:anywhere;padding-right:16px}
 .vtl{display:flex;flex-wrap:wrap;gap:3px;align-items:center}
 .vtl .bdg{font-size:9.5px;padding:0 5px}
-.vts{font-size:11px;line-height:1.3;color:var(--muted);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.vts{font-size:11px;line-height:1.3;color:var(--muted);display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
 .vts b{color:var(--fg)}
 .vt.cant .vtm{opacity:.42}
 .vt.prem .vtm{border-color:var(--foe)}
