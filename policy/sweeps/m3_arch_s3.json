@@ -1,0 +1,73 @@
+{
+ "note": "Milestone 3, round 3 (Oct 27): the realism-pass engine (sim.js: elephant/mammoth bluff .35, grizzly .75, black bear rarely bluffs a person, no bluffing when cornered, honey badger no longer seeks giants, cats don't run spotted prey down from beyond 30 m), the side-level checkmate goal and the behavior-spec metrics (--spec). Each enemy archetype's best arch1 configuration, 3 seeds (2 + a small-sigma variant for cats); harrier_v1 continued on the new engine. Guards train in the next round against these.",
+ "runs": [
+  {
+   "name": "bd_fb_c1_small_s1",
+   "args": "--pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --arch=bulldozer --initRule=flankBusy --thetaClip=1 --sigma=.05 --lr=.04 --goal=checkmate --spec=true --seed=901"
+  },
+  {
+   "name": "bd_fb_c1_small_s2",
+   "args": "--pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --arch=bulldozer --initRule=flankBusy --thetaClip=1 --sigma=.05 --lr=.04 --goal=checkmate --spec=true --seed=902"
+  },
+  {
+   "name": "bd_fb_c1_small_s3",
+   "args": "--pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --arch=bulldozer --initRule=flankBusy --thetaClip=1 --sigma=.05 --lr=.04 --goal=checkmate --spec=true --seed=903"
+  },
+  {
+   "name": "br_cold_c1_s1",
+   "args": "--pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --arch=brawler --thetaClip=1 --goal=checkmate --spec=true --seed=911"
+  },
+  {
+   "name": "br_cold_c1_s2",
+   "args": "--pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --arch=brawler --thetaClip=1 --goal=checkmate --spec=true --seed=912"
+  },
+  {
+   "name": "br_cold_c1_s3",
+   "args": "--pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --arch=brawler --thetaClip=1 --goal=checkmate --spec=true --seed=913"
+  },
+  {
+   "name": "ch_pat_c1_s1",
+   "args": "--pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --arch=charger --initRule=patient --thetaClip=1 --goal=checkmate --spec=true --seed=921"
+  },
+  {
+   "name": "ch_pat_c1_s2",
+   "args": "--pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --arch=charger --initRule=patient --thetaClip=1 --goal=checkmate --spec=true --seed=922"
+  },
+  {
+   "name": "ch_pat_c1_s3",
+   "args": "--pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --arch=charger --initRule=patient --thetaClip=1 --goal=checkmate --spec=true --seed=923"
+  },
+  {
+   "name": "ki_fb_c1_s1",
+   "args": "--pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --arch=kicker --initRule=flankBusy --thetaClip=1 --goal=checkmate --spec=true --seed=931"
+  },
+  {
+   "name": "ki_fb_c1_s2",
+   "args": "--pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --arch=kicker --initRule=flankBusy --thetaClip=1 --goal=checkmate --spec=true --seed=932"
+  },
+  {
+   "name": "ki_fb_c1_s3",
+   "args": "--pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --arch=kicker --initRule=flankBusy --thetaClip=1 --goal=checkmate --spec=true --seed=933"
+  },
+  {
+   "name": "cat_cold_c1_s1",
+   "args": "--pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --arch=cat --thetaClip=1 --goal=checkmate --spec=true --seed=941"
+  },
+  {
+   "name": "cat_cold_c1_s2",
+   "args": "--pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --arch=cat --thetaClip=1 --goal=checkmate --spec=true --seed=942"
+  },
+  {
+   "name": "ha_v1_c1_s1",
+   "args": "--pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --arch=harrier  --thetaClip=1 --initWeights=policy/weights/harrier_v1.json --goal=checkmate --spec=true --seed=951"
+  },
+  {
+   "name": "ha_v1_c1_s2",
+   "args": "--pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --arch=harrier  --thetaClip=1 --initWeights=policy/weights/harrier_v1.json --goal=checkmate --spec=true --seed=952"
+  },
+  {
+   "name": "cat_cold_c1_small",
+   "args": "--pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --arch=cat --thetaClip=1 --goal=checkmate --sigma=.05 --lr=.04 --spec=true --seed=943"
+  }
+ ]
+}

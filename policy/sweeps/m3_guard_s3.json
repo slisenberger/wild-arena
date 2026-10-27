@@ -1,0 +1,37 @@
+{
+ "note": "Guards round 3 (Oct 27): your guards against the new enemy side (realism engine; harrier_v1, bulldozer_v1, charger_v1 live via --withLive at this commit). Same configurations as m3_v2's guard runs, new seeds. Warm runs' test bar = guard_v1.",
+ "runs": [
+  {
+   "name": "g3_c1_s1",
+   "args": "--pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --arch=guard --initWeights=policy/weights/guard_v1.json --thetaClip=1 --seed=1001"
+  },
+  {
+   "name": "g3_c1_s2",
+   "args": "--pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --arch=guard --initWeights=policy/weights/guard_v1.json --thetaClip=1 --seed=1002"
+  },
+  {
+   "name": "g3_c2_s1",
+   "args": "--pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --arch=guard --initWeights=policy/weights/guard_v1.json --thetaClip=2 --seed=1003"
+  },
+  {
+   "name": "g3_c2_s2",
+   "args": "--pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --arch=guard --initWeights=policy/weights/guard_v1.json --thetaClip=2 --seed=1004"
+  },
+  {
+   "name": "g3_c2_small",
+   "args": "--pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --arch=guard --initWeights=policy/weights/guard_v1.json --thetaClip=2 --sigma=.05 --lr=.04 --seed=1005"
+  },
+  {
+   "name": "g3_c2_big",
+   "args": "--pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --arch=guard --initWeights=policy/weights/guard_v1.json --thetaClip=2 --sigma=.25 --lr=.15 --seed=1006"
+  },
+  {
+   "name": "g3_noclip",
+   "args": "--pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --arch=guard --initWeights=policy/weights/guard_v1.json --seed=1007"
+  },
+  {
+   "name": "g3_cold_c1",
+   "args": "--pairs=16 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --arch=guard --thetaClip=1 --seed=1008"
+  }
+ ]
+}

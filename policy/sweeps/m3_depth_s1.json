@@ -1,0 +1,29 @@
+{
+ "note": "Depth test (Oct 26): does a trained hidden layer keep improving where the 210-weight linear policy plateaus? Bulldozer, warm start flankBusy, thetaClip 1, same val/test as m3_arch_s1 (whose bd_fb_c1_s1/_s2 are the linear 16-pair control). Varies only the model (linear vs --mode=deep, which trains W1/b1 too, nh 16/32) and compute (16 vs 64 pairs per generation), 80 generations. Read the validation curve, not just the final test: the question is whether held-out goal still rises late.",
+ "runs": [
+  {
+   "name": "lin_p64_s1",
+   "args": "--pairs=64 --gens=80 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --arch=bulldozer --initRule=flankBusy --thetaClip=1 --seed=701"
+  },
+  {
+   "name": "lin_p64_s2",
+   "args": "--pairs=64 --gens=80 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --arch=bulldozer --initRule=flankBusy --thetaClip=1 --seed=702"
+  },
+  {
+   "name": "deep16_p64_s1",
+   "args": "--pairs=64 --mode=deep --nh=16 --gens=80 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --arch=bulldozer --initRule=flankBusy --thetaClip=1 --seed=703"
+  },
+  {
+   "name": "deep16_p64_s2",
+   "args": "--pairs=64 --mode=deep --nh=16 --gens=80 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --arch=bulldozer --initRule=flankBusy --thetaClip=1 --seed=704"
+  },
+  {
+   "name": "deep32_p64",
+   "args": "--pairs=64 --mode=deep --nh=32 --gens=80 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --arch=bulldozer --initRule=flankBusy --thetaClip=1 --seed=705"
+  },
+  {
+   "name": "deep16_p16",
+   "args": "--pairs=16 --mode=deep --nh=16 --gens=80 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --arch=bulldozer --initRule=flankBusy --thetaClip=1 --seed=706"
+  }
+ ]
+}

@@ -38,6 +38,8 @@ const DEFAULTS = {
   initRule: null,            // warm start from a hand-written rule encoded in the linear term (INIT_RULES below)
   initWeights: null,         // warm start from a weights file (e.g. policy/weights/guard_v1.json); 'best' starts there too, so validation must beat it
   thetaClip: 0,              // > 0: keep every weight within ±thetaClip of the start (stops the collapse into 'never deviate')
+  spec: false,               // true: add the behavior-spec metrics (move_reward.js SPEC_X / SPEC_INFO)
+  goal: null,                // 'checkmate': side-level goal (kill the human, sooner is better; move_reward.js goalPartsCheckmate)
   withLive: false,           // the other archetypes use the shipped policies in every fight (train against the live game)
             // warm start: 'patient' = wait while stronger guards block and the target isn't busy or easy (probe winner, +0.06)
 };
@@ -91,9 +93,10 @@ function init(opts){
   let theta0 = M.flat(P0, cfg.mode);
   if (cfg.initWeights){ // v2: continue from shipped weights (same shape: features, intents, hidden size)
     const W = JSON.parse(fs.readFileSync(cfg.initWeights, 'utf8'));
-    if (W.nin !== F.DIM || W.nout !== AR.nout || (W.nh || 0) !== (cfg.nh || 0)) throw new Error(`initWeights ${cfg.initWeights}: shape ${W.nin}/${W.nout}/${W.nh} does not match ${F.DIM}/${AR.nout}/${cfg.nh || 0}`);
+    const grow = !(W.nh || 0) && cfg.nh > 0; // linear weights into an MLP: keep bl/Wl, fresh random W1/b1, W2 = 0 (same behaviour)
+    if (W.nin !== F.DIM || W.nout !== AR.nout || (!grow && (W.nh || 0) !== (cfg.nh || 0))) throw new Error(`initWeights ${cfg.initWeights}: shape ${W.nin}/${W.nout}/${W.nh} does not match ${F.DIM}/${AR.nout}/${cfg.nh || 0}`);
     if ((W.set || null) !== (AR.set || null)) throw new Error(`initWeights ${cfg.initWeights}: intent set ${W.set || 'generic'} does not match ${AR.set || 'generic'}`);
-    P0 = Object.assign({}, W); delete P0.meta; P0.margin = W.margin; theta0 = M.flat(P0, cfg.mode);
+    P0 = grow ? Object.assign(P0, {bl: W.bl.slice(), Wl: W.Wl.slice(), margin: W.margin}) : Object.assign({}, W); delete P0.meta; P0.margin = W.margin; theta0 = M.flat(P0, cfg.mode);
   }
   if (cfg.initRule){ // encode a hand-written rule in the linear term (the trainable vector starts [bl, Wl], Wl row-major per intent)
     const IN = AR.intents, NOUT = IN.length, f = n => F.NAMES.indexOf(n), wl = (a, n, v) => { theta0[NOUT + IN.indexOf(a) * F.DIM + f(n)] = v; };
@@ -113,7 +116,7 @@ const weightsOf = (s, theta) => M.unflat(s.P0, theta, s.config.mode);
 // ES noise for generation g: deterministic from (seed, g), so a resumed run draws the same perturbations
 function gauss(R0){ let u = 0; while (!u) u = R0(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * R0()); }
 function noise(s, g, salt){ const R0 = R.A.rng((s.config.seed * 1000003 + g * 7919 + (salt || 0)) >>> 0); return [...Array(s.config.pairs)].map(() => s.theta.map(() => gauss(R0))); }
-const fopts = s => ({seed: s.config.seed, arch: s.config.arch, holdMap: s.config.holdMap, withLive: !!s.config.withLive});
+const fopts = s => ({seed: s.config.seed, arch: s.config.arch, holdMap: s.config.holdMap, withLive: !!s.config.withLive, goal: s.config.goal || null, spec: !!s.config.spec});
 
 // ---------- jobs ----------
 // validation: the current centre vs the best so far, on a fresh draw from the validation pool (each check its own draw)

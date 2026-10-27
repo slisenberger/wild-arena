@@ -14,10 +14,10 @@
 const fs = require('fs'), path = require('path'), os = require('os'), { execFileSync, spawn } = require('child_process');
 const ROOT = path.join(__dirname, '..', '..');
 const args = process.argv.slice(2), pos = args.filter(a => !a.startsWith('--')), opt = Object.fromEntries(args.filter(a => a.startsWith('--')).map(a => { const [k, v] = a.slice(2).split('='); return [k, v === undefined ? true : v]; }));
-const PROJECT = process.env.GCP_PROJECT, REGION = process.env.GCP_REGION || 'us-central1';
+const PROJECT = process.env.GCP_PROJECT, REGIONS = (process.env.GCP_REGION || 'us-central1').split(','), REGION = REGIONS[0]; // a list spills VMs into the next region (e.g. 8 external IPs per region)
 const BUCKET = opt.bucket || process.env.GCP_BUCKET || (PROJECT ? `gs://${PROJECT}-wild-arena-runs` : null);
 const LOCAL = !!opt.local || (BUCKET && !BUCKET.startsWith('gs://'));
-const MACHINES = (opt.machines || opt.machine || 'c2d-highcpu-112,c2d-highcpu-56,n2d-highcpu-64,n2d-highcpu-32').split(',');
+let MACHINES = (opt.machines || opt.machine || 'c2d-highcpu-112,c2d-highcpu-56,n2d-highcpu-64,n2d-highcpu-32').split(',');
 const CORES = m => +(m.match(/-(\d+)$/) || [0, 8])[1];
 const PRICE_PER_CORE_H = {c2d: .0072, n2d: .0062, c3d: .0080, e2: .0050}; // rough spot $/vCPU-hour (estimate only; check your region)
 const STALE_S = +(opt.staleMinutes || 20) * 60;
@@ -26,9 +26,9 @@ const log = (...m) => console.log(...m);
 
 // ---------- storage (gs:// via gcloud, or a local folder for tests) ----------
 const S = {
-  put(local, key){ if (LOCAL) { const f = path.join(BUCKET, key); fs.mkdirSync(path.dirname(f), {recursive: true}); fs.copyFileSync(local, f); } else sh('gcloud', ['storage', 'cp', '-q', local, `${BUCKET}/${key}`]); },
+  put(local, key){ if (LOCAL) { const f = path.join(BUCKET, key); fs.mkdirSync(path.dirname(f), {recursive: true}); fs.copyFileSync(local, f); } else if (process.env.GCS_XML_READ) sh('curl', ['-sSf', '-m', '60', '-X', 'POST', '--data-binary', '@' + local, '-H', 'Content-Type: application/octet-stream', `https://storage.googleapis.com/upload/storage/v1/b/${BUCKET.slice(5)}/o?uploadType=media&name=${encodeURIComponent(key)}`]); else sh('gcloud', ['storage', 'cp', '-q', local, `${BUCKET}/${key}`]); }, // GCS_XML_READ: also write over plain HTTPS (gcloud storage cp hung once behind the proxy)
   putText(key, text){ const t = path.join(os.tmpdir(), 'wa_' + process.pid + '_' + path.basename(key)); fs.writeFileSync(t, text); try { S.put(t, key); } finally { fs.unlinkSync(t); } },
-  get(key){ try { return LOCAL ? fs.readFileSync(path.join(BUCKET, key), 'utf8') : sh('gcloud', ['storage', 'cat', `${BUCKET}/${key}`]); } catch (e){ return null; } },
+  get(key){ try { return LOCAL ? fs.readFileSync(path.join(BUCKET, key), 'utf8') : process.env.GCS_XML_READ ? sh('curl', ['-sSf', `https://storage.googleapis.com/${BUCKET.slice(5)}/${key}`]) : sh('gcloud', ['storage', 'cat', `${BUCKET}/${key}`]); } catch (e){ return null; } }, // GCS_XML_READ: proxies that decode %2F break gcloud's JSON-API reads
   list(prefix){ try { if (LOCAL){ const d = path.join(BUCKET, prefix); return fs.existsSync(d) ? fs.readdirSync(d).map(f => prefix + f) : []; } return sh('gcloud', ['storage', 'ls', `${BUCKET}/${prefix}`]).split('\n').filter(Boolean).map(u => u.replace(BUCKET + '/', '')); } catch (e){ return []; } },
   ensureBucket(){ if (LOCAL){ fs.mkdirSync(BUCKET, {recursive: true}); return; } try { sh('gcloud', ['storage', 'buckets', 'describe', BUCKET]); } catch (e){ log(`creating ${BUCKET} in ${REGION}`); sh('gcloud', ['storage', 'buckets', 'create', BUCKET, '--location', REGION, '--uniform-bucket-level-access']); } },
 };
@@ -41,16 +41,16 @@ function auth(){
 // ---------- state ----------
 function manifest(id){ const m = S.get(`sweeps/${id}/manifest.json`); if (!m) throw new Error('no such sweep: ' + id); return JSON.parse(m); }
 function statuses(id){ const out = {}; for (const k of S.list(`sweeps/${id}/status/`)){ const t = S.get(k); if (t) try { const s = JSON.parse(t); out[s.run] = s; } catch (e){} } return out; }
-function view(id){
-  const m = manifest(id), st = statuses(id), now = Date.now() / 1000;
+function view(id, vms){ // vms (optional, from vmsOf): a 'running' run whose VM is gone (preempted) is lost at once, not after STALE_S
+  const m = manifest(id), st = statuses(id), now = Date.now() / 1000, up = vms && new Set(vms.filter(x => x.status !== 'TERMINATED').map(x => x.name));
   return m.runs.map(r => { const s = st[r.name], tries = (m.tries || {})[r.name] || 0;
-    let state = s ? s.state : 'pending'; if (state === 'running' && now - s.t > STALE_S) state = 'lost';
+    let state = s ? s.state : 'pending'; if (state === 'running' && (now - s.t > STALE_S || (up && s.host && !up.has(s.host)))) state = 'lost';
     if (state === 'running' && /time budget used/.test(s.note || '')) state = 'paused';
     return {name: r.name, state, tries, age: s ? Math.round(now - s.t) : null, host: s && s.host, note: s ? s.note : ''}; });
 }
 // ---------- VMs ----------
 function vmsOf(id){ if (LOCAL) return []; try { return JSON.parse(sh('gcloud', ['compute', 'instances', 'list', '--filter', `labels.wa-sweep=${id}`, '--format', 'json(name,zone,status)'])); } catch (e){ return []; } }
-function zones(){ if (opt.zones) return opt.zones.split(','); try { return sh('gcloud', ['compute', 'zones', 'list', '--filter', `region:${REGION} AND status:UP`, '--format', 'value(name)']).split('\n').filter(Boolean); } catch (e){ return ['b', 'c', 'a', 'f'].map(z => `${REGION}-${z}`); } }
+function zones(){ if (opt.zones) return opt.zones.split(','); return REGIONS.flatMap(R => { try { return sh('gcloud', ['compute', 'zones', 'list', '--filter', `region:${R} AND status:UP`, '--format', 'value(name)']).split('\n').filter(Boolean); } catch (e){ return ['b', 'c', 'a', 'f'].map(z => `${R}-${z}`); } }); }
 const RETRYABLE = /ZONE_RESOURCE_POOL_EXHAUSTED|RESOURCE_EXHAUSTED|QUOTA_EXCEEDED|Quota .* exceeded|does not have enough resources|not available in zone|UNSUPPORTED_OPERATION|was not found/i;
 function createVM(id, idx, runs, m, hours){
   const name = `wa-${id}-${idx}-${Date.now().toString(36).slice(-4)}`.toLowerCase().replace(/[^a-z0-9-]/g, '-').slice(0, 62);
@@ -62,7 +62,9 @@ function createVM(id, idx, runs, m, hours){
       '--scopes', 'cloud-platform', ...(process.env.GCP_VM_SA ? ['--service-account', process.env.GCP_VM_SA] : []), '--labels', `wa-sweep=${id}`, '--metadata', Object.entries(meta).map(([k, v]) => `${k}=${v}`).join(','), '--metadata-from-file', `startup-script=${startup}`, '--quiet'];
     if (opt['dry-run']){ log('  [dry-run] gcloud ' + a.join(' ')); return {name, zone, machine}; }
     try { sh('gcloud', a); log(`  ${name}: ${machine} in ${zone}, runs ${runs.join(', ')}`); return {name, zone, machine}; }
-    catch (e){ const msg = String(e.stderr || e.message); errors.push(`${machine}@${zone}: ${msg.split('\n').find(l => /ERROR/.test(l)) || msg.slice(0, 200)}`); if (!RETRYABLE.test(msg)) break; }
+    catch (e){ const msg = String(e.stderr || e.message); errors.push(`${machine}@${zone}: ${msg.split('\n').find(l => /ERROR/.test(l)) || msg.slice(0, 200)}`);
+      if (/CPUS_ALL_REGIONS/.test(msg)){ log(`  project-wide CPU quota full: runs ${runs.join(', ')} left pending`); return 'quota'; } // no zone or region can help
+      if (!RETRYABLE.test(msg)) break; }
   }
   log(`  could not create a VM for runs ${runs.join(', ')} (left pending; 'resume' retries):\n    ` + errors.slice(-4).join('\n    ')); return null;
 }
@@ -75,8 +77,8 @@ function launchRuns(id, m, names){
     return;
   }
   if (!opt.yes && !opt['dry-run']){ log('not launched: add --yes to launch (or --dry-run to see the commands)'); return; }
-  let ok = 0; groups.forEach((g, i) => { if (createVM(id, i, g, m, m.hours)) ok++; });
-  log(`${ok}/${groups.length} VMs created`);
+  const launched = []; let full = false; groups.forEach((g, i) => { if (full) return; const v = createVM(id, i, g, m, m.hours); if (v === 'quota') full = true; else if (v) launched.push(...g); });
+  log(`${groups.filter(g => launched.includes(g[0])).length}/${groups.length} VMs created`); return launched;
 }
 // ---------- check: is the GCP setup usable? (each step says what to fix) ----------
 function check(){
@@ -84,12 +86,12 @@ function check(){
   let fails = 0;
   log('environment');
   PROJECT ? ok('GCP_PROJECT = ' + PROJECT) : bad('GCP_PROJECT not set', 'add it in the environment settings, then start a new session');
-  let key = null; if (!process.env.GCP_SA_KEY) bad('GCP_SA_KEY not set', 'add the service-account JSON key as a secret, then start a new session');
+  let key = null; if (!process.env.GCP_SA_KEY) log("  note  GCP_SA_KEY not set: using gcloud's current login (e.g. a proxy-injected token)");
   else { try { key = JSON.parse(process.env.GCP_SA_KEY); key.type === 'service_account' && key.client_email && key.private_key ? ok(`key parses: ${key.client_email} (project ${key.project_id})`) : bad('GCP_SA_KEY is JSON but not a service-account key'); } catch (e){ bad('GCP_SA_KEY is not valid JSON', 'paste the whole key file contents (it starts with {"type": "service_account")'); } }
   if (key && PROJECT && key.project_id !== PROJECT) log(`  note  the key is from project ${key.project_id}, GCP_PROJECT is ${PROJECT} (fine if the account has roles there)`);
   if (fails) return log(`\n${fails} problem(s); fix them and run 'node policy/gcp/gcp.js check' again`);
   log('auth and project');
-  try { auth(); ok('activated the service account and set the project'); } catch (e){ return bad('gcloud auth failed: ' + String(e.stderr || e.message).split('\n')[0], 'check the key; a deleted or disabled key fails here'); }
+  try { auth(); ok(process.env.GCP_SA_KEY ? 'activated the service account and set the project' : 'set the project'); } catch (e){ return bad('gcloud auth failed: ' + String(e.stderr || e.message).split('\n')[0], 'check the key; a deleted or disabled key fails here'); }
   try { sh('gcloud', ['projects', 'describe', PROJECT, '--format', 'value(projectId)']); ok('project is visible'); } catch (e){ bad('cannot see project ' + PROJECT, 'grant the service account a role on this project (e.g. Compute Instance Admin)'); }
   log('APIs');
   for (const api of ['compute.googleapis.com', 'storage.googleapis.com']){
@@ -122,23 +124,26 @@ const [cmd, arg] = pos;
     if (S.get(`sweeps/${id}/manifest.json`)) throw new Error(`sweep ${id} exists: use 'resume ${id}'`);
     const commit = opt.commit || sh('git', ['rev-parse', 'HEAD'], {cwd: ROOT}).trim();
     if (!LOCAL){ try { sh('git', ['branch', '-r', '--contains', commit], {cwd: ROOT}).trim() || (() => { throw 0; })(); } catch (e){ throw new Error(`commit ${commit} isn't on the remote: push first (VMs clone it)`); } }
-    const m = {id, created: new Date().toISOString(), sweepFile: arg, note: sweep.note, commit, repo: opt.repo || 'https://github.com/slisenberger/wild-arena.git', threads: +(opt.threads || 8), hours: +(opt.hours || 5.5), runs: sweep.runs, tries: {}};
+    const m = {id, created: new Date().toISOString(), sweepFile: arg, note: sweep.note, commit, repo: opt.repo || 'https://github.com/slisenberger/wild-arena.git', threads: +(opt.threads || 8), hours: +(opt.hours || 5.5), machines: MACHINES, runs: sweep.runs, tries: {}};
     sweep.runs.forEach(r => m.tries[r.name] = 1);
     if (!opt['dry-run']) S.putText(`sweeps/${id}/manifest.json`, JSON.stringify(m, null, 1));
     log(`sweep ${id} @ ${commit.slice(0, 10)} -> ${BUCKET}/sweeps/${id}/`); launchRuns(id, m, sweep.runs.map(r => r.name));
   } else if (cmd === 'status'){
-    const v = view(arg), vms = vmsOf(arg), c = {};
+    const vms = vmsOf(arg), v = view(arg, vms), c = {};
     for (const r of v){ c[r.state] = (c[r.state] || 0) + 1; log(`${r.name.padEnd(18)} ${r.state.padEnd(8)} tries ${r.tries}  ${r.age == null ? '' : r.age + ' s ago'}  ${String(r.note || '').split('\n')[0].slice(0, 110)}`); }
     log(`summary: ${Object.entries(c).map(([k, n]) => k + ' ' + n).join(', ')} | VMs alive: ${LOCAL ? 'n/a (local)' : vms.map(x => x.name + ':' + x.status).join(' ') || 'none'}`);
   } else if (cmd === 'resume'){
-    const m = manifest(arg), v = view(arg), max = +(opt.maxRetries || 3), alive = new Set(vmsOf(arg).length ? Object.values(statuses(arg)).filter(s => Date.now() / 1000 - s.t < STALE_S).map(s => s.run) : []);
+    const m = manifest(arg), vms = vmsOf(arg), v = view(arg, LOCAL ? null : vms), max = +(opt.maxRetries || 3), up = new Set(vms.filter(x => x.status !== 'TERMINATED').map(x => x.name)),
+      alive = new Set(vms.length ? Object.values(statuses(arg)).filter(s => Date.now() / 1000 - s.t < STALE_S && (!s.host || up.has(s.host))).map(s => s.run) : []); // fresh heartbeat on a VM that still exists
     const todo = v.filter(r => r.state !== 'done' && !alive.has(r.name) && (r.state !== 'failed' || r.tries < max)).map(r => r.name);
     const skipped = v.filter(r => r.state === 'failed' && r.tries >= max).map(r => r.name);
     if (skipped.length) log(`not retried (failed ${max}×): ${skipped.join(', ')}`);
     if (!todo.length){ log('nothing to resume'); return; }
     if (opt.hours) m.hours = +opt.hours;
-    todo.forEach(n => m.tries[n] = (m.tries[n] || 0) + 1); if (!opt['dry-run'] && (opt.yes || LOCAL)) S.putText(`sweeps/${arg}/manifest.json`, JSON.stringify(m, null, 1));
-    log(`resuming ${todo.length}: ${todo.join(', ')}`); launchRuns(arg, m, todo);
+    if (opt.machine || opt.machines) m.machines = MACHINES; else if (m.machines) MACHINES = m.machines; // resume keeps the launch's machine choice
+    log(`resuming ${todo.length}: ${todo.join(', ')}`); const launched = launchRuns(arg, m, todo) || (LOCAL ? todo : []);
+    launched.forEach(n => m.tries[n] = (m.tries[n] || 0) + 1); // count an attempt only when a VM was created (a full quota isn't a failure)
+    if (!opt['dry-run'] && (opt.yes || LOCAL)) S.putText(`sweeps/${arg}/manifest.json`, JSON.stringify(m, null, 1));
   } else if (cmd === 'stop'){
     const vms = vmsOf(arg); if (!vms.length){ log('no VMs alive for ' + arg); return; }
     if (!opt.yes){ log(`would delete ${vms.length} VMs: ${vms.map(x => x.name).join(' ')} (add --yes)`); return; }

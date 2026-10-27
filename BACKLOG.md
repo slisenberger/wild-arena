@@ -27,6 +27,62 @@ Audit pass 1 is merged (polar bear, elephant, white rhino, swim-speed bug). Stil
 - [ ] Hippo stamina 8 s (probably fine: its land threat is the charge).
 - Checked and left alone: lion 20 m/s, polar land speed/heat/mass/health, most masses and land speeds.
 
+**Behavior-spec review (Oct 26, GCP session; doc "Wild Arena: archetype behavior specs", every claim checked against an
+opened source).** Engine changes the evidence supports. Each changes the heuristic and the live game, so rebuild, re-verify
+the shipped policies and reprice after:
+- [ ] Elephant/mammoth bluff .6 has no source; real attacks on people are mostly sudden and unprovoked (Das &
+  Chattopadhyay 2011: 14 autopsies; Mohanty 2024: 84% of 45 survivors). Lower it, or tie bluffing to the elephant's state.
+- [ ] Grizzly bluff .5 is low: ~90% of aggressive grizzly reactions end without contact (Gunther et al. 2024, 7,090
+  Yellowstone interactions). Try .7–.8. Black bear .7: split by mode (defensive high, predatory low; Herrero et al. 2011).
+- [ ] Honey badger `fearless` overstates it: wary, bolts from lion tracks, attacks mostly when surprised (Begg). Keep
+  unbreakable morale once fighting; drop "takes on anything".
+- [ ] Gorilla "always bluffs first" is too strict: when surprised or cornered it bites without the display (Betsem 2011,
+  74 bitten hunters). Give it its own contact model (bite, several bites possible) instead of the elephant's.
+- [ ] Wolves: a standing moose was never killed (0 of 36), a running one sometimes (5 of 41; Mech 1966). Gate commits
+  on the target fleeing; test with close lunges and short retreats, not circling at ~30 m (no source for that distance).
+- [ ] Stalking cats break cover and run prey down from any distance once it runs; a spotted tiger doesn't pursue
+  (Schaller 1967) and stalkers need 15–20 m (Laundré & Hernández 2003). Lions do hunt buffalo (54% success in Queen
+  Elizabeth NP), so don't gate group lions off dangerous prey.
+- [ ] Moose and bison renew the attack on a downed target that moves (Alaska Fish & Game; Mech et al. 2004); bison press
+  predators for minutes to hours. Buffalo face lions backed into thickets.
+- [ ] Ostrich kicks only forward (a rear approach is safe); giraffe safer standing than running (lions trip a galloping
+  giraffe); big male kangaroos challenge an upright person as a rival (Coulson).
+- [ ] **Cats need ambush decisions, not more training.** Every sweep (arch1, arch2, arch3) left cats at or near zero.
+  Cats deal 28% of the damage to you but are in contact only 8% of the time (150 fights); the engine gait already makes
+  the stalk/pounce/wait-for-opening calls, so commit/wait/flank/regroup/disengage barely change anything. Add the
+  sourced decisions the spec names: hold in cover until a guard is busy, abort a spotted stalk and reposition
+  (Schaller 1967), switch to an isolated or running target (Mattson 2011), lion wing/centre roles (Stander 1992); warm
+  start from a cover-waiting rule; more fights per candidate.
+  **Next milestone (owner): every archetype's policy chooses whom as well as how.** Today the target comes from engine
+  formulas (predators: meat x vulnerability / deterrence; herbivores: engage radius; guards: threat rank, with only
+  intercept/help able to switch) and the policy only picks the movement intent for that target. Joint policy: score
+  every (candidate target x intent) option from the milestone-2 per-candidate features + the milestone-3 intent
+  features (a trained hidden layer, `--mode=deep`, fits), under the side-level checkmate goal, with targeting realism
+  metrics (cats favour isolated/running prey, herbivores defend rather than hunt). Bigger action space: more fights per
+  update. Start with cats (weakest target choice, below).
+  **Owner design direction (Oct 27): speciation from broad archetypes + species tuning + open control + a general
+  reward.** (1) Move decisions out of engine rules into the policy (target, approach, attack, bluff, retreat, movement),
+  keeping physics in the engine (speed, reach, stamina, armor, morale): bodies are what make species differ. (2) One
+  network per archetype, conditioned on a species/trait vector (mass, top speed, sprint stamina, weapon, armor, reach,
+  pack/solo, swim); the vector can grow. (3) Reward: the side's checkmate goal + self-preservation. (4) The reviewed
+  behavior spec's per-species ranges and never-gates become the constraints that keep emergent styles realistic.
+  (5) Success metric: a speciation report: per species, learned behavior diverges from the heuristic in the
+  directions the spec sources (e.g. cougars quit stalks sooner than lion coalitions; moose renew attacks on a downed
+  target, white rhinos don't), alongside the goal.
+  Owner hypothesis: with dense inputs, some layers and compute, emergent targeting goals appear (kill the human's
+  mount, pick on what you beat). The inputs mostly exist (`policy/features.js`: isMount, riding, logStrVsSelf,
+  muchStronger, heightRatio, busyElsewhere, fleeing, hpFrac, guardRatio); add matchup inputs (weapon vs armor/pierce,
+  reach vs height, counters/yieldsTo, human HP, guards near the human). Optimizer: ES noise grows with parameter count,
+  so for a layered net use behaviour cloning of the heuristic (milestone 1 reached 99%) then policy-gradient RL (PPO)
+  under the checkmate goal, with a KL/drift penalty to the heuristic and the spec metrics as constraints.
+  **Try first (owner idea): learned target choice for cats.** 82% of cat damage already goes to your animals, but 60%
+  of cat approaches never reach contact and 1.1 cats die per fight (of ~1.7; 150 fights, realism engine): they pick
+  fights they lose. Real cats take the isolated, hurt, busy or running animal. The milestone-2 target hook
+  (`cfg.policy`, per-candidate features) exists; it found little leverage as one policy for all predators under the
+  old goal and engine. Retry cat-only, under the checkmate goal (own deaths count), combined with the movement policy.
+- [ ] No source for: jaguar 7 m and cougar 12 m horizontal pounces (cougar: 5.5 m vertical documented), hippo ~30 km/h
+  (never measured), any rhino or boar bluff share.
+
 ## 2. Camping, stalling and other anti-patterns
 **Goal: low camping.** Tool: `camp.js` (telemetry + start-position exploit search, verified on fresh seeds).
 

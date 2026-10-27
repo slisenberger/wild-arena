@@ -1,0 +1,15 @@
+[gen 52] goal mean 1.104 best 1.223 (heuristic 1.258: mean -0.154) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 43.2% | drift-flagged 0/32 | |θ| 11.941 | 5993 fights, 204 s, 29.4/s
+  [val #12] centre (after 52 updates, non-commit 40.4%) vs best (after 16 updates) on 1000 fresh fights: -0.066 ± 0.033 | style 1.000 gates [] drift [] -> keep best
+[gen 53] goal mean 0.977 best 1.048 (heuristic 0.968: mean +0.009) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 45.3% | drift-flagged 0/32 | |θ| 11.964 | 3993 fights, 143 s, 28.0/s
+[gen 54] goal mean 0.988 best 1.064 (heuristic 0.915: mean +0.072) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 43.1% | drift-flagged 0/32 | |θ| 11.985 | 3993 fights, 146 s, 27.4/s
+[gen 55] goal mean 0.973 best 1.088 (heuristic 0.883: mean +0.091) | style mean 0.992 min 0.741 feasible 97% | λ 0.00→0.00 | non-commit 48.9% | drift-flagged 1/32 | |θ| 12.004 | 3993 fights, 134 s, 29.8/s
+    flagged: goal 0.963 style 0.991 gates [longIdle] drift [longIdle 0.001→0.025]
+[gen 56] goal mean 0.943 best 1.056 (heuristic 0.916: mean +0.027) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 46.6% | drift-flagged 0/32 | |θ| 12.035 | 5993 fights, 196 s, 30.6/s
+  [val #13] centre (after 56 updates, non-commit 49.3%) vs best (after 16 updates) on 1000 fresh fights: +0.001 ± 0.032 | style 1.000 gates [] drift [] -> keep best
+[gen 57] goal mean 1.019 best 1.130 (heuristic 0.996: mean +0.023) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 49.4% | drift-flagged 0/32 | |θ| 12.065 | 3993 fights, 166 s, 24.0/s
+[gen 58] goal mean 0.982 best 1.054 (heuristic 0.995: mean -0.012) | style mean 1.000 min 1.000 feasible 100% | λ 0.00→0.00 | non-commit 51.2% | drift-flagged 0/32 | |θ| 12.085 | 3993 fights, 143 s, 28.0/s
+[gen 59] goal mean 1.002 best 1.104 (heuristic 0.975: mean +0.027) | style mean 1.000 min 0.985 feasible 100% | λ 0.00→0.00 | non-commit 51.7% | drift-flagged 1/32 | |θ| 12.103 | 3993 fights, 147 s, 27.1/s
+    flagged: goal 1.053 style 0.985 gates [] drift [noContact 0.191→0.291]
+  [val #14] centre (after 60 updates, non-commit 50.2%) vs best (after 16 updates) on 1000 fresh fights: +0.036 ± 0.032 | style 1.000 gates [] drift [] -> keep best
+[test] best (after 16 updates) vs the start (policy/weights/harrier_v1.json) on 1200 held-out fights: -0.009 ± 0.030 (within 2 SE) | style 1.000 gates [] drift []
+  per map: savanna -0.033±0.051 (n 300), river 0.089±0.063 (n 300), forest -0.054±0.063 (n 300), tundra -0.038±0.058 (n 300); your win% 49.3 -> 49.3

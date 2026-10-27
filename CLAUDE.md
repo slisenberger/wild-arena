@@ -302,6 +302,12 @@ round. Report ± standard errors.
   $1,200, rares 30%. Validation: median board's best team 92% (min 50, p25 79), typical full-spend team 197 s, 15
   distinct best teams over 16 boards. Changes: rhino $400, grizzly $100, tiger $100, lion coalition $100.
   (22 s/$100 → $2,400: typical 300 s, too easy; 18 s/$100 → $2,700: 83%, 153 s.)
+- *GCP branch prices* (`abs_s1`, before merging into main; superseded by the reprice after the merge, Oct 27: realism-pass engine + bulldozer_v1 and charger_v1 live with harrier_v1, guard_v1):**
+  21 s of swing per $100, giants/herds capped at $700 (triceratops now $700 too), board total $2,500, budget $1,200,
+  rares 30%. Validation (`RAREP=.3 node board.js 16 2 24 12 1200 2500`): median board's best team 88% (min 58, p25 79;
+  with/without elephant both 88%), typical full-spend team 169 s, 16 distinct best teams over 16 boards. Changes: rhino
+  $400, bison $200, grizzly $100, triceratops $700, lion coalition $100. (22 s/$100 -> $2,400: 96%, 300 s, too easy;
+  20 s/$100 -> $2,600: 79%, 162 s.)
 - *Previous* prices (`abs_r12`, with the learned harrier + guard policies live): 22 s of swing per $100, board total
   $2,600, budget $1,200, rares 30%. Validation: median board's best team 92% (min 38, p25 83), typical full-spend team
   173 s, 15 distinct best teams over 16 boards. Changes: rhino $300, croc $100, bull $100, triceratops $800.
