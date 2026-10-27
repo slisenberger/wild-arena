@@ -53,6 +53,11 @@ the shipped policies and reprice after:
   sourced decisions the spec names: hold in cover until a guard is busy, abort a spotted stalk and reposition
   (Schaller 1967), switch to an isolated or running target (Mattson 2011), lion wing/centre roles (Stander 1992); warm
   start from a cover-waiting rule; more fights per candidate.
+  **Try first (owner idea): learned target choice for cats.** 82% of cat damage already goes to your animals, but 60%
+  of cat approaches never reach contact and 1.1 cats die per fight (of ~1.7; 150 fights, realism engine): they pick
+  fights they lose. Real cats take the isolated, hurt, busy or running animal. The milestone-2 target hook
+  (`cfg.policy`, per-candidate features) exists; it found little leverage as one policy for all predators under the
+  old goal and engine. Retry cat-only, under the checkmate goal (own deaths count), combined with the movement policy.
 - [ ] No source for: jaguar 7 m and cougar 12 m horizontal pounces (cougar: 5.5 m vertical documented), hippo ~30 km/h
   (never measured), any rhino or boar bluff share.
 
