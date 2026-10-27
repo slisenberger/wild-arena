@@ -27,6 +27,62 @@ Audit pass 1 is merged (polar bear, elephant, white rhino, swim-speed bug). Stil
 - [ ] Hippo stamina 8 s (probably fine: its land threat is the charge).
 - Checked and left alone: lion 20 m/s, polar land speed/heat/mass/health, most masses and land speeds.
 
+**Behavior-spec review (Oct 26, GCP session; doc "Wild Arena: archetype behavior specs", every claim checked against an
+opened source).** Engine changes the evidence supports. Each changes the heuristic and the live game, so rebuild, re-verify
+the shipped policies and reprice after:
+- [ ] Elephant/mammoth bluff .6 has no source; real attacks on people are mostly sudden and unprovoked (Das &
+  Chattopadhyay 2011: 14 autopsies; Mohanty 2024: 84% of 45 survivors). Lower it, or tie bluffing to the elephant's state.
+- [ ] Grizzly bluff .5 is low: ~90% of aggressive grizzly reactions end without contact (Gunther et al. 2024, 7,090
+  Yellowstone interactions). Try .7–.8. Black bear .7: split by mode (defensive high, predatory low; Herrero et al. 2011).
+- [ ] Honey badger `fearless` overstates it: wary, bolts from lion tracks, attacks mostly when surprised (Begg). Keep
+  unbreakable morale once fighting; drop "takes on anything".
+- [ ] Gorilla "always bluffs first" is too strict: when surprised or cornered it bites without the display (Betsem 2011,
+  74 bitten hunters). Give it its own contact model (bite, several bites possible) instead of the elephant's.
+- [ ] Wolves: a standing moose was never killed (0 of 36), a running one sometimes (5 of 41; Mech 1966). Gate commits
+  on the target fleeing; test with close lunges and short retreats, not circling at ~30 m (no source for that distance).
+- [ ] Stalking cats break cover and run prey down from any distance once it runs; a spotted tiger doesn't pursue
+  (Schaller 1967) and stalkers need 15–20 m (Laundré & Hernández 2003). Lions do hunt buffalo (54% success in Queen
+  Elizabeth NP), so don't gate group lions off dangerous prey.
+- [ ] Moose and bison renew the attack on a downed target that moves (Alaska Fish & Game; Mech et al. 2004); bison press
+  predators for minutes to hours. Buffalo face lions backed into thickets.
+- [ ] Ostrich kicks only forward (a rear approach is safe); giraffe safer standing than running (lions trip a galloping
+  giraffe); big male kangaroos challenge an upright person as a rival (Coulson).
+- [ ] **Cats need ambush decisions, not more training.** Every sweep (arch1, arch2, arch3) left cats at or near zero.
+  Cats deal 28% of the damage to you but are in contact only 8% of the time (150 fights); the engine gait already makes
+  the stalk/pounce/wait-for-opening calls, so commit/wait/flank/regroup/disengage barely change anything. Add the
+  sourced decisions the spec names: hold in cover until a guard is busy, abort a spotted stalk and reposition
+  (Schaller 1967), switch to an isolated or running target (Mattson 2011), lion wing/centre roles (Stander 1992); warm
+  start from a cover-waiting rule; more fights per candidate.
+  **Next milestone (owner): every archetype's policy chooses whom as well as how.** Today the target comes from engine
+  formulas (predators: meat x vulnerability / deterrence; herbivores: engage radius; guards: threat rank, with only
+  intercept/help able to switch) and the policy only picks the movement intent for that target. Joint policy: score
+  every (candidate target x intent) option from the milestone-2 per-candidate features + the milestone-3 intent
+  features (a trained hidden layer, `--mode=deep`, fits), under the side-level checkmate goal, with targeting realism
+  metrics (cats favour isolated/running prey, herbivores defend rather than hunt). Bigger action space: more fights per
+  update. Start with cats (weakest target choice, below).
+  **Owner design direction (Oct 27): speciation from broad archetypes + species tuning + open control + a general
+  reward.** (1) Move decisions out of engine rules into the policy (target, approach, attack, bluff, retreat, movement),
+  keeping physics in the engine (speed, reach, stamina, armor, morale): bodies are what make species differ. (2) One
+  network per archetype, conditioned on a species/trait vector (mass, top speed, sprint stamina, weapon, armor, reach,
+  pack/solo, swim); the vector can grow. (3) Reward: the side's checkmate goal + self-preservation. (4) The reviewed
+  behavior spec's per-species ranges and never-gates become the constraints that keep emergent styles realistic.
+  (5) Success metric: a speciation report: per species, learned behavior diverges from the heuristic in the
+  directions the spec sources (e.g. cougars quit stalks sooner than lion coalitions; moose renew attacks on a downed
+  target, white rhinos don't), alongside the goal.
+  Owner hypothesis: with dense inputs, some layers and compute, emergent targeting goals appear (kill the human's
+  mount, pick on what you beat). The inputs mostly exist (`policy/features.js`: isMount, riding, logStrVsSelf,
+  muchStronger, heightRatio, busyElsewhere, fleeing, hpFrac, guardRatio); add matchup inputs (weapon vs armor/pierce,
+  reach vs height, counters/yieldsTo, human HP, guards near the human). Optimizer: ES noise grows with parameter count,
+  so for a layered net use behaviour cloning of the heuristic (milestone 1 reached 99%) then policy-gradient RL (PPO)
+  under the checkmate goal, with a KL/drift penalty to the heuristic and the spec metrics as constraints.
+  **Try first (owner idea): learned target choice for cats.** 82% of cat damage already goes to your animals, but 60%
+  of cat approaches never reach contact and 1.1 cats die per fight (of ~1.7; 150 fights, realism engine): they pick
+  fights they lose. Real cats take the isolated, hurt, busy or running animal. The milestone-2 target hook
+  (`cfg.policy`, per-candidate features) exists; it found little leverage as one policy for all predators under the
+  old goal and engine. Retry cat-only, under the checkmate goal (own deaths count), combined with the movement policy.
+- [ ] No source for: jaguar 7 m and cougar 12 m horizontal pounces (cougar: 5.5 m vertical documented), hippo ~30 km/h
+  (never measured), any rhino or boar bluff share.
+
 ## 2. Camping, stalling and other anti-patterns
 **Goal: low camping.** Tool: `camp.js` (telemetry + start-position exploit search, verified on fresh seeds).
 
@@ -83,13 +139,13 @@ that gives you one of each animal, they're weaker by design.
   converges on its packmate's target and doesn't spread out; rivals (lion–hyena) excluded.
 - [x] **done** **Buffalo and bison herds:** `buffaloherd`, `bisonherd` (×3) items; `herd` animals bond with their
   own kind like packs (no lone penalty: a lone buffalo is grumpy, not nervous) and mob the same target.
-- [ ] Herd ideas next: ringing up around you (musk-ox style), stampede contagion, herd-class bonuses (e.g. any two
+- [ ] Herd ideas next: ~~ringing up around you (musk-ox style)~~ (done Oct 27: musk ox herd `ring`), stampede contagion, herd-class bonuses (e.g. any two
   bovids together hold their nerve).
 - [ ] **Sell some animals as groups** (rules option, bends "one of each"): "Wolf pack (4) $300",
   "Hyena clan (3) $300", "Lion pride (2 lionesses + male) $500", "Buffalo herd (3) $600". The pack
   orbits, flanks and hamstrings as a unit; skip it and the other side gets the whole pack.
-- [ ] **Emergent herd behavior:** cohesion, ringing up around the vulnerable one (musk-ox style, with
-  you as the calf), stampede contagion when one breaks. Most realistic and fun to watch, hardest to balance.
+- [ ] **Emergent herd behavior:** cohesion, ~~ringing up around the vulnerable one (musk-ox style, with
+  you as the calf)~~ (done for the musk ox herd, Oct 27), stampede contagion when one breaks. Most realistic and fun to watch, hardest to balance.
 
 ## 5. Maps and variety
 - [ ] **Moderately procedural maps:** seeded, bounded parameters per map type (not freeform) — river
@@ -193,7 +249,15 @@ Pick for new roles. Top three for design value: **honey badger, moose, Komodo dr
 - [ ] Real frame animation needs drawn sprites: an original art project (don't trace others' photos).
 
 ## 8. Replayability
-- [x] **Roguelike "migration" mode (owner, Oct 26) — first playable done (Oct 26).** 7 fights, $600 start; earn $80/min alive
+- [x] **Progressive mode (owner, Oct 27) — prototype built behind `?progressive=1` (Oct 27), replaces Migration.** 7 rounds
+  up a price ladder, premium enemy from round 3, fixed top-ups + $25/kill (cap $150), rest 30% / paid full heal, scars,
+  XP and levels (Seasoned / Cunning / Veteran), two retries. Rules `progressive.js`, bot `progressive_bot.js`, round-1
+  check `progressive_r1.js`, level value `level_abs.js`; numbers in `research/progressive_mode.md`. Follow-ups: owner
+  playtest; a smarter bot (does selling, healing or saving money matter?); "training" spend (XP for money) from the
+  design; T. rex final-round boss (owner: maybe, later); the premium herd in rounds 6–7 is the run's wall (see the doc);
+  per-run share link that replays the run; scout the next board before buying.
+- [x] ~~Roguelike "migration" mode~~ (removed Oct 27: progressive mode replaced it; its rules/bot files are gone).
+  Original entry: **(owner, Oct 26) — first playable done (Oct 26).** 7 fights, $600 start; earn $80/min alive
   + $25 per enemy down + $50 for surviving (rounded to $50); survivors keep wounds (heal 40%, you 30%), the dead are gone,
   packs carry their surviving members; death ends the run. Between fights: recap, 1-of-3 boons (8: spear, waterskin,
   snowshoes, ranger's whistle, smoke pots, thick hide coat, field dressing, lookout tower), trading post (a fresh board
@@ -301,3 +365,19 @@ Pick for new roles. Top three for design value: **honey badger, moose, Komodo dr
 - [x] **Elephant rare** (owner, Oct 27): dealt through the rare slot (~8% of boards); board total kept at $2,600 (harder,
   median best team 88%, typical team 160 s). Next for variety: new mid-tier animals that can cost $200+ (research in
   `research/mid_tier_candidates.md`).
+
+- [ ] **Harness: brawler style-sensitivity checks fail after the realism pass** (Oct 27, `harness_test.js --quick` 176/178 on
+  the merged engine): "always wait / always disengage" brawler policies now score style 0.82 / 0.91 (threshold 0.9) and
+  don't trip the long-idle gate. Brawlers have no live policy, so the game is unaffected; recalibrate the brawler style
+  gates (or the check) before the next brawler training round.
+- [x] **Mid-tier animals, first three (Oct 27):** musk ox herd ×3 (tundra, `ring`), gaur (`facesDown`), walrus (tundra,
+  `tuskStab`), plus the `habitat` deal rule. Details and numbers in CLAUDE.md "Then (29–31)" and ROSTER.md.
+  Follow-ups from the zoology review, not built: a **walrus stampede** (a predator or person near hauled-out walruses sends
+  them all rushing to the water, crushing what's in the way: Kochnev 2002, 85% of Wrangel deaths were crush deaths; needs a
+  walrus herd item), gaur group mobbing of a tiger (several adults; needs a gaur herd), the ring as a liability against
+  human hunters (Inuit + dogs), a "solitary bull" gaur variant (aggr .5), a walrus aggression split (bold in water, flees to
+  water on land). Remaining research candidates: zebra harem ×4, gemsbok, Komodo/Megalania.
+- [ ] **Map-biased deal frequency (long term, owner):** the `habitat {terrain: weight}` field now exists (walrus and musk ox:
+  tundra only). Extend it to the rest of the roster where realism says so (croc/hippo heavier on the river, polar bear and
+  mammoth on the tundra, cats and gaur in the forest, savanna big game), re-measure each map's board strength, and decide
+  whether the board total should vary by map.

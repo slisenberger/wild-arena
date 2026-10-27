@@ -2,7 +2,7 @@
 
 ## Animal portraits (`faces.json`)
 
-All 28 portraits are 112×112 crops of images from Wikimedia Commons. All are in the public domain or released under CC0 except the giant kangaroo, which is CC BY 3.0 (attribution below). None of them is a crop of the original meme image any more (the earlier meme crops were replaced because the rights to their source photos are unknown). Author/artist is as stated on the Commons file page.
+All 31 portraits are 112×112 crops of images from Wikimedia Commons. All are in the public domain or released under CC0 except the giant kangaroo (CC BY 3.0) and the gaur (CC BY 2.0), attributed below. None of them is a crop of the original meme image any more (the earlier meme crops were replaced because the rights to their source photos are unknown). Author/artist is as stated on the Commons file page.
 
 | id | Animal | Source (Wikimedia Commons) | Author / artist | License |
 |---|---|---|---|---|
@@ -34,3 +34,6 @@ All 28 portraits are 112×112 crops of images from Wikimedia Commons. All are in
 | `boar` | Wild boar | [HPIM9277.JPG](https://commons.wikimedia.org/wiki/File:HPIM9277.JPG) | I.Sáček, senior | Public domain |
 | `giantkangaroo` | Giant kangaroo (Procoptodon goliah, reconstruction) | [Procoptodon goliah.jpg](https://commons.wikimedia.org/wiki/File:Procoptodon_goliah.jpg) | Stanton F. Fink | CC BY 3.0 (cropped and resized) |
 | `smilodon` | Sabre-toothed cat (Smilodon fatalis, life restoration) | [National Fossil Day 2016 artwork (cropped).png](https://commons.wikimedia.org/wiki/File:National_Fossil_Day_2016_artwork_(cropped).png) | National Park Service | Public domain |
+| `muskox` | Musk ox (bull) | [Male musk ox animal mammal.jpg](https://commons.wikimedia.org/wiki/File:Male_musk_ox_animal_mammal.jpg) | Tim Bowman, U.S. Fish and Wildlife Service | Public domain |
+| `gaur` | Gaur | [Intimate portrait of gaur (52077051551).jpg](https://commons.wikimedia.org/wiki/File:Intimate_portrait_of_gaur_(52077051551).jpg) | Kandukuru Nagarjun | CC BY 2.0 (cropped and resized) |
+| `walrus` | Pacific walrus (young bull) | [Close up of head of young bull walrus marine mammal in water odobenus rosmarus.jpg](https://commons.wikimedia.org/wiki/File:Close_up_of_head_of_young_bull_walrus_marine_mammal_in_water_odobenus_rosmarus.jpg) | Joel Garlich-Miller, U.S. Fish and Wildlife Service | Public domain |

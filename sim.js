@@ -11,11 +11,11 @@ const W = 100, H = 66, DT = 0.1, MATCH_T = 300, QUIET_T = 30;
 // swim = speed in deep water, m/s (real swimming/bottom-walking speed, not a fraction of sprint speed).
 // tag aquaStalk = hides submerged like a croc, lunges out of the water, first strike from the water is an ambush.
 const ANIMALS = [
- {id:'elephant', rare:true, bluffP:0.6, name:'African Elephant', abbr:'ELE', price:700, mass:6000, spd:7, dmg:260, cd:1.6, armor:.35, reach:3.5, stam:20, heat:.8, cold:.6, water:.5, swim:1.5, aggr:.55, flee:.15, corner:1.3, pred:false, charge:true, vision:40, tags:['hatesPredators','sweep','bluff'],
-  traits:['Rideable: you sit 3.2 m up, and its trunk reaches any rider','Matriarch: ears out and a mock charge first, then it tramples for real','Mobs predators on sight; momentum hits scatter anything smaller']},
+ {id:'elephant', rare:true, bluffP:0.35, name:'African Elephant', abbr:'ELE', price:700, mass:6000, spd:7, dmg:260, cd:1.6, armor:.35, reach:3.5, stam:20, heat:.8, cold:.6, water:.5, swim:1.5, aggr:.55, flee:.15, corner:1.3, pred:false, charge:true, vision:40, tags:['hatesPredators','sweep','bluff'],
+  traits:['Rideable: you sit 3.2 m up, and its trunk reaches any rider','Matriarch: sometimes a mock charge, often a real one with no warning; it tramples','Mobs predators on sight; momentum hits scatter anything smaller']},
  {id:'rhino', name:'White Rhino', abbr:'RHI', price:400, mass:2300, spd:12.5, dmg:180, cd:1.4, armor:.55, reach:2.6, stam:15, heat:.8, cold:.55, water:0, swim:1, aggr:.3, flee:.25, corner:1.3, pred:false, charge:true, vision:18, tags:[],
   traits:['Placid two-tonne grazer: slow to anger, and it gives way to elephants','Armor-thick hide (only the croc is tougher) and a horn charge that cannot steer','Poor eyesight: it charges what it hears or smells as much as what it sees']},
- {id:'hippo', name:'Hippo', abbr:'HIP', price:300, mass:2000, spd:8, dmg:230, cd:1.3, armor:.55, reach:2.5, stam:8, heat:.5, cold:.4, water:.9, swim:2.5, aggr:.9, flee:.1, corner:1.3, pred:false, charge:true, vision:25, tags:['territorial','sunburn','submerges'],
+ {id:'hippo', name:'Hippo', abbr:'HIP', price:400, mass:2000, spd:8, dmg:230, cd:1.3, armor:.55, reach:2.5, stam:8, heat:.5, cold:.4, water:.9, swim:2.5, aggr:.9, flee:.1, corner:1.3, pred:false, charge:true, vision:25, tags:['territorial','sunburn','submerges'],
   traits:['Deadliest large animal in Africa: holds the river and charges out of it','In water: faster, cooler, territorial, and hard to spot until it surfaces','On dry land: sunburns and overheats']},
  {id:'giraffe', name:'Giraffe', abbr:'GIR', price:200, mass:1200, spd:15, dmg:150, cd:1.8, armor:.2, reach:2.5, stam:25, heat:1, cold:.5, water:-.6, swim:0.8, aggr:.2, flee:.5, corner:1.4, pred:false, charge:false, vision:60, tags:['lookout','kicker'],
   traits:['Lookout: your whole team spots threats 50% farther away','Sees lions a kilometre off, and one kick can kill one','Only kicks what comes at it; never starts a fight']},
@@ -27,7 +27,7 @@ const ANIMALS = [
   traits:["'Black death': a wounded buffalo circles back for whoever hurt it, for a long time",'+50% damage against lions, tigers and hyenas','Without a herd, it fights alone']},
  {id:'bison', bluffP:0.3, name:'American Bison', abbr:'BIS', price:300, mass:900, spd:15, dmg:140, cd:1.3, armor:.35, reach:2.3, stam:40, heat:.75, cold:1, water:.2, swim:1.5, aggr:.5, flee:.3, corner:1.8, pred:false, charge:true, vision:28, tags:['herd','standsGround','bluff'],
   traits:['Injures more Yellowstone visitors than any other animal','Tail up, mock charge, then the real thing; spins on a dime','Huge stamina; at home in snow']},
- {id:'grizzly', name:'Grizzly Bear', abbr:'GRZ', bluffP:.5, price:200, mass:320, spd:15, dmg:125, cd:.9, armor:.35, reach:2, stam:15, heat:.65, cold:.95, water:.3, swim:1.8, aggr:.6, flee:.25, corner:1.3, pred:true, charge:false, vision:30, hpMul:1.2, tags:['scavenger','bluff'], prey:{human:.5}, rivals:{polar:1.3, wolf:1.3, cougar:1.4},
+ {id:'grizzly', name:'Grizzly Bear', abbr:'GRZ', bluffP:.75, price:200, mass:320, spd:15, dmg:125, cd:.9, armor:.35, reach:2, stam:15, heat:.65, cold:.95, water:.3, swim:1.8, aggr:.6, flee:.25, corner:1.3, pred:true, charge:false, vision:30, hpMul:1.2, tags:['scavenger','bluff'], prey:{human:.5}, rivals:{polar:1.3, wolf:1.3, cougar:1.4},
   traits:['Very hard to kill (+20% durability)','Charges at 56 km/h, often a bluff; if it does not stop, it mauls','Takes kills from cougars and wolves']},
  {id:'tiger', name:'Bengal Tiger', abbr:'TIG', latchMax:4, price:100, mass:220, spd:17, dmg:125, cd:.9, armor:.1, reach:2, stam:6, heat:.75, cold:.65, water:.5, swim:2, aggr:.7, flee:.3, corner:1.3, pred:true, latch:true, charge:false, vision:30, tags:['catSense','ambush'], rivals:{leopard:1.6, cougar:1.6, jaguar:1.4}, prey:{human:1.4},
   traits:['Throat hold: latches onto prey up to 2.5x its mass','Ambush first strike (x1.7, x2 in forest)','Can leap onto an elephant (3.6 m)']},
@@ -44,7 +44,7 @@ const ANIMALS = [
  {id:'hyena', name:'Spotted Hyena', abbr:'HYE', price:100, mass:60, spd:16, dmg:60, cd:.8, armor:.1, reach:1.6, stam:50, heat:.9, cold:.6, water:.1, swim:1.5, aggr:.55, flee:.45, corner:1.3, pred:true, charge:false, vision:35, pierce:.3, hpMul:1.3, tags:['scavenger','boneCrush','pack'], prey:{human:1.0}, rivals:{lion:1.3},
   traits:['Bone-crushing bite ignores 30% of armor and cracks bone: every bite leaves a limp that never wears off (up to -30% speed), and it runs lamed prey down','Tough (+30% durability) and tireless: a clan runs prey down','Clan hunter, not a scavenger: kills most of its own food and eats fast']},
  // ---- added Oct 2026 (no portrait yet: shown as a lettered token) ----
- {id:'blackrhino', bluffP:0.3, name:'Black Rhino', abbr:'BRH', price:200, mass:1200, spd:15, swim:1, dmg:160, cd:1.3, armor:.5, reach:2.3, stam:12, heat:.8, cold:.5, water:0, aggr:.8, flee:.1, corner:1.4, pred:false, charge:true, vision:15, tags:['blindCharger','bluff'],
+ {id:'blackrhino', bluffP:0.3, name:'Black Rhino', abbr:'BRH', price:300, mass:1200, spd:15, swim:1, dmg:160, cd:1.3, armor:.5, reach:2.3, stam:12, heat:.8, cold:.5, water:0, aggr:.8, flee:.1, corner:1.4, pred:false, charge:true, vision:15, tags:['blindCharger','bluff'],
   traits:['The irritable rhino: half the weight of a white rhino, twice the temper','Charges anything that moves within 18 m, though some charges veer off at the last moment','Hooked lip, sharp front horn, turns quickly for a rhino']},
  {id:'bull', name:'Fighting Bull', abbr:'TOR', price:200, mass:550, spd:15.5, swim:1.5, dmg:150, cd:1.2, armor:.25, reach:2.2, stam:14, heat:.8, cold:.7, water:.2, aggr:.95, flee:.1, corner:1.4, pred:false, charge:true, vision:25, tags:['bred','chasesMovement'],
   traits:['Toro bravo: bred for centuries to charge, it never needs provoking','Charges whatever moves, then turns fast and comes back','Tires in a long fight']},
@@ -53,13 +53,13 @@ const ANIMALS = [
  {id:'ostrich', name:'Ostrich', abbr:'OST', price:100, mass:120, spd:19, swim:.8, dmg:110, cd:1.0, armor:.05, reach:1.5, stam:30, heat:1.1, cold:.6, water:-.3, aggr:.35, flee:.45, corner:1.4, pred:false, charge:false, vision:55, tags:['lookout','kicker','clawKick'],
   traits:['Fastest runner on two legs (70 km/h), and it can keep it up','Forward kick with a 10 cm toe claw: rips predators open (they bleed) and knocks them back; it kicks whatever comes for you up close','Huge eyes on a 2.7 m frame: a lookout, and a fast (if wobbly) mount']},
  {id:'honeybadger', name:'Honey Badger', abbr:'HBD', price:100, mass:11, spd:8.5, swim:1, dmg:22, cd:.6, armor:.35, reach:1.2, stam:40, heat:.9, cold:.5, water:-.2, aggr:.9, flee:.02, corner:1.3, pred:true, charge:false, vision:20, hpMul:1.5, tags:['fearless','hamstring','looseSkin','musk'], prey:{human:.1},
-  traits:['Fearless: its morale never breaks, whatever it faces','Musk: a predator that gets hold of it gets a blast from its stink glands and reels away (once every 12 s)','Thick loose skin: it twists out of holds, and its bites on the legs keep rattling whatever it pesters']},
+  traits:['Fearless once fighting: its morale never breaks; wary of big predators, it picks fights with its own size','Musk: a predator that gets hold of it gets a blast from its stink glands and reels away (once every 12 s)','Thick loose skin: it twists out of holds, and its bites on the legs keep rattling whatever it pesters']},
  {id:'triceratops', name:'Triceratops', abbr:'TRI', price:800, mass:8000, spd:8, swim:1.2, dmg:300, cd:1.5, armor:.5, reach:3.2, stam:15, heat:.8, cold:.6, water:.3, aggr:.6, flee:.1, corner:1.3, pred:false, charge:true, vision:25, rare:true, tags:['hatesPredators','giant'],
   traits:['Rare: only turns up on the odd board','Eight tonnes, a bony frill and two 1 m brow horns','Rideable 3 m up; charges like a rhino the size of an elephant']},
- {id:'mammoth', bluffP:0.6, name:'Woolly Mammoth', abbr:'MAM', price:400, mass:6000, spd:7, swim:1.5, dmg:260, cd:1.6, armor:.4, reach:3.6, stam:20, heat:.4, cold:1, water:.5, aggr:.55, flee:.15, corner:1.3, pred:false, charge:true, vision:40, rare:true, tags:['hatesPredators','giant','sweep','bluff'],
+ {id:'mammoth', bluffP:0.35, name:'Woolly Mammoth', abbr:'MAM', price:600, mass:6000, spd:7, swim:1.5, dmg:260, cd:1.6, armor:.4, reach:3.6, stam:20, heat:.4, cold:1, water:.5, aggr:.55, flee:.15, corner:1.3, pred:false, charge:true, vision:40, rare:true, tags:['hatesPredators','giant','sweep','bluff'],
   traits:['Rare: only turns up on the odd board','An elephant in a fur coat: shrugs off the cold, wilts in the heat','Huge curved tusks sweep everything in reach; rideable 3.2 m up']},
- {id:'blackbear', name:'Black Bear', abbr:'BBR', bluffP:.7, price:100, mass:120, spd:13.5, swim:1.8, dmg:75, cd:.9, armor:.25, reach:1.8, stam:15, heat:.7, cold:.9, water:.4, aggr:.35, flee:.4, corner:1.6, pred:true, charge:false, vision:25, climb:true, tags:['scavenger','bluff','repeatBluff'], prey:{human:.4},
-  traits:['Bouncer: huffs, pops its jaws and bluff-charges up to three times before it fights; anything its size it rattles is run off','Bolts up the nearest tree when it is in trouble','Fights hard when cornered']},
+ {id:'blackbear', name:'Black Bear', abbr:'BBR', bluffP:.7, bluffHumanP:.1, price:100, mass:120, spd:13.5, swim:1.8, dmg:75, cd:.9, armor:.25, reach:1.8, stam:15, heat:.7, cold:.9, water:.4, aggr:.35, flee:.4, corner:1.6, pred:true, charge:false, vision:25, climb:true, tags:['scavenger','bluff','repeatBluff'], prey:{human:.4},
+  traits:['Bouncer: huffs, pops its jaws and bluff-charges animals up to three times before it fights (a person it hunts for real); anything its size it rattles is run off','Bolts up the nearest tree when it is in trouble','Fights hard when cornered']},
  {id:'leopard', name:'Leopard', abbr:'LEO', latchMax:2.5, yieldsTo:['lion','tiger','hyena'], price:100, mass:70, spd:16, swim:1.5, dmg:70, cd:.9, armor:.05, reach:1.8, stam:6, heat:.95, cold:.6, water:.4, aggr:.6, flee:.4, corner:1.6, pred:true, latch:true, charge:false, vision:30, climb:true, tags:['catSense','ambush','hiddenGuard'], prey:{human:.9},
   traits:['Cover-to-cover ambusher (x1.7, x2 in forest); climbs after you','On guard it lies up in cover beside you: the other side cannot see it beyond 6 m, so predators walk into its ambush','Gives way to lions, tigers and hyenas','Deadliest of the big cats when wounded or cornered']},
  {id:'boar', name:'Wild Boar', abbr:'BOA', price:100, mass:150, spd:13, swim:1.5, dmg:75, cd:.8, armor:.3, reach:1.6, stam:20, heat:.6, cold:.85, water:.4, aggr:.7, flee:.2, corner:1.6, pred:false, charge:true, vision:20, tags:['standsGround','slash','upends'],
@@ -68,6 +68,14 @@ const ANIMALS = [
   traits:['Rare: Procoptodon, the Ice Age short-faced kangaroo (230 kg, 2–2.7 m tall)','Grabs with long clawed arms, then leans back for a crushing two-footed kick (a blunt hoof, not a claw)','Backs into water and holds attackers under, like kangaroos do to dogs','Thumps the ground when it spots a predator; strides rather than bounces, hopping only in bursts']},
  {id:'smilodon', name:'Sabre-toothed Cat', abbr:'SAB', latchMax:3.5, price:100, mass:260, spd:14, swim:1.3, dmg:95, cd:1.0, armor:.15, reach:2, stam:4, heat:.85, cold:.7, water:-.1, aggr:.6, flee:.3, corner:1.3, pred:true, latch:true, charge:false, vision:30, rare:true, tags:['catSense','ambush','pinStab','bigGame'], rivals:{lion:1.5, hyena:1.3, tiger:1.2, wolf:1.2}, prey:{human:1.1},
   traits:['Rare: Smilodon fatalis, the Ice Age sabre-tooth (260 kg)','Pins prey with huge forearms, then one killing stab that leaves it bleeding','Fragile sabres: stabbing armor or prey that isn\'t held can snap a canine']},
+ // ---- added Oct 27, 2026 (research/mid_tier_candidates.md). habitat = the maps it is dealt on, with a deal weight each
+ // (absent = every map, weight 1). The musk ox comes only as a herd (dealWeight 0: the lone form is never dealt).
+ {id:'muskox', name:'Musk Ox', abbr:'MOX', price:100, mass:285, spd:11, swim:1.2, dmg:100, cd:1.1, armor:.35, reach:2, stam:15, heat:.3, cold:1, water:.1, aggr:.45, flee:.3, corner:1.6, pred:false, charge:true, vision:25, dealWeight:0, habitat:{tundra:1.5}, tags:['herd','standsGround','ring'],
+  traits:['Tundra only: built for the Arctic, it cooks anywhere warm','The living wall: against one predator the herd lines up shoulder to shoulder in front of you; against several it rings you, horns out','One ox at a time dashes out at a predator that comes close, then backs into its place; bears and anything twice its size break the ring']},
+ {id:'gaur', name:'Gaur', abbr:'GAU', price:300, mass:1200, spd:12, swim:1.5, dmg:170, cd:1.3, armor:.4, reach:2.4, stam:18, heat:.75, cold:.6, water:.2, aggr:.3, flee:.25, corner:1.5, pred:false, charge:true, vision:25, tags:['placid','facesDown','forestRunner','standsGround'],
+  traits:['The largest wild cattle: a tonne of muscle, slow to anger, very hard to stop once it is','Faces down stalkers: a cat it spots creeping in loses its ambush, and usually gives up and slinks off','A forest animal: it charges through the trees without crashing into them']},
+ {id:'walrus', name:'Walrus', abbr:'WAL', price:200, mass:1200, spd:2.5, swim:2.2, dmg:150, cd:1.4, armor:.5, reach:2.2, stam:4, heat:.3, cold:1, water:1, aggr:.5, flee:.2, corner:1.4, pred:false, charge:false, vision:20, habitat:{tundra:2.5}, tags:['territorial','shoreGuard','tuskStab'],
+  traits:['Tundra only, and often there: holds the icy lake the way a croc holds a river','Tusk stab: at the water\'s edge or in the water it drives both tusks down (x1.5, half armor) and pins anything up to its own size','10 cm of hide over 15 cm of blubber; on land it hauls itself along slowly']},
 ];
 // Fighting styles: how each animal moves and attacks. strikeH = highest point it can hit (m); mountH = rider height if it can carry you (0 = can't).
 const STYLE = {
@@ -81,8 +89,8 @@ const STYLE = {
  bison:{gait:'charge', strikeH:1.8, mountH:2.0, overshoot:5, turn:1.4, wheel:.5, style:'Spinning charger', how:'Charges and pivots on a dime. The most agile heavyweight.'},
  grizzly:{gait:'lumber', strikeH:2.8, mountH:1.5, maul:true, style:'Brawler', how:'Bulls straight in; every third swipe is a full maul.'},
  tiger:{gait:'stalk', strikeH:3.6, mountH:1.2, pounce:9, style:'Stalker', how:'Creeps in low and slow, then pounces from 9 m.'},
- lion:{gait:'rush', strikeH:3, mountH:1.2, pounce:5, style:'Sprinter', how:'Fastest sprint here: rushes straight in and leaps the last 5 m; jumps onto the back of big prey that is busy with someone else.'},
- gorilla:{gait:'lumber', strikeH:2.4, mountH:0, style:'Bluffer', how:'Beats its chest at anything coming for you, drawing it onto itself; bluff-charges first and fights for real only if that fails.'},
+ lion:{gait:'rush', strikeH:3, mountH:1.2, pounce:5, style:'Sprinter', how:'Fastest sprint here: closes to ~30 m, then rushes in and leaps the last 5 m; jumps onto the back of big prey that is busy with someone else.'},
+ gorilla:{gait:'lumber', strikeH:2.4, mountH:0, style:'Bluffer', how:'Beats its chest at anything coming for you, drawing it onto itself; bluff-charges first and fights for real only if that fails; cornered, it just bites.'},
  jaguar:{gait:'stalk', strikeH:2.8, mountH:0, pounce:7, style:'Stalker', how:'Creeps in, or swims in with only its head showing, then pounces from 7 m for a skull bite.'},
  wolf:{gait:'orbit', strikeH:1.4, mountH:0, dart:1.1, style:'Harrier', how:'Circles at a distance, darts in to bite the legs, then backs out. Alone, it nips big prey and leads it off on a chase.'},
  cougar:{gait:'stalk', strikeH:5, mountH:0, pounce:12, style:'Leaper', how:'Stalks, then leaps from 12 m (the longest pounce on the board), lands from behind and bites the back of the neck.'},
@@ -91,7 +99,7 @@ const STYLE = {
  bull:{gait:'charge', strikeH:1.7, mountH:1.6, overshoot:5, turn:1.2, wheel:.6, style:'Relentless charger', how:'Charges, hooks, spins and charges again. Never stops coming until it tires.'},
  moose:{gait:'charge', strikeH:2.4, mountH:2.0, overshoot:3, turn:1.0, wheel:.8, style:'Stomper', how:'Short charge, then rears up and rains front-hoof strikes.'},
  ostrich:{gait:'keepaway', strikeH:1.3, mountH:1.4, style:'Kickboxer', how:'Outruns trouble; whatever comes at it, or at you up close, gets a forward kick that rips it open with a dagger claw.'},
- honeybadger:{gait:'lumber', strikeH:.8, mountH:0, style:'Pest', how:'Trundles straight at anything and bites the ankles; grab it and you get a face full of musk.'},
+ honeybadger:{gait:'lumber', strikeH:.8, mountH:0, style:'Pest', how:'Trundles in at things its own size and bites the ankles; grab it and you get a face full of musk.'},
  smilodon:{gait:'stalk', strikeH:3, mountH:1.2, pounce:6, style:'Sabre-tooth', how:'Creeps close and springs from 6 m, wrestles its prey down, drives in its sabres, then lets go and waits for it to bleed out.'},
  giantkangaroo:{gait:'keepaway', strikeH:2.3, mountH:0, style:'Kickboxer', how:'Grabs what gets close, rocks back and kicks with both feet; chased by a predator, it backs into water and holds it under.'},
  mammoth:{gait:'lumber', strikeH:5, mountH:3.2, style:'Ice-age bulldozer', how:'Wades in steadily; every strike is a tusk-and-trunk sweep that also hits everything else within reach.'},
@@ -99,10 +107,13 @@ const STYLE = {
  leopard:{gait:'stalk', strikeH:3.5, mountH:0, pounce:7, style:'Stalker', how:'Creeps in close under cover, then pounces from 7 m for the throat. On guard it lies hidden beside you and springs on whatever comes for you.'},
  boar:{gait:'charge', strikeH:1.0, mountH:0, overshoot:3, turn:1.5, wheel:.4, style:'Slasher', how:'Short, low charges that bowl over anything its size, a sideways slash of the tusks, then spins and comes again.'},
  triceratops:{gait:'charge', strikeH:2.4, mountH:3.0, overshoot:6, turn:.3, wheel:1.5, style:'Living battering ram', how:'Lowers its frill and charges; brow horns at the height of a lion\'s chest.'},
+ muskox:{gait:'charge', strikeH:1.5, mountH:0, overshoot:2, turn:1.2, wheel:.5, style:'Living wall', how:'Short head-down dashes. When predators close in, the herd forms a line or a ring around you, horn bosses out, and takes turns charging out and back.'},
+ gaur:{gait:'charge', strikeH:1.9, mountH:1.9, overshoot:4, turn:.9, wheel:.8, style:'Placid tank', how:'Grazes until provoked. Turns to face a stalking cat and walks straight at it; once roused, a heavy charge that threads between trees.'},
+ walrus:{gait:'lumber', strikeH:1.5, mountH:0, style:'Shore guard', how:'Lies low in the water by the shore and heaves out at whatever comes to the edge, stabbing down with both tusks.'},
 };
 ANIMALS.forEach(a => Object.assign(a, STYLE[a.id]));
 // Pack items: the same species, but one pick brings several. A board deals a species solo or as a pack, never both.
-for (const [id, n, groupName, price, suffix, dealWeight, rare] of [['wolf', 4, 'Wolf pack', 100, null, 3], ['wolf', 6, 'Great wolf pack', 200, 'pack6', .3, true], ['hyena', 4, 'Hyena clan', 200], ['lion', 2, 'Lion coalition', 200], ['buffalo', 3, 'Buffalo herd', 700, 'herd'], ['bison', 3, 'Bison herd', 700, 'herd']])
+for (const [id, n, groupName, price, suffix, dealWeight, rare] of [['wolf', 4, 'Wolf pack', 100, null, 3], ['wolf', 6, 'Great wolf pack', 200, 'pack6', .3, true], ['hyena', 4, 'Hyena clan', 200], ['lion', 2, 'Lion coalition', 100], ['buffalo', 3, 'Buffalo herd', 700, 'herd'], ['bison', 3, 'Bison herd', 700, 'herd'], ['muskox', 3, 'Musk ox herd', 400, 'herd']])
   ANIMALS.push(Object.assign({}, ANIMALS.find(a => a.id === id), Object.assign({id: id + (suffix || 'pack'), species: id, group: n, groupName, price, dealWeight: dealWeight || 1}, rare ? {rare: true, traits: ['Rare: six wolves hunting as one', 'They circle, test and hamstring until the biggest prey goes down', 'Endless stamina; nervous only if the pack breaks up']} : {})));
 const HUMAN = {id:'human', name:'You', abbr:'YOU', price:0, mass:75, spd:6.5, dmg:6, cd:1, armor:0, reach:1.2, stam:8, heat:1, cold:.6, water:-.5, aggr:0, flee:0, corner:1, pred:false, charge:false, vision:35, swim:1, strikeH:1.8, mountH:0, gait:'human', climb:true, tags:[]};
 const BY_ID = {}; ANIMALS.forEach(a => BY_ID[a.id] = a); BY_ID.human = HUMAN;
@@ -204,6 +215,18 @@ function boonMods(ids){
   return {dmg: on('spear') ? 2 : 1, heat: on('waterskin') ? .7 : 1, snow: on('snowshoes') ? .5 : 1, whistle: on('whistle'), smoke: on('smoke') ? .1 : 0, hide: on('hide') ? .85 : 1, see: on('tower') ? 1.2 : 1};
 }
 
+// ---------- progressive-mode levels and scars (cfg.levels, cfg.maxHp; opt-in, absent = the plain game) ----------
+// cfg.levels = {id: 0-3}: experience, not superpowers. 1 Seasoned: morale breaks later (flee threshold x.75) and a fallen
+// packmate shakes it half as much; 2 Cunning: +15% sight range; 3 Veteran: +10% damage, +10% max health. Levels stack.
+// cfg.maxHp = {id: multiplier | [multiplier per surviving member]}: lasting scars (-10% each). Your side only.
+const LEVEL_FX = {flee: .75, shaken: .5, see: 1.15, dmg: 1.1, hp: 1.1};
+function progMods(cfg, aid, u, k){
+  const lv = (cfg.levels && cfg.levels[aid]) || 0, mh = cfg.maxHp && cfg.maxHp[aid], m = Array.isArray(mh) ? mh[k] : mh;
+  if (lv > 0) u.lv = lv;
+  const f = (lv >= 3 ? LEVEL_FX.hp : 1) * (m != null ? clamp(m, .1, 2) : 1);
+  if (f !== 1){ u.maxhp *= f; u.hp = u.maxhp; }
+}
+
 // ---------- world setup ----------
 function setup(cfg){
   // the live game's learned policies (policy/live.js) apply unless the cfg brings its own movePolicy or sets livePolicy:false
@@ -259,6 +282,7 @@ function setup(cfg){
     const u = mkUnit(s, 'P', pos.x, pos.y, w.nid++);
     // migration carry-over: startHp[id] = a fraction, or one fraction per surviving member of a pack/herd (its length is the group size)
     const hp0 = cfg.startHp && cfg.startHp[aid], hpAt = k => Array.isArray(hp0) ? hp0[k] : hp0, nGroup = Array.isArray(hp0) ? Math.max(1, hp0.length) : groupSize(cfg, s);
+    if (cfg.levels || cfg.maxHp) progMods(cfg, aid, u, 0);
     if (hp0 != null) u.hp = u.maxhp * clamp(hpAt(0), .01, 1);
     u.homeDx = pos.x - human.x; u.homeDy = pos.y - human.y; u.agit = .5;
     if (Math.hypot(u.homeDx, u.homeDy) > ESCORT_R && aid !== mountId) u.post = {x: pos.x, y: pos.y};
@@ -267,6 +291,7 @@ function setup(cfg){
     // a group item (wolf pack, hyena clan, lion pride) brings its packmates, placed around the leader
     for (let k = 1; k < nGroup; k++){
       const a = k * 2.4, q = clampPlace(T.id, s, pos.x + Math.cos(a) * 2.2, pos.y + Math.sin(a) * 2.2, V), m = mkUnit(s, 'P', q.x, q.y, w.nid++);
+      if (cfg.levels || cfg.maxHp) progMods(cfg, aid, m, k);
       if (hp0 != null) m.hp = m.maxhp * clamp(hpAt(k), .01, 1);
       m.homeDx = q.x - human.x; m.homeDy = q.y - human.y; m.agit = .5; if (u.post) m.post = {x: q.x, y: q.y};
       w.units.push(m);
@@ -312,6 +337,7 @@ function setup(cfg){
   // closing arena: a themed hazard (fire / flood / blizzard) closes in from the edges toward a point near mid-field
   if (T.hazard && w.mode === 'wild' && cfg.hazard !== false) w.zone = {kind: T.hazard, cx: W / 2 + (R() - .5) * 16, cy: H / 2 + (R() - .5) * 12};
   w.zb = zoneAt(w, 0);
+  w.hasRing = w.units.some(u => has(u, 'ring')); // musk ox formations (only boards with a musk ox herd run ringUpdate)
   if (V.on && V.note) log(w, V.note, 'info');
   return w;
 }
@@ -404,7 +430,7 @@ function packStrength(w, u){ let s = strength(u); if (social(u)) for (const o of
 function yieldsTo(w, u, o){ const l = u.s.yieldsTo; if (!l || !l.includes(sp(o.s))) return false; return sp(o.s) !== 'wolf' || packMates(w, o) > 0; }
 function packMates(w, u){ let n = 0; for (const o of w.units) if (packMate(u, o) && dist(u, o) < 15) n++; return n; }
 // signature-move counter (for the identity audit): w.sig['tiger:pounce'] = how many times it happened this fight
-function sig(w, u, name){ if (!u || !u.s || u.side === 'H') return; const k = u.s.id + ':' + name; w.sig[k] = (w.sig[k] || 0) + 1; }
+function sig(w, u, name){ if (!u || !u.s || u.side === 'H') return; const k = u.s.id + ':' + name; w.sig[k] = (w.sig[k] || 0) + 1; u.st.sig = (u.st.sig || 0) + 1; } // u.st.sig: per-unit count (progressive-mode XP; stats only)
 function strength(u){ return Math.sqrt(Math.max(1,u.hp) * (u.s.dmg / u.s.cd)); }
 function pressure(w){ return w.mode === 'wild' ? Math.min(1, w.t / 150) : 1; }
 // water: w.band is the river (vertical band x0..x1 with shallow fords), w.ponds are ellipses; w.wet = any water at all
@@ -442,7 +468,7 @@ function awayWater(w, u){
   return {x: dx / m * 1.5, y: dy / m * 1.5};
 }
 function inShade(w, u){ return w.shade.some(t => Math.hypot(t.x - u.x, t.y - u.y) < t.r); }
-function snowFactor(s){ if (['polar','wolf','cougar','moose'].includes(sp(s))) return 1; if (s.id === 'mammoth') return .75; if (s.id === 'bison') return .92; return clamp(1.05 - .25 * Math.log10(Math.max(50, s.mass) / 50), .5, .95); }
+function snowFactor(s){ if (['polar','wolf','cougar','moose','walrus'].includes(sp(s))) return 1; if (s.id === 'mammoth') return .75; if (s.id === 'bison' || sp(s) === 'muskox') return .92; return clamp(1.05 - .25 * Math.log10(Math.max(50, s.mass) / 50), .5, .95); }
 function heatLoad(s){ return Math.pow(s.mass / 400, .3) / Math.pow(s.heat, 2.2); }
 function ambient(w){ return w.T.amb * (w.T.heatRamp ? Math.min(2.2, 1 + w.t / 110) : 1); }
 function active(u){ return u.state !== 'dead' && !u.escaped && !u.penned; }
@@ -469,6 +495,7 @@ function reachable(att, t){
 function canSee(w, viewer, u){
   let range = viewer.s.vision * (w.T.vision || 1);
   if (w.bn && viewer.side !== 'E') range *= w.bn.see; // lookout tower
+  if (viewer.lv >= 2) range *= LEVEL_FX.see; // Cunning: reads the field sooner
   if (viewer.side !== 'E' && w.lookout) range *= 1.5;
   else if (w.alarm && w.alarm[viewer.side === 'H' ? 'P' : viewer.side] > 0) range *= 1.25; // a kangaroo's thump put everyone on alert
   // big cats find each other by scent: a hidden cat is no secret to another cat
@@ -500,7 +527,7 @@ function guardsAround(w, t, me){
   let g = 0;
   for (const u of w.units){
     if (u === t || u === me || !active(u) || u.side === 'E' || u.state === 'flee' || hiddenGuard(u)) continue;
-    if (dist(u, t) < 7) g += strength(u) * (busy(u) ? .5 : 1); // a guard already in a fight deters less
+    if (dist(u, t) < 7) g += strength(u) * (busy(u) ? .5 : 1) * (u.ringOn && !u.sortie ? 2 : 1); // a guard already in a fight deters less; a musk ox in its ring, horns out, twice as much
   }
   return g;
 }
@@ -516,9 +543,8 @@ function predatorTarget(w, u){
     if (has(u,'waterbound') && w.wet && distWater(w, t) > 5) continue; // a croc takes prey at the water's edge, never on open ground
     const ts = strength(t);
     let vuln = Math.min(4, Math.pow(my / ts, 1.2));
-    if (has(u,'fearless')) vuln = Math.max(vuln, .6); // a honey badger takes on anything
     let sc = Math.pow(t.s.mass, expo) * vuln;
-    if (ts > my * 2.5 && u.grudge !== t && !has(u,'fearless')) sc *= 0.05;
+    if (ts > my * 2.5 && u.grudge !== t) sc *= 0.05; // a honey badger too: wary, it bolts from lion tracks and fights when surprised (Begg)
     if (t.s.id === 'elephant' || has(t,'giant')) sc *= 0.1;
     if (t.side === 'H') sc *= (u.s.prey && u.s.prey.human) || 1;
     if (has(u,'riderSnatcher') && t.riding) sc *= 1.6; // a rider is just prey on a high perch to a cougar
@@ -561,6 +587,7 @@ function herbivoreTarget(w, u){
   for (const t of w.units){
     if (!hostile(w, u, t)) continue;
     if (u.repelBy === t && u.repelUntil > w.t) continue; // musked
+    if (has(u,'shoreGuard') && w.wet && distWater(w, t) > 6 && u.grudge !== t) continue; // a walrus defends its water, not the open snow (left alone in its lake, the fight can end 'quiet')
     const d = dist(u, t);
     let sc = 0;
     if (u.grudge === t) sc = 5;
@@ -606,7 +633,7 @@ function allyTarget(w, u){
     if (e.side !== 'E' || !active(e)) continue;
     if (u.repelBy === e && u.repelUntil > w.t) continue; // musked
     if (!teamSees(w, e) && !(u.post && dist(u, e) < 10)) continue;
-    if (has(u,'waterbound') && w.wet && distWater(w, e) > 10) continue;
+    if ((has(u,'waterbound') || has(u,'shoreGuard')) && w.wet && distWater(w, e) > 10) continue; // (a walrus holds the shore too)
     const dh = dist(e, anchor), dm = dist(u, e);
     const called = !!(w.bn && w.bn.whistle && e.target === H && dist(e, H) < 25 && !u.rider); // ranger's whistle: anything coming for you within 25 m
     if (dh > leash && !(u.target === e && dh < leash + 8) && u.grudge !== e && !called) continue;
@@ -727,7 +754,7 @@ function strike(w, a, t, opts){
   if (a.fangBroken) dmg *= .7;
   if (opts.stab) dmg *= 3;
   if (opts.latch){ dmg *= .65; if (has(t,'mane')) dmg *= .6; if (has(t,'looseSkin')) dmg *= .5; }
-  if (opts.pounce){ dmg *= 1.4; sig(w, a, a.fromTree ? 'tree drop' : 'pounce'); }
+  if (opts.pounce){ dmg *= 1.4; sig(w, a, a.fromTree ? 'tree drop' : has(a,'shoreGuard') ? 'surges from the water' : 'pounce'); }
   // a cougar comes from behind and bites the back of the neck (into the spine): prey that wasn't facing it is stunned
   let nape = false;
   if (opts.pounce && has(a,'napeBite') && t.target !== a && t.s.mass <= 5 * a.s.mass){
@@ -750,13 +777,27 @@ function strike(w, a, t, opts){
     else { const hx = t.mv.nx, hy = t.mv.ny, ax = a.x - t.x, ay = a.y - t.y, m = Math.hypot(ax, ay) || 1; if ((hx * ax + hy * ay) / m < -.3) flank = true; }
   }
   if (flank){ dmg *= 1.25; sig(w, a, 'flank'); if (w.R() < .3) log(w, `${capName(a)} catches ${nameOf(t)} side-on`, 'flank', t); }
-  let armor = t.s.armor * (1 - (s.pierce || 0)) * (opts.latch || opts.stab || nape ? .5 : 1) * Math.max(.4, 1 - .1 * (mob - 1)) * (flank ? .5 : 1);
+  // a walrus at the water's edge drives both tusks down into whatever comes to it (every other strike)
+  let tusk = false;
+  if (has(a,'tuskStab') && !opts.latch && !opts.sweep && w.wet && distWater(w, a) < 1.5 && distWater(w, t) < 1.5){
+    a.tuskAlt = !a.tuskAlt; if (a.tuskAlt){ tusk = true; dmg *= 1.5; sig(w, a, 'tusk stab'); if (w.R() < .35) log(w, `${capName(a)} heaves up and stabs ${nameOf(t)} with both tusks`, 'maul', t); }
+  }
+  let armor = t.s.armor * (1 - (s.pierce || 0)) * (opts.latch || opts.stab || nape || tusk ? .5 : 1) * Math.max(.4, 1 - .1 * (mob - 1)) * (flank ? .5 : 1);
+  // a musk ox in its line or ring meets anything in front of it with its horn boss (10 cm of horn over 7.5 cm of bone)
+  if (t.ringOn && !t.sortie && t.ringFace){ const ax = a.x - t.x, ay = a.y - t.y, am = Math.hypot(ax, ay) || 1; if ((ax * t.ringFace.x + ay * t.ringFace.y) / am > .5){ armor = Math.min(.8, armor + .25); sig(w, t, 'horn boss'); } }
   if (t.s.id === 'croc') armor = inWater(w,t) ? Math.min(.8, armor + .1) : armor - .2;
   dmg *= (1 - armor);
   if (t.side === 'H' && t.riding) dmg *= 1;
   if (w.bn){ if (a.side === 'H') dmg *= w.bn.dmg; if (t.side === 'H') dmg *= w.bn.hide; } // spear, hide coat
+  if (a.lv >= 3) dmg *= LEVEL_FX.dmg; // Veteran: practised technique
   dmg = Math.max(1, dmg);
   applyDamage(w, a, t, dmg);
+  // a bear, or anything twice a musk ox's size, that gets in among the ring breaks it up (NPS: bears hunt them in their circle)
+  if (t.ringOn && a.side !== 'H' && (RING_BREAKERS.includes(sp(a.s)) || a.s.mass > 2 * t.s.mass)) breakRing(w, t.side, `${capName(a)} breaks up the musk ox ring`, t, RING_BREAKERS.includes(sp(a.s)));
+  if (tusk && t.state !== 'dead'){
+    if (t.s.mass <= 1.5 * a.s.mass && !t.riding){ t.stun = Math.max(t.stun, 1); if (t.latchOn) release(w, t, 'pinned'); }
+    if (t.rider && inWater(w, t) && t.s.mountH <= 2 && w.R() < .3) throwRider(w, t, `${capName(a)} stabbed it from the water`, a); // the walrus that capsizes the kayak
+  }
   // secondary effects
   if (has(a,'boxer') && !opts.latch && t.state !== 'dead' && t.s.mass < 1.5 * a.s.mass && !t.latchedBy){ // the kick: a heavy blunt shove (it can't move something much bigger)
     const d = dist(a, t) || 1, kb = 1.5 * Math.min(1, a.s.mass / t.s.mass); t.x += (t.x - a.x) / d * kb; t.y += (t.y - a.y) / d * kb; t.stun = Math.max(t.stun, .4); sig(w, a, clinched ? 'clinch and kick' : 'two-footed kick'); }
@@ -885,8 +926,11 @@ function speedOf(w, u){
     if (w.coldWater && inColdWater(w, u)) v *= .6 + .4 * u.s.cold; // near-freezing water stiffens anything not built for it
   }
   else if (onFord(w, u) && u.s.water < .8) v *= .8;
-  if (has(u,'waterbound') && !(w.wet && distWater(w, u) < 4)) v *= .7; // a croc on land is slow and tires fast (its bite is as strong as ever)
-  if (w.T.id === 'forest' && u.s.mass > 800) v *= .78;
+  if (has(u,'waterbound') && !(w.wet && distWater(w, u) < 4)){ // a croc on land: a burst out of the water, then a slow walk (its bite is as strong as ever)
+    const dW = w.wet ? distWater(w, u) : 0;
+    v *= dW > 10 ? .25 : .7; // walk 2-4 km/h, exhausted before 100 m (IUCN CSG, Locomotion); no water on the map: as before
+  }
+  if (w.T.id === 'forest' && u.s.mass > 800 && !has(u,'forestRunner')) v *= .78; // (a gaur lives in forest and moves through it at speed)
   if (w.T.snow){ let sf = snowFactor(u.s); if (w.bn && u.side === 'H') sf = 1 - (1 - sf) * w.bn.snow; v *= w.snowDepth === 1 ? sf : Math.max(.35, 1 - (1 - sf) * w.snowDepth); }
   if (u.slowT > 0) v *= (1 - u.slow);
   if (u.limp) v *= 1 - u.limp; // bones cracked by a hyena
@@ -957,7 +1001,7 @@ function step(w){
     const floor = Math.min(.95, .5 + w.t / 90);
     for (const u of units){
       if (!active(u) || u.side !== 'E') continue;
-      if (!u.s.pred) u.agit = Math.max(u.agit, floor);
+      if (!u.s.pred && !has(u,'placid')) u.agit = Math.max(u.agit, floor); // a gaur stays placid until something provokes it
       if (u.feud){ u.feudT -= DT; if (u.feudT <= 0 || !active(u.feud)){ if (u.feud && active(u.feud)) log(w, `${capName(u)} and ${nameOf(u.feud)} break off their scrap`, 'info', u); u.feud = null; } continue; }
       if (!u.s.rivals) continue;
       for (const o of units){
@@ -998,6 +1042,7 @@ function step(w){
   // morale
   for (const u of units){
     if (!active(u) || u.side === 'H') continue;
+    if (u.side === 'P' && !(u.st.low <= u.hp / u.maxhp)) u.st.low = u.hp / u.maxhp; // lowest health this fight (progressive-mode scars; stats only)
     const my = strength(u);
     let fear = 0, friends = 0;
     for (const o of units){
@@ -1016,17 +1061,18 @@ function step(w){
       if (o.side !== u.side || o === u || !(o.state === 'dead' || o.escaped)) continue;
       if (sp(o.s) === sp(u.s)) fallen += 1; else if (o.state === 'dead' && dist(o, u) < 15) fallen += .4;
     }
-    tgt -= (u.side === 'E' ? .05 : .03) * fallen;
+    tgt -= (u.side === 'E' ? .05 : .03) * fallen * (u.lv >= 1 ? LEVEL_FX.shaken : 1);
     if (u.side === 'E' && u.state !== 'flee') tgt += .25 * pressure(w);
     if (w.bn && w.bn.smoke && u.side === 'E' && w.t < 45) tgt -= w.bn.smoke; // smoke pots
     if (u.side === 'P') tgt += Math.min(.25, friends * .06);
     if (u.s.yieldsTo) for (const o of units) if (active(o) && hostile(w,o,u) && yieldsTo(w, u, o) && dist(o,u) < 10) tgt -= .25;
     if (has(u,'standsGround') && u.hp < u.maxhp * .95 && u.grudge) tgt += .25;
     if (has(u,'fearless')) tgt = Math.max(tgt, .8);
+    if (u.ringOn) tgt = Math.max(tgt, .5); // shoulder to shoulder, a musk ox holds its nerve
     if (has(u,'vindictive') && u.grudge && active(u.grudge)) tgt += .3; // it does not give up on whoever hurt it
     if (has(u,'guardian') && u.side === 'P' && units.some(e => e.side === 'E' && active(e) && e.target === w.human && dist(e, u) < 15)) tgt = Math.max(tgt, .8); // fights to the death for you
     u.morale += (tgt - u.morale) * Math.min(1, .6 * DT);
-    if (u.state !== 'flee' && u.cornerT <= 0 && u.morale < u.s.flee && u.fleeT <= 0 && !u.withdrawn){
+    if (u.state !== 'flee' && u.cornerT <= 0 && u.morale < u.s.flee * (u.lv >= 1 ? LEVEL_FX.flee : 1) && u.fleeT <= 0 && !u.withdrawn){
       u.state = 'flee'; u.fleeT = 4 + R() * 4; release(w, u); u.mv = null;
       u.breaks = (u.breaks || 0) + 1;
       if (u.rider && R() < (u.state === 'carry' && !u.latchedBy ? .15 : .5)) throwRider(w, u, 'it panicked and bolted'); // a mount already running with you mostly just runs faster; one that's grabbed bucks
@@ -1070,6 +1116,8 @@ function step(w){
     u.retargetT -= DT;
     if (u.retargetT <= 0){ u.retargetT = .5 + R() * .2; chooseTarget(w, u); }
   }
+  if (w.hasRing) ringUpdate(w);
+  for (const u of units) if (has(u,'facesDown') && active(u)) faceDown(w, u);
   // movement
   for (const u of units){
     if (!active(u)) continue;
@@ -1102,7 +1150,11 @@ function step(w){
         const m = Math.hypot(ax, ay) || 1; u.kite = {x: u.x + ax / m * 6, y: u.y + ay / m * 6}; if (!u.kiting){ u.kiting = true; sig(w, u, 'leads a chase'); } }
       else u.kiting = false;
     }
-    if (u.state === 'flee'){
+    if (u.ringOn && u.ringSlot && u.state !== 'flee' && !u.heatstroke){ // musk ox holding its place in the line / ring
+      const g = Math.hypot(u.ringSlot.x - u.x, u.ringSlot.y - u.y); tx = u.ringSlot.x; ty = u.ringSlot.y; frac = g < .6 ? 0 : g > 4 ? 1 : .5;
+    } else if (u.fdT > w.t && u.fdOn && active(u.fdOn) && u.state !== 'flee' && !u.heatstroke){ // a gaur walking steadily at the cat it has spotted
+      tx = u.fdOn.x; ty = u.fdOn.y; frac = Math.min(1, 2 / Math.max(.1, vmax));
+    } else if (u.state === 'flee'){
       let ax = 0, ay = 0;
       for (const o of units) if (active(o) && hostile(w,o,u)){ const d = dist(o,u); const k = 1 / (d*d + 1); ax += (u.x-o.x)*k; ay += (u.y-o.y)*k; }
       let m = Math.hypot(ax, ay);
@@ -1135,6 +1187,7 @@ function step(w){
     } else if (u.state === 'engage' && u.target){
       const t = u.target, d = dist(u, t), touch = u.r + t.r + u.s.reach * .6;
       if (has(u,'waterbound') && w.wet && distWater(w, t) > 5){ const p = waterPoint(w, u, t); tx = p.x; ty = p.band ? t.y : p.y; frac = .3; }
+      else if (has(u,'shoreGuard') && w.wet && distWater(w, t) > 3 && d > touch + 1){ const p = waterPoint(w, u, t); tx = p.x; ty = p.band ? t.y : p.y; frac = .6; } // a walrus waits in the water by the shore nearest it
       else if (perchAmbush(w, u, t, d)){ continue; } // up a tree, waiting to drop on it
       else if (u.backT > 0 && t === u.stabbed){ // stabbed and let go: circle out of reach while it bleeds
         const rx = (u.x - t.x) / (d || 1), ry = (u.y - t.y) / (d || 1), vx = -ry * u.orbitDir + rx * (8 - d) * .4, vy = rx * u.orbitDir + ry * (8 - d) * .4, m = Math.hypot(vx, vy) || 1;
@@ -1154,6 +1207,7 @@ function step(w){
       tx = H.x + u.homeDx; ty = H.y + u.homeDy;
       if (u.post){ tx = u.post.x; ty = u.post.y; }
       if (u.rider || w.mount === u){ tx = H.x; ty = H.y; }
+      if (has(u,'shoreGuard') && w.wet && distWater(w, {x: tx, y: ty}) < 15){ const p = waterPoint(w, {x: tx, y: ty}, {x: tx, y: ty}); tx = p.x; ty = p.band ? ty : p.y; } // a walrus guards from the water nearest its spot
       frac = Math.hypot(tx-u.x, ty-u.y) > 6 ? .8 : .35;
       if (Math.hypot(tx-u.x, ty-u.y) < 1) frac = 0;
       if (u.gIntent && w.cfg.movePolicy){ const m = guardIdleGo(w, u); if (m){ tx = m.tx; ty = m.ty; frac = m.frac; } } // learned guard intent (policy/), opt-in
@@ -1162,7 +1216,7 @@ function step(w){
       if (!u.wander || R() < .01){
         const H0 = w.human, lean = u.sated ? 0 : Math.min(1, (u.s.pred ? .5 : .2 + u.agit * .7) + pressure(w) * .6);
         const bx = u.x + (H0.x - u.x) * lean * .5, by = u.y + (H0.y - u.y) * lean * .5;
-        u.wander = {x: clamp(bx + (R()-.5)*20, 5, W-5), y: clamp(by + (R()-.5)*20, 5, H-5)}; if (has(u,'waterbound') && w.wet) u.wander = nearWaterPt(w, u, u.wander, -1); } // lurk submerged
+        u.wander = {x: clamp(bx + (R()-.5)*20, 5, W-5), y: clamp(by + (R()-.5)*20, 5, H-5)}; if (has(u,'waterbound') && w.wet) u.wander = nearWaterPt(w, u, u.wander, -1); else if (has(u,'shoreGuard') && w.wet) u.wander = waterPoint(w, u, u.wander); } // lurk submerged; a walrus keeps to its water
       if (has(u,'waterbound') && !w.wet){ frac = 0; }
       else { tx = u.wander.x; ty = u.wander.y; frac = u.state === 'rest' ? .12 : .35 + .35 * pressure(w); }
     }
@@ -1286,8 +1340,10 @@ function step(w){
         } else { u.stun = .8; if (w.R() < .3) log(w, `${capName(u)} leaps for you and misses`, 'info', u); continue; }
       } else { u.atk = .5; continue; }
     }
-    // bluff / mock charge (gorilla always; elephant, mammoth, black rhino, bison sometimes): stop short and rattle it first
-    if (has(u,'bluff') && u.bluffed[t.id] === undefined) u.bluffed[t.id] = w.R() < (u.s.bluffP || 1) && u.grudge !== t && !(u.side === 'P' && t.target === w.human);
+    // bluff / mock charge (gorilla always; elephant, mammoth, black rhino, bison, bears sometimes): stop short and rattle it first.
+    // Never when cornered (a cornered gorilla bites without the display: Betsem 2011); a black bear rarely bluffs a person
+    // (88% of fatal black bear attacks were predatory: Herrero et al. 2011)
+    if (has(u,'bluff') && u.bluffed[t.id] === undefined) u.bluffed[t.id] = w.R() < (t === w.human && u.s.bluffHumanP !== undefined ? u.s.bluffHumanP : (u.s.bluffP || 1)) && u.grudge !== t && u.cornerT <= 0 && !(u.side === 'P' && t.target === w.human);
     if (u.bluffed[t.id] === true){
       u.bluffed[t.id] = false; u.atk = u.s.cd * 1.5; sig(w, u, 'mock charge');
       if (strength(t) < strength(u) * 1.5){ t.morale -= .35; log(w, `${capName(u)} ${u.s.id === 'gorilla' ? 'bluff-charges' : 'mock-charges'} ${nameOf(t)}, rattling it`, 'bluff', u); }
@@ -1353,6 +1409,110 @@ function waitForOpening(w, u, t, d){
   const patience = (6 + 18 * (1 - u.s.aggr)) * (1.3 - u.hunger);
   if (u.waitT >= patience || guardsAround(w, t, u) < 1.2 * packStrength(w, u)) return false;
   u.waitT += DT; return true;
+}
+// ---------- musk ox ring (tag 'ring'; research/mid_tier_candidates.md §1) ----------
+// Two or more musk oxen of a side close together, and an enemy predator coming for one of them (or, on your side, for
+// you, or anything of yours inside the herd) within 25 m: one predator, the herd forms a line between it and you; several, a ring around you (around the herd
+// itself on the other side), each ox facing the nearest threat. Holding station: horn-boss armor in front, morale floor
+// .5, each counts double as a guard. Every 6-10 s the ox nearest a predator within 8 m dashes at it (<= 10 m) and goes back.
+// The ring breaks (15 s before it can re-form) when a bear or anything over twice an ox's mass hits one of them (a bear
+// sends the herd running for a few seconds), or one drops below 30% health; it dissolves after 20 s with no predator
+// within 8 m (no standoffs), or when the threat is gone. Ringing you (not calves) is the game's abstraction, as the gorilla's.
+// (NPS Gates of the Arctic and Cape Krusenstern: a line for one predator, a circle for many; one ox charges out and
+// rejoins; some grizzlies have learned to break the circle.)
+const RING_BREAKERS = ['grizzly', 'polar'];
+const RING = {trig: 25, herd: 15, sortieR: 8, sortieRun: 10, quiet: 20, cd: 15, lineGap: 3.8};
+// why = a log line (the ring was broken, not just stood down); bolt = the herd runs for a few seconds (a bear got in among it)
+function breakRing(w, side, why, u, bolt){
+  const rs = w.ring && w.ring[side]; if (!rs || !rs.on) return;
+  rs.on = false; rs.cd = RING.cd;
+  for (const o of w.units) if (o.ringOn && o.side === side){ o.ringOn = false; o.ringSlot = null; o.sortie = false; if (bolt && o.state !== 'dead'){ o.state = 'flee'; o.fleeT = 2.5 + w.R() * 2; o.mv = null; } }
+  if (why){ sig(w, u, bolt ? 'ring broken by a bear' : 'ring broken'); log(w, why + (bolt ? ', and the herd bolts' : ''), bolt ? 'flee' : 'info', u); } // a bear in the ring sends the herd running (NPS)
+}
+function ringUpdate(w){
+  if (!w.ring) w.ring = {P: {on: false, cd: 0, quiet: 0}, E: {on: false, cd: 0, quiet: 0}};
+  const hum = w.human;
+  for (const side of ['P', 'E']){
+    const rs = w.ring[side]; rs.cd -= DT;
+    const ox = w.units.filter(u => u.side === side && active(u) && has(u, 'ring') && u.state !== 'flee' && !u.withdrawn && !u.routing && !u.heatstroke && !u.latchOn);
+    if (!ox.length){ breakRing(w, side); continue; }
+    let cx = 0, cy = 0; for (const o of ox){ cx += o.x; cy += o.y; } cx /= ox.length; cy /= ox.length;
+    const ward = side === 'P' ? hum : {x: cx, y: cy};
+    const mem = ox.filter(o => Math.hypot(o.x - ward.x, o.y - ward.y) < RING.herd);
+    // a predator within 25 m that is after the herd (or you, or anything of yours inside it) forms the ring; once formed,
+    // it holds while any predator stays within 25 m, and stands down 2 s after the last one has gone or turned tail
+    const coming = e => mem.includes(e.target) || (side === 'P' && e.target === hum) || (e.target.side === side && dist(e.target, ward) < RING.herd);
+    const threats = w.units.filter(e => e.s.pred && active(e) && e.side !== 'H' && hostile(w, e, ox[0]) && e.state !== 'flee' && !e.routing && e.target &&
+      Math.hypot(e.x - ward.x, e.y - ward.y) < RING.trig && (rs.on || coming(e)));
+    if (rs.on){
+      rs.gone = threats.length ? 0 : (rs.gone || 0) + DT;
+      if (mem.length < 2 || rs.gone >= 2){ breakRing(w, side); rs.cd = 2; continue; }
+      if (!threats.length) continue; // hold the last stations for a moment
+      rs.quiet = threats.some(e => mem.some(o => dist(o, e) < RING.sortieR)) ? 0 : rs.quiet + DT;
+      if (rs.quiet >= RING.quiet){ sig(w, mem[0], 'ring dissolves'); breakRing(w, side); continue; }
+      const hurt = mem.find(o => o.hp < o.maxhp * .3); if (hurt){ breakRing(w, side, `${capName(hurt)} is too badly hurt to hold the ring`, hurt); continue; }
+    } else {
+      if (rs.cd > 0 || mem.length < 2 || !threats.length) continue;
+      rs.on = true; rs.quiet = 0;
+      for (const o of mem) if (o.mv) o.mv = null;
+      const kind = threats.length > 1 ? 'ring' : 'line';
+      sig(w, mem[0], kind === 'ring' ? 'forms a ring' : 'forms a line');
+      log(w, kind === 'ring' ? `The musk oxen close into a ring${side === 'P' ? ' around you' : ''}, horns out` : `The musk oxen line up shoulder to shoulder${side === 'P' ? ' in front of you' : ''}`, 'bluff', mem[0]);
+    }
+    for (const o of ox) if (!mem.includes(o) && o.ringOn){ o.ringOn = false; o.ringSlot = null; o.sortie = false; }
+    // stations: one threat -> a line across its approach; several -> evenly round the ward, starting toward the nearest threat
+    let th0 = threats[0], td = 1e9; for (const e of threats){ const d = Math.hypot(e.x - ward.x, e.y - ward.y); if (d < td){ td = d; th0 = e; } }
+    const ux = (th0.x - ward.x) / (td || 1), uy = (th0.y - ward.y) / (td || 1), n = mem.length, oxR = mem[0].r;
+    const inner = side === 'P' ? (hum.r + oxR) * .85 + .8 : 0; // clear of you
+    let slots;
+    if (threats.length === 1){
+      const px = -uy, py = ux, pr = o => (o.x - ward.x) * px + (o.y - ward.y) * py;
+      slots = mem.slice().sort((a, b) => pr(a) - pr(b)).map((o, i) => ({o, x: ward.x + ux * inner + px * RING.lineGap * (i - (n - 1) / 2), y: ward.y + uy * inner + py * RING.lineGap * (i - (n - 1) / 2)}));
+    } else {
+      const rad = Math.max(inner, RING.lineGap / (2 * Math.sin(Math.PI / Math.max(2, n)))), a0 = Math.atan2(uy, ux);
+      const ang = o => { let a = Math.atan2(o.y - ward.y, o.x - ward.x) - a0; while (a < 0) a += 2 * Math.PI; while (a >= 2 * Math.PI) a -= 2 * Math.PI; return a; };
+      slots = mem.slice().sort((a, b) => ang(a) - ang(b)).map((o, i) => ({o, x: ward.x + Math.cos(a0 + 2 * Math.PI * i / n) * rad, y: ward.y + Math.sin(a0 + 2 * Math.PI * i / n) * rad}));
+    }
+    let sortieOn = mem.some(o => o.sortie && o.mv);
+    for (const {o, x, y} of slots){
+      o.ringOn = true; o.ringSlot = {x: clamp(x, 2, W - 2), y: clamp(y, 2, H - 2)};
+      if (o.sortie && !o.mv) o.sortie = false;
+      let near = null, nd = 1e9; for (const e of threats){ const d = dist(o, e); if (d < nd){ nd = d; near = e; } }
+      o.ringFace = {x: (near.x - o.x) / (nd || 1), y: (near.y - o.y) / (nd || 1)};
+      o.sortieCd = (o.sortieCd || 0) - DT;
+      if (!o.sortie){ o.target = near; o.state = 'engage'; }
+      // sortie: the ox nearest a predator within 8 m dashes out at it, then backs into its place
+      if (!sortieOn && nd < RING.sortieR && o.sortieCd <= 0 && !o.mv && o.stun <= 0 && heightOf(near) <= o.s.strikeH){
+        const m = nd || 1, run = Math.min(RING.sortieRun, nd + (o.s.overshoot || 2));
+        o.mv = {k: 'charge', nx: (near.x - o.x) / m, ny: (near.y - o.y) / m, left: run, t: run / Math.max(3, o.s.spd) + 1.5, tgt: near, hit: {}};
+        o.sortie = true; sortieOn = true; o.target = near; o.sortieCd = 6 + 4 * w.R(); sig(w, o, 'sortie');
+      }
+    }
+  }
+}
+// ---------- gaur: faces down a stalking cat (tag 'facesDown'; research §2) ----------
+// A stalker (stalk gait or ambush) it can see within 20 m, creeping on the gaur or on anything of its side within 10 m
+// of it: the gaur turns and walks steadily at it. The cat loses its ambush, and 7 times in 10 it gives up on that prey
+// for 12 s and backs off (Karanth's Nagarahole herd walking a tiger off; tigers abandon a hunt once detected); a tiger
+// only 4 in 10, a leopard 8 in 10. 10 s cooldown.
+// Cats it can't see (a leopard lying hidden, a jaguar swimming in, a polar bear in snow) aren't faced down.
+// how readily each stalker gives up when faced (reviewer's estimate; the tiger is the gaur's real predator and presses on)
+const FACEDOWN_P = {tiger: .4, smilodon: .5, jaguar: .7, cougar: .7, leopard: .8};
+function faceDown(w, u){
+  if (u.fdCd > w.t || u.state === 'flee' || u.heatstroke || u.latchedBy || u.mv) return;
+  let c = null, cd = 20;
+  for (const o of w.units){
+    if (!active(o) || !hostile(w, u, o) || o.latchOn || o.state !== 'engage' || !o.target || o.mv) continue;
+    if (!(o.s.gait === 'stalk' || has(o, 'ambush'))) continue;
+    const t = o.target; if (!(t === u || (t !== o && !hostile(w, u, t) && dist(t, u) < 10))) continue;
+    const d = dist(u, o); if (d < cd && canSee(w, u, o)){ cd = d; c = o; }
+  }
+  if (!c) return;
+  u.fdCd = w.t + 10; u.fdOn = c; u.fdT = w.t + 3; u.target = c; u.state = 'engage'; c.ambushReady = false;
+  if (w.R() < (FACEDOWN_P[sp(c.s)] || .7)){
+    c.repelBy = c.target; c.repelUntil = w.t + 12; c.target = null; c.mv = null; c.state = 'flee'; c.fleeT = 2 + w.R() * 1.5;
+    sig(w, u, 'faces down a stalker'); log(w, `${capName(u)} turns and walks straight at ${nameOf(c)}, which slinks off`, 'bluff', u);
+  } else { sig(w, u, 'stalker spotted'); log(w, `${capName(u)} spots ${nameOf(c)} creeping in`, 'info', u); }
 }
 // wedged between trunks (no progress for a second while trying to move): detour sideways for a moment
 function unstick(w, u, d){
@@ -1478,13 +1638,16 @@ function gaitMove(w, u, t, d, touch, vmax){
       if (d > 6) log(w, `${capName(u)} pounces ${Math.round(d)} m onto ${nameOf(t)}`, 'pounce', u);
       commitMove(w, u, vmax); return null;
     }
-    // creep only while the prey is unaware; once it runs (or turns on you), break cover and run it down
+    // creep only while the prey is unaware; once it runs (or turns on you), break cover and run it down, but only from
+    // within ~30 m: a spotted tiger doesn't pursue from farther (Schaller 1967), stalkers need 15-20 m (Laundre &
+    // Hernandez 2003). Farther off it keeps creeping in
     const away = (t.vx * (t.x - u.x) + t.vy * (t.y - u.y)) / (d || 1);
     if (g === 'stalk' && d > P + 1){
-      if (!ally && (away > 2 || t.target === u)) return go(d < 30 ? 1 : .75);
+      if (!ally && (away > 2 || t.target === u)) return go(d < 30 ? 1 : .38);
       if (ally && (t.target === w.human || t.target === u || busy(t))) return go(1); // defending: no time to creep, run it down
       return go(ally ? .6 : .38);
     }
+    if (g === 'rush' && !ally && d > 30) return go(.6); // lions close in before the rush; success is highest from ~20 m (Van Orsdol 1984)
     return go(1);
   }
   if (g === 'lunge'){
@@ -1511,8 +1674,8 @@ function gaitMove(w, u, t, d, touch, vmax){
     return go(.7);
   }
   // lumber; an aquatic stalker in deep water surges out at prey on or near the bank (reuses the croc's lunge move)
-  if (has(u,'aquaStalk') && inWater(w, u) && d <= 6 && d > touch * .7 && u.pounceCd <= 0 && reachable(u, t)){
-    const V = 10, dur = clamp(d / V, .2, .55), m = d || 1;
+  if ((has(u,'aquaStalk') || has(u,'shoreGuard')) && inWater(w, u) && d <= 6 && d > touch * .7 && u.pounceCd <= 0 && reachable(u, t)){
+    const V = has(u,'shoreGuard') ? 7.5 : 10, dur = clamp(d / V, .2, .55), m = d || 1; // a walrus bursts to ~27 km/h over a few metres (cruise ~7 km/h, top ~35)
     u.mv = {k:'lunge', vx:(t.x - u.x) / m * V, vy:(t.y - u.y) / m * V, t:dur, tgt:t}; u.wetLunge = true;
     log(w, `${capName(u)} surges out of the water at ${nameOf(t)}`, 'lunge', u);
     commitMove(w, u, vmax); return null;
@@ -1527,7 +1690,7 @@ function commitMove(w, u, vmax){
     accel(u, mv.nx * vmax, mv.ny * vmax, 1.6);
     mv.left -= Math.hypot(u.vx, u.vy) * DT;
     if (inWater(w, u) && u.s.water < .8){ u.mv = {k:'wheel', t:(u.s.wheel || 1) + .8}; u.chargeCd = 2.5; u.vx *= .3; u.vy *= .3; log(w, `${capName(u)}'s charge founders in the deep water`, 'info', u); return; }
-    for (const tr of w.trees){
+    if (!has(u,'forestRunner')) for (const tr of w.trees){ // a gaur threads its charge between the trunks
       if (Math.hypot(tr.x - u.x, tr.y - u.y) < tr.r + u.r * .55 + .4 && Math.hypot(u.vx, u.vy) > vmax * .5){
         u.mv = null; u.vx = u.vy = 0; u.stun = Math.max(u.stun, 1.6); u.chargeCd = 3;
         applyDamage(w, u, u, u.maxhp * .04); if (u.state === 'dead') return;
@@ -1588,7 +1751,7 @@ function evadeMove(w, u){
 function defaultMount(team){ let b = null, h = 2.99; for (const id of team){ const m = BY_ID[id].mountH; if (m > h){ h = m; b = id; } } return b; }
 // Measured value of each pick (price_abs.js, seconds of survival): mine = with you vs left off the board,
 // theirs = against you vs off the board (negative = it hurts you). Written by apply_values.js; shown on the cards.
-const MEASURED = {/*MEASURED*/elephant:{mine:134,theirs:-23}, rhino:{mine:62,theirs:-14}, hippo:{mine:44,theirs:-22}, giraffe:{mine:34,theirs:-5}, polar:{mine:27,theirs:-10}, croc:{mine:22,theirs:-3}, buffalo:{mine:35,theirs:-21}, bison:{mine:35,theirs:-19}, grizzly:{mine:19,theirs:-14}, tiger:{mine:8,theirs:-18}, lion:{mine:11,theirs:-5}, gorilla:{mine:16,theirs:1}, jaguar:{mine:10,theirs:1}, wolf:{mine:11,theirs:4}, cougar:{mine:7,theirs:4}, hyena:{mine:4,theirs:-5}, blackrhino:{mine:34,theirs:-13}, bull:{mine:30,theirs:-5}, moose:{mine:35,theirs:-12}, ostrich:{mine:14,theirs:-7}, honeybadger:{mine:1,theirs:-3}, triceratops:{mine:134,theirs:-23}, mammoth:{mine:59,theirs:-23}, blackbear:{mine:9,theirs:-3}, leopard:{mine:13,theirs:-4}, boar:{mine:17,theirs:-7}, giantkangaroo:{mine:7,theirs:-4}, smilodon:{mine:20,theirs:-3}, wolfpack:{mine:26,theirs:-1}, wolfpack6:{mine:31,theirs:-1}, hyenapack:{mine:27,theirs:-12}, lionpack:{mine:22,theirs:-9}, buffaloherd:{mine:119,theirs:-33}, bisonherd:{mine:130,theirs:-36}};
+const MEASURED = {/*MEASURED*/elephant:{mine:144,theirs:-23}, rhino:{mine:71,theirs:-13}, hippo:{mine:61,theirs:-21}, giraffe:{mine:31,theirs:-7}, polar:{mine:32,theirs:-12}, croc:{mine:24,theirs:-2}, buffalo:{mine:47,theirs:-19}, bison:{mine:44,theirs:-12}, grizzly:{mine:28,theirs:-6}, tiger:{mine:10,theirs:-16}, lion:{mine:19,theirs:1}, gorilla:{mine:5,theirs:-6}, jaguar:{mine:14,theirs:-2}, wolf:{mine:6,theirs:-6}, cougar:{mine:8,theirs:0}, hyena:{mine:13,theirs:-10}, blackrhino:{mine:36,theirs:-23}, bull:{mine:28,theirs:-11}, moose:{mine:27,theirs:-17}, ostrich:{mine:3,theirs:-5}, honeybadger:{mine:3,theirs:2}, triceratops:{mine:188,theirs:-22}, mammoth:{mine:104,theirs:-16}, blackbear:{mine:10,theirs:0}, leopard:{mine:9,theirs:-4}, boar:{mine:7,theirs:-3}, giantkangaroo:{mine:18,theirs:1}, smilodon:{mine:21,theirs:-6}, muskox:{mine:12,theirs:-6}, gaur:{mine:42,theirs:-18}, walrus:{mine:23,theirs:-7}, wolfpack:{mine:19,theirs:-6}, wolfpack6:{mine:26,theirs:-5}, hyenapack:{mine:25,theirs:-10}, lionpack:{mine:22,theirs:-4}, buffaloherd:{mine:142,theirs:-26}, bisonherd:{mine:147,theirs:-27}, muskoxherd:{mine:55,theirs:-22}};
 // ---------- board rules ----------
 // Each game deals a board of RULES.board animals from the roster (a rare animal turns up with probability rareP).
 // You spend up to RULES.budget on the board; every board animal you don't pick is on the other side.
@@ -1596,21 +1759,32 @@ const MEASURED = {/*MEASURED*/elephant:{mine:134,theirs:-23}, rhino:{mine:62,the
 // and you always buy the same share of it. rules.terrain (optional) keeps cold-blooded animals off cold maps.
 // Wolves, hyenas and lions are dealt either solo or as a pack item (one pick brings the whole group).
 const RULES = {board: 12, budget: 1200, total: 2600, tol: 100, rareP: .3}; // owner: $1,000 felt hard; see CLAUDE.md for validation
+// cold-blooded animals (the croc) never on a cold map; habitat {terrain: weight} limits a species to those maps (no
+// terrain given = not dealt); dealsOn(id, terrain) = can this catalog item ever turn up on a board of that map
+const coldOK = (a, tid) => !(tid && (TERRAINS[tid] || {}).cold && a.cold < .3);
+function habitatWeight(a, tid){ const h = BY_ID[sp(a)].habitat; return !h ? 1 : (tid && h[tid]) || 0; }
+function dealsOn(id, tid){ const a = BY_ID[id]; return !!a && coldOK(a, tid) && habitatWeight(a, tid) > 0 && (a.dealWeight ?? 1) > 0; }
 function dealBoard(seed, rules, prices){
   rules = Object.assign({}, RULES, rules || {});
   const R = rng(seed), price = id => (prices && prices[id]) || BY_ID[id].price;
   // cold-blooded animals (the croc) are never dealt on a cold map; each species appears once, solo or as a pack
-  const cold = rules.terrain && (TERRAINS[rules.terrain] || {}).cold, ok = a => !(cold && a.cold < .3);
+  // habitat: a species with a habitat list is dealt only on those maps, weighted (the walrus: tundra only, and often)
+  const hw = k => habitatWeight(BY_ID[k], rules.terrain), ok = a => coldOK(a, rules.terrain) && hw(sp(a)) > 0;
   const ex = rules.exclude || null; // ids never dealt (migration: animals you already own)
-  const forms = {}; for (const a of ANIMALS) if (ok(a) && !(ex && ex.includes(a.id))) (forms[sp(a)] = forms[sp(a)] || []).push(a.id);
+  const cap = rules.maxPrice || 0; // progressive mode: only animals at or under this price (0 = no cap)
+  const forms = {}; for (const a of ANIMALS) if (ok(a) && !(ex && ex.includes(a.id)) && !(cap && price(a.id) > cap)) (forms[sp(a)] = forms[sp(a)] || []).push(a.id);
   const common = Object.keys(forms).filter(k => !BY_ID[k].rare), rare = Object.keys(forms).filter(k => BY_ID[k].rare);
   // pick solo or pack by dealWeight (wolves come as a pack 3 times in 4: that's how real wolves hunt)
-  const form = k => { const f = forms[k], tw = f.reduce((s, id) => s + (BY_ID[id].dealWeight || 1), 0); let r = R() * tw; for (const id of f){ r -= BY_ID[id].dealWeight || 1; if (r <= 0) return id; } return f[f.length - 1]; };
+  const dw = id => BY_ID[id].dealWeight ?? 1; // 0 = never dealt in that form (the lone musk ox)
+  const form = k => { const f = forms[k], tw = f.reduce((s, id) => s + dw(id), 0); let r = R() * tw; for (const id of f){ r -= dw(id); if (r <= 0 && dw(id) > 0) return id; } return f[f.length - 1]; };
+  // the next species from the pool: uniform (the original stream, one R() call) unless a habitat weight is in play
+  const weighted = common.some(k => hw(k) !== 1);
+  const pickIx = p => { if (!weighted) return Math.floor(R() * p.length); let r = R() * p.reduce((s, k) => s + hw(k), 0); for (let i = 0; i < p.length; i++){ r -= hw(p[i]); if (r < 0) return i; } return p.length - 1; };
   let b = [];
   for (let tries = 0; tries < 20000; tries++){
     const pool = common.slice(); b = [];
     if (rare.length && R() < rules.rareP) b.push(form(rare[Math.floor(R() * rare.length)]));
-    while (b.length < rules.board && pool.length) b.push(form(pool.splice(Math.floor(R() * pool.length), 1)[0]));
+    while (b.length < rules.board && pool.length) b.push(form(pool.splice(pickIx(pool), 1)[0]));
     if (!rules.total || Math.abs(b.reduce((s, id) => s + price(id), 0) - rules.total) <= rules.tol) break;
   }
   return ANIMALS.map(a => a.id).filter(id => b.includes(id)); // roster order
@@ -1868,7 +2042,7 @@ function policyChoose(w, u){
   INTERNALS.choose(w, u, w.cfg.policy);
 }
 
-const API = { _internals: INTERNALS, MEASURED, RULES, BOONS, dealBoard, defaultMount, mapVariant, baseVariant, ESCORT_R, POST_R, zoneAt, ZONE_T0, ZONE_T1, HAZARD_NAME, zoneFor, homeFor, placeOK, clampPlace, defaultPost, snowFactor, heatLoad, QUIET_T, STYLE, ANIMALS, HUMAN, BY_ID, TERRAINS, W, H, DT, MATCH_T, setup, step, simulate, snapshot, summarize, randomDraft, defaultPlacement, rng, hpOf, radiusOf };
+const API = { _internals: INTERNALS, MEASURED, RULES, BOONS, LEVEL_FX, dealBoard, dealsOn, defaultMount, mapVariant, baseVariant, ESCORT_R, POST_R, zoneAt, ZONE_T0, ZONE_T1, HAZARD_NAME, zoneFor, homeFor, placeOK, clampPlace, defaultPost, snowFactor, heatLoad, QUIET_T, STYLE, ANIMALS, HUMAN, BY_ID, TERRAINS, W, H, DT, MATCH_T, setup, step, simulate, snapshot, summarize, randomDraft, defaultPlacement, rng, hpOf, radiusOf };
 if (typeof module !== 'undefined' && module.exports){
   module.exports = API;
   try { require('./policy/live.js'); } catch (e){ if (e.code !== 'MODULE_NOT_FOUND') throw e; } // learned policies (absent next to a stray copy of sim.js)

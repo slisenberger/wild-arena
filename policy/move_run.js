@@ -29,6 +29,9 @@ const XTEL = {chaseSpd: .6, longChase: 8, far: 20};
 // cats: a pounce counts as stalked if the cat was creeping (moving below 45% of its top speed, the tall-grass cover
 // limit) within the 3 s before it; lying still (< 1 m/s) on a target for > 12 s on end is a long hold
 const CTEL = {stalkSpd: .45, stalkWin: 3, stillV: 1, stillT: 12};
+// spec telemetry (behavior-spec doc, reviewed Oct 26): a cat's rush starts within ~15-30 m (Laundre & Hernandez 2003;
+// Schaller 1967); pack kills follow the prey running (Mech 1966: 0 of 36 moose that stood were killed, 5 of 41 that ran)
+const STEL = {farRush: 30, sprint: .85, moving: 1.5};
 
 // ---------- fight sets (seed pools) ----------
 // Each pool is its own stream; a set is (pool, index). Fights: boards dealt with A.dealBoard per map, a player-like
@@ -48,7 +51,7 @@ function fightSet(pool, index, n, opts){
     const team = []; let left = A.RULES.budget; for (const id of order) if (A.BY_ID[id].price <= left){ team.push(id); left -= A.BY_ID[id].price; }
     const seed = Math.floor(R() * 2e9) + 1;
     if (!hasArch(board, team, arch)) continue;
-    out.push({pool, index, i: out.length, tr, bseed, board, team, mount: A.defaultMount(team), seed, live: !!opts.withLive}); k++;
+    out.push({pool, index, i: out.length, tr, bseed, board, team, mount: A.defaultMount(team), seed, live: !!opts.withLive, goal: opts.goal || null, spec: !!opts.spec}); k++;
   }
   return out;
 }
@@ -72,7 +75,10 @@ function runFight(f, weights, arch){
   const us = w.units.filter(u => I.archetypeOf(u) === arch);
   const S = us.map(u => ({foe: 0, dealt: 0, st: null, dart: false, lastC: 0, nc: 0, face: 0, appr: null}));
   const r = {n: us.length, life: 0, fight: 0, close: 0, idle: 0, flee: 0, feed: 0, heat: 0, carry: 0, engT: 0, nearT: 0, distSum: 0,
-    darts: 0, hits: 0, dmgHuman: 0, dmgFoe: 0, noContactT: 0, longIdleT: 0, faceOnT: 0, faceOnStints: 0, appr: 0, fruitless: 0};
+    darts: 0, hits: 0, dmgHuman: 0, dmgFoe: 0, noContactT: 0, longIdleT: 0, faceOnT: 0, faceOnStints: 0, appr: 0, fruitless: 0, dmgHumanAll: 0,
+    farSprintT: 0, closeT: 0, hitsOnMoving: 0, rearHits: 0, fleeContactT: 0};
+  if (f.spec) r.spec = true;
+  if (f.goal) r.goalMode = f.goal;
   // the other non-harrier archetypes (records tagged with arch): signature-move starts and the realism-gate telemetry
   const X = arch !== 'harrier';
   if (X) Object.assign(r, {arch, charges: 0, pounces: 0, longChaseT: 0, farHuntT: 0, badgerLife: 0, badgerBackT: 0});
@@ -82,7 +88,7 @@ function runFight(f, weights, arch){
   let hp0 = H.hp;
   while (!w.over){
     A.step(w);
-    const hDrop = Math.max(0, hp0 - H.hp); hp0 = H.hp;
+    const hDrop = Math.max(0, hp0 - H.hp); hp0 = H.hp; r.dmgHumanAll += hDrop; // from anyone: the side-level goal
     us.forEach((u, i) => {
       const s = S[i];
       const df = u.st.foe - s.foe, dd = u.st.dealt - s.dealt; s.foe = u.st.foe; s.dealt = u.st.dealt;
@@ -107,6 +113,10 @@ function runFight(f, weights, arch){
         if (u.s.id === 'honeybadger'){ r.badgerLife += DT; if (eng && (u.intent === 1 || u.intent === 3 || u.intent === 4)) r.badgerBackT += DT; } // fearless: never waits, regroups or backs off
       }
       if (dd > 0) r.hits++;
+      // spec telemetry: sprinting at a target > 30 m off; hits from behind a moving target; contact while it flees
+      if (st === 'close' && t){ r.closeT += DT; if (I.dist(u, t) > STEL.farRush && Math.hypot(u.vx, u.vy) > STEL.sprint * u.s.spd) r.farSprintT += DT; }
+      if (dd > 0 && t){ const tv = Math.hypot(t.vx, t.vy); if (tv > STEL.moving){ r.hitsOnMoving++; if (t.vx * (u.x - t.x) + t.vy * (u.y - t.y) < 0) r.rearHits++; } }
+      if (st === 'fight' && t && stateOf(t) === 'flee') r.fleeContactT += DT;
       if (st === 'fight' || dd > 0 || u.latchedBy) s.lastC = w.t;
       // no contact: hunting (idle or closing in) without touching anything for > contactWindow s; pointless motion counts too
       if ((st === 'idle' || st === 'close') && w.t - s.lastC > TEL.contactWindow){ r.noContactT += DT; s.nc += DT; if (s.nc > TEL.longIdle) r.longIdleT += DT; } else s.nc = 0;

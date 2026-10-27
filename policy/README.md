@@ -241,7 +241,10 @@ plain JSON in and plain JSON out. First archetype: the other side's pack harrier
 - `logit[a] = margin·[a = commit] + bl[a] + Wl[a]·x + W2[a]·tanh(W1·x + b1)`, argmax with ties to commit. All-zero
   `bl, Wl, W2` = always commit = the heuristic, whatever the hidden layer holds; `margin` (default 1) is a trust region a
   perturbation has to overcome before behaviour changes. `mode: 'linear'` trains `[bl, Wl]` (210 numbers); `'full'`
-  also trains `W2` over a fixed random hidden layer (`nh`). Probe policies: `{fixed: k}`.
+  also trains `W2` over a fixed random hidden layer (`nh`); `'deep'` trains the hidden layer too (`[bl, Wl, W2, W1, b1]`; with
+  `--nh=16`, 1,382 numbers for 61 features). `initWeights` from a linear file into `--nh>0` grows it: same `bl, Wl`, fresh
+  random `W1, b1`, `W2 = 0`, so it starts as exactly the linear policy. Sweep `policy/sweeps/m3_depth_s1.json` tests whether
+  depth plus more pairs per generation keeps improving where linear plateaus. Probe policies: `{fixed: k}`.
 
 ### Rewards (`move_reward.js`, telemetry in `move_run.js`)
 - **Goal** (per fight, the side's harriers together): damage to you / your max HP + 1 if a harrier killed you + damage

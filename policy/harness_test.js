@@ -244,17 +244,22 @@ async function suite(arch, slow){
   ok(c1.every((x, i) => x === c2[i]), `a cat-only policy (always flank) gives the same fights with zero weights for every other archetype next to it`);
   const cb = {cat: {fixed: 6, set: 'cat'}}, c3 = await plainFP(R.SIM, fxs, cb), c4 = await plainFP(R.SIM, fxs, Object.assign({}, zx, cb)), c5 = await plainFP(R.SIM, fxs, {cat: {fixed: 0, set: 'cat'}});
   ok(c3.every((x, i) => x === c4[i]) && c3.some((x, i) => x !== c1[i]) && c5.every((x, i) => x === l0n[i]), `cat intents: always blind side is unaffected by zero weights for the others and differs from the generic always flank; always commit (cat set) = no policy`);
-  // the cat intents (newest change): without cat weights, fights identical to the engine before them, with livePolicy:false
-  // and with the live default (shipped harrier + guard weights), on the board fights + these cat fights
-  const rc = refSim('CAT_INTENTS', process.env.REF_CAT_SIM);
-  if (rc){
-    const fb = fxs.concat(require('./common.js').boardJobs(2, QUICK ? 10 : 40, 31337));
-    // the live game now ships cat weights too (cat_v1), so the 'live' arm passes the shipped harrier + guard weights explicitly
-    for (const live of [false, true]){
-      const mp = live ? {harrier: LV.harrier, guard: LV.guard} : null, a = await plainFP(rc.f || rc, fb, mp), b = await plainFP(R.SIM, fb, mp);
-      ok(a.every((x, i) => x === b[i]), `no cat weights, ${live ? 'shipped harrier + guard weights' : 'livePolicy:false'}: ${fb.length} fights identical to the engine before the cat intents (${rc.h ? 'git ' + rc.h.slice(0, 7) : rc})`);
-    }
-  } else console.log('  SKIP pre-cat-intents comparison (set REF_CAT_SIM=path/to/sim.js)');
+  // the cat intents must be inert without cat weights: no cat entry = explicit zero cat weights (cat set), with livePolicy:false
+  // and next to the shipped harrier + guard weights. (It used to compare against the newest sim.js without the cat
+  // intents, but later deliberate engine changes, e.g. the realism pass, made that reference stale; REF_CAT_SIM=path
+  // restores the old comparison.)
+  const fb = fxs.concat(require('./common.js').boardJobs(2, QUICK ? 10 : 40, 31337)), zc = zerosFor('cat', 0, 1);
+  for (const live of [false, true]){
+    const mp = live ? {harrier: LV.harrier, guard: LV.guard} : null, a = await plainFP(R.SIM, fb, mp), b = await plainFP(R.SIM, fb, Object.assign({}, mp || {}, {cat: zc}));
+    ok(a.every((x, i) => x === b[i]), `no cat weights = zero cat weights, ${live ? 'next to the shipped harrier + guard weights' : 'livePolicy:false'}: ${fb.length} fights identical`);
+  }
+  const rc = process.env.REF_CAT_SIM ? refSim('CAT_INTENTS', process.env.REF_CAT_SIM) : null;
+  // (only fights the older engine can run: boards dealt today may hold animals added since, e.g. the musk ox, gaur, walrus)
+  const refIds = rc ? new Set(Object.keys(require(rc.f || rc).BY_ID)) : null, fbr = rc ? fb.filter(f => f.board.concat(f.team).every(id => refIds.has(id))) : [];
+  if (rc) for (const live of [false, true]){
+    const mp = live ? {harrier: LV.harrier, guard: LV.guard} : null, a = await plainFP(rc.f || rc, fbr, mp), b = await plainFP(R.SIM, fbr, mp);
+    ok(a.every((x, i) => x === b[i]), `no cat weights, ${live ? 'shipped harrier + guard weights' : 'livePolicy:false'}: ${fbr.length} fights identical to the engine before the cat intents (${rc.h ? 'git ' + rc.h.slice(0, 7) : rc})`);
+  }
 
   let fA = null;
   // every archetype gets section 1's zero = heuristic and determinism checks; the slow ones (whole dry runs, resume, probe
