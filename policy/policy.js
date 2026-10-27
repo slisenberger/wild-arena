@@ -8,6 +8,7 @@
 const F = require('./features.js');
 const G = require('./guard_features.js');
 const TM = require('./target_model.js');
+const FP = require('./features_plus.js'); // P.feat === 'plus': + the guard situation around each target
 const M = require('./model.js');
 const path = require('path');
 const A = require(process.env.SIM ? path.resolve(process.env.SIM) : path.join(__dirname, '..', 'sim.js'));
@@ -38,7 +39,7 @@ function pickLin(w, P, X, teach, u){
 function choose(w, u, policy){
   const cfg = w.cfg, log = cfg.policyLog, stats = cfg.policyStats;
   if (policy.byArch) policy = policy.byArch[A._internals.archetypeOf(u)];
-  const {opts, X} = F.extract(w, u);
+  const {opts, X} = (policy.feat === 'plus' ? FP : F).extract(w, u);
   const lin = policy.kind === 'target-lin' || policy.kind === 'target-mlp';
   const teach = policy.teacher || log || stats || lin ? F.heuristicIndex(w, u, opts) : -1;
   const a = policy.teacher ? teach : lin ? pickLin(w, policy, X, teach, u) : M.argmax(policy, X);
@@ -50,7 +51,7 @@ function choose(w, u, policy){
 // of the candidates the heuristic stands (so zero weights = the engine exactly)
 function chooseHerb(w, u, policy){
   const P = policy.byArch[A._internals.archetypeOf(u)], stats = w.cfg.policyStats;
-  const {opts, X} = F.extract(w, u, true), h = F.herbHeuristic(w, u, opts);
+  const {opts, X} = (P.feat === 'plus' ? FP : F).extract(w, u, true), h = F.herbHeuristic(w, u, opts);
   const a = h.i < 0 ? -1 : pickLin(w, P, X, h.i, u);
   if (stats){ stats.n = (stats.n || 0) + 1; if (a === h.i) stats.agree = (stats.agree || 0) + 1; }
   u.target = a < 0 ? h.t : (opts[a].kind === 'target' ? opts[a].t : null); u.state = u.target ? 'engage' : 'roam';

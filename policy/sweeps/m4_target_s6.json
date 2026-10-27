@@ -1,0 +1,25 @@
+{
+ "note": "Milestone 4 round 6 (Oct 27): cat target choice with the guard situation around each target (features_plus.js: guards near the target, free vs busy, free strength vs the cat, enemies tying them up, allies on the target). The cat diagnosis: target choice alone was flat, the bottleneck is getting through your guards; the hand rule comboSoft (go for you when your guards are busy, avoid strong free guards, join allies) was +0.042 ± 0.031 clean. Plus one charger run with the same features.",
+ "runs": [
+  {
+   "name": "cat_p_s1",
+   "args": "--arch=cat --pairs=16 --seed=1601 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --goal=checkmate --spec=true --target=true --feat=plus --thetaClip=1 --margin=.25"
+  },
+  {
+   "name": "cat_p_s2",
+   "args": "--arch=cat --pairs=16 --seed=1602 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --goal=checkmate --spec=true --target=true --feat=plus --thetaClip=1 --margin=.25"
+  },
+  {
+   "name": "cat_p_p24",
+   "args": "--arch=cat --pairs=24 --seed=1603 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --goal=checkmate --spec=true --target=true --feat=plus --thetaClip=1 --margin=.25"
+  },
+  {
+   "name": "cat_p_mlp",
+   "args": "--arch=cat --pairs=24 --nh=8 --seed=1604 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --goal=checkmate --spec=true --target=true --feat=plus --thetaClip=1 --margin=.25"
+  },
+  {
+   "name": "ch_p_s1",
+   "args": "--arch=charger --pairs=16 --seed=1605 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --goal=checkmate --spec=true --target=true --feat=plus --thetaClip=1 --margin=.25"
+  }
+ ]
+}

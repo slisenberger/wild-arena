@@ -3,11 +3,11 @@
 // fresh fights with every shipped policy live (cat_v1 movement kept). Usage: node policy/probes/cat_target_rules.js [N] [probeIndex] [arch]
 const { Worker, isMainThread, parentPort, workerData } = require('worker_threads');
 const path = require('path'), os = require('os');
-const R = require(path.join(__dirname, '..', 'move_run.js')), RW = require(path.join(__dirname, '..', 'move_reward.js')), F = require(path.join(__dirname, '..', 'features.js'));
+const R = require(path.join(__dirname, '..', 'move_run.js')), RW = require(path.join(__dirname, '..', 'move_reward.js')), F = require(path.join(__dirname, '..', process.env.FEAT === 'plus' ? 'features_plus.js' : 'features.js')); // FEAT=plus: + the guard situation (features_plus.js)
 require(path.join(__dirname, '..', 'live.js'));
 if (!isMainThread){ parentPort.postMessage(workerData.jobs.map(j => { const r = R.runFight(j.f, j.W, workerData.arch); if (r.trace) r.trace = r.trace.map(d => d.X.length); return {k: j.k, i: j.i, rec: r}; })); return; }
 const [n, idx, a] = process.argv.slice(2), N = +n || 600, arch = a || 'cat';
-const W = (o, extra) => { const wt = new Array(F.DIM).fill(0); for (const [k, v] of Object.entries(o)){ const i = F.NAMES.indexOf(k); if (i < 0) throw new Error('no feature ' + k); wt[i] = v; } return Object.assign({kind: 'target-lin', v: 1, nin: F.DIM, margin: .25, wt}, extra || {}); };
+const W = (o, extra) => { const wt = new Array(F.DIM).fill(0); for (const [k, v] of Object.entries(o)){ const i = F.NAMES.indexOf(k); if (i < 0) throw new Error('no feature ' + k); wt[i] = v; } return Object.assign({kind: 'target-lin', v: 1, nin: F.DIM, margin: .25, wt}, process.env.FEAT === 'plus' ? {feat: 'plus'} : {}, extra || {}); };
 // every rule only re-ranks targets: a target-only feature with a negative weight gets an isTarget offset so targets don't fall below
 // 'none' (a first version without it mostly meant 'hold back': -0.19 to -0.27, cats idle)
 const RULES = {
