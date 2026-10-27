@@ -14,7 +14,7 @@ if (isMainThread){
     wk.on('exit', () => { if (++done === NW) report(out, t0); });
   }
 } else {
-  const P = require('./progressive.js'), A = require('./sim.js');
+  const P = require(process.env.PROG_JS || './progressive.js'), A = require('./sim.js'); // env PROG_JS: another rules file (before/after comparisons)
   Object.assign(P.PROG, JSON.parse(workerData.prog));
   const val = id => { const m = A.MEASURED[id]; return Math.max(1, m ? m.mine - m.theirs : 0); };
   for (const seed of workerData.seeds){

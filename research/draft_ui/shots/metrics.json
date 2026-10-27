@@ -1,0 +1,446 @@
+{
+ "draft": {
+  "phone default": {
+   "long": {
+    "n": 8,
+    "taps": 8,
+    "scroll": 2925,
+    "ok": true
+   },
+   "n": 3,
+   "taps": 3,
+   "scroll": 707,
+   "pageH": 3452,
+   "spent": 1200,
+   "team": "buffaloherd,bull,gaur",
+   "hscroll": 0,
+   "topOk": true,
+   "fight": true,
+   "errors": 0
+  },
+  "phone versus": {
+   "long": {
+    "n": 8,
+    "taps": 8,
+    "scroll": 369,
+    "ok": true
+   },
+   "n": 3,
+   "taps": 3,
+   "scroll": 0,
+   "pageH": 1397,
+   "spent": 1200,
+   "team": "buffaloherd,bull,gaur",
+   "hscroll": 0,
+   "topOk": true,
+   "fight": true,
+   "errors": 0
+  },
+  "phone list": {
+   "long": {
+    "n": 8,
+    "taps": 8,
+    "scroll": 962,
+    "ok": true
+   },
+   "n": 3,
+   "taps": 3,
+   "scroll": 0,
+   "pageH": 1634,
+   "spent": 1200,
+   "team": "buffaloherd,bull,gaur",
+   "hscroll": 0,
+   "topOk": true,
+   "fight": true,
+   "errors": 0
+  },
+  "phone deck": {
+   "long": {
+    "n": 8,
+    "taps": 12,
+    "scroll": 0,
+    "ok": true
+   },
+   "n": 3,
+   "taps": 3,
+   "scroll": 0,
+   "pageH": 1212,
+   "spent": 1200,
+   "team": "buffaloherd,bull,gaur",
+   "hscroll": 0,
+   "topOk": true,
+   "fight": true,
+   "errors": 0
+  },
+  "small default": {
+   "long": {
+    "n": 8,
+    "taps": 8,
+    "scroll": 4508,
+    "ok": true
+   },
+   "n": 3,
+   "taps": 3,
+   "scroll": 943,
+   "pageH": 3957,
+   "spent": 1200,
+   "team": "buffaloherd,bull,gaur",
+   "hscroll": 0,
+   "topOk": true,
+   "fight": true,
+   "errors": 0
+  },
+  "small versus": {
+   "long": {
+    "n": 8,
+    "taps": 8,
+    "scroll": 485,
+    "ok": true
+   },
+   "n": 3,
+   "taps": 3,
+   "scroll": 0,
+   "pageH": 1544,
+   "spent": 1200,
+   "team": "buffaloherd,bull,gaur",
+   "hscroll": 0,
+   "topOk": true,
+   "fight": true,
+   "errors": 0
+  },
+  "small list": {
+   "long": {
+    "n": 8,
+    "taps": 8,
+    "scroll": 1533,
+    "ok": true
+   },
+   "n": 3,
+   "taps": 3,
+   "scroll": 289,
+   "pageH": 1704,
+   "spent": 1200,
+   "team": "buffaloherd,bull,gaur",
+   "hscroll": 0,
+   "topOk": true,
+   "fight": true,
+   "errors": 0
+  },
+  "small deck": {
+   "long": {
+    "n": 8,
+    "taps": 12,
+    "scroll": 0,
+    "ok": true
+   },
+   "n": 3,
+   "taps": 3,
+   "scroll": 0,
+   "pageH": 1282,
+   "spent": 1200,
+   "team": "buffaloherd,bull,gaur",
+   "hscroll": 0,
+   "topOk": true,
+   "fight": true,
+   "errors": 0
+  },
+  "desk default": {
+   "long": {
+    "n": 8,
+    "taps": 8,
+    "scroll": 2013,
+    "ok": true
+   },
+   "n": 3,
+   "taps": 3,
+   "scroll": 411,
+   "pageH": 2438,
+   "spent": 1200,
+   "team": "buffaloherd,bull,gaur",
+   "hscroll": 0,
+   "topOk": true,
+   "fight": true,
+   "errors": 0
+  },
+  "desk versus": {
+   "long": {
+    "n": 8,
+    "taps": 8,
+    "scroll": 0,
+    "ok": true
+   },
+   "n": 3,
+   "taps": 3,
+   "scroll": 0,
+   "pageH": 1037,
+   "spent": 1200,
+   "team": "buffaloherd,bull,gaur",
+   "hscroll": 0,
+   "topOk": true,
+   "fight": true,
+   "errors": 0
+  },
+  "desk list": {
+   "long": {
+    "n": 8,
+    "taps": 8,
+    "scroll": 926,
+    "ok": true
+   },
+   "n": 3,
+   "taps": 3,
+   "scroll": 0,
+   "pageH": 1575,
+   "spent": 1200,
+   "team": "buffaloherd,bull,gaur",
+   "hscroll": 0,
+   "topOk": true,
+   "fight": true,
+   "errors": 0
+  },
+  "desk deck": {
+   "long": {
+    "n": 8,
+    "taps": 12,
+    "scroll": 0,
+    "ok": true
+   },
+   "n": 3,
+   "taps": 3,
+   "scroll": 0,
+   "pageH": 1123,
+   "spent": 1200,
+   "team": "buffaloherd,bull,gaur",
+   "hscroll": 0,
+   "topOk": true,
+   "fight": true,
+   "errors": 0
+  }
+ },
+ "checks": [
+  [
+   "phone default: full team, fight starts, no errors, no sideways scroll",
+   true
+  ],
+  [
+   "phone versus: full team, fight starts, no errors, no sideways scroll",
+   true
+  ],
+  [
+   "phone list: full team, fight starts, no errors, no sideways scroll",
+   true
+  ],
+  [
+   "phone deck: full team, fight starts, no errors, no sideways scroll",
+   true
+  ],
+  [
+   "phone: every design drafted both target teams",
+   true
+  ],
+  [
+   "small default: full team, fight starts, no errors, no sideways scroll",
+   true
+  ],
+  [
+   "small versus: full team, fight starts, no errors, no sideways scroll",
+   true
+  ],
+  [
+   "small list: full team, fight starts, no errors, no sideways scroll",
+   true
+  ],
+  [
+   "small deck: full team, fight starts, no errors, no sideways scroll",
+   true
+  ],
+  [
+   "small: every design drafted both target teams",
+   true
+  ],
+  [
+   "desk default: full team, fight starts, no errors, no sideways scroll",
+   true
+  ],
+  [
+   "desk versus: full team, fight starts, no errors, no sideways scroll",
+   true
+  ],
+  [
+   "desk list: full team, fight starts, no errors, no sideways scroll",
+   true
+  ],
+  [
+   "desk deck: full team, fight starts, no errors, no sideways scroll",
+   true
+  ],
+  [
+   "desk: every design drafted both target teams",
+   true
+  ],
+  [
+   "versus prog: the shop is this design",
+   true
+  ],
+  [
+   "versus prog: buy spends money (400 → 300)",
+   true
+  ],
+  [
+   "versus prog: undo refunds",
+   true
+  ],
+  [
+   "versus prog: premium shows \"Not for sale\"",
+   true
+  ],
+  [
+   "versus prog: tapping the premium doesn't buy it",
+   true
+  ],
+  [
+   "versus prog: heal a wounded carried animal",
+   true
+  ],
+  [
+   "versus prog: sell a carried animal",
+   true
+  ],
+  [
+   "versus prog: Fight now from the bar",
+   true
+  ],
+  [
+   "versus five: draft opens in this design",
+   true
+  ],
+  [
+   "versus five: fight",
+   true
+  ],
+  [
+   "versus daily: fight with the drafted team",
+   true
+  ],
+  [
+   "versus: no page errors in the modes",
+   true
+  ],
+  [
+   "list prog: the shop is this design",
+   true
+  ],
+  [
+   "list prog: buy spends money (400 → 300)",
+   true
+  ],
+  [
+   "list prog: undo refunds",
+   true
+  ],
+  [
+   "list prog: premium shows \"Not for sale\"",
+   true
+  ],
+  [
+   "list prog: tapping the premium doesn't buy it",
+   true
+  ],
+  [
+   "list prog: heal a wounded carried animal",
+   true
+  ],
+  [
+   "list prog: sell a carried animal",
+   true
+  ],
+  [
+   "list prog: Fight now from the bar",
+   true
+  ],
+  [
+   "list five: draft opens in this design",
+   true
+  ],
+  [
+   "list five: fight",
+   true
+  ],
+  [
+   "list daily: fight with the drafted team",
+   true
+  ],
+  [
+   "list: no page errors in the modes",
+   true
+  ],
+  [
+   "deck prog: the shop is this design",
+   true
+  ],
+  [
+   "deck prog: buy spends money (400 → 300)",
+   true
+  ],
+  [
+   "deck prog: undo refunds",
+   true
+  ],
+  [
+   "deck prog: premium shows \"Not for sale\"",
+   true
+  ],
+  [
+   "deck prog: tapping the premium doesn't buy it",
+   true
+  ],
+  [
+   "deck prog: heal a wounded carried animal",
+   true
+  ],
+  [
+   "deck prog: sell a carried animal",
+   true
+  ],
+  [
+   "deck prog: Fight now from the bar",
+   true
+  ],
+  [
+   "deck five: draft opens in this design",
+   true
+  ],
+  [
+   "deck five: fight",
+   true
+  ],
+  [
+   "deck daily: fight with the drafted team",
+   true
+  ],
+  [
+   "deck: no page errors in the modes",
+   true
+  ],
+  [
+   "switcher keeps the team across designs",
+   true
+  ],
+  [
+   "switcher remembers the choice (?draftui=1 opens List)",
+   true
+  ],
+  [
+   "deck: swipe left leaves the card",
+   true
+  ],
+  [
+   "deck: swipe right takes the card",
+   true
+  ],
+  [
+   "no flag: the default cards, no switcher",
+   true
+  ]
+ ]
+}

@@ -2,7 +2,7 @@
 
 ## Animal portraits (`faces.json`)
 
-All 31 portraits are 112×112 crops of images from Wikimedia Commons. All are in the public domain or released under CC0 except the giant kangaroo (CC BY 3.0) and the gaur (CC BY 2.0), attributed below. None of them is a crop of the original meme image any more (the earlier meme crops were replaced because the rights to their source photos are unknown). Author/artist is as stated on the Commons file page.
+All 34 portraits are 112×112 crops of images from Wikimedia Commons. All are in the public domain or released under CC0 except the giant kangaroo (CC BY 3.0), the gaur (CC BY 2.0) and the woolly rhinoceros (CC BY 2.5), attributed below. None of them is a crop of the original meme image any more (the earlier meme crops were replaced because the rights to their source photos are unknown). Author/artist is as stated on the Commons file page.
 
 | id | Animal | Source (Wikimedia Commons) | Author / artist | License |
 |---|---|---|---|---|
@@ -37,3 +37,6 @@ All 31 portraits are 112×112 crops of images from Wikimedia Commons. All are in
 | `muskox` | Musk ox (bull) | [Male musk ox animal mammal.jpg](https://commons.wikimedia.org/wiki/File:Male_musk_ox_animal_mammal.jpg) | Tim Bowman, U.S. Fish and Wildlife Service | Public domain |
 | `gaur` | Gaur | [Intimate portrait of gaur (52077051551).jpg](https://commons.wikimedia.org/wiki/File:Intimate_portrait_of_gaur_(52077051551).jpg) | Kandukuru Nagarjun | CC BY 2.0 (cropped and resized) |
 | `walrus` | Pacific walrus (young bull) | [Close up of head of young bull walrus marine mammal in water odobenus rosmarus.jpg](https://commons.wikimedia.org/wiki/File:Close_up_of_head_of_young_bull_walrus_marine_mammal_in_water_odobenus_rosmarus.jpg) | Joel Garlich-Miller, U.S. Fish and Wildlife Service | Public domain |
+| `woollyrhino` | Woolly rhinoceros (Coelodonta antiquitatis, life restoration) | [Woolly rhinoceros (Coelodonta antiquitatis) - Mauricio Antón.jpg](https://commons.wikimedia.org/wiki/File:Woolly_rhinoceros_(Coelodonta_antiquitatis)_-_Mauricio_Ant%C3%B3n.jpg) | Mauricio Antón (from Sedwick 2008, PLoS Biology 6: e99) | CC BY 2.5 (cropped and resized) |
+| `shortface` | Giant short-faced bear (Arctodus simus, life-size museum model at Heureka, Vantaa) | [Arctodus simus model.jpg](https://commons.wikimedia.org/wiki/File:Arctodus_simus_model.jpg) | Hunsvotti | CC0 |
+| `utahraptor` | Utahraptor (feathered life restoration) | [Utahraptor traditional.jpg](https://commons.wikimedia.org/wiki/File:Utahraptor_traditional.jpg) | PaleoNeolitic | CC0 (Commons tags it "inaccurate paleoart": jaw shape, eye size) |

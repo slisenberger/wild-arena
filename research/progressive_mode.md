@@ -124,7 +124,7 @@ Migration (`migration.js`, `migration_bot.js`, `?migration=1`) was removed; old 
 median run ends in round 6, 19.6% complete. The bot results below are from an earlier tuning.)
 
 Plus $25 per kill, at most $150 a won round (`PER_KILL`, `KILL_CAP`). Rares on 10% → 30% of boards. Free rest heals 30% of
-missing health; full heal 25% of price (min $50); sell for half. Scar: below 25% health in a fight → −10% max health for
+missing health; full heal 25% of price (min $50); sell for half (superseded by the UX pass below). Scar: below 25% health in a fight → −10% max health for
 the run (max 3). XP: 1 per 50 damage (damage to something attacking you counts twice), 10 per kill, 5 for surviving, 5 per
 signature move (max 2 a fight), 10 for MVP; levels at 25 / 60 / 110 XP; packs share one pool. Your own health resets each
 round (the human stays as fragile as now). Premium: the round's top price band, non-rare if possible, chosen by the seed,
@@ -165,3 +165,16 @@ is a big-cat round more than a badger round.
   cats (tiger, lion, jaguar, croc; a "small animals" round), or give the badger a real finishing move. Needs the owner.
 - The premium herd in rounds 6–7 (DECISIONS.md).
 - Not built from the draft: paid "training", T. rex boss, a smarter bot (selling, saving).
+
+## UX pass (Oct 27, after the owner's first playthrough; `research/prog_ux/README.md`)
+- Flow: Start → round 1's shop → Formation (the fight starts there; "Fight now" in the shop skips it) → result → next shop.
+  The run overview is one tap away (HUD); a resumed run opens in the shop.
+- Heal: full heal = price × `HEAL_RATE` .55 × the share of health missing ($5 steps, up; min $10). Sell = price × .5 ×
+  health ($5 steps, down); not under 25% health. Health % per member, rest line, "Heal to 100% · $X", "Heal all wounded".
+- XP: each card says what its level does and what the next one gives; "How XP and levels work"; the recap lists what each
+  animal earned its XP for.
+- The last round pays no kill money (nothing left to buy). The end screen lists every animal of the run (`run.hist`, one
+  record per buy: rounds, kills, damage, protecting you, XP/level, scars, MVPs, how it left), survivors first with a gold badge.
+- Formation bug fixed: the mount follows the team (a giant you buy or carry is ridden by default) until you pick one.
+- Bot (500 runs × 2 seed sets): complete 17.3% → 15.9%, round 1 first-try 81.5% (unchanged), median end round 6.
+

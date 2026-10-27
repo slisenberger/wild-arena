@@ -230,6 +230,52 @@ th.n{text-align:right}
   .proghud .btnrow{margin-left:0}
   .progteam{grid-template-columns:1fr}
 }
+/* progressive UX pass (Oct 27): the shop's round panel, team cards with health/heal/sell/XP, formation roster */
+.progshop{display:flex;flex-direction:column;gap:10px}
+.progshop .panel{padding:12px 14px}
+.roundchips{display:flex;flex-wrap:wrap;gap:6px}
+.roundchips > span{display:inline-flex;align-items:center;gap:6px;font-size:13px;padding:4px 10px;border-radius:999px;border:1px solid var(--line);background:var(--panel2)}
+.roundchips .money{font-family:var(--mono);color:var(--gold);border-color:color-mix(in srgb, var(--gold) 50%, var(--line))}
+.roundchips .prem{border-color:var(--foe);padding-left:4px}
+.roundchips .prem b{color:var(--foe)}
+.teamhead{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;margin-bottom:8px}
+.teamhead h3{margin:0}
+.progmsg{font-size:13px;color:var(--you)}
+.progmsg:empty{display:none}
+.mt{flex-wrap:wrap;align-items:flex-start}
+.mt .mtb{flex:1 1 200px}
+.mt .hpb{flex-wrap:wrap;align-items:center;gap:4px 8px;margin-top:5px;font:12px/1.1 var(--mono);color:var(--muted)}
+.mt .hpb .hpm{display:inline-flex;align-items:center;gap:5px}
+.mt .hpb i{width:56px;height:7px}
+.mt .hpb .pc{color:var(--fg)}
+.mt .flag{font-size:11px;font-weight:600;line-height:1;padding:3px 7px;border-radius:999px;border:1px solid;white-space:nowrap}
+.mt .flag.hurt{color:var(--gold);border-color:color-mix(in srgb, var(--gold) 60%, var(--line))}
+.mt .flag.bad{color:var(--red);border-color:color-mix(in srgb, var(--red) 70%, var(--line))}
+.mt .flag.ok{color:var(--you);border-color:color-mix(in srgb, var(--you) 50%, var(--line))}
+.mt .rest{font-size:11.5px;color:var(--muted);margin-top:3px}
+.mt .xpb{flex-wrap:wrap;gap:3px 6px}
+.mt .lvnow{font-size:12px;color:var(--muted);margin-top:4px;line-height:1.3}
+.mt .lvnow b{color:var(--gold);font-weight:600}
+.mt .mta{flex:1 1 100%;flex-direction:row;flex-wrap:wrap;margin-left:0;gap:6px}
+.mt .mta .btn{flex:1 1 140px;min-height:44px;font-size:13.5px;padding:6px 10px}
+.mt .mta .btn.arm{background:var(--red);border-color:var(--red);color:#fff}
+.mt.small{align-items:center;flex-wrap:nowrap}
+.mt.small .mtb{flex:1 1 auto}
+.mt.small .mta{flex:0 0 auto;margin-left:auto}
+.mt.small .mta .btn{flex:0 0 auto}
+.xphow summary,.recapbox summary,.howrun summary{cursor:pointer;font-size:13px;padding:10px 0;color:var(--muted)}
+.recapbox summary{color:var(--fg);font-weight:600}
+.xphow p,.howrun p{margin:0 0 6px}
+.xplist{margin:4px 0 0;padding-left:18px;font-size:13px;color:var(--muted)}
+.xplist b{color:var(--fg);font-weight:600}
+.progform{display:flex;flex-direction:column;gap:8px}
+.mt .mtb{flex:1 1 0;min-width:0}
+.mt .xpb span{font-family:var(--body);font-size:12px;line-height:1.3}
+.mt .flag.surv{color:#16110a;background:var(--gold);border-color:var(--gold)}
+.mt.surv{border-color:color-mix(in srgb, var(--gold) 70%, var(--line));background:color-mix(in srgb, var(--gold) 6%, var(--panel2))}
+.mt .flag{color:var(--muted);border-color:var(--line)}
+.mt .hpb .flag{font-family:var(--body)}
+@media (max-width:560px){ .roundchips > span{font-size:12.5px} }
 /* ---- mobile UX pass (Oct 27): sticky action bar, bigger tap targets, compact arena/header on phones ---- */
 .actbar{position:fixed;left:0;right:0;bottom:0;z-index:25;background:color-mix(in srgb, var(--bg) 92%, transparent);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border-top:1px solid var(--line);padding:10px max(16px, env(safe-area-inset-right, 0px)) calc(10px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px))}
 .actbar .in{max-width:1080px;margin:0 auto;display:flex;gap:8px;align-items:center}
@@ -305,6 +351,7 @@ body.hasbar #toDraft, body.hasbar #toDeployD, body.hasbar #startFight{display:no
     <h2 id="draftTitle">Build a team to protect you from the rest</h2>
     <p class="lede" id="boardLede"></p>
   </div>
+  <div class="progshop" id="progShop" hidden></div>
   <div class="teamline" id="teamline"></div>
   <div id="tiers" style="display:flex;flex-direction:column;gap:12px"></div>
   <div class="detail" id="detail"></div>
@@ -334,6 +381,7 @@ body.hasbar #toDraft, body.hasbar #toDeployD, body.hasbar #startFight{display:no
   <div style="display:flex;flex-direction:column;gap:6px">
     <h2>Set your formation</h2>
   </div>
+  <div class="panel progform" id="progForm" hidden></div>
   <p class="lede" id="deployHelp">Drag anyone, including yourself, anywhere on your side of the map. Animals inside the escort ring move with you. Anything placed farther out holds that spot as a guard post and fights whatever comes within 14 m of it. On the river, swimmers can start in the water: a croc beside a ford ambushes whatever crosses.</p>
   <div class="panel" style="display:flex;flex-direction:column;gap:10px"><div class="label">Ride one of your animals</div><div class="mounts" id="mountOpts"></div><p class="notes" id="mountNote"></p></div>
   <div class="stage" id="deployStage"><canvas id="deployCanvas"></canvas></div>
@@ -376,7 +424,7 @@ body.hasbar #toDraft, body.hasbar #toDeployD, body.hasbar #startFight{display:no
 <section class="screen" id="s-prog" hidden>
   <div style="display:flex;flex-direction:column;gap:6px"><h2 id="progTitle">Progressive run</h2><div class="progtrail" id="progTrail"></div></div>
   <div class="panel recap" id="progRecap" hidden></div>
-  <div class="panel" id="progTeamBox"><h3 style="margin-bottom:8px">Your team</h3><div id="progTeam"></div></div>
+  <div class="panel" id="progTeamBox"><h3 style="margin-bottom:8px" id="progTeamTitle">Your team</h3><div id="progTeam"></div></div>
   <div class="panel" id="progNext"></div>
   <div class="btnrow" id="progActions"></div>
 </section>

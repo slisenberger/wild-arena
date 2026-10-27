@@ -182,11 +182,16 @@ Pick for new roles. Top three for design value: **honey badger, moose, Komodo dr
   starts near water (it gets mobbed on the way): a deployment-skill payoff, revisit if it should be more common.
 - [ ] **More rare megafauna (owner asked, Oct 2026)**, ranked by new identity: ~~Smilodon~~ (built Oct 2026: pin,
   killing stab, let it bleed, fragile canines), Glyptodon (~2 t armadillo: near-total armor, spiked tail club; a fortress),
-  Megatherium (~4 t ground sloth: rears to 4 m, huge claws; anti-rider reach), Arctodus (short-faced bear, ~900 kg,
-  fast apex bear), Thylacoleo (marsupial lion: strongest bite for its size, climbs), Megalania (5–7 m monitor,
-  venom over time; cold-blooded, no tundra), Irish elk (3.6 m antler sweep), woolly rhino (the cold rhino),
+  Megatherium (~4 t ground sloth: rears to 4 m, huge claws; anti-rider reach), ~~Arctodus~~ (built Oct 27 as the giant
+  short-faced bear: 650 kg, rears over predators holding prey, a hypothesis), Thylacoleo (marsupial lion: strongest bite for its size, climbs), Megalania (5–7 m monitor,
+  venom over time; cold-blooded, no tundra), Irish elk (3.6 m antler sweep), ~~woolly rhino~~ (built Oct 27: tundra rare, snow-plough furrow),
   Gigantopithecus (overlaps gorilla), terror bird (overlaps ostrich), Diprotodon (2.7 t wombat). Idea: an
   "Ice Age Australia" themed board (giant kangaroo, Diprotodon, Thylacoleo, Megalania).
+- [x] **Prehistoric batch 1 (Oct 27, `animals-prehist1`; `research/prehistoric_candidates.md`):** woolly rhinoceros (tundra),
+  giant short-faced bear (tundra, forest), Utahraptor (forest, savanna), all rares. Next from the doc: Doedicurus (tail club,
+  savanna), Homotherium pair, dire wolf pack, Protoceratops herd; a themed rare pool per board (Ice Age / Cretaceous) so the
+  rare slot isn't diluted (now 8 rares on the tundra). Open: the furrow is speculative (reviewer); the bear's take-over fires
+  ~.1-.2 a fight (holds near it are rare); Utahraptor pins mostly you and small cats.
 - [ ] Wolverine — the tundra's honey badger.
 - [ ] **Fighting bull** (Spanish toro bravo, ~550 kg, bred for aggression): the most willing charger on the board,
   never needs provoking, turns fast for its size. Cheap-to-mid price.
