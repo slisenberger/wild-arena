@@ -1,4 +1,4 @@
-// Checks that the hidden prototype modes (?migration=1, ?five=1) still run end to end through the action bar on a phone.
+// Checks that the hidden prototype modes (?progressive=1, ?five=1) still run end to end through the action bar on a phone.
 // Usage: node research/ux_audit/modes_check.js   (exits 1 on a failure; screenshots in research/ux_audit/after/)
 const { chromium } = require('playwright');
 const path = require('path');
@@ -11,22 +11,22 @@ const OUT = path.join(__dirname, 'after');
   const ok = []; const check = (name, v) => { ok.push([name, !!v]); console.log((v ? 'ok   ' : 'FAIL ') + name); };
   const vis = id => p.evaluate(id => !document.getElementById(id).hidden, id);
   const finish = () => p.evaluate(() => { window.__wa.playT = window.__wa.dur; });
-  // migration
-  await p.goto(FILE + '?migration=1'); await p.click('#migNew'); await p.waitForTimeout(200);
-  check('migration: run hub opens', await vis('s-mig'));
-  check('migration: bar hidden on the run hub', await p.evaluate(() => document.getElementById('actbar').hidden));
-  await p.click('#migToShop'); await p.waitForTimeout(150);
-  check('migration: trading post', await vis('s-draft'));
+  // progressive
+  await p.goto(FILE + '?progressive=1'); await p.click('#progNew'); await p.waitForTimeout(200);
+  check('progressive: run hub opens', await vis('s-prog'));
+  check('progressive: bar hidden on the run hub', await p.evaluate(() => document.getElementById('actbar').hidden));
+  await p.click('#progToShop'); await p.waitForTimeout(150);
+  check('progressive: trading post', await vis('s-draft'));
   await p.locator('#tiers .card:not(.cant)').first().click();
-  await p.screenshot({ path: path.join(OUT, 'phone_17_mig_shop.png'), scale: 'css' });
+  await p.screenshot({ path: path.join(OUT, 'phone_17_prog_shop.png'), scale: 'css' });
   await p.click('#actbar .primary'); await p.waitForTimeout(200);
-  check('migration: bar Fight starts the fight', await vis('s-fight'));
+  check('progressive: bar Fight starts the fight', await vis('s-fight'));
   await p.click('#actbar .primary'); await p.waitForTimeout(200); // skip to result
   const lbl = await p.textContent('#actbar .primary');
-  check('migration: bar mirrors the banner (' + lbl + ')', /migration|run/i.test(lbl));
-  await p.screenshot({ path: path.join(OUT, 'phone_18_mig_result.png'), scale: 'css' });
+  check('progressive: bar mirrors the banner (' + lbl + ')', /round|run|continue|shop/i.test(lbl));
+  await p.screenshot({ path: path.join(OUT, 'phone_18_prog_result.png'), scale: 'css' });
   await p.click('#actbar .primary'); await p.waitForTimeout(200);
-  check('migration: back on the run hub', await vis('s-mig'));
+  check('progressive: back on the run hub', await vis('s-prog'));
   // 5 in a row
   await p.goto(FILE + '?five=1'); await p.evaluate(() => localStorage.removeItem('wa-five-run')); await p.reload();
   await p.click('#five'); await p.waitForTimeout(200);
