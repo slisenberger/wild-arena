@@ -9,6 +9,10 @@ Each item has a recommendation; reply with a number and "yes", or your own call.
    reusing Migration's engine hooks.
 3. **5 in a Row:** the owner moved on to the progressive mode. Default: leave it hidden behind `?five=1`; delete later if
    unused.
+4. **Prehistoric animals to build** (`research/prehistoric_candidates.md`, all proposed as rares): giant short-faced bear,
+   woolly rhino, Doedicurus (tail-club glyptodont), Utahraptor; alternates Homotherium pair, dire wolf pack, Protoceratops
+   herd; Stegosaurus if you want another giant. Recommendation: woolly rhino + short-faced bear first (best evidence,
+   fill the tundra), after the musk ox / gaur / walrus batch is priced in.
 
 ## Decided
 - Oct 27: cards show the signature move and your own record (built); personal stats panel built.
