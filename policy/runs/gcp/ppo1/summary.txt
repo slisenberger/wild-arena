@@ -1,0 +1,5 @@
+pp_cat_lin_b1      [test] best (after 60 iterations) vs heuristic on 1200 held-out fights: +0.004 ± 0.019 (within 2 SE) | style 1.000 gates [] | survival -0.2 pts | deviates 3.0%
+pp_cat_mlp_b1      [test] best (after 60 iterations) vs heuristic on 1200 held-out fights: +0.001 ± 0.018 (within 2 SE) | style 1.000 gates [] | survival -0.1 pts | deviates 2.9%
+pp_cat_mlp_b5      [test] best (after 60 iterations) vs heuristic on 1200 held-out fights: +0.011 ± 0.012 (within 2 SE) | style 1.000 gates [] | survival -0.6 pts | deviates 0.9%
+pp_gd_mlp_b1       [test] best (after 30 iterations) vs heuristic on 1200 held-out fights: -0.001 ± 0.004 (within 2 SE) | style 1.000 gates [] | survival -0.1 pts | deviates 0.0%
+pp_ch_mlp_b1       [test] best (after 50 iterations) vs heuristic on 1200 held-out fights: +0.002 ± 0.024 (within 2 SE) | style 1.000 gates [] | survival -0.3 pts | deviates 2.5%

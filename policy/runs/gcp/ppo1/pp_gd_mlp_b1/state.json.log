@@ -1,0 +1,74 @@
+[init] policy/runs/gcp/pp_gd_mlp_b1/state.json: guard, target-mlp 1970 weights (114 inputs), {"arch":"guard","iters":60,"fights":200,"threads":4,"lr":0.02,"clip":0.2,"epochs":4,"tau":0.125,"margin":0.25,"beta":0.1,"nh":16,"self":true,"valEvery":5,"val":800,"test":1200,"seed":1404,"goal":null,"spec":false,"withLive":true,"styleThr":0.9,"trainer":"ppo","target":true,"mode":"linear"}
+[it 0] sampled policy vs heuristic +0.084 ± 0.047 | 56602 decisions, deviates 32.2%, clipped 27% | |w| 2.641 | 43 s
+[it 1] sampled policy vs heuristic -0.010 ± 0.048 | 61892 decisions, deviates 7.0%, clipped 10% | |w| 3.040 | 47 s
+[it 2] sampled policy vs heuristic -0.031 ± 0.046 | 53092 decisions, deviates 3.9%, clipped 4% | |w| 3.604 | 44 s
+[it 3] sampled policy vs heuristic -0.022 ± 0.048 | 53982 decisions, deviates 4.3%, clipped 0% | |w| 4.043 | 44 s
+[it 4] sampled policy vs heuristic +0.002 ± 0.050 | 54976 decisions, deviates 3.5%, clipped 2% | |w| 4.386 | 44 s
+  [val] greedy vs heuristic on 800 fights: -0.012 ± 0.017 | style 1.000 gates [] drift [] | survival -1.1 pts | deviates 1.9%
+[it 5] sampled policy vs heuristic -0.031 ± 0.043 | 54699 decisions, deviates 4.1%, clipped 0% | |w| 4.660 | 39 s
+[it 6] sampled policy vs heuristic +0.046 ± 0.047 | 52508 decisions, deviates 2.9%, clipped 2% | |w| 4.853 | 44 s
+[it 7] sampled policy vs heuristic +0.077 ± 0.046 | 56030 decisions, deviates 3.1%, clipped 0% | |w| 5.013 | 43 s
+[it 8] sampled policy vs heuristic -0.027 ± 0.045 | 53123 decisions, deviates 2.5%, clipped 1% | |w| 5.140 | 41 s
+[it 9] sampled policy vs heuristic +0.001 ± 0.039 | 53398 decisions, deviates 2.6%, clipped 0% | |w| 5.246 | 44 s
+  [val] greedy vs heuristic on 800 fights: +0.002 ± 0.013 | style 1.000 gates [] drift [] | survival 0.3 pts | deviates 0.8%  -> new best
+[it 10] sampled policy vs heuristic -0.041 ± 0.035 | 50556 decisions, deviates 1.8%, clipped 1% | |w| 5.314 | 42 s
+[it 11] sampled policy vs heuristic -0.012 ± 0.045 | 52980 decisions, deviates 2.0%, clipped 0% | |w| 5.393 | 41 s
+[it 12] sampled policy vs heuristic +0.032 ± 0.043 | 56987 decisions, deviates 1.8%, clipped 0% | |w| 5.479 | 43 s
+[it 13] sampled policy vs heuristic -0.002 ± 0.048 | 53513 decisions, deviates 1.8%, clipped 0% | |w| 5.591 | 41 s
+[it 14] sampled policy vs heuristic +0.040 ± 0.041 | 64579 decisions, deviates 1.5%, clipped 0% | |w| 5.716 | 46 s
+  [val] greedy vs heuristic on 800 fights: -0.002 ± 0.006 | style 1.000 gates [] drift [] | survival -0.1 pts | deviates 0.1%
+[it 15] sampled policy vs heuristic -0.020 ± 0.038 | 57236 decisions, deviates 1.5%, clipped 0% | |w| 5.838 | 45 s
+[it 16] sampled policy vs heuristic -0.060 ± 0.033 | 56534 decisions, deviates 1.2%, clipped 0% | |w| 5.927 | 44 s
+[it 17] sampled policy vs heuristic -0.028 ± 0.041 | 52880 decisions, deviates 1.2%, clipped 0% | |w| 6.001 | 44 s
+[it 18] sampled policy vs heuristic -0.062 ± 0.037 | 53893 decisions, deviates 1.0%, clipped 0% | |w| 6.056 | 41 s
+[it 19] sampled policy vs heuristic +0.012 ± 0.038 | 57729 decisions, deviates 1.1%, clipped 0% | |w| 6.102 | 47 s
+  [val] greedy vs heuristic on 800 fights: +0.002 ± 0.006 | style 1.000 gates [] drift [] | survival 0.3 pts | deviates 0.1%  -> new best
+[it 20] sampled policy vs heuristic -0.004 ± 0.039 | 54488 decisions, deviates 0.9%, clipped 0% | |w| 6.151 | 43 s
+[it 21] sampled policy vs heuristic +0.027 ± 0.033 | 57515 decisions, deviates 0.9%, clipped 0% | |w| 6.192 | 44 s
+[it 22] sampled policy vs heuristic -0.047 ± 0.038 | 56533 decisions, deviates 0.8%, clipped 0% | |w| 6.228 | 43 s
+[it 23] sampled policy vs heuristic -0.016 ± 0.028 | 54060 decisions, deviates 0.8%, clipped 0% | |w| 6.285 | 44 s
+[it 24] sampled policy vs heuristic +0.065 ± 0.042 | 64566 decisions, deviates 0.6%, clipped 0% | |w| 6.308 | 46 s
+  [val] greedy vs heuristic on 800 fights: -0.000 ± 0.000 | style 1.000 gates [] drift [] | survival 0.0 pts | deviates 0.0%
+[it 25] sampled policy vs heuristic -0.035 ± 0.034 | 51464 decisions, deviates 0.5%, clipped 0% | |w| 6.367 | 39 s
+[it 26] sampled policy vs heuristic +0.016 ± 0.029 | 58947 decisions, deviates 0.5%, clipped 0% | |w| 6.433 | 44 s
+[it 27] sampled policy vs heuristic +0.014 ± 0.032 | 54745 decisions, deviates 0.6%, clipped 0% | |w| 6.526 | 42 s
+[it 28] sampled policy vs heuristic +0.039 ± 0.027 | 53486 decisions, deviates 0.6%, clipped 0% | |w| 6.585 | 42 s
+[it 29] sampled policy vs heuristic -0.009 ± 0.029 | 57603 decisions, deviates 0.6%, clipped 0% | |w| 6.646 | 43 s
+  [val] greedy vs heuristic on 800 fights: +0.004 ± 0.003 | style 1.000 gates [] drift [] | survival 0.3 pts | deviates 0.0%  -> new best
+[it 30] sampled policy vs heuristic -0.019 ± 0.028 | 55116 decisions, deviates 0.5%, clipped 0% | |w| 6.695 | 44 s
+[it 31] sampled policy vs heuristic -0.030 ± 0.027 | 53615 decisions, deviates 0.4%, clipped 0% | |w| 6.724 | 42 s
+[it 32] sampled policy vs heuristic +0.017 ± 0.023 | 56038 decisions, deviates 0.4%, clipped 0% | |w| 6.766 | 43 s
+[it 33] sampled policy vs heuristic +0.012 ± 0.027 | 56234 decisions, deviates 0.3%, clipped 0% | |w| 6.795 | 42 s
+[it 34] sampled policy vs heuristic +0.031 ± 0.023 | 57376 decisions, deviates 0.4%, clipped 0% | |w| 6.830 | 43 s
+  [val] greedy vs heuristic on 800 fights: +0.001 ± 0.001 | style 1.000 gates [] drift [] | survival 0.1 pts | deviates 0.0%
+[it 35] sampled policy vs heuristic +0.014 ± 0.024 | 58888 decisions, deviates 0.4%, clipped 0% | |w| 6.900 | 45 s
+[it 36] sampled policy vs heuristic -0.008 ± 0.020 | 56420 decisions, deviates 0.4%, clipped 0% | |w| 6.959 | 42 s
+[it 37] sampled policy vs heuristic +0.001 ± 0.026 | 59579 decisions, deviates 0.4%, clipped 0% | |w| 7.057 | 46 s
+[it 38] sampled policy vs heuristic -0.001 ± 0.022 | 55655 decisions, deviates 0.3%, clipped 0% | |w| 7.175 | 42 s
+[it 39] sampled policy vs heuristic -0.028 ± 0.017 | 54485 decisions, deviates 0.3%, clipped 0% | |w| 7.268 | 43 s
+  [val] greedy vs heuristic on 800 fights: +0.000 ± 0.000 | style 1.000 gates [] drift [] | survival 0.0 pts | deviates 0.0%
+[it 40] sampled policy vs heuristic -0.014 ± 0.015 | 54779 decisions, deviates 0.2%, clipped 0% | |w| 7.332 | 44 s
+[it 41] sampled policy vs heuristic -0.046 ± 0.024 | 52823 decisions, deviates 0.2%, clipped 0% | |w| 7.391 | 40 s
+[it 42] sampled policy vs heuristic -0.003 ± 0.019 | 51629 decisions, deviates 0.2%, clipped 0% | |w| 7.460 | 43 s
+[it 43] sampled policy vs heuristic +0.013 ± 0.015 | 59260 decisions, deviates 0.2%, clipped 0% | |w| 7.517 | 43 s
+[it 44] sampled policy vs heuristic -0.015 ± 0.015 | 56572 decisions, deviates 0.2%, clipped 0% | |w| 7.568 | 43 s
+  [val] greedy vs heuristic on 800 fights: +0.000 ± 0.000 | style 1.000 gates [] drift [] | survival 0.0 pts | deviates 0.0%
+[it 45] sampled policy vs heuristic -0.007 ± 0.013 | 55889 decisions, deviates 0.2%, clipped 0% | |w| 7.600 | 43 s
+[it 46] sampled policy vs heuristic +0.009 ± 0.021 | 56078 decisions, deviates 0.1%, clipped 0% | |w| 7.668 | 41 s
+[it 47] sampled policy vs heuristic -0.016 ± 0.017 | 60492 decisions, deviates 0.2%, clipped 0% | |w| 7.735 | 47 s
+[it 48] sampled policy vs heuristic -0.010 ± 0.016 | 52132 decisions, deviates 0.1%, clipped 0% | |w| 7.765 | 40 s
+[it 49] sampled policy vs heuristic -0.011 ± 0.018 | 52354 decisions, deviates 0.1%, clipped 0% | |w| 7.766 | 40 s
+  [val] greedy vs heuristic on 800 fights: +0.000 ± 0.000 | style 1.000 gates [] drift [] | survival 0.0 pts | deviates 0.0%
+[it 50] sampled policy vs heuristic +0.006 ± 0.010 | 54354 decisions, deviates 0.1%, clipped 0% | |w| 7.779 | 41 s
+[it 51] sampled policy vs heuristic -0.018 ± 0.018 | 54875 decisions, deviates 0.1%, clipped 0% | |w| 7.825 | 43 s
+[it 52] sampled policy vs heuristic +0.009 ± 0.021 | 58216 decisions, deviates 0.1%, clipped 0% | |w| 7.872 | 43 s
+[it 53] sampled policy vs heuristic -0.013 ± 0.015 | 55034 decisions, deviates 0.1%, clipped 0% | |w| 7.938 | 40 s
+[it 54] sampled policy vs heuristic +0.009 ± 0.016 | 59183 decisions, deviates 0.1%, clipped 0% | |w| 8.001 | 44 s
+  [val] greedy vs heuristic on 800 fights: +0.001 ± 0.000 | style 1.000 gates [] drift [] | survival 0.0 pts | deviates 0.0%
+[it 55] sampled policy vs heuristic -0.000 ± 0.018 | 57938 decisions, deviates 0.1%, clipped 0% | |w| 8.055 | 44 s
+[it 56] sampled policy vs heuristic +0.014 ± 0.014 | 54220 decisions, deviates 0.2%, clipped 0% | |w| 8.120 | 40 s
+[it 57] sampled policy vs heuristic +0.008 ± 0.024 | 50478 decisions, deviates 0.1%, clipped 0% | |w| 8.173 | 42 s
+[it 58] sampled policy vs heuristic -0.008 ± 0.018 | 57207 decisions, deviates 0.2%, clipped 0% | |w| 8.217 | 43 s
+[it 59] sampled policy vs heuristic +0.003 ± 0.016 | 51334 decisions, deviates 0.1%, clipped 0% | |w| 8.231 | 40 s
+  [val] greedy vs heuristic on 800 fights: -0.002 ± 0.002 | style 1.000 gates [] drift [] | survival -0.1 pts | deviates 0.0%
+[test] best (after 30 iterations) vs heuristic on 1200 held-out fights: -0.001 ± 0.004 (within 2 SE) | style 1.000 gates [] | survival -0.1 pts | deviates 0.0%

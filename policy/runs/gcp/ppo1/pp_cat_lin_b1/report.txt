@@ -1,0 +1,2 @@
+[it 60/60] best after 60 iterations val +0.017 | cat target-lin ppo
+test: 0.004 ± 0.019 (within noise), style 1.000

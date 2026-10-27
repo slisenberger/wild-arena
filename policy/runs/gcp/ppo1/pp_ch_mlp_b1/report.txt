@@ -1,0 +1,2 @@
+[it 60/60] best after 50 iterations val +0.027 | charger target-mlp ppo
+test: 0.002 ± 0.024 (within noise), style 1.000

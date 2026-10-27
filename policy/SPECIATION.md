@@ -52,6 +52,15 @@ each species develop its own realistic fighting style. This note is the plan; th
 - PPO sampling temperature: at tau 1 the sampled policy deviated from the heuristic on 55% of decisions (noise swamps the
   paired advantage); tau = margin / 2 = .125 gives ~14%.
 
+- Results, first target-choice rounds (Oct 27; ES = train.js, held-out test on 1,200 fights vs zero weights):
+  chargers ch_t_s1 **+0.143 ± 0.030**, clean (style 1.00); cats on cat_v1 +0.055 ± 0.026 but fail the stillLong gate;
+  brawler +0.061 ± 0.033, bulldozers +0.036 / −0.003, guards +0.024 / +0.028 (within noise); kickers and old-engine cats: no
+  update beat zero weights. Target choice has leverage for chargers (a charge spent on the right animal), little so far for others.
+- PPO pilot (ppo1: cats linear/MLP, beta .1/.5; guard and charger MLP): every test within noise (−0.001 to +0.011). The
+  learned policy barely moves (greedy deviation 1–4%; guards 0%), while ES's charger winner deviates far more. Diagnosis: one
+  fight-level advantage spread over ~10k decisions (guards ~50k) is too weak a credit signal. Next for PPO: per-decision
+  credit, e.g. paired branch fights that differ from the heuristic at a single sampled decision, or a learned value baseline.
+
 ## Phases (each measured before the next)
 1. Plumbing: joint (target, intent) hook for every archetype, zero/heuristic policy byte-identical to today
    (`check_identical.js`), features + trait vector, harness tests.
