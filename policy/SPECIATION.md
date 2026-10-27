@@ -61,6 +61,21 @@ each species develop its own realistic fighting style. This note is the plan; th
   fight-level advantage spread over ~10k decisions (guards ~50k) is too weak a credit signal. Next for PPO: per-decision
   credit, e.g. paired branch fights that differ from the heuristic at a single sampled decision, or a learned value baseline.
 
+- Species-aware charger (tgt5 ch_mlp_s1, target-mlp, ES): held-out +0.129 ± 0.034, fresh re-check +0.187 ± 0.035 (linear a1
+  +0.158 ± 0.029; difference within noise so far); human survival 50.3% -> 43.7%, own deaths -0.13/fight.
+- **Cats: where the headroom isn't (Oct 27, probes/cat_diag.js, cat_approach.js, cat_target_rules.js; live game, cat_v1 on).**
+  - Cats do ~1/10 of chargers' damage to your side (65-210 per fight vs 700-1,900; tiger 736 per minute alive, bison herd
+    3,400). 50-74% of enemy cats die, mostly to big herbivores on your side.
+  - They have real target choices (53 decisions per fight, 67% with 2+ targets), but 24 hand-set target rules (busy, hurt,
+    beatable, unguarded, close, the charger winner's weights, small or big game, sticky, avoid much stronger, ...) are all
+    within noise or worse. 'Go for big game' is −0.085 ± 0.042, and holding back costs −0.27.
+  - Approaches: 16% land a hit; 52% end in a switch, the commonest being 'you -> a big guard near you' (35% of switches; the
+    guard was not attacking the cat), then back again (12%). Sticking with you trips stillLong (waitForOpening circles), and
+    switching sends it into a rhino. Being intercepted (hurt by someone other than its target) is the commonest harm (16%).
+  - Reading: under today's movement, whom a cat targets has little leverage; the bottleneck is getting through your guards.
+    The cat lever is likely joint (timing + target: go for you when your guards are busy elsewhere, together with the
+    chargers), i.e. the joint target+intent decision with features of the guards around the human, not target choice alone.
+
 ## Phases (each measured before the next)
 1. Plumbing: joint (target, intent) hook for every archetype, zero/heuristic policy byte-identical to today
    (`check_identical.js`), features + trait vector, harness tests.
