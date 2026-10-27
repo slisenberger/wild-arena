@@ -60,6 +60,15 @@ the shipped policies and reprice after:
   features (a trained hidden layer, `--mode=deep`, fits), under the side-level checkmate goal, with targeting realism
   metrics (cats favour isolated/running prey, herbivores defend rather than hunt). Bigger action space: more fights per
   update. Start with cats (weakest target choice, below).
+  **Owner design direction (Oct 27): speciation from broad archetypes + species tuning + open control + a general
+  reward.** (1) Move decisions out of engine rules into the policy (target, approach, attack, bluff, retreat, movement),
+  keeping physics in the engine (speed, reach, stamina, armor, morale): bodies are what make species differ. (2) One
+  network per archetype, conditioned on a species/trait vector (mass, top speed, sprint stamina, weapon, armor, reach,
+  pack/solo, swim); the vector can grow. (3) Reward: the side's checkmate goal + self-preservation. (4) The reviewed
+  behavior spec's per-species ranges and never-gates become the constraints that keep emergent styles realistic.
+  (5) Success metric: a speciation report: per species, learned behavior diverges from the heuristic in the
+  directions the spec sources (e.g. cougars quit stalks sooner than lion coalitions; moose renew attacks on a downed
+  target, white rhinos don't), alongside the goal.
   Owner hypothesis: with dense inputs, some layers and compute, emergent targeting goals appear (kill the human's
   mount, pick on what you beat). The inputs mostly exist (`policy/features.js`: isMount, riding, logStrVsSelf,
   muchStronger, heightRatio, busyElsewhere, fleeing, hpFrac, guardRatio); add matchup inputs (weapon vs armor/pierce,
