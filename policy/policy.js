@@ -41,8 +41,10 @@ function choose(w, u, policy){
   if (policy.byArch) policy = policy.byArch[A._internals.archetypeOf(u)];
   const {opts, X} = (policy.feat === 'plus' ? FP : F).extract(w, u);
   const lin = policy.kind === 'target-lin' || policy.kind === 'target-mlp';
-  const teach = policy.teacher || log || stats || lin ? F.heuristicIndex(w, u, opts) : -1;
-  const a = policy.teacher ? teach : lin ? pickLin(w, policy, X, teach, u) : M.argmax(policy, X);
+  const look = policy.kind === 'target-look'; // lookahead (policy/probes/cat_lookahead.js): policy.pick(w, u, opts, teach) chooses
+  if (u.forceT && w.t < u.forceUntil){ const k = opts.findIndex(o => o.kind === 'target' && o.t === u.forceT); if (k >= 0){ apply(u, opts[k]); return; } } // a lookahead branch holds its tried target
+  const teach = policy.teacher || log || stats || lin || look ? F.heuristicIndex(w, u, opts) : -1;
+  const a = policy.teacher ? teach : look ? policy.pick(w, u, opts, teach) : lin ? pickLin(w, policy, X, teach, u) : M.argmax(policy, X);
   if (stats){ stats.n = (stats.n || 0) + 1; if (a === teach) stats.agree = (stats.agree || 0) + 1; }
   if (log && opts.length > 1) log.push({X, y: teach, a, sp: u.s.id});
   apply(u, opts[a]);
