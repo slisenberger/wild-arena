@@ -396,3 +396,8 @@ Pick for new roles. Top three for design value: **honey badger, moose, Komodo dr
   tundra only). Extend it to the rest of the roster where realism says so (croc/hippo heavier on the river, polar bear and
   mammoth on the tundra, cats and gaur in the forest, savanna big game), re-measure each map's board strength, and decide
   whether the board total should vary by map.
+
+- [ ] **Walrus on your side rarely stays at the water** (found Oct 28 while checking guard targeting): on tundra-lake fights your
+  walrus is > 6 m from water 97% of the time on main (98% with guard_target_m2, so not a regression). Its `shoreGuard`
+  behaviour applies on the other side; as a guard it escorts you overland as a slow armored lump. Decide: should a walrus guard
+  hold the shore near you (realistic) or escort (current)? Measure value either way.
