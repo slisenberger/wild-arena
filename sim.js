@@ -183,7 +183,7 @@ function mkPond(R, tid, kind, xr, yr, rxr, ryr, cold){
   }
   return null;
 }
-function mapVariant(tid, seed){
+function mapVariant(tid, seed, opts){
   const v = baseVariant(tid);
   const R = rng(((seed || 1) ^ 0x9e3779b9) >>> 0);
   v.on = true; const notes = [];
@@ -208,16 +208,150 @@ function mapVariant(tid, seed){
     if (v.snow > 1){ v.features.push('deep snow'); notes.push('The snow is deep today.'); } else if (v.snow < 1){ v.features.push('light snow'); notes.push('The snow is shallow and wind-packed.'); }
     if (R() < .45){ const p = mkPond(R, tid, 'lake', [42, 62], [14, 52], [6.5, 9.5], [4.5, 6.5], true); if (p){ v.ponds.push(p); v.features.push('frozen lake'); notes.push('A half-frozen lake: open water so cold it saps the strength of anything that swims in it.'); } }
   }
+  if (opts && opts.maps2) m2Features(v, R); // terrain features (prototype): drawn last, so everything above is unchanged
   v.hasWater = !!v.band || v.ponds.length > 0;
   v.note = notes.length ? notes.join(' ') : null;
-  v.key = v.terrain + ':' + (seed || 1) + ':' + JSON.stringify([v.band, v.ponds, v.clearing, v.trees, v.shade, v.snow]);
+  v.key = v.terrain + ':' + (seed || 1) + ':' + JSON.stringify([v.band, v.ponds, v.clearing, v.trees, v.shade, v.snow]) + (v.obst ? ':m2:' + JSON.stringify([v.pb, v.obst]) : '');
   return v;
 }
 function variantFor(cfg){
   if (cfg.variant && typeof cfg.variant === 'object') return cfg.variant;
   const tid = (TERRAINS[cfg.terrain] || TERRAINS.savanna).id;
   if (cfg.variant === false) return baseVariant(tid);
-  return mapVariant(tid, cfg.mapSeed != null ? cfg.mapSeed : (cfg.seed || 1));
+  return mapVariant(tid, cfg.mapSeed != null ? cfg.mapSeed : (cfg.seed || 1), cfg.maps2 ? {maps2: true} : undefined);
+}
+
+// ---------- terrain features (prototype, cfg.maps2 / ?maps2=1; research/map_features.md) ----------
+// Opt-in: mapVariant(tid, seed, {maps2: true}) adds v.pb (the playable box: an impassable border of thornbush, valley
+// side, undergrowth or scree trims the field a little per game), v.obst (solid circles: granite kopje boulders, termite
+// mounds, a donga's or ravine's steep sides, cut banks, deadfall, a moraine ridge, erratic boulders) and v.nav (waypoints at
+// the gaps and around the ends, for routing). Drawn after every other variant draw, so the water, trees and fords are the
+// same as without the flag. Without the flag none of this exists and every fight is byte-identical.
+// hi = tall enough to block sight. The final arena's core (M2.core) is always kept clear.
+const M2 = {core: {x0: 38, x1: 62, y0: 25, y1: 41}, gap: 7, home: 8, navClr: 1.6,
+  hi: {kopje: 1, mound: 1, moraine: 1, boulder: 1}, label: {kopje: 'KOPJE', donga: 'DONGA', ravine: 'RAVINE', bank: 'CUT BANK', moraine: 'MORAINE', log: 'DEADFALL'}};
+const FULL_PB = {x0: 0, x1: W, y0: 0, y1: H};
+const pbOf = w => w.pb || FULL_PB;
+function m2Features(v, R){
+  const tid = v.terrain, home = homeFor(tid), C = M2.core, obst = [], nav = [], feats = [];
+  const f1 = n => +n.toFixed(1);
+  const pb = v.pb = {x0: f1(R() * 3), x1: f1(W - 3 - R() * 6), y0: f1(1 + R() * 5), y1: f1(H - 1 - R() * 5)};
+  const wet = (x, y, m) => v.ponds.some(p => pondDist(p, x, y) < m) || !!(v.band && x > v.band.x0 - m && x < v.band.x1 + m);
+  const inCore = (x, y, m) => x > C.x0 - m && x < C.x1 + m && y > C.y0 - m && y < C.y1 + m;
+  // a circle may go here: off the core, away from where you start, out of the water, clear of other features
+  const ok = (c, opt) => !inCore(c.x, c.y, c.r + 1) && Math.hypot(c.x - home.x, c.y - home.y) > c.r + M2.home && (opt.wetOK || !wet(c.x, c.y, c.r + 1.5))
+    && (opt.edgeOK || (c.x - c.r > pb.x0 + 2 && c.x + c.r < pb.x1 - 2 && c.y - c.r > pb.y0 + 2 && c.y + c.r < pb.y1 - 2))
+    && !obst.some(o => Math.hypot(o.x - c.x, o.y - c.y) < o.r + c.r + 2.5) && !nav.some(p => Math.hypot(p.x - c.x, p.y - c.y) < c.r + 3);
+  const add = (cs, pts, ft) => { for (const c of cs) obst.push(c); for (const p of pts) nav.push(p); feats.push(ft); };
+  const navOK = (p, cs) => p.x > pb.x0 + 2.5 && p.x < pb.x1 - 2.5 && p.y > pb.y0 + 2.5 && p.y < pb.y1 - 2.5 && !obst.concat(cs).some(o => Math.hypot(o.x - p.x, o.y - p.y) < o.r + 2.8);
+  // a line of overlapping circles from (x0, y0) to (x1, y1), with gaps (centre, in metres along it) M2.gap m clear
+  function chain(k, x0, y0, x1, y1, r, jit, gaps, opt){
+    const L = Math.hypot(x1 - x0, y1 - y0), ux = (x1 - x0) / L, uy = (y1 - y0) / L, n = Math.ceil(L / (r * 1.25)), cs = [], pts = [];
+    for (let i = 0; i <= n; i++){
+      const s = i * L / n, rr = f1(r * (1 + (R() - .5) * jit)), j = (R() - .5) * jit * r;
+      if (gaps.some(g => Math.abs(s - g) < M2.gap / 2 + rr)) continue;
+      cs.push({k, x: f1(x0 + ux * s - uy * j), y: f1(y0 + uy * s + ux * j), r: rr});
+    }
+    for (const g of gaps) pts.push({x: f1(x0 + ux * g), y: f1(y0 + uy * g), gap: 1});
+    if (opt.openA) pts.push({x: f1(x0 - ux * (r + 3.5)), y: f1(y0 - uy * (r + 3.5))});
+    if (opt.openB) pts.push({x: f1(x1 + ux * (r + 3.5)), y: f1(y1 + uy * (r + 3.5))});
+    if (!cs.every(c => ok(c, opt)) || !pts.every(p => navOK(p, cs))) return false;
+    // waypoints along both sides every ~8 m, so something pressed against it can always see one
+    const off = r * (1 + jit / 2) + 2.8, ns = Math.max(1, Math.round(L / 8));
+    for (let i = 0; i <= ns; i++){ const q = i * L / ns; for (const sd of [-1, 1]){ const p = {x: f1(x0 + ux * q - uy * off * sd), y: f1(y0 + uy * q + ux * off * sd)}; if (navOK(p, cs)) pts.push(p); } }
+    add(cs, pts, {k, x: f1(x0 + ux * L * .5 - uy * (r + 2.4)), y: f1(y0 + uy * L * .5 + ux * (r + 2.4))}); return true;
+  }
+  function cluster(k, cx, cy, n, r0, r1, spread){
+    const cs = []; let ext = 0;
+    for (let i = 0; i < n; i++){ const a = R() * 6.283, d = i ? spread * (.4 + R() * .6) : 0, r = f1(r0 + R() * (r1 - r0)); cs.push({k, x: f1(cx + Math.cos(a) * d), y: f1(cy + Math.sin(a) * d), r}); ext = Math.max(ext, d + r); }
+    const pts = []; for (let i = 0; i < 6; i++){ const a = i * Math.PI / 3 + .3; pts.push({x: f1(cx + Math.cos(a) * (ext + 3.2)), y: f1(cy + Math.sin(a) * (ext + 3.2))}); }
+    if (!cs.every(c => ok(c, {}))) return false;
+    add(cs, pts.filter(p => navOK(p, cs)), {k, x: f1(cx), y: f1(cy + ext + 2)}); return true;
+  }
+  function scatter(k, n, r0, r1, xr){
+    for (let i = 0, t = 0; i < n && t < 40; t++){ const c = {k, x: f1(xr[0] + R() * (xr[1] - xr[0])), y: f1(pb.y0 + 4 + R() * (pb.y1 - pb.y0 - 8)), r: f1(r0 + R() * (r1 - r0))}; if (ok(c, {})){ obst.push(c); i++; } }
+  }
+  // a gully running in from the top or bottom edge, on your flank or theirs, open at its far end, maybe with a crossing
+  function fromEdge(k, r, jit, frac0, frac1, crossing){
+    for (let t = 0; t < 12; t++){
+      const mine = R() < .55, x = mine ? 28 + R() * 8 : 64 + R() * 8, top = R() < .5, len = (pb.y1 - pb.y0) * (frac0 + R() * (frac1 - frac0)), lean = (R() - .5) * 8;
+      const ya = top ? pb.y0 - 1 : pb.y1 + 1, yb = top ? ya + len : ya - len, gaps = crossing ? [len * (.3 + R() * .3)] : [];
+      if (chain(k, x, ya, x + lean, yb, r, jit, gaps, {edgeOK: true, openB: true})) return true;
+    }
+    return false;
+  }
+  if (tid === 'savanna'){
+    let any = false;
+    if (R() < .8) for (let t = 0; t < 12 && !any; t++){ const top = R() < .5; any = cluster('kopje', 26 + R() * 48, top ? pb.y0 + 9 + R() * 8 : pb.y1 - 9 - R() * 8, 4 + Math.floor(R() * 3), 2, 3.6, 4.5); }
+    if (R() < (any ? .45 : 1)) fromEdge('donga', 1.4, .3, .4, .6, R() < .5);
+    scatter('mound', 3 + Math.floor(R() * 4), 1.1, 1.7, [10, 90]);
+  } else if (tid === 'river'){
+    // cut banks: on a bend's outer side the bank is a steep earth wall; the inner side (the point bar, mid-river) stays open
+    const B = v.band, topLeft = R() < .5;
+    for (const [left, top] of [[true, topLeft], [false, !topLeft]]){
+      const x = left ? B.x0 - .9 : B.x1 + .9, ya = top ? pb.y0 - 1 : C.y1 + 1, yb = top ? C.y0 - 1 : pb.y1 + 1;
+      const segs = []; let y = ya; // split around the fords (1.5 m of open bank either side)
+      for (const [a, b] of B.fords.slice().sort((p, q) => p[0] - q[0])){ if (b + 1.5 < ya || a - 1.5 > yb) continue; if (a - 1.5 > y) segs.push([y, a - 1.5]); y = Math.max(y, b + 1.5); }
+      if (yb > y) segs.push([y, yb]);
+      for (const [s0, s1] of segs) if (s1 - s0 > 2) chain('bank', x, s0, x, s1, 1, 0, [], {edgeOK: true, wetOK: true, openA: s0 > pb.y0, openB: s1 < pb.y1});
+    }
+    if (R() < .5){ // a side gully cutting down to the river
+      const mine = R() < .5, y = R() < .5 ? pb.y0 + 8 + R() * 10 : pb.y1 - 8 - R() * 10, L = 14 + R() * 8, x0 = mine ? B.x0 - 3.5 : B.x1 + 3.5;
+      chain('donga', x0, y, x0 + (mine ? -L : L), y + (R() - .5) * 6, 1.3, .3, [], {openB: true});
+    }
+  } else if (tid === 'forest'){
+    if (R() < .7) fromEdge('ravine', 1.8, .25, .5, .7, true);
+    const nLog = 2 + Math.floor(R() * 3);
+    for (let i = 0, t = 0; i < nLog && t < 30; t++){ const x = 10 + R() * 80, y = pb.y0 + 6 + R() * (pb.y1 - pb.y0 - 12), a = R() * Math.PI, L = 6 + R() * 4;
+      if (chain('log', x, y, x + Math.cos(a) * L, y + Math.sin(a) * L, 1, .2, [], {openA: true, openB: true})) i++; }
+  } else if (tid === 'tundra'){
+    if (R() < .75){ // a moraine: a ridge of boulders right across the field, with one or two gaps
+      for (let t = 0; t < 12; t++){ const mine = R() < .55, x = mine ? 28 + R() * 8 : 64 + R() * 8, lean = (R() - .5) * 10, L = pb.y1 - pb.y0 + 2, two = R() < .5;
+        const gaps = two ? [L * (.15 + R() * .2), L * (.65 + R() * .2)] : [L * (.25 + R() * .5)];
+        if (chain('moraine', x, pb.y0 - 1, x + lean, pb.y1 + 1, 2, .35, gaps, {edgeOK: true})) break; }
+    }
+    scatter('boulder', 2 + Math.floor(R() * 3), 1.8, 3, [12, 88]);
+  }
+  v.obst = obst; v.nav = nav; v.feats = feats.filter(f => M2.label[f.k]);
+}
+// the obstacle (radius x k, plus c) that segment (ax, ay)-(bx, by) passes through, if any
+function m2Hit(list, ax, ay, bx, by, c, k){
+  const dx = bx - ax, dy = by - ay, L2 = dx * dx + dy * dy, x0 = Math.min(ax, bx), x1 = Math.max(ax, bx), y0 = Math.min(ay, by), y1 = Math.max(ay, by);
+  for (const o of list){
+    const rr = o.r * (k || 1) + c;
+    if (o.x + rr < x0 || o.x - rr > x1 || o.y + rr < y0 || o.y - rr > y1) continue;
+    const t = L2 > 0 ? clamp(((o.x - ax) * dx + (o.y - ay) * dy) / L2, 0, 1) : 0, px = ax + dx * t - o.x, py = ay + dy * t - o.y;
+    if (px * px + py * py < rr * rr) return o;
+  }
+  return null;
+}
+function m2Setup(w, V){
+  w.obst = V.obst; w.obstHi = V.obst.filter(o => M2.hi[o.k]); w.pb = V.pb;
+  const P = V.nav.filter(p => !m2Hit(V.obst, p.x, p.y, p.x, p.y, 2.4)), n = P.length, adj = [];
+  for (let i = 0; i < n; i++){ adj[i] = []; for (let j = 0; j < n; j++) adj[i][j] = i === j ? 0 : j < i ? adj[j][i] : (m2Hit(V.obst, P[i].x, P[i].y, P[j].x, P[j].y, M2.navClr) ? Infinity : Math.hypot(P[i].x - P[j].x, P[i].y - P[j].y)); }
+  w.nav = {P, adj};
+}
+// where to head next when a wall stands between u and (tx, ty): the first waypoint of the shortest route; null = go straight
+function m2Route(w, u, tx, ty){
+  const c = u.r * .6 + .25, O = w.obst;
+  const inO = m2Hit(O, tx, ty, tx, ty, c); if (inO){ const dx = tx - inO.x, dy = ty - inO.y, m = Math.hypot(dx, dy) || 1, k = inO.r + c + .3; tx = inO.x + dx / m * k; ty = inO.y + dy / m * k; } // aim at the near side of it
+  if (!m2Hit(O, u.x, u.y, tx, ty, c)){ u.m2r = null; return null; }
+  const rt = u.m2r;
+  if (rt && w.t < rt.t && Math.hypot(rt.gx - tx, rt.gy - ty) < 3 && Math.hypot(u.x - rt.x, u.y - rt.y) > 1.5) return rt;
+  const {P, adj} = w.nav, n = P.length, d = new Array(n), prev = new Array(n).fill(-1), done = new Array(n).fill(false);
+  for (let i = 0; i < n; i++){ const q = Math.hypot(P[i].x - u.x, P[i].y - u.y); d[i] = q < 1.5 || m2Hit(O, u.x, u.y, P[i].x, P[i].y, c) ? Infinity : q; }
+  if (!d.some(q => q < Infinity)) for (let i = 0; i < n; i++){ const q = Math.hypot(P[i].x - u.x, P[i].y - u.y); d[i] = q < 1.5 || m2Hit(O, u.x, u.y, P[i].x, P[i].y, .2) ? Infinity : q; } // pressed against it: any waypoint it can see at all
+  let best = -1, bc = Infinity;
+  for (let it = 0; it < n; it++){
+    let i = -1, m = Infinity; for (let j = 0; j < n; j++) if (!done[j] && d[j] < m){ m = d[j]; i = j; }
+    if (i < 0) break; done[i] = true;
+    const toG = m2Hit(O, P[i].x, P[i].y, tx, ty, c) ? Infinity : Math.hypot(tx - P[i].x, ty - P[i].y);
+    if (d[i] + toG < bc){ bc = d[i] + toG; best = i; }
+    for (let j = 0; j < n; j++) if (!done[j] && d[i] + adj[i][j] < d[j]){ d[j] = d[i] + adj[i][j]; prev[j] = i; }
+  }
+  if (best < 0){ u.m2r = null; return null; }
+  let i = best; while (prev[i] >= 0) i = prev[i];
+  u.m2r = {x: P[i].x, y: P[i].y, t: w.t + .5, gx: tx, gy: ty}; return u.m2r;
 }
 
 function mkUnit(s, side, x, y, id){
@@ -278,6 +412,7 @@ function setup(cfg){
   if (cfg.boons && cfg.boons.length) w.bn = boonMods(cfg.boons); // migration perks (opt-in; absent = the plain game)
   // the world's water bodies: the river band (river map) and any ponds this game's variant adds
   w.variant = V; w.band = V.band; w.ponds = V.ponds; w.wet = !!(V.band || V.ponds.length); w.coldWater = V.ponds.some(p => p.cold); w.snowDepth = V.snow;
+  if (V.obst) m2Setup(w, V); // terrain features (maps2 prototype)
   const human = mkUnit(HUMAN, 'H', 22, 36, w.nid++); human.atk = 0; w.units.push(human); w.human = human;
   w.shade = [];
   { const hp = homeFor(T.id); human.x = hp.x; human.y = hp.y; }
@@ -286,12 +421,15 @@ function setup(cfg){
   if (cfg.humanHp != null) human.hp = human.maxhp * clamp(cfg.humanHp, .01, 1); // migration: your wounds carry over
   // nothing grows in a pond or a clearing
   const open = (x, y, m) => (V.clearing && Math.hypot(x - V.clearing.x, y - V.clearing.y) < V.clearing.r) || V.ponds.some(p => pondDist(p, x, y) < m);
+  // (maps2) nor in the border, on a feature, or in one of its gaps
+  const m2open = V.obst ? (x, y, m) => x < V.pb.x0 + 2 || x > V.pb.x1 - 2 || y < V.pb.y0 + 2 || y > V.pb.y1 - 2 || V.obst.some(o => Math.hypot(o.x - x, o.y - y) < o.r + m + 1) || V.nav.some(p => p.gap && Math.hypot(p.x - x, p.y - y) < 5) : null;
   // trees
   if (V.trees){
     let tries = 0;
     while (w.trees.length < V.trees && tries++ < 500){
       const t = {x:6 + R()*(W-12), y:6 + R()*(H-12), r:1 + R()*1.2};
       if (V.on && open(t.x, t.y, t.r + 1.5)) continue;
+      if (m2open && m2open(t.x, t.y, t.r)) continue;
       if (Math.hypot(t.x-human.x, t.y-human.y) < 7 && Math.hypot(t.x-human.x, t.y-human.y) > 4.5 && !w.trees.some(o=>Math.hypot(o.x-human.x,o.y-human.y)<7)) { w.trees.push(t); continue; }
       if (w.trees.some(o => Math.hypot(o.x-t.x, o.y-t.y) < 7)) continue;
       if (Math.hypot(t.x-human.x, t.y-human.y) < 5) continue;
@@ -303,6 +441,7 @@ function setup(cfg){
     while (w.shade.length < V.shade && tries++ < 300){
       const t = {x:8 + R()*(W-16), y:8 + R()*(H-16), r:3.6 + R()*1.4};
       if (V.on && open(t.x, t.y, t.r + 1)) continue;
+      if (m2open && m2open(t.x, t.y, 0)) continue;
       if (w.shade.some(o => Math.hypot(o.x-t.x, o.y-t.y) < 16)) continue;
       if (Math.hypot(t.x-human.x, t.y-human.y) < 9) continue;
       w.shade.push(t);
@@ -353,11 +492,13 @@ function setup(cfg){
         }
       }
       if (s.id === 'croc' && !B && !(V.ponds.length && pondAt(w, x, y))) { x = 60 + R()*30; }
+      if (w.pb){ x = clamp(x, w.pb.x0 + 3, w.pb.x1 - 3); y = clamp(y, w.pb.y0 + 3, w.pb.y1 - 3); } // (maps2) inside the playable box
       ok = !w.units.some(u => Math.hypot(u.x-x, u.y-y) < (tries < 200 ? 9 : 5)) && !w.trees.some(t => Math.hypot(t.x-x, t.y-y) < t.r + 3);
+      if (ok && w.obst && m2Hit(w.obst, x, y, x, y, radiusOf(s.mass) * .6 + 1)) ok = false;
     }
     for (let k = 0; k < groupSize(cfg, s); k++){ // packmates arrive together
       let gx = x, gy = y;
-      if (k){ const a = R() * 6.283; gx = clamp(x + Math.cos(a) * 3, 3, W - 3); gy = clamp(y + Math.sin(a) * 3, 3, H - 3); }
+      if (k){ const a = R() * 6.283, P = pbOf(w); gx = clamp(x + Math.cos(a) * 3, P.x0 + 3, P.x1 - 3); gy = clamp(y + Math.sin(a) * 3, P.y0 + 3, P.y1 - 3); }
       const u = mkUnit(s, 'E', gx, gy, w.nid++); w.units.push(u);
       if (w.mode === 'allout'){ u.releaseT = 0; }
       u.atk = R()*1; u.agit = Math.max(u.agit, .4 + R()*.2);
@@ -384,7 +525,7 @@ function groupSize(cfg, s){ return s.group || 1; }
 const sp = s => s.species || s.id;
 // v (optional, all four helpers): this game's map variant from mapVariant(); omitted = the base map
 const varOf = (tid, v) => v || baseVariant((TERRAINS[tid] || TERRAINS.savanna).id);
-function zoneFor(tid, v){ v = varOf(tid, v); return {x0: 2, x1: v.band ? v.band.x1 : 45, y0: 2, y1: H - 2}; }
+function zoneFor(tid, v){ v = varOf(tid, v); const P = v.pb || FULL_PB; return {x0: P.x0 + 2, x1: v.band ? v.band.x1 : 45, y0: P.y0 + 2, y1: P.y1 - 2}; }
 function homeFor(tid){ const T = TERRAINS[tid] || TERRAINS.savanna; return T.water ? {x: 16, y: 33} : {x: 22, y: 36}; }
 // where an animal may stand at deployment: inside your zone; only swimmers may start in deep water
 function placeOK(tid, s, x, y, v){
@@ -392,6 +533,7 @@ function placeOK(tid, s, x, y, v){
   if (x < z.x0 || x > z.x1 || y < z.y0 || y > z.y1) return false;
   if (B && x >= B.x0 && x <= B.x1 && !B.fords.some(([a, b]) => y >= a && y <= b)) return s.water >= .8;
   if (v.ponds.some(p => pondK(p, x, y) <= 1)) return s.water >= .8;
+  if (v.obst && m2Hit(v.obst, x, y, x, y, radiusOf(s.mass) * .6 + .2)) return false; // (maps2) not inside a rock, gully or bank
   return true;
 }
 function clampPlace(tid, s, x, y, v){
@@ -403,7 +545,15 @@ function clampPlace(tid, s, x, y, v){
       let dx = x - p.x, dy = y - p.y, k = pondK(p, x, y); if (k < 1e-3){ dx = -p.rx; dy = 0; k = 1; }
       const f = (1 + 1.6 / Math.min(p.rx, p.ry)) / k; x = clamp(p.x + dx * f, z.x0, z.x1); y = clamp(p.y + dy * f, z.y0, z.y1);
       if (pondK(p, x, y) <= 1){ x = p.x - p.rx - 1.6; y = clamp(y, z.y0, z.y1); }
-    } else if (v.band) x = v.band.x0 - 1.5;
+    } else if (v.band && !(v.obst && v.band.x0 - x > 1.5)) x = v.band.x0 - (v.obst ? 2.5 + radiusOf(s.mass) * .6 : 1.5); // (maps2: behind the cut bank)
+    if (v.obst){ // (maps2) step off the feature: out to its edge, then the nearest spot that is allowed
+      const c = radiusOf(s.mass) * .6 + .5;
+      for (let i = 0; i < 24 && !placeOK(tid, s, x, y, v); i++){
+        const o = m2Hit(v.obst, x, y, x, y, c - .3);
+        if (o){ const dx = x - o.x, dy = y - o.y, m = Math.hypot(dx, dy) || 1; x = clamp(o.x + dx / m * (o.r + c), z.x0, z.x1); y = clamp(o.y + dy / m * (o.r + c), z.y0, z.y1); }
+        else { const a = i * 2.4, q = 1 + i * .5; x = clamp(x + Math.cos(a) * q, z.x0, z.x1); y = clamp(y + Math.sin(a) * q, z.y0, z.y1); }
+      }
+    }
   }
   return {x, y};
 }
@@ -444,7 +594,8 @@ const HAZARD_NAME = {fire: 'fire', flood: 'flood water', blizzard: 'blizzard'};
 function zoneAt(w, t){
   const z = w.zone; if (!z) return null;
   const p = clamp((t - ZONE_T0) / (ZONE_T1 - ZONE_T0), 0, 1), e = p * p * (3 - 2 * p);
-  return {x0: (z.cx - ZONE_W / 2) * e, x1: W + (z.cx + ZONE_W / 2 - W) * e, y0: (z.cy - ZONE_H / 2) * e, y1: H + (z.cy + ZONE_H / 2 - H) * e, p};
+  const P = pbOf(w); // (maps2: it closes in from the playable box's edges)
+  return {x0: P.x0 + (z.cx - ZONE_W / 2 - P.x0) * e, x1: P.x1 + (z.cx + ZONE_W / 2 - P.x1) * e, y0: P.y0 + (z.cy - ZONE_H / 2 - P.y0) * e, y1: P.y1 + (z.cy + ZONE_H / 2 - P.y1) * e, p};
 }
 function outsideZone(w, u){ const z = w.zb; return !!z && z.p > 0 && (u.x < z.x0 || u.x > z.x1 || u.y < z.y0 || u.y > z.y1); }
 function hazardHurt(w, u, dmg){
@@ -545,6 +696,7 @@ function canSee(w, viewer, u){
   if (has(u, 'submerges') && inWater(w, u) && u.state !== 'flee') range = Math.min(range, 10);
   if (has(u, 'swimStalk') && inWater(w, u) && u.state !== 'flee') range = Math.min(range, 7); // a jaguar swims with only its head showing
   if (hiddenGuard(u)) range = Math.min(range, 6); // your leopard lying up in cover beside you
+  if (w.obstHi){ const d = dist(viewer, u); return d <= range && (d < 4 || !m2Hit(w.obstHi, viewer.x, viewer.y, u.x, u.y, 0, .85)); } // (maps2) a kopje, mound or boulder hides what is behind it
   return dist(viewer, u) <= range;
 }
 // your leopard on guard and ready to ambush is lying up in cover: the other side doesn't see it (or count it as a guard) until it springs
@@ -1173,7 +1325,7 @@ function step(w){
       }
       u.fleeT -= DT;
       // cornered?
-      const nearEdge = u.x < 4 || u.x > W - 4 || u.y < 4 || u.y > H - 4;
+      const P = pbOf(w), nearEdge = u.x < P.x0 + 4 || u.x > P.x1 - 4 || u.y < P.y0 + 4 || u.y > P.y1 - 4;
       let threatNear = null; for (const o of units) if (active(o) && hostile(w,o,u) && o.target === u && dist(o,u) < 7) threatNear = o;
       if (threatNear && (nearEdge || u.latchedBy)){
         u.state = 'engage'; u.target = threatNear; u.cornerT = 6; u.morale = .7; u.fleeT = 0;
@@ -1234,7 +1386,7 @@ function step(w){
       let m = Math.hypot(ax, ay);
       if (m > 1e-9){ ax /= m; ay /= m; } else if (u.fleeDir){ ax = u.fleeDir.x; ay = u.fleeDir.y; }
       if (u.routing){
-        const ex = [u.x, W - u.x, u.y, H - u.y], k = ex.indexOf(Math.min(...ex));
+        const P = pbOf(w), ex = [u.x - P.x0, P.x1 - u.x, u.y - P.y0, P.y1 - u.y], k = ex.indexOf(Math.min(...ex));
         const gx = k === 0 ? -1 : k === 1 ? 1 : 0, gy = k === 2 ? -1 : k === 3 ? 1 : 0;
         ax = ax * .5 + gx; ay = ay * .5 + gy;
       }
@@ -1291,7 +1443,7 @@ function step(w){
       if (!u.wander || R() < .01){
         const H0 = w.human, lean = u.sated ? 0 : Math.min(1, (u.s.pred ? .5 : .2 + u.agit * .7) + pressure(w) * .6);
         const bx = u.x + (H0.x - u.x) * lean * .5, by = u.y + (H0.y - u.y) * lean * .5;
-        u.wander = {x: clamp(bx + (R()-.5)*20, 5, W-5), y: clamp(by + (R()-.5)*20, 5, H-5)}; if (has(u,'waterbound') && w.wet) u.wander = nearWaterPt(w, u, u.wander, -1); else if (has(u,'shoreGuard') && w.wet) u.wander = waterPoint(w, u, u.wander); } // lurk submerged; a walrus keeps to its water
+        const P = pbOf(w); u.wander = {x: clamp(bx + (R()-.5)*20, P.x0 + 5, P.x1 - 5), y: clamp(by + (R()-.5)*20, P.y0 + 5, P.y1 - 5)}; if (has(u,'waterbound') && w.wet) u.wander = nearWaterPt(w, u, u.wander, -1); else if (has(u,'shoreGuard') && w.wet) u.wander = waterPoint(w, u, u.wander); } // lurk submerged; a walrus keeps to its water
       if (has(u,'waterbound') && !w.wet){ frac = 0; }
       else { tx = u.wander.x; ty = u.wander.y; frac = u.state === 'rest' ? .12 : .35 + .35 * pressure(w); }
     }
@@ -1313,12 +1465,16 @@ function step(w){
       if (nearEdge){ tx = clamp(u.x, z.x0 + m, z.x1 - m); ty = clamp(u.y, z.y0 + m, z.y1 - m); frac = Math.max(frac, outsideZone(w, u) ? .9 : .5); }
       else if (tx !== null){ tx = clamp(tx, z.x0 + m, z.x1 - m); ty = clamp(ty, z.y0 + m, z.y1 - m); }
     }
+    if (w.obst && tx !== null && frac > 0){ // (maps2) a wall in the way: go round by the nearest gap; caught outside the safe box behind one, make for the box's middle
+      if (w.zone && outsideZone(w, u) && !u.routing && m2Hit(w.obst, u.x, u.y, w.zone.cx, w.zone.cy, u.r * .6 + .25)){ tx = w.zone.cx; ty = w.zone.cy; frac = Math.max(frac, .9); }
+      const r = m2Route(w, u, tx, ty); if (r){ tx = r.x; ty = r.y; }
+    }
     let dvx = 0, dvy = 0;
     if (tx !== null && frac > 0){
       const dx = tx - u.x, dy = ty - u.y, m = Math.hypot(dx, dy);
       if (m > .2){
         const sp = vmax * frac * (u.stam < .2 && frac > .6 ? .6 : 1); let d = steerTrees(w, u, dx/m, dy/m);
-        if (w.trees.length && sp > 1) d = unstick(w, u, d);
+        if ((w.trees.length || w.obst) && sp > 1) d = unstick(w, u, d);
         dvx = d.x*sp; dvy = d.y*sp;
       }
     }
@@ -1331,7 +1487,7 @@ function step(w){
     if (u.riding){ u.x = u.riding.x; u.y = u.riding.y; u.vx = u.riding.vx; u.vy = u.riding.vy; continue; }
     if (u.onTree){ u.vx = u.vy = 0; continue; }
     u.x += u.vx * DT; u.y += u.vy * DT;
-    u.x = clamp(u.x, u.r * .5, W - u.r * .5); u.y = clamp(u.y, u.r * .5, H - u.r * .5);
+    const P = pbOf(w); u.x = clamp(u.x, P.x0 + u.r * .5, P.x1 - u.r * .5); u.y = clamp(u.y, P.y0 + u.r * .5, P.y1 - u.r * .5);
   }
   // collisions
   for (let i = 0; i < units.length; i++){
@@ -1352,6 +1508,10 @@ function step(w){
         // an elephant leaning into a trunk for a second or so simply shoves the tree over
         if (a.s.mass >= 5000 && Math.hypot(a.vx, a.vy) > 1 && (t.push = (t.push || 0) + DT) > 1.2){ t.fell = true; log(w, `${capName(a)} shoves over a tree`, 'crash', a); }
       }
+    }
+    if (w.obst) for (const t of w.obst){ // (maps2) rock, bank and gully sides don't give
+      const dx = a.x - t.x, dy = a.y - t.y, d = Math.hypot(dx, dy), m = t.r + a.r * .6;
+      if (d < m && d > 1e-4){ a.x = t.x + dx/d*m; a.y = t.y + dy/d*m; }
     }
   }
   if (w.trees.some(t => t.fell)){
@@ -1399,6 +1559,7 @@ function step(w){
     if (!active(t)) continue;
     const d = dist(u, t), touch = u.r + t.r + u.s.reach;
     if (d > touch) continue;
+    if (w.obst && !u.latchedBy && m2Hit(w.obst, u.x, u.y, t.x, t.y, 0, .75)) continue; // (maps2) no striking through a rock or across a gully
     const easy = t.state === 'flee' || t.stun > 0 || t.latchedBy || t.heatstroke || t.side === 'H';
     if (u.s.gait === 'orbit' && !(u.mv && u.mv.k === 'dart') && !easy && !u.latchedBy && u.cornerT <= 0) continue;
     if ((u.s.gait === 'stalk' || u.s.gait === 'rush' || u.s.gait === 'lunge') && u.mv) continue;
@@ -1669,6 +1830,14 @@ function steerTrees(w, u, nx, ny){
     const k = 1.5 * ahead * (1 - .5 * clamp((d - clear) / 1.5, 0, 1));
     sx += px * k; sy += py * k;
   }
+  if (w.obst) for (const t of w.obst){ // (maps2) the same for rocks and gully sides, looking a little farther ahead
+    const ox = t.x - u.x, oy = t.y - u.y, d = Math.hypot(ox, oy), clear = t.r + u.r * .6 + .6;
+    if (d > clear + 2.5 || d < 1e-4) continue;
+    const ahead = (ox * nx + oy * ny) / d; if (ahead < .3) continue;
+    let px = -ny, py = nx; if (px * ox + py * oy > 0){ px = -px; py = -py; }
+    const k = 1.5 * ahead * (1 - .5 * clamp((d - clear) / 2.5, 0, 1));
+    sx += px * k; sy += py * k;
+  }
   const m = Math.hypot(sx, sy) || 1; return {x: sx / m, y: sy / m};
 }
 
@@ -1722,7 +1891,7 @@ function moveHuman(w, h){
   // avoid water (crocs) and edges
   { const aw = awayWater(w, h); if (aw){ dx += aw.x; if (aw.y) dy += aw.y; } }
   // stay clear of the field edges and of the closing hazard (hard push once you are in it)
-  const zb = w.zb && w.zb.p > 0 ? w.zb : {x0: 0, x1: W, y0: 0, y1: H}, out = outsideZone(w, h), ek = out ? 4 : 1;
+  const zb = w.zb && w.zb.p > 0 ? w.zb : pbOf(w), out = outsideZone(w, h), ek = out ? 4 : 1;
   if (h.x < zb.x0 + 4) dx += ek; if (h.x > zb.x1 - 4) dx -= ek; if (h.y < zb.y0 + 4) dy += ek; if (h.y > zb.y1 - 4) dy -= ek;
   const m = Math.hypot(dx, dy);
   if (m < .05){ damp(h); return; }
@@ -1730,6 +1899,7 @@ function moveHuman(w, h){
   setVel(w, h, dx/m, dy/m, urgent ? 1 : Math.min(.6, m));
 }
 function setVel(w, u, nx, ny, frac){
+  if (w.obst && frac > 0){ const d = unstick(w, u, steerTrees(w, u, nx, ny)); nx = d.x; ny = d.y; } // (maps2) you walk round rocks too
   const v = speedOf(w, u) * frac;
   const acc = Math.min(1, 5 * DT);
   u.vx += (nx*v - u.vx) * acc; u.vy += (ny*v - u.vy) * acc;
@@ -1743,7 +1913,7 @@ function gaitMove(w, u, t, d, touch, vmax){
   const lead = {tx: t.x + t.vx * .3, ty: t.y + t.vy * .3};
   const go = f => ({tx: lead.tx, ty: lead.ty, frac: d > touch ? f : 0});
   if (g === 'charge'){
-    if (d > 5 && d < 32 && u.chargeCd <= 0 && u.stam > .3 && reachable(u, t)){
+    if (d > 5 && d < 32 && u.chargeCd <= 0 && u.stam > .3 && reachable(u, t) && !(w.obst && m2Hit(w.obst, u.x, u.y, t.x, t.y, u.r * .6))){
       const px = t.x + t.vx * d / Math.max(4, vmax) * .5, py = t.y + t.vy * d / Math.max(4, vmax) * .5, m = Math.hypot(px - u.x, py - u.y) || 1;
       const run = Math.min(s.maxRun || 99, m + (s.overshoot || 4));
       u.mv = {k:'charge', nx:(px - u.x) / m, ny:(py - u.y) / m, left:run, t:run / Math.max(3, vmax) + 1.5, tgt:t, hit:{}};
@@ -1830,11 +2000,18 @@ function commitMove(w, u, vmax){
         log(w, `${capName(u)} slams into a tree and is stunned`, 'crash', u); return;
       }
     }
+    if (w.obst) for (const o of w.obst){ // (maps2) a charge that runs into rock or up to a gully's edge ends there
+      if (Math.hypot(o.x - u.x, o.y - u.y) < o.r + u.r * .6 + .3 && Math.hypot(u.vx, u.vy) > vmax * .5 && (o.x - u.x) * u.vx + (o.y - u.y) * u.vy > 0){
+        u.mv = null; u.vx = u.vy = 0; u.stun = Math.max(u.stun, 1.2); u.chargeCd = 3;
+        applyDamage(w, u, u, u.maxhp * .03); if (u.state === 'dead') return;
+        log(w, `${capName(u)} ${o.k === 'donga' || o.k === 'ravine' || o.k === 'bank' ? 'pulls up hard at the edge of the ' + (o.k === 'bank' ? 'bank' : o.k) : 'slams into the rocks'} and is stunned`, 'crash', u); return;
+      }
+    }
     for (const o of w.units){
       if (!hostile(w, u, o) || mv.hit[o.id] || heightOf(o) > u.s.strikeH) continue;
       if (dist(u, o) <= u.r + o.r + u.s.reach * .5 && Math.hypot(u.vx, u.vy) > vmax * .45){ mv.hit[o.id] = 1; strike(w, u, o, {}); if (w.over) return; }
     }
-    const edge = u.x < 3 || u.x > W - 3 || u.y < 3 || u.y > H - 3;
+    const P = pbOf(w), edge = u.x < P.x0 + 3 || u.x > P.x1 - 3 || u.y < P.y0 + 3 || u.y > P.y1 - 3;
     if (mv.left <= 0 || mv.t <= 0 || edge){ u.mv = {k:'wheel', t:u.s.wheel || 1}; u.chargeCd = .6 + (u.s.wheel || 1); }
     return;
   }
@@ -1843,7 +2020,7 @@ function commitMove(w, u, vmax){
     u.vx = mv.vx; u.vy = mv.vy;
     if (mv.t <= 0){
       u.mv = null; u.pounceCd = mv.k === 'lunge' ? 3.5 : 3;
-      if (t && dist(u, t) <= u.r + t.r + u.s.reach + .8 && heightOf(t) <= u.s.strikeH){ u.vx *= .2; u.vy *= .2; strike(w, u, t, {pounce:true}); u.atk = u.s.cd; if (u.fromTree && t.state !== 'dead') t.stun = Math.max(t.stun, 1.2); u.fromTree = false; }
+      if (t && dist(u, t) <= u.r + t.r + u.s.reach + .8 && heightOf(t) <= u.s.strikeH && !(w.obst && m2Hit(w.obst, u.x, u.y, t.x, t.y, 0, .75))){ u.vx *= .2; u.vy *= .2; strike(w, u, t, {pounce:true}); u.atk = u.s.cd; if (u.fromTree && t.state !== 'dead') t.stun = Math.max(t.stun, 1.2); u.fromTree = false; }
       else { u.fromTree = false; u.wetLunge = false; u.vx *= .2; u.vy *= .2; u.stun = Math.max(u.stun, mv.k === 'lunge' ? .9 : .5); if (t && dist(u, t) < 14) log(w, `${capName(u)} ${mv.k === 'lunge' ? 'lunges' : 'pounces'} and misses`, 'info', u); }
     }
     return;
@@ -1872,7 +2049,7 @@ function evadeMove(w, u){
   if (gw){ gx /= gw; gy /= gw; const d = Math.hypot(gx - u.x, gy - u.y); if (d > 3){ dx += (gx - u.x) / d * .6; dy += (gy - u.y) / d * .6; } }
   if (danger > 0){ const m = Math.hypot(ax, ay) || 1, k = Math.min(2.5, danger * 4); dx += ax / m * k; dy += ay / m * k; }
   { const aw = awayWater(w, u); if (aw){ dx += aw.x; if (aw.y) dy += aw.y; } }
-  const zb = w.zb && w.zb.p > 0 ? w.zb : {x0: 0, x1: W, y0: 0, y1: H};
+  const zb = w.zb && w.zb.p > 0 ? w.zb : pbOf(w);
   if (u.x < zb.x0 + 5) dx += 1.2; if (u.x > zb.x1 - 5) dx -= 1.2; if (u.y < zb.y0 + 5) dy += 1.2; if (u.y > zb.y1 - 5) dy -= 1.2;
   const m = Math.hypot(dx, dy);
   if (m < .05) return {tx: u.x, ty: u.y, frac: 0};

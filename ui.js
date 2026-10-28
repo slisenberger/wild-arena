@@ -22,6 +22,8 @@ const fmtT = t => { t = Math.max(0, t); const m = Math.floor(t/60), s = Math.flo
 const kmh = v => Math.round(v * 3.6);
 // 5 in a Row (prototype, Oct 27): hidden unless ?five=1
 const FIVE_ON = (() => { try { return /[?&]five=1\b/.test(location.search); } catch(e){ return false; } })();
+// Terrain features (prototype, Oct 28, research/map_features.md): hidden unless ?maps2=1. Sets cfg.maps2 on every fight.
+const MAPS2_ON = (() => { try { return /[?&]maps2=1\b/.test(location.search); } catch(e){ return false; } })();
 const canAdd = a => S.prog ? M.canBuy(S.prog, a.id) : a.price <= BUDGET - spent();
 function strengthOf(a){ return Math.sqrt(A.hpOf(a) * a.dmg / a.cd); }
 function tok(a, size){ const d = document.createElement('span'); d.className = 'tok'; d.style.cssText = tokStyle(a); d.title = a.name; if (size) { d.style.width = d.style.height = size + 'px'; } if (!faceOf(a)) d.textContent = a.abbr; return d; }
@@ -510,6 +512,7 @@ function groundFor(terrain, trees, w, h, shade, variant){
     g.fillStyle = '#4c5c26'; g.beginPath(); g.ellipse((t.x-.3)*sc, (t.y-.3)*sc, t.r*.4*sc, t.r*.26*sc, 0, 0, 7); g.fill();
     g.fillStyle = 'rgba(236,230,211,.5)'; g.font = `700 ${Math.max(8, sc*1.1)}px "Big Shoulders Display", sans-serif`; g.textAlign = 'center'; g.fillText('SHADE', t.x*sc, (t.y + t.r + 1.2)*sc); g.textAlign = 'left';
   }
+  if (V.pb) drawFeatures(g, terrain, V, w, h, sc); // terrain features (?maps2=1)
   // 10 m grid
   g.strokeStyle = 'rgba(236,230,211,.05)'; g.lineWidth = 1;
   for (let x = 10; x < A.W; x += 10){ g.beginPath(); g.moveTo(x*sc, 0); g.lineTo(x*sc, h); g.stroke(); }
@@ -528,6 +531,34 @@ function groundFor(terrain, trees, w, h, shade, variant){
   return c;
 }
 
+// terrain features (?maps2=1): the impassable border (thornbush, valley side, undergrowth, scree), then rocks, gullies,
+// cut banks, deadfall and moraine, each with a label; painted once into the cached ground canvas
+const FEAT_EDGE = {savanna: ['#141308', '#2b2d12', '#3a3c18', 'THORNBUSH'], river: ['#17140c', '#3a2c1a', '#4e3c24', 'STEEP VALLEY SIDE'], forest: ['#070c08', '#0f2414', '#173420', 'DENSE UNDERGROWTH'], tundra: ['#2a3036', '#59626b', '#78828c', 'SCREE']};
+function drawFeatures(g, terrain, V, w, h, sc){
+  const P = V.pb, E = FEAT_EDGE[terrain], R = A.rng(23);
+  g.save();
+  g.fillStyle = E[0]; g.beginPath(); g.rect(0, 0, w, h); g.rect(P.x0*sc, P.y0*sc, (P.x1 - P.x0)*sc, (P.y1 - P.y0)*sc); g.fill('evenodd');
+  const blob = (x, y) => { const r = (.9 + R()*1.4)*sc; g.fillStyle = R() < .5 ? E[1] : E[2]; g.beginPath(); g.arc(x*sc, y*sc, r, 0, 7); g.fill(); };
+  for (let x = 0; x < A.W; x += 1.6){ if (P.y0 > .3) blob(x + R(), P.y0 - .2 - R()*Math.min(P.y0, 1.2)); if (A.H - P.y1 > .3) blob(x + R(), P.y1 + .2 + R()*Math.min(A.H - P.y1, 1.2)); }
+  for (let y = P.y0; y < P.y1; y += 1.6){ if (P.x0 > .3) blob(P.x0 - .2 - R()*Math.min(P.x0, 1.2), y + R()); blob(P.x1 + .2 + R()*1.2, y + R()); }
+  g.strokeStyle = 'rgba(236,230,211,.35)'; g.lineWidth = Math.max(1, sc*.15); g.setLineDash([sc*.6, sc*.5]); g.strokeRect(P.x0*sc, P.y0*sc, (P.x1 - P.x0)*sc, (P.y1 - P.y0)*sc); g.setLineDash([]);
+  g.fillStyle = 'rgba(236,230,211,.45)'; g.font = `700 ${Math.max(7, sc*1)}px "Big Shoulders Display", sans-serif`; g.textAlign = 'center';
+  if (A.H - P.y1 > 1.6) g.fillText(E[3], (P.x0 + P.x1) / 2 * sc, (P.y1 + (A.H - P.y1) * .6) * sc + sc*.4);
+  const O = V.obst, ditch = o => o.k === 'donga' || o.k === 'ravine', disc = (o, r, col, dx, dy) => { g.fillStyle = col; g.beginPath(); g.arc((o.x + (dx || 0))*sc, (o.y + (dy || 0))*sc, r*sc, 0, 7); g.fill(); };
+  // gullies: a pale crumbling rim, then the dark cut; cut banks: an earth wall with a lighter lip
+  for (const o of O) if (ditch(o)) disc(o, o.r + .45, terrain === 'forest' ? '#4a3a26' : '#7a6440');
+  for (const o of O) if (ditch(o)) disc(o, o.r * .82, '#120d07');
+  for (const o of O) if (o.k === 'bank') disc(o, o.r + .25, '#8a6a3e');
+  for (const o of O) if (o.k === 'bank') disc(o, o.r * .8, '#4a331c');
+  for (const o of O){
+    if (o.k === 'kopje' || o.k === 'moraine' || o.k === 'boulder'){ disc(o, o.r + .25, 'rgba(0,0,0,.45)', .5, .6); disc(o, o.r + .12, 'rgba(16,20,24,.7)'); disc(o, o.r, o.k === 'kopje' ? '#857a62' : '#56606a'); disc(o, o.r * .62, o.k === 'kopje' ? '#a3967a' : '#76808a', -o.r * .2, -o.r * .22); if (o.k !== 'kopje') disc(o, o.r * .42, 'rgba(238,244,248,.85)', -o.r * .3, -o.r * .35); }
+    else if (o.k === 'mound'){ disc(o, o.r + .2, 'rgba(0,0,0,.4)', .4, .5); disc(o, o.r, '#7c4c2a'); disc(o, o.r * .5, '#a56a3a', -.15, -.2); }
+    else if (o.k === 'log'){ disc(o, o.r + .15, 'rgba(0,0,0,.4)', .3, .4); disc(o, o.r, '#5b3d22'); disc(o, o.r * .55, '#6e4c2c', -.1, -.15); }
+  }
+  g.font = `800 ${Math.max(8, sc*1.15)}px "Big Shoulders Display", sans-serif`; g.fillStyle = 'rgba(236,230,211,.7)';
+  for (const f of V.feats || []){ const L = {kopje: 'KOPJE', donga: 'DONGA', ravine: 'RAVINE', bank: 'CUT BANK', moraine: 'MORAINE', log: 'DEADFALL'}[f.k]; if (L && f.k !== 'log') g.fillText(L, f.x*sc, f.y*sc); }
+  g.textAlign = 'left'; g.restore();
+}
 // ground texture (FX.terrain), painted once into the cached ground canvas: grass tufts, leaf litter and dapples, snow drifts
 function groundDetail(g, terrain, w, h, sc){
   const R = A.rng(11);
@@ -609,7 +640,7 @@ let deployWorld = null;
 function youAt(){ return S.youPos || A.homeFor(S.terrain); }
 // this game's map variant (waterhole, fords, tree density...): it follows the terrain and the seed
 let varMemo = null;
-function curVar(){ if (!varMemo || varMemo.tid !== S.terrain || varMemo.seed !== S.seed) varMemo = {tid: S.terrain, seed: S.seed, v: A.mapVariant(S.terrain, S.seed)}; return varMemo.v; }
+function curVar(){ if (!varMemo || varMemo.tid !== S.terrain || varMemo.seed !== S.seed) varMemo = {tid: S.terrain, seed: S.seed, v: A.mapVariant(S.terrain, S.seed, MAPS2_ON ? {maps2: true} : undefined)}; return varMemo.v; }
 function absPlacements(){
   const out = {}, team = [...S.team], h = A.homeFor(S.terrain);
   team.forEach((id, i) => {
@@ -622,6 +653,7 @@ function absPlacements(){
 function currentPlacements(){ const y = youAt(), abs = absPlacements(), out = {}; for (const id in abs) out[id] = {dx: abs[id].x - y.x, dy: abs[id].y - y.y}; return out; }
 function makeCfg(){
   const c = { board:S.board.slice(), team:[...S.team], placements:currentPlacements(), human:youAt(), terrain:S.terrain, mode:S.mode, mount:(S.mount && S.team.has(S.mount)) ? S.mount : null, seed:S.seed };
+  if (MAPS2_ON) c.maps2 = true;
   if (S.prog){ const m = M.cfgFor(S.prog); c.startHp = m.startHp; if (m.maxHp) c.maxHp = m.maxHp; if (m.levels) c.levels = m.levels; } // carried wounds, scars and levels (progressive mode only)
   return c;
 }
@@ -1258,7 +1290,7 @@ $('runPrice').addEventListener('click', () => {
     const order = S.board.slice(); for (let k = order.length - 1; k > 0; k--){ const j = Math.floor(R() * (k + 1)); [order[k], order[j]] = [order[j], order[k]]; }
     const team = []; let left = BUDGET; for (const id of order) if (A.BY_ID[id].price <= left){ team.push(id); left -= A.BY_ID[id].price; }
     const terrain = terr[i % 4];
-    const w = A.simulate({board:S.board, team, terrain, mode:S.mode, mount:bestMount(team) || null, seed: 5000 + i});
+    const w = A.simulate({board:S.board, team, terrain, mode:S.mode, mount:bestMount(team) || null, seed: 5000 + i, maps2: MAPS2_ON});
     const sc = w.result.score;
     onBoard.forEach(a => (team.includes(a.id) ? on : off)[a.id].push(sc));
   }, p => $('pPrice').style.width = (p*100) + '%', () => {
