@@ -668,7 +668,7 @@ function renderDraftMap(){
   const V = curVar(), T = A.TERRAINS[S.terrain], key = S.terrain + ':' + S.seed + ':' + !!S.prog;
   if (mapCardKey === key && el.firstChild) return;
   mapCardKey = key;
-  const feats = (V.band ? ['river'] : []).concat(V.features || [], S.terrain === 'forest' && V.trees ? [V.trees + ' trees'] : []), w0 = A.setup({board: [], team: [], terrain: S.terrain, mode: S.mode, seed: S.seed});
+  const feats = (V.band ? ['river'] : []).concat(V.features || [], S.terrain === 'forest' && V.trees ? [V.trees + ' trees'] : [], [...new Set((V.feats || []).map(f => ({kopje: 'rock kopje', donga: 'gully', ravine: 'ravine', bank: 'cut banks', moraine: 'boulder ridge', log: 'fallen trunks'})[f.k]).filter(Boolean))]), w0 = A.setup(Object.assign({board: [], team: [], terrain: S.terrain, mode: S.mode, seed: S.seed}, MAPS2_ON ? {maps2: true} : {}));
   el.innerHTML = `<canvas width="480" height="${Math.round(480 * A.H / A.W)}" aria-label="Map preview"></canvas><div class="mc-t"><div class="mc-n"><small>${S.prog ? 'THIS ROUND\'S MAP' : 'THIS GAME\'S MAP'}</small>${esc(T.name)}</div>`
     + `<div class="mc-f">${feats.some(f => WET_FEATURES.includes(f) || f === 'river') ? '' : '<span>No water</span>'}${feats.map(f => `<span class="${WET_FEATURES.includes(f) || f === 'river' ? 'w' : ''}">${esc(f[0].toUpperCase() + f.slice(1))}</span>`).join('')}</div><p>${esc(MAP_TIP[S.terrain] || '')}</p></div>`;
   const cv = el.querySelector('canvas'), g = cv.getContext('2d'), sc = cv.width / A.W, z = A.zoneFor(S.terrain, V);
