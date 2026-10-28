@@ -877,16 +877,17 @@ function clampPlace(tid, s, x, y, v){
 // on other maps, in a pond that reaches into your side
 function defaultPost(tid, aid, v){
   v = varOf(tid, v);
-  if (aid !== 'croc' && aid !== 'hippo') return null;
+  if (aid !== 'croc' && aid !== 'hippo' && aid !== 'walrus') return null;
   if (v.band){
     const W0 = v.band, mid = (W0.x0 + W0.x1) / 2;
-    if (aid === 'croc') return {x: W0.x0 + 2.5, y: W0.fords[0][1] + 3};
+    if (aid !== 'hippo') return {x: W0.x0 + 2.5, y: W0.fords[0][1] + 3};
     return {x: mid, y: (W0.fords[0][1] + W0.fords[1][0]) / 2};
   }
   const z = zoneFor(tid, v);
   for (const p of v.ponds){
-    const q = {x: p.x - p.rx * (aid === 'croc' ? .6 : .3), y: p.y};
+    const q = {x: p.x - p.rx * (aid === 'hippo' ? .3 : .6), y: p.y};
     if (q.x <= z.x1) return q;
+    if (aid === 'walrus' && pondDist(p, z.x1, p.y) < 12) return {x: z.x1, y: p.y}; // the lake is just past your side: the walrus starts at your edge nearest it
   }
   return null;
 }
@@ -1706,6 +1707,7 @@ function step(w){
       if (u.side === 'P'){ ax += (w.human.x - u.x) * .004; ay += (w.human.y - u.y) * .004; }
       m = Math.hypot(ax, ay) || 1; u.fleeDir = {x: ax/m, y: ay/m};
       tx = u.x + ax/m*10; ty = u.y + ay/m*10; frac = 1;
+      if (has(u,'shoreGuard') && w.wet && !u.routing && distWater(w, u) < 25){ const p = waterPoint(w, u, u); tx = p.x; ty = p.band ? u.y : p.y; } // a walrus escapes into the water
     } else if (u.state === 'cool'){
       let toWater = w.wet;
       if (toWater && w.shade.length){ let sd = 1e9; for (const t of w.shade) sd = Math.min(sd, Math.hypot(t.x-u.x, t.y-u.y)); toWater = distWater(w, u) < sd + 10; } // a waterhole beats shade unless it is much farther
@@ -1759,6 +1761,7 @@ function step(w){
       if (has(u,'waterbound') && !w.wet){ frac = 0; }
       else { tx = u.wander.x; ty = u.wander.y; frac = u.state === 'rest' ? .12 : .35 + .35 * pressure(w); }
     }
+    if (u.side === 'P' && has(u,'shoreGuard') && w.wet && !u.routing && u.state !== 'flee' && u.state !== 'withdraw' && distWater(w, {x: tx, y: ty}) > 3 && distWater(w, {x: tx, y: ty}) < 25){ const p = waterPoint(w, {x: tx, y: ty}, {x: tx, y: ty}); tx = p.x; ty = p.band ? ty : p.y; } // your walrus holds the water nearest where it would go: it guards the shore, it doesn't follow you over the snow (water farther than 25 m: it hauls itself along beside you)
     if (u.dodge){ tx = u.dodge.x; ty = u.dodge.y; frac = 1; } // the sidestep wins over whatever else it was doing
     else if (u.kite){ tx = u.kite.x; ty = u.kite.y; frac = .9; }
     // a kangaroo chased by a predator lighter than itself backs into water, where the attacker has to swim
@@ -2600,6 +2603,7 @@ function guardDecide(w, u){
   const k = u.gIntent = INTERNALS.moveChoose(w, u, t, t ? dist(u, t) : 0, w.cfg.movePolicy.guard, 'guard');
   u.gT = k === 1 ? guardThreat(w, u, false) : k === 2 ? guardThreat(w, u, true) : k === 4 ? guardHelpTarget(w, u) : null;
   if (u.gT && w.cfg.policy && w.cfg.policy.byArch && w.cfg.policy.byArch.guard) u.gT = INTERNALS.chooseGuard(w, u, w.cfg.policy, u.gT); // learned target choice re-judges the intent's target (milestone 4)
+  if (u.gT && has(u,'shoreGuard') && w.wet && distWater(w, u.gT) > 10) u.gT = null; // a walrus only takes on what comes to its shore
   if (u.gT){ u.target = u.gT; u.state = 'engage'; }
 }
 function guardSpot(u, H, dx, dy, r, near){ // a point r m from you in direction (dx, dy); null when already there
