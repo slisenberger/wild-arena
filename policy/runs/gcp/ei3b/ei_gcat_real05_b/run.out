@@ -1,0 +1,43 @@
+[round 0 collect] 20622 decisions from 900 fights (the lookahead plays), 20622 total, 533 s
+  20622 decisions (18560 train, 2062 held out), 3826 weights; heuristic on held out: picks the best branch 33.1%, regret 0.1165
+  [ep 0] held out: best branch 39.8%, keeps the heuristic 58.3%, regret 0.1030, loss 1.212  -> best
+  [ep 9] held out: best branch 43.2%, keeps the heuristic 58.0%, regret 0.0980, loss 1.187
+  [ep 19] held out: best branch 43.0%, keeps the heuristic 50.1%, regret 0.1009, loss 1.183
+[round 0 train] held-out regret 0.0940 (heuristic 0.1165), 22 s
+[round 0 val] network vs today's cats on 800 fresh fights: -0.023 ± 0.025 | style 0.992 gates [] drift [catIdle 0.211→0.102] | your survival -1.7 pts
+[round 1 collect] 25776 decisions from 900 fights (the network plays), 46398 total, 660 s
+  46398 decisions (41759 train, 4639 held out), 3826 weights; heuristic on held out: picks the best branch 30.8%, regret 0.1282
+  [ep 0] held out: best branch 38.1%, keeps the heuristic 56.5%, regret 0.1142, loss 1.227
+  [ep 9] held out: best branch 38.3%, keeps the heuristic 51.2%, regret 0.1120, loss 1.225
+  [ep 19] held out: best branch 38.5%, keeps the heuristic 48.2%, regret 0.1086, loss 1.226  -> best
+[round 1 train] held-out regret 0.1086 (heuristic 0.1282), 51 s
+[round 1 val] network vs today's cats on 800 fresh fights: -0.034 ± 0.026 | style 0.973 gates [] drift [catIdle 0.212→0.062] | your survival -1.7 pts
+[round 2 collect] 21248 decisions from 900 fights (the network plays), 67646 total, 563 s
+  67646 decisions (60882 train, 6764 held out), 3826 weights; heuristic on held out: picks the best branch 31.1%, regret 0.1368
+  [ep 0] held out: best branch 39.2%, keeps the heuristic 49.2%, regret 0.1169, loss 1.221
+  [ep 9] held out: best branch 39.2%, keeps the heuristic 49.5%, regret 0.1152, loss 1.222
+  [ep 19] held out: best branch 38.7%, keeps the heuristic 44.3%, regret 0.1164, loss 1.221
+[round 2 train] held-out regret 0.1132 (heuristic 0.1368), 73 s
+[round 2 val] network vs today's cats on 800 fresh fights: -0.135 ± 0.028 | style 0.971 gates [] drift [catIdle 0.211→0.069; dodgeRate 0.629→0.913] | your survival -8.1 pts
+[round 3 collect] 21445 decisions from 900 fights (the network plays), 89091 total, 582 s
+  89091 decisions (80182 train, 8909 held out), 3826 weights; heuristic on held out: picks the best branch 30.6%, regret 0.1344
+  [ep 0] held out: best branch 38.7%, keeps the heuristic 43.7%, regret 0.1164, loss 1.223  -> best
+  [ep 9] held out: best branch 38.7%, keeps the heuristic 46.6%, regret 0.1177, loss 1.223
+  [ep 19] held out: best branch 38.5%, keeps the heuristic 47.8%, regret 0.1173, loss 1.223
+[round 3 train] held-out regret 0.1150 (heuristic 0.1344), 97 s
+[round 3 val] network vs today's cats on 800 fresh fights: -0.069 ± 0.026 | style 0.976 gates [] drift [catIdle 0.210→0.066] | your survival -5.4 pts
+[round 4 collect] 20989 decisions from 900 fights (the network plays), 110080 total, 593 s
+  110080 decisions (99072 train, 11008 held out), 3826 weights; heuristic on held out: picks the best branch 30.1%, regret 0.1362
+  [ep 0] held out: best branch 38.5%, keeps the heuristic 47.2%, regret 0.1147, loss 1.227
+  [ep 9] held out: best branch 38.2%, keeps the heuristic 48.4%, regret 0.1124, loss 1.228
+  [ep 19] held out: best branch 38.7%, keeps the heuristic 46.1%, regret 0.1126, loss 1.229
+[round 4 train] held-out regret 0.1092 (heuristic 0.1362), 120 s
+[round 4 val] network vs today's cats on 800 fresh fights: -0.029 ± 0.028 | style 0.978 gates [] drift [catIdle 0.220→0.080] | your survival -2.0 pts
+[round 5 collect] 22781 decisions from 900 fights (the network plays), 132861 total, 589 s
+  132861 decisions (119575 train, 13286 held out), 3826 weights; heuristic on held out: picks the best branch 30.4%, regret 0.1401
+  [ep 0] held out: best branch 37.8%, keeps the heuristic 54.1%, regret 0.1199, loss 1.232
+  [ep 9] held out: best branch 38.3%, keeps the heuristic 47.8%, regret 0.1220, loss 1.234
+  [ep 19] held out: best branch 38.0%, keeps the heuristic 48.7%, regret 0.1193, loss 1.233
+[round 5 train] held-out regret 0.1178 (heuristic 0.1401), 144 s
+[round 5 val] network vs today's cats on 800 fresh fights: -0.064 ± 0.027 | style 0.975 gates [] drift [catIdle 0.207→0.061] | your survival -4.6 pts
+[test] best (init (= today's cats)) vs today's cats on 1200 held-out fights: +0.000 ± 0.000 (within 2 SE) | style 1.000 gates [] drift [] | your survival 0.0 pts

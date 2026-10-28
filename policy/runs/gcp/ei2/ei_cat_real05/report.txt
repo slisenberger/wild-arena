@@ -1,0 +1,2 @@
+[round 6/6 done] best init (= today's cats) val +0.000 | cat expert iteration, 181495 decisions
+test: 0.000 ± 0.000 (within noise), style 1.000

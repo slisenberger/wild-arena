@@ -1,0 +1,2 @@
+[round 6/6 done] best round 3 val +0.040 | guard expert iteration, 216727 decisions
+test: 0.025 ± 0.017 (within noise), style 1.000

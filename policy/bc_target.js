@@ -48,13 +48,60 @@ function train(D, o, log, init){
   }
   return {P: Object.assign({}, P, {theta: best.th}), th0, base, best};
 }
-module.exports = { train, DEF };
+// Gain regression (loss 'adv'): predict each tried option's gain over today's pick, a_i = s_i - s_teach, as f(x_i) - f(x_teach)
+// (Huber loss: the labels are single noisy rolls), then choose the switching threshold kappa (the model's margin at play time:
+// switch only when the predicted gain beats kappa) that maximizes the realized held-out gain mean(s_chosen - s_teach).
+// Unlike imitating the argmax, this uses how much an option wins by, so noise-level 'wins' stop pulling the policy around.
+function trainAdv(D, o, log, init){
+  o = Object.assign({}, DEF, {huber: .5, kappas: [0, .02, .05, .1, .15, .2, .3, .5]}, o); log = log || (() => {});
+  D = D.filter(d => d.X.length >= 2 && d.teach >= 0).slice();
+  let s = (o.seed >>> 0) || 1; const rnd = () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; };
+  for (let i = D.length - 1; i > 0; i--){ const j = Math.floor(rnd() * (i + 1)); [D[i], D[j]] = [D[j], D[i]]; }
+  const nv = Math.floor(D.length * o.holdout), V = D.slice(0, nv), Tn = D.slice(nv);
+  const nin = D[0].X[0].length + D[0].tr.length, P = TM.mlp(nin, o.nh, 0, o.seed * 31 + 7, true); if (o.feat) P.feat = o.feat; if (o.only) P.only = o.only; if (o.wide) P.wide = true;
+  P.targetsOnly = true;
+  const NP = TM.npar(P), th0 = TM.thetaOf(P).slice(), th = init && init.theta && init.theta.length === NP ? init.theta.slice() : th0.slice();
+  const m = new Array(NP).fill(0), v = new Array(NP).fill(0); let t = 0;
+  const inp = d => d.X.map(x => x.concat(d.tr)), f = X => TM.scores(P, X, -1, th);
+  const pick = (d, q, k) => { let b = d.teach, bv = 0; for (let i = 0; i < q.length; i++){ const g = q[i] - q[d.teach]; if (i !== d.teach && g - k > bv){ bv = g - k; b = i; } } return b; };
+  function evalSet(S){ const r = o.kappas.map(k => ({k, gain: 0, dev: 0})); let mse = 0, n = 0;
+    for (const d of S){ const q = f(inp(d)); for (let i = 0; i < q.length; i++) if (i !== d.teach){ const e = (q[i] - q[d.teach]) - (d.s[i] - d.s[d.teach]); mse += e * e; n++; }
+      r.forEach(x => { const b = pick(d, q, x.k); x.gain += d.s[b] - d.s[d.teach]; x.dev += b !== d.teach; }); }
+    r.forEach(x => { x.gain /= S.length || 1; x.dev /= S.length || 1; }); return {mse: mse / (n || 1), r}; }
+  const oracle = V.reduce((a, d) => a + Math.max(...d.s) - d.s[d.teach], 0) / (V.length || 1);
+  log(`${D.length} decisions (${Tn.length} train, ${V.length} held out), ${NP} weights; held-out gain if every best branch were taken: ${oracle.toFixed(4)}`);
+  let best = {gain: 0, k: 1e9, th: th.slice(), ep: -1};
+  for (let ep = 0; ep < o.epochs; ep++){
+    for (let i = Tn.length - 1; i > 0; i--){ const j = Math.floor(rnd() * (i + 1)); [Tn[i], Tn[j]] = [Tn[j], Tn[i]]; }
+    for (let b0 = 0; b0 < Tn.length; b0 += o.batch){
+      const g = new Array(NP).fill(0), B = Tn.slice(b0, b0 + o.batch);
+      for (const d of B){ const X = inp(d), q = f(X), k = d.teach;
+        for (let i = 0; i < X.length; i++){ if (i === k) continue; const e = (q[i] - q[k]) - (d.s[i] - d.s[k]), c = (Math.abs(e) <= o.huber ? e : o.huber * Math.sign(e)) / B.length;
+          TM.addGrad(g, th, P, X[i], c); TM.addGrad(g, th, P, X[k], -c); } }
+      t++; for (let k = 0; k < NP; k++){ const gk = g[k] + o.l2 * (th[k] - th0[k]); m[k] = .9 * m[k] + .1 * gk; v[k] = .999 * v[k] + .001 * gk * gk;
+        th[k] -= o.lr * (m[k] / (1 - Math.pow(.9, t))) / (Math.sqrt(v[k] / (1 - Math.pow(.999, t))) + 1e-8); }
+    }
+    const e = evalSet(V), bk = e.r.reduce((a, x) => x.gain > a.gain ? x : a, {gain: -1e9});
+    if (bk.gain > best.gain) best = {gain: bk.gain, k: bk.k, dev: bk.dev, th: th.slice(), ep};
+    log(`[ep ${ep}] held out: gain-prediction mse ${e.mse.toFixed(4)} | realized gain by kappa ${e.r.map(x => `${x.k}: ${x.gain >= 0 ? '+' : ''}${x.gain.toFixed(4)} (${(100 * x.dev).toFixed(0)}%)`).join(', ')}${best.ep === ep ? '  -> best' : ''}`);
+  }
+  return {P: Object.assign({}, P, {theta: best.th, margin: best.k === 1e9 ? 1e3 : best.k}), th0, best, oracle};
+}
+module.exports = { train, trainAdv, DEF };
 
 if (require.main === module){
   const R = require('./move_run.js');
   const [files, out, ...rest] = process.argv.slice(2);
   const o = Object.assign({}, DEF, Object.fromEntries(rest.filter(a => a.startsWith('--')).map(a => { const [k, v] = a.slice(2).split('='); return [k, isNaN(+v) ? v : +v]; })));
-  const D = files.split(',').flatMap(f => fs.readFileSync(f, 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l)));
+  const rd = f => (f.endsWith('.gz') ? require('zlib').gunzipSync(fs.readFileSync(f)).toString('utf8') : fs.readFileSync(f, 'utf8')).split('\n').filter(Boolean).map(l => JSON.parse(l));
+  const D = files.split(',').flatMap(rd);
+  if (o.loss === 'adv'){ // --loss=adv: gain regression; writes the state with the chosen kappa as the margin
+    const r = trainAdv(D, o, console.log), b = r.best;
+    const st = {format: 'wild-arena/bc-target', simHash: R.simHash(), harnessHash: R.harnessHash(), data: files, opts: o, features: o.arch === 'guard' ? require('./guard_features.js').NAMES : FP.NAMES,
+      config: Object.assign({arch: o.arch, target: true, mode: 'linear', nh: o.nh, trainer: 'adv-lookahead', withLive: true}, o.arch === 'guard' ? {goal: null, spec: false, only: o.only} : {goal: 'checkmate', spec: true, feat: 'plus'}),
+      P0: Object.assign({}, r.P, {theta: r.th0}), theta: b.th, best: {theta: b.th, it: b.ep, val: b.gain, from: `epoch ${b.ep}, kappa ${b.k} (held-out gain ${b.gain.toFixed(4)} of ${r.oracle.toFixed(4)}, switches ${(100 * (b.dev || 0)).toFixed(0)}%)`}, test: null, phase: 'done'};
+    fs.writeFileSync(out, JSON.stringify(st)); console.log(`wrote ${out}: ${st.best.from}`); process.exit(0);
+  }
   const r = train(D, o, console.log), b = r.best;
   const st = {format: 'wild-arena/bc-target', simHash: R.simHash(), harnessHash: R.harnessHash(), data: files, opts: o, features: FP.NAMES,
     config: {arch: o.arch, goal: 'checkmate', spec: true, withLive: true, target: true, mode: 'linear', feat: 'plus', nh: o.nh, trainer: 'bc-lookahead'},

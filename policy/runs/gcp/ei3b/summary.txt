@@ -1,0 +1,2 @@
+ei_gcat_b          [test] best (round 3) vs today's cats on 1200 held-out fights: +0.025 ± 0.017 (within 2 SE) | style 1.000 gates [] drift [] | your survival 1.9 pts
+ei_gcat_real05_b   [test] best (init (= today's cats)) vs today's cats on 1200 held-out fights: +0.000 ± 0.000 (within 2 SE) | style 1.000 gates [] drift [] | your survival 0.0 pts

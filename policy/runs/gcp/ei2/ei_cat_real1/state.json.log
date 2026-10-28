@@ -1,0 +1,44 @@
+[init] policy/runs/gcp/ei_cat_real1/state.json: {"arch":"cat","rounds":6,"fights":900,"rolls":3,"H":8,"max":3,"real":1,"nh":32,"epochs":20,"lr":0.002,"val":800,"test":1200,"seed":2402,"styleThr":0.9,"dagger":true,"threads":8,"trainer":"expert","target":true,"mode":"linear","feat":"plus","goal":"checkmate","spec":true,"withLive":true}
+[round 0 collect] 19129 decisions from 900 fights (the lookahead plays), 19129 total, 391 s
+  19129 decisions (17217 train, 1912 held out), 3595 weights; heuristic on held out: picks the best branch 36.2%, regret 0.2779
+  [ep 0] held out: best branch 48.0%, keeps the heuristic 49.2%, regret 0.1898, loss 1.098  -> best
+  [ep 9] held out: best branch 49.3%, keeps the heuristic 48.1%, regret 0.1815, loss 1.078
+  [ep 19] held out: best branch 49.6%, keeps the heuristic 48.3%, regret 0.1803, loss 1.074
+[round 0 train] held-out regret 0.1771 (heuristic 0.2779), 19 s
+[round 0 val] network vs today's cats on 800 fresh fights: +0.086 ± 0.045 | style 0.421 gates [longIdle,sprintRate] drift [closeShare 0.690→0.232; idleShare 0.065→0.642; nearShare 0.105→0.307; meanDist 30.969→15.110; longIdle 0.019→0.146; noContact 0.315→0.507; pounceRate 2.050→4.855; rushPounceRate 1.190→2.156; stalkPounceRate 2.328→5.759; rushNear 0.157→0.432; stalkNear 0.088→0.266; sprintRate 26.531→52.608] | your survival -3.4 pts  (not clean)
+[round 1 collect] 24820 decisions from 900 fights (the network plays), 43949 total, 494 s
+  43949 decisions (39555 train, 4394 held out), 3595 weights; heuristic on held out: picks the best branch 34.6%, regret 0.2859
+  [ep 0] held out: best branch 43.7%, keeps the heuristic 46.0%, regret 0.2282, loss 1.112  -> best
+  [ep 9] held out: best branch 44.8%, keeps the heuristic 48.1%, regret 0.2005, loss 1.108
+  [ep 19] held out: best branch 45.2%, keeps the heuristic 43.5%, regret 0.2041, loss 1.102
+[round 1 train] held-out regret 0.1958 (heuristic 0.2859), 42 s
+[round 1 val] network vs today's cats on 800 fresh fights: +0.170 ± 0.044 | style 0.486 gates [longIdle,sprintRate] drift [closeShare 0.702→0.267; idleShare 0.053→0.594; nearShare 0.104→0.277; meanDist 31.177→21.345; longIdle 0.015→0.152; noContact 0.291→0.469; pounceRate 2.272→5.009; rushPounceRate 1.162→3.034; stalkPounceRate 2.594→5.526; rushNear 0.151→0.408; stalkNear 0.091→0.242; sprintRate 25.505→52.371] | your survival -6.6 pts  (not clean)
+[round 2 collect] 23009 decisions from 900 fights (the network plays), 66958 total, 472 s
+  66958 decisions (60263 train, 6695 held out), 3595 weights; heuristic on held out: picks the best branch 34.9%, regret 0.2843
+  [ep 0] held out: best branch 45.8%, keeps the heuristic 51.5%, regret 0.1905, loss 1.104  -> best
+  [ep 9] held out: best branch 46.2%, keeps the heuristic 48.7%, regret 0.1879, loss 1.101
+  [ep 19] held out: best branch 46.4%, keeps the heuristic 47.0%, regret 0.1882, loss 1.101
+[round 2 train] held-out regret 0.1804 (heuristic 0.2843), 64 s
+[round 2 val] network vs today's cats on 800 fresh fights: +0.091 ± 0.043 | style 0.722 gates [longIdle,sprintRate] drift [closeShare 0.689→0.363; idleShare 0.064→0.509; longIdle 0.012→0.179; noContact 0.296→0.479; pounceRate 2.326→3.626; stalkPounceRate 2.648→4.190; sprintRate 26.950→43.162] | your survival -3.6 pts  (not clean)
+[round 3 collect] 22134 decisions from 900 fights (the network plays), 89092 total, 463 s
+  89092 decisions (80183 train, 8909 held out), 3595 weights; heuristic on held out: picks the best branch 34.3%, regret 0.2938
+  [ep 0] held out: best branch 46.0%, keeps the heuristic 48.1%, regret 0.1878, loss 1.099
+  [ep 9] held out: best branch 45.7%, keeps the heuristic 48.4%, regret 0.1981, loss 1.097
+  [ep 19] held out: best branch 46.4%, keeps the heuristic 43.2%, regret 0.1982, loss 1.093
+[round 3 train] held-out regret 0.1789 (heuristic 0.2938), 85 s
+[round 3 val] network vs today's cats on 800 fresh fights: +0.033 ± 0.045 | style 0.653 gates [longIdle,stalkPounce,sprintRate] drift [closeShare 0.733→0.332; idleShare 0.050→0.526; longIdle 0.016→0.140; noContact 0.306→0.456; pounceRate 2.144→4.190; stalkPounce 0.828→0.687; rushPounceRate 1.284→2.023; stalkPounceRate 2.445→4.970; stalkNear 0.087→0.201; sprintRate 27.787→47.069] | your survival -0.5 pts  (not clean)
+[round 4 collect] 23916 decisions from 900 fights (the network plays), 113008 total, 506 s
+  113008 decisions (101708 train, 11300 held out), 3595 weights; heuristic on held out: picks the best branch 34.2%, regret 0.2889
+  [ep 0] held out: best branch 45.9%, keeps the heuristic 43.5%, regret 0.1871, loss 1.098
+  [ep 9] held out: best branch 46.2%, keeps the heuristic 49.3%, regret 0.1886, loss 1.095
+  [ep 19] held out: best branch 46.6%, keeps the heuristic 43.4%, regret 0.1905, loss 1.094
+[round 4 train] held-out regret 0.1758 (heuristic 0.2889), 109 s
+[round 4 val] network vs today's cats on 800 fresh fights: -0.013 ± 0.042 | style 0.681 gates [longIdle,sprintRate] drift [closeShare 0.705→0.366; idleShare 0.052→0.495; longIdle 0.008→0.154; noContact 0.290→0.468; pounceRate 2.245→3.696; rushPounceRate 1.092→1.731; stalkPounceRate 2.608→4.273; sprintRate 24.012→38.816] | your survival 1.1 pts  (not clean)
+[round 5 collect] 22577 decisions from 900 fights (the network plays), 135585 total, 428 s
+  135585 decisions (122027 train, 13558 held out), 3595 weights; heuristic on held out: picks the best branch 34.0%, regret 0.2804
+  [ep 0] held out: best branch 45.1%, keeps the heuristic 48.0%, regret 0.1778, loss 1.105
+  [ep 9] held out: best branch 44.8%, keeps the heuristic 47.5%, regret 0.1822, loss 1.107
+  [ep 19] held out: best branch 45.4%, keeps the heuristic 43.6%, regret 0.1876, loss 1.107
+[round 5 train] held-out regret 0.1749 (heuristic 0.2804), 131 s
+[round 5 val] network vs today's cats on 800 fresh fights: +0.088 ± 0.043 | style 0.685 gates [longIdle,sprintRate] drift [closeShare 0.685→0.378; idleShare 0.060→0.484; longIdle 0.017→0.137; noContact 0.296→0.456; pounceRate 2.244→3.661; rushPounceRate 1.275→1.995; stalkPounceRate 2.557→4.179; sprintRate 25.544→42.238] | your survival -2.6 pts  (not clean)
+[test] best (init (= today's cats)) vs today's cats on 1200 held-out fights: +0.000 ± 0.000 (within 2 SE) | style 1.000 gates [] drift [] | your survival 0.0 pts

@@ -112,6 +112,21 @@ each species develop its own realistic fighting style. This note is the plan; th
   (planning cats) keeps the whole +0.2 with clean style: waiting for the owner's call (?plan=1 prototype).
 - Guards: guard_target_m2 replicates (tgt11: 4 of 5 seeds significant; m3 = 16 hidden: fresh +0.129 ± 0.021, cat fights +0.180).
 
+- **Owner rule (Oct 28): nothing may need in-game loading.** The lookahead is a training-only teacher; only networks ship.
+- **Fix (Oct 28): a lookahead-trained net may only re-rank targets (P.targetsOnly).** The lookahead never labels 'none', and
+  its untrained score made cats idle 30-87% (every imitation gate failure). bc_cat3 with the fix: +0.054 ± 0.025, style 1.00
+  (cat_target_bc3m, in the ?smart=1 build).
+- Expert iteration on GCP with the fix (ei3b your cats, ei4 enemy cats; 6 rounds x 900 fights, DAgger): held-out tests
+  +0.025 ± 0.017 and +0.032 ± 0.026 (round-to-round validation noise large; best-of-6 selection inflates val).
+- Gain regression (bc_target.js --loss=adv: predict s_i - s_teach, switch only above a threshold kappa), 129k enemy-cat decisions:
+  held-out gain 0.065 of 0.181 possible; in play kappa .02 +0.058 ± 0.027, .05 +0.040 ± 0.020, .1 +0.039 ± 0.016 (no drift).
+  A network keeps ~1/4 of the lookahead's +0.2 so far.
+- **Your cats: the inputs are the bottleneck.** On 217k decisions the gain regression learns nothing (mse flat, gain 0.003 of
+  0.10); no guard-feature difference correlates with an option's gain above 0.017 (enemy cats: up to 0.17, isHuman, smaller
+  targets). The lookahead's +0.203 for your cats rests on information the features don't carry (timing, geometry, who reaches
+  whom, can it finish the target). Next: richer decision inputs (time to contact, hits to kill / be killed, facing / flank,
+  the threat's ETA to you, who else is on the target), re-collect, retrain.
+
 ## Phases (each measured before the next)
 1. Plumbing: joint (target, intent) hook for every archetype, zero/heuristic policy byte-identical to today
    (`check_identical.js`), features + trait vector, harness tests.

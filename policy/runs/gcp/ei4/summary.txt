@@ -1,0 +1,1 @@
+ei_cat_fix         [test] best (round 4) vs today's cats on 1200 held-out fights: +0.032 ± 0.026 (within 2 SE) | style 1.000 gates [] drift [] | your survival -1.2 pts
