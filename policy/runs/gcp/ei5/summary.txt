@@ -1,0 +1,4 @@
+eir_gcat_r3        (no test yet)
+eir_gcat_r5        (no test yet)
+eir_cat_r3         [test] best (round 3) vs today's cats on 1200 held-out fights: +0.025 ± 0.029 (within 2 SE) | style 0.983 gates [] drift [humanShare 0.207→0.367; pounceRate 2.216→1.361; rushPounceRate 1.357→0.648; stalkPounceRate 2.468→1.558] | your survival -1.2 pts
+eir_gall_r3        (no test yet)

@@ -127,6 +127,13 @@ each species develop its own realistic fighting style. This note is the plan; th
   whom, can it finish the target). Next: richer decision inputs (time to contact, hits to kill / be killed, facing / flank,
   the threat's ETA to you, who else is on the target), re-collect, retrain.
 
+- Rich inputs (features_rich.js) + gain regression, ei5 (Oct 28): your cats' held-out gain still 0.001-0.008 of ~0.09, validation
+  -0.04 to +0.03; enemy cats test +0.025 ± 0.029 (no better than bc3m); a local 80-fight check: strongest rich correlation .053
+  (keep the current target), but a sticky rule changes 1% of picks (-0.009 ± 0.009). So far, per-option summary inputs don't
+  carry what the lookahead uses for your cats. Next candidate: a state encoder (every animal's relative position, speed, HP,
+  species traits and target links pooled into the option scorer), i.e. the dense-input network of the original milestone plan.
+  Until then the best help for your cats is learning all guards together (guard_target_m2 / m3: +0.18-0.19 on cat fights).
+
 ## Phases (each measured before the next)
 1. Plumbing: joint (target, intent) hook for every archetype, zero/heuristic policy byte-identical to today
    (`check_identical.js`), features + trait vector, harness tests.

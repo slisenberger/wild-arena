@@ -1,0 +1,6 @@
+[init] policy/runs/gcp/eir_gall_r3/state.json: {"arch":"guard","only":0,"wide":true,"loss":"adv","rounds":6,"fights":900,"rolls":3,"H":8,"max":3,"real":0,"nh":32,"epochs":8,"lr":0.002,"val":800,"test":1200,"seed":2704,"styleThr":0.9,"dagger":true,"threads":8,"trainer":"expert","feat":"rich","target":true,"mode":"linear","withLive":true,"goal":null,"spec":false}
+[round 0 collect] 181613 decisions from 900 fights (the lookahead plays), 181613 total, 3346 s
+  181613 decisions (163452 train, 18161 held out), 4486 weights; held-out gain if every best branch were taken: 0.0625
+  [ep 0] held out: gain-prediction mse 0.1377 | realized gain by kappa 0: +0.0005 (27%), 0.02: +0.0028 (9%), 0.05: +0.0005 (1%), 0.1: +0.0000 (0%), 0.15: +0.0000 (0%), 0.2: +0.0000 (0%), 0.3: +0.0000 (0%), 0.5: +0.0000 (0%)  -> best
+[round 0 train] held-out gain 0.0028 of 0.0625, threshold 0.02, 104 s
+[round 0 val] network vs today's cats on 800 fresh fights: +0.056 ± 0.022 | style 1.000 gates [] drift [] | your survival 2.9 pts  -> new best

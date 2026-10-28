@@ -1,0 +1,16 @@
+[init] policy/runs/gcp/eir_gcat_r5/state.json: {"arch":"guard","only":"cat","wide":true,"loss":"adv","rounds":6,"fights":900,"rolls":5,"H":8,"max":3,"real":0,"nh":32,"epochs":8,"lr":0.002,"val":800,"test":1200,"seed":2702,"styleThr":0.9,"dagger":true,"threads":8,"trainer":"expert","feat":"rich","target":true,"mode":"linear","withLive":true,"goal":null,"spec":false}
+[round 0 collect] 30772 decisions from 900 fights (the lookahead plays), 30772 total, 1152 s
+  30772 decisions (27695 train, 3077 held out), 4486 weights; held-out gain if every best branch were taken: 0.0699
+  [ep 0] held out: gain-prediction mse 0.0768 | realized gain by kappa 0: +0.0021 (39%), 0.02: +0.0034 (17%), 0.05: +0.0005 (1%), 0.1: +0.0000 (0%), 0.15: +0.0000 (0%), 0.2: +0.0000 (0%), 0.3: +0.0000 (0%), 0.5: +0.0000 (0%)  -> best
+[round 0 train] held-out gain 0.0077 of 0.0699, threshold 0, 18 s
+[round 0 val] network vs today's cats on 800 fresh fights: -0.040 ± 0.021 | style 1.000 gates [] drift [] | your survival -3.0 pts
+[round 1 collect] 38691 decisions from 900 fights (the network plays), 69463 total, 1490 s
+  69463 decisions (62517 train, 6946 held out), 4486 weights; held-out gain if every best branch were taken: 0.0813
+  [ep 0] held out: gain-prediction mse 0.1050 | realized gain by kappa 0: +0.0008 (25%), 0.02: -0.0002 (5%), 0.05: -0.0000 (0%), 0.1: +0.0000 (0%), 0.15: +0.0000 (0%), 0.2: +0.0000 (0%), 0.3: +0.0000 (0%), 0.5: +0.0000 (0%)  -> best
+[round 1 train] held-out gain 0.0019 of 0.0813, threshold 0.02, 39 s
+[round 1 val] network vs today's cats on 800 fresh fights: -0.011 ± 0.016 | style 1.000 gates [] drift [] | your survival -1.4 pts
+[round 2 collect] 38805 decisions from 900 fights (the network plays), 108268 total, 1502 s
+  108268 decisions (97442 train, 10826 held out), 4486 weights; held-out gain if every best branch were taken: 0.0901
+  [ep 0] held out: gain-prediction mse 0.1219 | realized gain by kappa 0: -0.0011 (52%), 0.02: +0.0022 (15%), 0.05: +0.0005 (1%), 0.1: +0.0000 (0%), 0.15: +0.0000 (0%), 0.2: +0.0000 (0%), 0.3: +0.0000 (0%), 0.5: +0.0000 (0%)  -> best
+[round 2 train] held-out gain 0.0022 of 0.0901, threshold 0.02, 61 s
+[round 2 val] network vs today's cats on 800 fresh fights: -0.019 ± 0.020 | style 1.000 gates [] drift [] | your survival -1.8 pts
