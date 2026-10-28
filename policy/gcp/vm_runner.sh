@@ -30,6 +30,7 @@ if [ "$LOCAL" != 1 ]; then
   retry git clone -q "$REPO" "$REPO_DIR" && git -C "$REPO_DIR" checkout -q "$COMMIT" || { for r in ${RUNS//+/ }; do status "$r" failed "git clone/checkout $COMMIT failed"; done; exit 1; }
 fi
 cd "$REPO_DIR"
+export NODE_OPTIONS="--max-old-space-size=$(( $(awk '/MemTotal/{print int($2/1024)}' /proc/meminfo) * 3 / 4 ))"   # big heaps: expert iteration keeps all its data in memory
 get "sweeps/$SWEEP/manifest.json" /tmp/manifest.json || { echo "no manifest"; exit 1; }
 pids=()
 for r in ${RUNS//+/ }; do

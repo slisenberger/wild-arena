@@ -9,7 +9,10 @@ const F = require('./features.js');
 const G = require('./guard_features.js');
 const TM = require('./target_model.js');
 const FP = require('./features_plus.js'); // P.feat === 'plus': + the guard situation around each target
-const FR = require('./features_rich.js'); // P.feat === 'rich': + timing, kill race, openings, who is after whom
+const FR = require('./features_rich.js');
+const SM = require('./set_model.js'); // 'target-set': sees every animal on the field (state encoder)
+// a state-encoder pick: argmax over options (targets only unless it is the heuristic's pick, like targetsOnly)
+function pickSet(w, P, u, opts, X, teach){ const q = SM.scores(P, SM.decision(w, u, opts, X), teach); let b = teach >= 0 ? teach : 0; q.forEach((v, i) => { if ((opts[i].kind === 'target' || i === teach) && v > q[b]) b = i; }); return b; } // P.feat === 'rich': + timing, kill race, openings, who is after whom
 const M = require('./model.js');
 const path = require('path');
 const A = require(process.env.SIM ? path.resolve(process.env.SIM) : path.join(__dirname, '..', 'sim.js'));
@@ -43,11 +46,11 @@ function choose(w, u, policy){
   const cfg = w.cfg, log = cfg.policyLog, stats = cfg.policyStats;
   if (policy.byArch) policy = policy.byArch[A._internals.archetypeOf(u)];
   const {opts, X} = policy.feat === 'rich' ? FR.extract(w, u) : (policy.feat === 'plus' ? FP : F).extract(w, u);
-  const lin = policy.kind === 'target-lin' || policy.kind === 'target-mlp';
+  const lin = policy.kind === 'target-lin' || policy.kind === 'target-mlp' || policy.kind === 'target-set';
   const look = policy.kind === 'target-look'; // lookahead (policy/probes/cat_lookahead.js): policy.pick(w, u, opts, teach) chooses
   if (u.forceT && w.t < u.forceUntil){ const k = opts.findIndex(o => o.kind === 'target' && o.t === u.forceT); if (k >= 0){ apply(u, opts[k]); return; } } // a lookahead branch holds its tried target
   const teach = policy.teacher || log || stats || lin || look ? F.heuristicIndex(w, u, opts) : -1;
-  const a = policy.teacher ? teach : look ? policy.pick(w, u, opts, teach) : lin ? pickLin(w, policy, X, teach, u, opts.map(o => o.kind === 'target')) : M.argmax(policy, X);
+  const a = policy.teacher ? teach : look ? policy.pick(w, u, opts, teach) : policy.kind === 'target-set' ? pickSet(w, policy, u, opts, X, teach) : lin ? pickLin(w, policy, X, teach, u, opts.map(o => o.kind === 'target')) : M.argmax(policy, X);
   if (policy.commit && a !== teach && opts[a] && opts[a].kind === 'target'){ u.forceT = opts[a].t; u.forceUntil = w.t + policy.commit; } // P.commit s: a learned departure from the heuristic is held that long (follow-through, as in the lookahead's branches)
   if (stats){ stats.n = (stats.n || 0) + 1; if (a === teach) stats.agree = (stats.agree || 0) + 1; }
   if (log && opts.length > 1) log.push({X, y: teach, a, sp: u.s.id});
@@ -69,7 +72,7 @@ function chooseGuard(w, u, policy, h){ // returns the target to take (h = the he
   if (u.rider || (P.only === 'cat' && !(u.s.pred && u.s.latch))) return h; // P.only 'cat': only your big cats learn; the rest keep the heuristic
   if (u.forceT && w.t < u.forceUntil) return A._internals.active(u.forceT) ? u.forceT : h; // a lookahead branch holds its tried target
   const {opts, X} = P.feat === 'rich' ? FR.extract(w, u, {wide: P.wide}) : G.extract(w, u, P.wide), i = G.heuristic(opts, h); // P.wide: any enemy your side can see (no leash)
-  const a = i < 0 ? -1 : P.kind === 'target-look' ? P.pick(w, u, opts, i) : pickLin(w, P, X, i, u, opts.map(o => o.kind === 'target')); // target-look: plan.js (training / headroom tests only)
+  const a = i < 0 ? -1 : P.kind === 'target-look' ? P.pick(w, u, opts, i) : P.kind === 'target-set' ? pickSet(w, P, u, opts, X, i) : pickLin(w, P, X, i, u, opts.map(o => o.kind === 'target')); // target-look: plan.js (training / headroom tests only)
   if (stats){ stats.n = (stats.n || 0) + 1; if (a === i) stats.agree = (stats.agree || 0) + 1; }
   return a < 0 ? h : opts[a].kind === 'target' ? opts[a].t : null;
 }

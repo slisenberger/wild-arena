@@ -87,7 +87,46 @@ function trainAdv(D, o, log, init){
   }
   return {P: Object.assign({}, P, {theta: best.th, margin: best.k === 1e9 ? 1e3 : best.k}), th0, best, oracle};
 }
-module.exports = { train, trainAdv, DEF };
+// the same gain regression for the state encoder (policy/set_model.js 'target-set'): records carry U (each nearby animal's fixed
+// row) and T (each tried option's per-animal target rows), logged by plan.js with set: true
+function trainAdvSet(D, o, log, init){
+  const SM = require('./set_model.js');
+  o = Object.assign({}, DEF, {huber: .5, K: 16, kappas: [0, .02, .05, .1, .15, .2, .3, .5]}, o); log = log || (() => {});
+  D = D.filter(d => d.X.length >= 2 && d.teach >= 0 && d.U).slice();
+  let s = (o.seed >>> 0) || 1; const rnd = () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; };
+  for (let i = D.length - 1; i > 0; i--){ const j = Math.floor(rnd() * (i + 1)); [D[i], D[j]] = [D[j], D[i]]; }
+  const nv = Math.floor(D.length * o.holdout), V = D.slice(0, nv), Tn = D.slice(nv);
+  const dec = d => d._D || (d._D = {x: d.X.map(x => x.concat(d.tr)), U: d.U, T: d.T});
+  const P = SM.make(D[0].X[0].length + D[0].tr.length, o.K, o.nh, 0, o.seed * 31 + 7); if (o.feat) P.feat = o.feat; if (o.only) P.only = o.only; if (o.wide) P.wide = true; P.targetsOnly = true;
+  const NP = P.theta.length, th0 = P.theta.slice(), th = init && init.theta && init.theta.length === NP ? init.theta.slice() : th0.slice();
+  const m = new Array(NP).fill(0), v = new Array(NP).fill(0); let t = 0;
+  const f = d => SM.scores(P, dec(d), -1, th);
+  const pick = (d, q, k) => { let b = d.teach, bv = 0; for (let i = 0; i < q.length; i++){ const g = q[i] - q[d.teach]; if (i !== d.teach && g - k > bv){ bv = g - k; b = i; } } return b; };
+  function evalSet(S){ const r = o.kappas.map(k => ({k, gain: 0, dev: 0})); let mse = 0, n = 0;
+    for (const d of S){ const q = f(d); for (let i = 0; i < q.length; i++) if (i !== d.teach){ const e = (q[i] - q[d.teach]) - (d.s[i] - d.s[d.teach]); mse += e * e; n++; }
+      r.forEach(x => { const b = pick(d, q, x.k); x.gain += d.s[b] - d.s[d.teach]; x.dev += b !== d.teach; }); }
+    r.forEach(x => { x.gain /= S.length || 1; x.dev /= S.length || 1; }); return {mse: mse / (n || 1), r}; }
+  const oracle = V.reduce((a, d) => a + Math.max(...d.s) - d.s[d.teach], 0) / (V.length || 1);
+  log(`${D.length} decisions (${Tn.length} train, ${V.length} held out), state encoder ${NP} weights; held-out gain if every best branch were taken: ${oracle.toFixed(4)}`);
+  let best = {gain: 0, k: 1e9, th: th.slice(), ep: -1};
+  for (let ep = 0; ep < o.epochs; ep++){
+    for (let i = Tn.length - 1; i > 0; i--){ const j = Math.floor(rnd() * (i + 1)); [Tn[i], Tn[j]] = [Tn[j], Tn[i]]; }
+    for (let b0 = 0; b0 < Tn.length; b0 += o.batch){
+      const g = new Array(NP).fill(0), B = Tn.slice(b0, b0 + o.batch);
+      for (const d of B){ const Dd = dec(d), q = SM.scores(P, Dd, -1, th), k = d.teach;
+        for (let i = 0; i < q.length; i++){ if (i === k) continue; const e = (q[i] - q[k]) - (d.s[i] - d.s[k]), c = (Math.abs(e) <= o.huber ? e : o.huber * Math.sign(e)) / B.length;
+          SM.addGrad(g, th, P, Dd, i, c); SM.addGrad(g, th, P, Dd, k, -c); } }
+      t++; for (let k = 0; k < NP; k++){ const gk = g[k] + o.l2 * (th[k] - th0[k]); m[k] = .9 * m[k] + .1 * gk; v[k] = .999 * v[k] + .001 * gk * gk;
+        th[k] -= o.lr * (m[k] / (1 - Math.pow(.9, t))) / (Math.sqrt(v[k] / (1 - Math.pow(.999, t))) + 1e-8); }
+    }
+    const e = evalSet(V), bk = e.r.reduce((a, x) => x.gain > a.gain ? x : a, {gain: -1e9});
+    if (bk.gain > best.gain) best = {gain: bk.gain, k: bk.k, dev: bk.dev, th: th.slice(), ep};
+    log(`[ep ${ep}] held out: gain-prediction mse ${e.mse.toFixed(4)} | realized gain by kappa ${e.r.map(x => `${x.k}: ${x.gain >= 0 ? '+' : ''}${x.gain.toFixed(4)} (${(100 * x.dev).toFixed(0)}%)`).join(', ')}${best.ep === ep ? '  -> best' : ''}`);
+  }
+  for (const d of D) delete d._D;
+  return {P: Object.assign({}, P, {theta: best.th, margin: best.k === 1e9 ? 1e3 : best.k}), th0, best, oracle};
+}
+module.exports = { train, trainAdv, trainAdvSet, DEF };
 
 if (require.main === module){
   const R = require('./move_run.js');

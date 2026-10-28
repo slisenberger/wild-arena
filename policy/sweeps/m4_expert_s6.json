@@ -1,0 +1,17 @@
+{
+ "note": "Milestone 4 state encoder (Oct 28): target-set (policy/set_model.js): every nearby animal as a row relative to the deciding animal and the candidate target, encoded and pooled into the option scorer; gain regression on lookahead labels; rich option inputs. Your cats x2 (K 16 / 32), enemy cats. Per-option summary inputs carried no signal for your cats (|r| <= .05) while the lookahead gains +0.203.",
+ "runs": [
+  {
+   "name": "eis_gcat_k16",
+   "args": "--trainer=expert --model=set --feat=rich --loss=adv --rounds=5 --fights=900 --H=8 --max=3 --rolls=3 --epochs=6 --lr=.002 --val=800 --test=1200 --dagger=true --arch=guard --only=cat --wide=true --K=16 --nh=32 --seed=2801"
+  },
+  {
+   "name": "eis_gcat_k32",
+   "args": "--trainer=expert --model=set --feat=rich --loss=adv --rounds=5 --fights=900 --H=8 --max=3 --rolls=3 --epochs=6 --lr=.002 --val=800 --test=1200 --dagger=true --arch=guard --only=cat --wide=true --K=32 --nh=48 --seed=2802"
+  },
+  {
+   "name": "eis_cat_k16",
+   "args": "--trainer=expert --model=set --feat=rich --loss=adv --rounds=5 --fights=900 --H=8 --max=3 --rolls=3 --epochs=6 --lr=.002 --val=800 --test=1200 --dagger=true --arch=cat --K=16 --nh=32 --seed=2803"
+  }
+ ]
+}

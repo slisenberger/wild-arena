@@ -9,14 +9,14 @@
 const path = require('path');
 const A = require(process.env.SIM ? path.resolve(process.env.SIM) : path.join(__dirname, '..', 'sim.js'));
 const L = require('./lookahead.js');
-const FP = require('./features_plus.js'), FR = require('./features_rich.js'), G = require('./guard_features.js'), TR = require('./traits.js'), TM = require('./target_model.js');
+const SM = require('./set_model.js'), FP = require('./features_plus.js'), FR = require('./features_rich.js'), G = require('./guard_features.js'), TR = require('./traits.js'), TM = require('./target_model.js');
 function score(w){
   let pl = 0, pm = 0, el = 0, em = 0;
   for (const u of w.units){ const lost = u.maxhp - Math.max(0, u.state === 'dead' ? 0 : u.hp); if (u.side === 'E'){ el += lost; em += u.maxhp; } else { pl += lost; pm += u.maxhp; } }
   const H = w.human; return 2 * (H.maxhp - Math.max(0, H.state === 'dead' ? 0 : H.hp)) / H.maxhp + pl / pm - el / em + (H.state === 'dead' ? 2 : 0);
 }
 function makePlanner(o){
-  o = Object.assign({H: 8, max: 3, cool: 2, rolls: 1, data: null, learner: null, real: 0, feat: null, arch: 'cat', side: 'E', only: null, wide: false}, o || {});
+  o = Object.assign({H: 8, max: 3, cool: 2, rolls: 1, data: null, learner: null, real: 0, feat: null, set: false, arch: 'cat', side: 'E', only: null, wide: false}, o || {});
   // arch / side: whose choice is planned. 'guard' / 'P' = your guards (policy.js chooseGuard; scored for your side; only 'cat' =
   // just your big cats; wide = no leash); data / learner use features_plus for enemies and guard_features for your guards
   // real: a realism-aware teacher: each branch's score loses real x (the share of its H seconds this cat spent idle, i.e. slow and
@@ -50,9 +50,12 @@ function makePlanner(o){
       sc.push(v); if (v > bs + 1e-9){ bs = v; best = i; }
     }
     const feats = () => (o.feat === 'rich' ? FR.extract(w, u, {wide: o.wide}) : o.arch === 'guard' ? G.extract(w, u, o.wide) : FP.extract(w, u)).X;
-    if (o.data){ const X = feats(), r4 = x => Math.round(x * 1e4) / 1e4; o.data.push({sp: u.s.id, tr: TR.traits(u.s), X: tries.map(i => X[i].map(r4)), s: sc.map(r4), teach: tries.indexOf(teach)}); }
+    if (o.data){ const X = feats(), r4 = x => Math.round(x * 1e4) / 1e4; const rec = {sp: u.s.id, tr: TR.traits(u.s), X: tries.map(i => X[i].map(r4)), s: sc.map(r4), teach: tries.indexOf(teach)};
+      if (o.set){ const si = SM.setInputs(w, u, opts); rec.U = si.U.map(r => r.map(r4)); rec.T = tries.map(i => si.T[i] ? si.T[i].map(r => r.map(r4)) : null); } // state encoder data
+      o.data.push(rec); }
     if (best !== teach) P.changed++;
     u.planT = w.t; u.planTo = opts[best] && opts[best].t;
+    if (o.learner && o.learner.kind === 'target-set'){ const q = SM.scores(o.learner, SM.decision(w, u, opts, feats()), teach); let k = teach; q.forEach((x, j) => { if (opts[j].kind === 'target' && x > q[k]) k = j; }); return k; }
     if (o.learner){ const X = TM.inputs(o.learner, feats(), u), q = TM.scores(o.learner, X, teach); if (o.learner.targetsOnly) opts.forEach((x, j) => { if (x.kind !== 'target' && j !== teach) q[j] = -Infinity; }); let k = 0; q.forEach((x, j) => { if (x > q[k]) k = j; }); return k; }
     return best;
   };
