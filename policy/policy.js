@@ -64,8 +64,9 @@ function chooseHerb(w, u, policy){
 function chooseGuard(w, u, policy, h){ // returns the target to take (h = the heuristic's, or the guard intent's: unchanged)
   const P = policy.byArch.guard, stats = w.cfg.policyStats;
   if (u.rider || (P.only === 'cat' && !(u.s.pred && u.s.latch))) return h; // P.only 'cat': only your big cats learn; the rest keep the heuristic
+  if (u.forceT && w.t < u.forceUntil) return A._internals.active(u.forceT) ? u.forceT : h; // a lookahead branch holds its tried target
   const {opts, X} = G.extract(w, u, P.wide), i = G.heuristic(opts, h); // P.wide: any enemy your side can see (no leash)
-  const a = i < 0 ? -1 : pickLin(w, P, X, i, u);
+  const a = i < 0 ? -1 : P.kind === 'target-look' ? P.pick(w, u, opts, i) : pickLin(w, P, X, i, u); // target-look: plan.js (training / headroom tests only)
   if (stats){ stats.n = (stats.n || 0) + 1; if (a === i) stats.agree = (stats.agree || 0) + 1; }
   return a < 0 ? h : opts[a].kind === 'target' ? opts[a].t : null;
 }

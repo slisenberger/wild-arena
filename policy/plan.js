@@ -16,13 +16,15 @@ function score(w){
   const H = w.human; return 2 * (H.maxhp - Math.max(0, H.state === 'dead' ? 0 : H.hp)) / H.maxhp + pl / pm - el / em + (H.state === 'dead' ? 2 : 0);
 }
 function makePlanner(o){
-  o = Object.assign({H: 8, max: 3, cool: 2, rolls: 1, data: null, learner: null, real: 0}, o || {});
+  o = Object.assign({H: 8, max: 3, cool: 2, rolls: 1, data: null, learner: null, real: 0, arch: 'cat', side: 'E', only: null, wide: false}, o || {});
+  // arch / side: whose choice is planned. 'guard' / 'P' = your guards (policy.js chooseGuard; scored for your side; only 'cat' =
+  // just your big cats; wide = no leash), for headroom tests; data / learner are for enemy cats (features_plus) so far
   // real: a realism-aware teacher: each branch's score loses real x (the share of its H seconds this cat spent idle, i.e. slow and
   // not near its target, or sprinting > 8 m from its target); imitation of the plain teacher drifted into idle / sprint-heavy cats
   // training only (policy/expert_iter.js): rolls = fair rolls averaged per option; data = an array that collects each planned
   // decision (features_plus rows of the tried options, their branch scores, the heuristic's pick, the cat's traits);
   // learner = a target-mlp whose pick is played instead of the plan's (DAgger: the plan only labels) // 8 s measured at least as good as 15 s (+0.247 vs +0.195, same fights) at half the cost
-  const P = {kind: 'target-look', n: 0, branched: 0, changed: 0};
+  const P = {kind: 'target-look', n: 0, branched: 0, changed: 0, only: o.only, wide: o.wide};
   P.pick = (w, u, opts, teach) => {
     P.n++;
     const tg = opts.map((x, i) => i).filter(i => opts[i].kind === 'target');
@@ -30,7 +32,8 @@ function makePlanner(o){
     if (o.cool && u.planT !== undefined && w.t - u.planT < o.cool){ const k = opts.findIndex(x => x.kind === 'target' && x.t === u.planTo); if (k >= 0) return k; } // cool s: keep a fresh plan
     const I = A._internals, others = tg.filter(i => i !== teach).sort((i, j) => I.dist(u, opts[i].t) - I.dist(u, opts[j].t)).slice(0, o.max);
     const tries = (teach >= 0 ? [teach] : []).concat(others), ui = w.units.indexOf(u);
-    const inner = {policy: {byArch: Object.assign({}, w.cfg.policy.byArch, {cat: {teacher: true}})}}; // inside a branch: today's cats, every other learned choice kept
+    const today = o.arch === 'guard' ? {kind: 'target-lin', v: 1, nin: 200, margin: .25, wt: new Array(200).fill(0)} : {teacher: true};
+    const inner = {policy: {byArch: Object.assign({}, w.cfg.policy.byArch, {[o.arch]: today})}}; // inside a branch: today's choices for this archetype, every other learned choice kept
     let best = teach, bs = -1e9; P.branched++;
     const sc = [];
     for (const i of tries){
@@ -42,7 +45,7 @@ function makePlanner(o){
         const t1 = c.t + o.H; let bad = 0;
         while (!c.over && c.t < t1){ A.step(c); if (o.real && I.active(cu)){ const sp = Math.hypot(cu.vx, cu.vy), tt = cu.target && I.active(cu.target) ? cu.target : null, d = tt ? I.dist(cu, tt) : 1e9;
           if ((sp < 1 && d > 10) || (sp > .7 * cu.s.spd && d > 8)) bad += .1; } }
-        v += (score(c) - o.real * bad / o.H) / o.rolls;
+        v += ((o.side === 'P' ? -score(c) : score(c)) - o.real * bad / o.H) / o.rolls; // your side: the other side's loss is your gain
       }
       sc.push(v); if (v > bs + 1e-9){ bs = v; best = i; }
     }
