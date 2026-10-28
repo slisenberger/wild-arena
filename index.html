@@ -2953,74 +2953,13 @@ A._internals.chooseHerb = chooseHerb;
 module.exports = { choose, chooseHerb, chooseGuard, scoresLin, apply, load: f => JSON.parse(require('fs').readFileSync(f, 'utf8')) };
 
   };
-  M['lookahead.js'] = function(module, exports){ var require = req, __dirname = ''; // Milestone 4: copy a fight mid-way, so a decision can be tried several ways and each branch played forward (lookahead
-// search: a teacher for target choice, and a test of how much better choices are worth). The world is plain data except its
-// random generator (w.R), whose state sim.js's rng exposes (state / seek). The copy drops the event log (not needed to play
-// on) and shares the read-only cfg weights; its policy sinks (stats, trace, log) are off.
-const path = require('path');
-const A = require(process.env.SIM ? path.resolve(process.env.SIM) : path.join(__dirname, '..', 'sim.js'));
-function cloneWorld(w, cfgOver){
-  const R = w.R, cfg = w.cfg, ev = w.events;
-  w.R = null; w.cfg = null; w.events = [];
-  let c; try { c = structuredClone(w); } finally { w.R = R; w.cfg = cfg; w.events = ev; }
-  c.R = A.rng(1); c.R.seek(R.state());
-  c.cfg = Object.assign({}, cfg, {policyStats: null, policyTrace: null, policyLog: null}, cfgOver || {});
-  return c;
-}
-module.exports = { cloneWorld };
-
-  };
-  M['plan.js'] = function(module, exports){ var require = req, __dirname = ''; // Milestone 4 'planning cats' (prototype, ?smart=1): an enemy cat chooses its target by lookahead. At each decision with 2+
-// targets it copies the fight (lookahead.js), plays each option (the heuristic's pick + up to 3 nearest others) for H seconds
-// with the cat holding that target and everything else as usual, each copy rolling its own dice (derived from the fight's
-// state, so a fight still replays exactly), and takes the option that went best for its side: your HP lost x2, your side's
-// HP lost, minus its own side's, as shares of max HP. Measured (probes/cat_lookahead.js, FAIR): 15 s +0.207 ± 0.032 on 1,200
-// fights; 8 s +0.247 ± 0.067 on 300 (15 s on the same: +0.195). probes/plan_eval.js measures this file as the game runs it.
-// makePlanner() returns a fresh target policy per fight (its decision counter is part of the dice). cool: a cat keeps a plan
-// that is under 2 s old (same gain, half the CPU: +0.241 ± 0.061, ~0.5 s per fight on a desktop thread).
-const path = require('path');
-const A = require(process.env.SIM ? path.resolve(process.env.SIM) : path.join(__dirname, '..', 'sim.js'));
-const L = require('./lookahead.js');
-function score(w){
-  let pl = 0, pm = 0, el = 0, em = 0;
-  for (const u of w.units){ const lost = u.maxhp - Math.max(0, u.state === 'dead' ? 0 : u.hp); if (u.side === 'E'){ el += lost; em += u.maxhp; } else { pl += lost; pm += u.maxhp; } }
-  const H = w.human; return 2 * (H.maxhp - Math.max(0, H.state === 'dead' ? 0 : H.hp)) / H.maxhp + pl / pm - el / em + (H.state === 'dead' ? 2 : 0);
-}
-function makePlanner(o){
-  o = Object.assign({H: 8, max: 3, cool: 2}, o || {}); // 8 s measured at least as good as 15 s (+0.247 vs +0.195, same fights) at half the cost
-  const P = {kind: 'target-look', n: 0, branched: 0, changed: 0};
-  P.pick = (w, u, opts, teach) => {
-    P.n++;
-    const tg = opts.map((x, i) => i).filter(i => opts[i].kind === 'target');
-    if (tg.length < 2) return teach;
-    if (o.cool && u.planT !== undefined && w.t - u.planT < o.cool){ const k = opts.findIndex(x => x.kind === 'target' && x.t === u.planTo); if (k >= 0) return k; } // cool s: keep a fresh plan
-    const I = A._internals, others = tg.filter(i => i !== teach).sort((i, j) => I.dist(u, opts[i].t) - I.dist(u, opts[j].t)).slice(0, o.max);
-    const tries = (teach >= 0 ? [teach] : []).concat(others), ui = w.units.indexOf(u);
-    const inner = {policy: {byArch: Object.assign({}, w.cfg.policy.byArch, {cat: {teacher: true}})}}; // inside a branch: today's cats, every other learned choice kept
-    let best = teach, bs = -1e9; P.branched++;
-    for (const i of tries){
-      const c = L.cloneWorld(w, inner), cu = c.units[ui];
-      c.R.seek((w.R.state() ^ Math.imul(P.n * 97 + i + 1, 0x9e3779b9)) >>> 0);
-      cu.forceT = c.units[w.units.indexOf(opts[i].t)]; cu.forceUntil = c.t + o.H; cu.target = cu.forceT; cu.state = 'engage'; cu.carcass = null;
-      const t1 = c.t + o.H; while (!c.over && c.t < t1) A.step(c);
-      const v = score(c); if (v > bs + 1e-9){ bs = v; best = i; }
-    }
-    if (best !== teach) P.changed++;
-    u.planT = w.t; u.planTo = opts[best] && opts[best].t;
-    return best;
-  };
-  return P;
-}
-module.exports = { makePlanner, score };
-
-  };
-  M['smart.js'] = function(module, exports){ var require = req, __dirname = ''; // ?smart=1 prototype (owner playtest): every learned target choice from milestone 4 at once, as one cfg.policy for a fight.
-// Enemy cats plan by lookahead (plan.js); enemy chargers use charger_target_m1 (fresh +0.239 ± 0.036); your guards use
-// guard_target_m3 (fresh +0.129 ± 0.021). Off unless the page asks for it; without it every fight is the shipped game.
+  M['smart.js'] = function(module, exports){ var require = req, __dirname = ''; // ?smart=1 prototype (owner playtest): learned target choice from milestone 4, as one cfg.policy for a fight. Networks only
+// (owner, Oct 28: nothing may need in-game loading, so no lookahead at play time): enemy chargers use charger_target_m1
+// (fresh +0.239 ± 0.036), your guards guard_target_m3 (fresh +0.129 ± 0.021); enemy cats join once their network (trained
+// to imitate the lookahead, offline) is significant and clean. Off unless the page asks; without it every fight is the shipped game.
 require('./policy.js'); // registers the target choosers with the engine
-const PL = require('./plan.js');
 const W = n => { const w = require(n); const {meta, ...p} = w; return p; };
-function smartPolicy(o){ return {byArch: {cat: PL.makePlanner(o), charger: W('./weights/charger_target_m1.json'), guard: W('./weights/guard_target_m3.json')}}; }
+function smartPolicy(){ return {byArch: {charger: W('./weights/charger_target_m1.json'), guard: W('./weights/guard_target_m3.json')}}; }
 module.exports = smartPolicy;
 if (typeof window !== 'undefined') window.ArenaSmart = smartPolicy;
 
@@ -3164,8 +3103,8 @@ const fmtT = t => { t = Math.max(0, t); const m = Math.floor(t/60), s = Math.flo
 const kmh = v => Math.round(v * 3.6);
 // 5 in a Row (prototype, Oct 27): hidden unless ?five=1
 const FIVE_ON = (() => { try { return /[?&]five=1\b/.test(location.search); } catch(e){ return false; } })();
-// prototype (owner playtest), hidden unless ?smart=1: every learned target choice at once (policy/smart.js): enemy cats plan by
-// lookahead, enemy chargers and your guards pick targets learned in training. Smart fights skip personal stats.
+// prototype (owner playtest), hidden unless ?smart=1: learned target choice (policy/smart.js, networks only, no in-game
+// loading): enemy chargers and your guards pick targets learned in training. Smart fights skip personal stats.
 const SMART_ON = (() => { try { return (/[?&]smart=1\b/.test(location.search) || window.WA_SMART === true) && typeof window.ArenaSmart === 'function'; } catch(e){ return false; } })(); // window.WA_SMART: a playtest copy that is always smart
 const canAdd = a => S.mig ? M.canBuy(S.mig, a.id) : a.price <= BUDGET - spent();
 function strengthOf(a){ return Math.sqrt(A.hpOf(a) * a.dmg / a.cd); }
@@ -3814,9 +3753,7 @@ function drawDeploy(){
 })();
 $('autoForm').addEventListener('click', () => { S.pos = {}; S.youPos = null; drawDeploy(); });
 $('newSeed').addEventListener('click', () => { S.seed = (Math.random()*1e6|0) + 1; $('seedLbl').textContent = S.seed; drawDeploy(); });
-// ?smart=1: planning cats take a moment to simulate; say so and let the page paint before the fight is computed
-function startSmart(go){ if (!SMART_ON){ go(); return; } const b = $('startFight'), r = $('rematch'), t = b.textContent; b.disabled = r.disabled = true; b.textContent = 'The animals are planning…'; setTimeout(() => { try { go(); } finally { b.disabled = r.disabled = false; b.textContent = t; } }, 40); }
-$('startFight').addEventListener('click', () => startSmart(startBattle));
+$('startFight').addEventListener('click', () => startBattle());
 
 // ---------- battle ----------
 function startBattle(){
@@ -3835,7 +3772,7 @@ function startBattle(){
   renderReport(false);
   S.lastTs = 0;
 }
-$('rematch').addEventListener('click', () => { if (!S.daily){ S.seed = (Math.random()*1e6|0) + 1; $('seedLbl').textContent = S.seed; } startSmart(startBattle); });
+$('rematch').addEventListener('click', () => { if (!S.daily){ S.seed = (Math.random()*1e6|0) + 1; $('seedLbl').textContent = S.seed; } startBattle(); });
 $('replaySame').addEventListener('click', () => { S.playT = 0; S.playing = true; $('report').hidden = true; $('banner').innerHTML = ''; });
 $('playBtn').addEventListener('click', () => { if (S.playT >= S.dur) { S.playT = 0; $('report').hidden = true; $('banner').innerHTML = ''; } S.playing = !S.playing; });
 document.querySelectorAll('#speedSeg button').forEach(b => b.addEventListener('click', () => { S.speed = +b.dataset.v; syncSpeed(); }));
@@ -4607,7 +4544,7 @@ if (!loadHash()){
   dealNewBoard(); renderAll();
   const run = loadRun(); // a migration in progress picks up where it left off after a reload
   if (MIG_ON && run && !run.over){ S.mig = run; go('mig'); showNotice(`<b>Migration resumed</b> <span>Fight ${run.k + 1} of ${M.MIG.FIGHTS}, $${run.money.toLocaleString()} to spend.</span>`); }
-  if (SMART_ON) showNotice('<b>Smart animals (prototype)</b> <span>Enemy cats plan a few seconds ahead before choosing whom to go after; enemy chargers and your guards pick targets learned in training. These fights don\'t count in your stats.</span>');
+  if (SMART_ON) showNotice('<b>Smart animals (prototype)</b> <span>Enemy chargers and your guards pick their targets with networks learned in training. These fights don\'t count in your stats.</span>');
   else go('arena');
 }
 requestAnimationFrame(frame);

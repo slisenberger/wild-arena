@@ -10,7 +10,7 @@ t = t.replace('/*CREDITS*/', () => JSON.stringify(credits));
 // require('path')/process.env/__dirname are shimmed and any require of sim.js resolves to window.Arena
 const POLICY = ['move_model.js', 'move_features.js', 'move_guard_features.js', 'move_arch_features.js', 'move_cat_features.js', 'move_arch.js', 'move_policy.js', 'live.js'];
 // the ?smart=1 prototype (policy/smart.js: learned target choice + planning cats), off unless the page asks for it
-const SMART = ['model.js', 'traits.js', 'features.js', 'features_plus.js', 'guard_features.js', 'target_model.js', 'policy.js', 'lookahead.js', 'plan.js', 'smart.js'];
+const SMART = ['model.js', 'traits.js', 'features.js', 'features_plus.js', 'guard_features.js', 'target_model.js', 'policy.js', 'smart.js'];
 const SMART_W = ['charger_target_m1.json', 'guard_target_m3.json'];
 const policyBundle = `;(function(){ var A = window.Arena, M = {}, C = {}, process = {env: {}}, path = {join: function(){ return arguments[arguments.length - 1]; }, resolve: function(x){ return x; }};
   function req(n){ n = String(n).split('/').pop(); if (n === 'path') return path; if (n === 'sim.js') return A; if (!(n in C)){ var m = {exports: {}}; C[n] = m.exports; M[n](m, m.exports); C[n] = m.exports; } return C[n]; }
