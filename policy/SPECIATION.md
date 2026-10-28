@@ -89,6 +89,21 @@ each species develop its own realistic fighting style. This note is the plan; th
   - Your cats die ~75% of fights whatever they target: 46-68% of their time on big herbivores comes from guard_v1's help /
     intercept intent (the chooser now re-judges those). Refusing giants saves cats (78% -> 61% deaths) but costs you 4-5 pts.
 
+- **Lookahead (Oct 27 night): cat target choice has real headroom.** At each enemy cat decision with 2+ targets, copy the fight
+  (policy/lookahead.js), play each option 15 s, take the best (probes/cat_lookahead.js). Shared dice (oracle): +0.310 ± 0.067.
+  Own dice per branch (fair): +0.195 ± 0.071 (300), **+0.207 ± 0.032 (1,200)**, +0.206 ± 0.070 (300, another draw); you
+  survive 52.7% -> 44.7%, -21.7 s; cat deaths 0.98 -> 0.90; style 0.98, no gate. Behaviour: more stalk-pounces (2.4 -> 3.5 /min),
+  damage 207 -> 287 per fight, more approaches that don't land (fruitless .65 -> .81). It changes 62% of picks with a choice;
+  the heuristic picks the best branch 38%. So the earlier learners failed on credit (one fight result over ~50 decisions),
+  not for lack of better targets.
+  - Imitation (bc_target.js, target-mlp 16 hidden on 29k lookahead decisions): held-out regret 0.438 -> 0.339, but in play
+    +0.016 ± 0.035 and gates fail (idle 5% -> 40%, you as target 20% -> 48%). A commitment window (hold a departure 4 / 10 s)
+    doesn't fix it (-0.03 / -0.02): the net learned 'target the human' without the situations that make it pay. Labels are one
+    noisy 15-s roll each. Next for imitation: denoise (several rolls per branch), DAgger, richer state.
+  - Alternative: run the lookahead itself live (planning cats). Cost ~3 s of CPU per fight (one thread), i.e. ~1% of a
+    5-minute real-time fight in the browser, and deterministic (the branch dice derive from the fight state), so replays and
+    game links still work. Tools that run thousands of fights (pricing, board.js) get ~12x slower for fights with enemy cats.
+
 ## Phases (each measured before the next)
 1. Plumbing: joint (target, intent) hook for every archetype, zero/heuristic policy byte-identical to today
    (`check_identical.js`), features + trait vector, harness tests.

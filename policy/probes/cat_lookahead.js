@@ -53,5 +53,6 @@ Promise.all([...Array(T).keys()].map(k => new Promise(res => { const w = new Wor
   const lk = D.look.reduce((a, r) => ({n: a.n + r.look.n, b: a.b + r.look.branched, c: a.c + r.look.changed}), {n: 0, b: 0, c: 0});
   console.log(`enemy cats, lookahead ${H} s${process.env.FAIR ? ' (fair: own dice per branch)' : ''} vs today, ${N} fresh fights (probe ${+idx || 71}), ${((Date.now() - t0) / 1000).toFixed(0)} s:`);
   console.log(`  goal ${q.diff >= 0 ? '+' : ''}${q.diff.toFixed(3)} ± ${q.se.toFixed(3)} | style ${q.styleB.style.toFixed(2)} [${q.styleB.failed}] | your survival ${(100 * m(D.base.map(r => r.survived))).toFixed(1)}% -> ${(100 * m(D.look.map(r => r.survived))).toFixed(1)}%, time alive ${(m(D.look.map(alive)) - m(D.base.map(alive))).toFixed(1)} s | cat deaths/fight ${m(D.base.map(r => r.deaths)).toFixed(2)} -> ${m(D.look.map(r => r.deaths)).toFixed(2)}`);
+  console.log(`  drift [${q.driftB.join("; ")}]`);
   console.log(`  decisions ${lk.n}, with 2+ targets ${lk.b}, lookahead changed the pick ${lk.c} (${(100 * lk.c / Math.max(1, lk.b)).toFixed(0)}%)`);
 });

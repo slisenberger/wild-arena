@@ -45,6 +45,7 @@ function choose(w, u, policy){
   if (u.forceT && w.t < u.forceUntil){ const k = opts.findIndex(o => o.kind === 'target' && o.t === u.forceT); if (k >= 0){ apply(u, opts[k]); return; } } // a lookahead branch holds its tried target
   const teach = policy.teacher || log || stats || lin || look ? F.heuristicIndex(w, u, opts) : -1;
   const a = policy.teacher ? teach : look ? policy.pick(w, u, opts, teach) : lin ? pickLin(w, policy, X, teach, u) : M.argmax(policy, X);
+  if (policy.commit && a !== teach && opts[a] && opts[a].kind === 'target'){ u.forceT = opts[a].t; u.forceUntil = w.t + policy.commit; } // P.commit s: a learned departure from the heuristic is held that long (follow-through, as in the lookahead's branches)
   if (stats){ stats.n = (stats.n || 0) + 1; if (a === teach) stats.agree = (stats.agree || 0) + 1; }
   if (log && opts.length > 1) log.push({X, y: teach, a, sp: u.s.id});
   apply(u, opts[a]);
