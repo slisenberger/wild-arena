@@ -9,14 +9,14 @@
 const path = require('path');
 const A = require(process.env.SIM ? path.resolve(process.env.SIM) : path.join(__dirname, '..', 'sim.js'));
 const L = require('./lookahead.js');
-const FP = require('./features_plus.js'), G = require('./guard_features.js'), TR = require('./traits.js'), TM = require('./target_model.js');
+const FP = require('./features_plus.js'), FR = require('./features_rich.js'), G = require('./guard_features.js'), TR = require('./traits.js'), TM = require('./target_model.js');
 function score(w){
   let pl = 0, pm = 0, el = 0, em = 0;
   for (const u of w.units){ const lost = u.maxhp - Math.max(0, u.state === 'dead' ? 0 : u.hp); if (u.side === 'E'){ el += lost; em += u.maxhp; } else { pl += lost; pm += u.maxhp; } }
   const H = w.human; return 2 * (H.maxhp - Math.max(0, H.state === 'dead' ? 0 : H.hp)) / H.maxhp + pl / pm - el / em + (H.state === 'dead' ? 2 : 0);
 }
 function makePlanner(o){
-  o = Object.assign({H: 8, max: 3, cool: 2, rolls: 1, data: null, learner: null, real: 0, arch: 'cat', side: 'E', only: null, wide: false}, o || {});
+  o = Object.assign({H: 8, max: 3, cool: 2, rolls: 1, data: null, learner: null, real: 0, feat: null, arch: 'cat', side: 'E', only: null, wide: false}, o || {});
   // arch / side: whose choice is planned. 'guard' / 'P' = your guards (policy.js chooseGuard; scored for your side; only 'cat' =
   // just your big cats; wide = no leash); data / learner use features_plus for enemies and guard_features for your guards
   // real: a realism-aware teacher: each branch's score loses real x (the share of its H seconds this cat spent idle, i.e. slow and
@@ -49,7 +49,7 @@ function makePlanner(o){
       }
       sc.push(v); if (v > bs + 1e-9){ bs = v; best = i; }
     }
-    const feats = () => (o.arch === 'guard' ? G.extract(w, u, o.wide) : FP.extract(w, u)).X;
+    const feats = () => (o.feat === 'rich' ? FR.extract(w, u, {wide: o.wide}) : o.arch === 'guard' ? G.extract(w, u, o.wide) : FP.extract(w, u)).X;
     if (o.data){ const X = feats(), r4 = x => Math.round(x * 1e4) / 1e4; o.data.push({sp: u.s.id, tr: TR.traits(u.s), X: tries.map(i => X[i].map(r4)), s: sc.map(r4), teach: tries.indexOf(teach)}); }
     if (best !== teach) P.changed++;
     u.planT = w.t; u.planTo = opts[best] && opts[best].t;

@@ -17,14 +17,14 @@ const ZW = {kind: 'target-lin', v: 1, nin: 200, margin: .25, wt: new Array(200).
 if (!isMainThread){
   const {jobs, arch, o, learner} = workerData, out = [];
   for (const j of jobs){
-    if (j.k === 'collect'){ const g = arch === 'guard', data = [], W = PL.makePlanner({H: o.H, max: o.max, cool: 0, rolls: o.rolls, data, learner, real: o.real, arch, side: g ? 'P' : 'E', only: g ? o.only : null, wide: g && o.wide}); R.runFight(j.f, W, arch); out.push({k: j.k, i: j.i, data}); }
+    if (j.k === 'collect'){ const g = arch === 'guard', data = [], W = PL.makePlanner({H: o.H, max: o.max, cool: 0, rolls: o.rolls, data, learner, real: o.real, feat: o.feat === 'rich' ? 'rich' : null, arch, side: g ? 'P' : 'E', only: g ? o.only : null, wide: g && o.wide}); R.runFight(j.f, W, arch); out.push({k: j.k, i: j.i, data}); }
     else out.push({k: j.k, i: j.i, rec: R.runFight(j.f, j.k === 'base' ? Object.assign({}, ZW, arch === 'guard' ? {only: o.only} : {}) : j.W, arch)});
   }
   parentPort.postMessage(out); return;
 }
 const CMDS = ['init', 'run', 'report'], av = process.argv.slice(2), cmd = CMDS.includes(av[0]) ? av.shift() : 'run', [file, ...rest] = av;
 const opt = Object.fromEntries(rest.filter(a => a.startsWith('--')).map(a => { const [k, v] = a.slice(2).split('='); return [k, v === undefined ? true : isNaN(+v) ? (v === 'true' ? true : v === 'false' ? false : v) : +v]; }));
-const DEF = {arch: 'cat', only: 'cat', wide: true, rounds: 6, fights: 600, rolls: 3, H: 8, max: 3, real: 0, nh: 32, epochs: 20, lr: .002, val: 800, test: 1200, seed: 1, styleThr: .9, dagger: true, threads: Math.min(8, os.cpus().length)};
+const DEF = {arch: 'cat', only: 'cat', wide: true, loss: 'ce', rounds: 6, fights: 600, rolls: 3, H: 8, max: 3, real: 0, nh: 32, epochs: 20, lr: .002, val: 800, test: 1200, seed: 1, styleThr: .9, dagger: true, threads: Math.min(8, os.cpus().length)};
 const DATA = file + '.data.jsonl.gz';
 const log = m => { console.log(m); fs.appendFileSync(file + '.log', m + '\n'); };
 const save = s => { fs.writeFileSync(file + '.tmp', JSON.stringify(s)); fs.renameSync(file + '.tmp', file); };
@@ -38,9 +38,9 @@ if (cmd === 'report'){ if (!s) process.exit(1); const b = s.best, t = s.test;
 if (cmd === 'init'){
   if (s) throw new Error(file + ' exists');
   const c = Object.assign({}, DEF, opt, {trainer: 'expert', target: true, mode: 'linear', withLive: true}); const g = c.arch === 'guard';
-  Object.assign(c, g ? {feat: null, goal: null, spec: false} : {feat: 'plus', goal: 'checkmate', spec: true, only: null, wide: false}); // your guards (arch guard): guard_features, the guard goal, only / wide; enemy cats: features_plus, checkmate
-  const FX = g ? require('./guard_features.js') : require('./features_plus.js');
-  const P0 = Object.assign({}, require('./target_model.js').mlp(FX.DIM + require('./traits.js').DIM, c.nh, .25, c.seed * 31 + 7, true), g ? {only: c.only, wide: !!c.wide} : {feat: 'plus'});
+  Object.assign(c, g ? {feat: opt.feat === 'rich' ? 'rich' : null, goal: null, spec: false} : {feat: opt.feat === 'rich' ? 'rich' : 'plus', goal: 'checkmate', spec: true, only: null, wide: false}); // --feat=rich: + features_rich.js // your guards (arch guard): guard_features, the guard goal, only / wide; enemy cats: features_plus, checkmate
+  const FRm = require('./features_rich.js'), FX = c.feat === 'rich' ? {DIM: g ? FRm.DIM_G : FRm.DIM_E, NAMES: g ? FRm.NAMES_G : FRm.NAMES_E} : g ? require('./guard_features.js') : require('./features_plus.js');
+  const P0 = Object.assign({}, require('./target_model.js').mlp(FX.DIM + require('./traits.js').DIM, c.nh, .25, c.seed * 31 + 7, true), g ? {only: c.only, wide: !!c.wide} : {}, c.feat ? {feat: c.feat} : {});
   s = {format: 'wild-arena/expert-iter', simHash: R.simHash(), harnessHash: R.harnessHash(), config: c, features: FX.NAMES,
     P0, theta: P0.theta.slice(), round: 0, phase: 'collect', dataN: 0, best: {theta: P0.theta.slice(), round: -1, val: 0, from: 'init (= today\'s cats)'}, history: [], test: null};
   save(s); log(`[init] ${file}: ${JSON.stringify(c)}`); process.exit(0);
@@ -48,7 +48,7 @@ if (cmd === 'init'){
 if (!s) throw new Error('no state ' + file + ' (run init first)');
 if (s.simHash !== R.simHash() && !process.env.ALLOW_ENGINE_MISMATCH) throw new Error(`${file} was made with sim ${s.simHash}; this checkout has ${R.simHash()}`);
 const c = s.config, T = +opt.threads || c.threads, HOURS = +opt.hours || 0, T0 = Date.now(), fo = {arch: c.arch, seed: c.seed, withLive: true, goal: c.goal, spec: c.spec, withCat: c.arch === 'guard' && c.only === 'cat'};
-const W = theta => Object.assign({}, s.P0, {theta: theta.slice(), targetsOnly: true}); // the net only re-ranks targets (its labels only compare targets)
+const W = theta => Object.assign({}, s.P0, {theta: theta.slice(), targetsOnly: true}, s.margin != null ? {margin: s.margin} : {}); // --loss=adv: the learned switching threshold // the net only re-ranks targets (its labels only compare targets)
 function pool(jobs, extra){
   return Promise.all([...Array(T).keys()].map(k => new Promise((res, rej) => { const w = new Worker(__filename, {workerData: Object.assign({jobs: jobs.filter((_, q) => q % T === k), arch: c.arch, o: c}, extra || {})}); w.on('message', res); w.on('error', rej); }))).then(p => p.flat());
 }
@@ -70,20 +70,20 @@ const timeUp = () => HOURS && Date.now() - T0 > HOURS * 3600e3;
       log(`[round ${r} collect] ${recs.length} decisions from ${fights.length} fights (${learner ? 'the network plays' : 'the lookahead plays'}), ${D.length} total, ${((Date.now() - t0) / 1000).toFixed(0)} s`);
     }
     if (s.phase === 'train'){
-      const t0 = Date.now(), res = BC.train(readData(), {nh: c.nh, epochs: c.epochs, lr: c.lr, seed: c.seed + r, feat: c.feat, only: c.arch === 'guard' ? c.only : null, wide: c.arch === 'guard' && c.wide}, m => { if (/decisions|\[ep (0|9|19|29)\]/.test(m)) log('  ' + m); }, r > 0 ? {theta: s.theta} : null);
-      s.theta = res.P.theta; s.phase = 'val'; save(s);
-      log(`[round ${r} train] held-out regret ${res.best.regret.toFixed(4)} (heuristic ${res.base.regret.toFixed(4)}), ${((Date.now() - t0) / 1000).toFixed(0)} s`);
+      const t0 = Date.now(), res = (c.loss === 'adv' ? BC.trainAdv : BC.train)(readData(), {nh: c.nh, epochs: c.epochs, lr: c.lr, seed: c.seed + r, feat: c.feat, only: c.arch === 'guard' ? c.only : null, wide: c.arch === 'guard' && c.wide}, m => { if (/decisions|\[ep (0|9|19|29)\]/.test(m)) log('  ' + m); }, r > 0 ? {theta: s.theta} : null);
+      s.theta = res.P.theta; if (c.loss === 'adv') s.margin = res.P.margin; s.phase = 'val'; save(s);
+      log(c.loss === 'adv' ? `[round ${r} train] held-out gain ${res.best.gain.toFixed(4)} of ${res.oracle.toFixed(4)}, threshold ${res.P.margin}, ${((Date.now() - t0) / 1000).toFixed(0)} s` : `[round ${r} train] held-out regret ${res.best.regret.toFixed(4)} (heuristic ${res.base.regret.toFixed(4)}), ${((Date.now() - t0) / 1000).toFixed(0)} s`);
     }
     if (s.phase === 'val'){
       const v = await evalW(s.theta, 'val', r, c.val), ok = !v.gates.length && v.style >= c.styleThr, better = ok && v.diff > (s.best.val || 0); // must beat today's cats (val 0) and every earlier clean round
       s.history.push(Object.assign({round: r, dataN: s.dataN}, v));
-      if (better) s.best = {theta: s.theta.slice(), round: r, val: v.diff, from: `round ${r}`};
+      if (better) s.best = {theta: s.theta.slice(), round: r, val: v.diff, from: `round ${r}`, margin: s.margin};
       log(`[round ${r} val] network vs today's cats on ${v.n} fresh fights: ${v.diff >= 0 ? '+' : ''}${v.diff.toFixed(3)} ± ${v.se.toFixed(3)} | style ${v.style.toFixed(3)} gates [${v.gates}] drift [${v.drift.join('; ')}] | your survival ${(100 * v.surv).toFixed(1)} pts${better ? '  -> new best' : ok ? '' : '  (not clean)'}`);
       s.round++; s.phase = 'collect'; save(s);
     }
   }
   if (!s.test){
-    const t = await evalW(s.best.theta, 'test', 0, c.test); s.test = t; s.phase = 'done'; save(s);
+    s.margin = s.best.margin != null ? s.best.margin : s.P0.margin; const t = await evalW(s.best.theta, 'test', 0, c.test); // the init (today's game) keeps its own margin s.test = t; s.phase = 'done'; save(s);
     log(`[test] best (${s.best.from}) vs today's cats on ${t.n} held-out fights: ${t.diff >= 0 ? '+' : ''}${t.diff.toFixed(3)} ± ${t.se.toFixed(3)} (${Math.abs(t.diff) > 2 * t.se ? 'beyond' : 'within'} 2 SE) | style ${t.style.toFixed(3)} gates [${t.gates}] drift [${t.drift.join('; ')}] | your survival ${(100 * t.surv).toFixed(1)} pts`);
   }
 })().catch(e => { console.error(e); process.exit(1); });

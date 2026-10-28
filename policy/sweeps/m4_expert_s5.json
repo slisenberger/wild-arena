@@ -1,0 +1,21 @@
+{
+ "note": "Milestone 4 expert iteration, round 5 (Oct 28): rich decision inputs (features_rich.js: time to contact, kill race, facing / flank, who the target is after and its ETA to you, allies on it, foes around it) because the guard features carried no signal about which target pays (|r| <= .017) while the lookahead gains +0.203 for your cats; gain regression (--loss=adv) with a learned switching threshold; targetsOnly. Your cats (3 / 5 rolls), enemy cats, all your guards.",
+ "runs": [
+  {
+   "name": "eir_gcat_r3",
+   "args": "--trainer=expert --feat=rich --loss=adv --rounds=6 --fights=900 --H=8 --max=3 --nh=32 --epochs=8 --lr=.002 --val=800 --test=1200 --dagger=true --arch=guard --only=cat --wide=true --rolls=3 --seed=2701"
+  },
+  {
+   "name": "eir_gcat_r5",
+   "args": "--trainer=expert --feat=rich --loss=adv --rounds=6 --fights=900 --H=8 --max=3 --nh=32 --epochs=8 --lr=.002 --val=800 --test=1200 --dagger=true --arch=guard --only=cat --wide=true --rolls=5 --seed=2702"
+  },
+  {
+   "name": "eir_cat_r3",
+   "args": "--trainer=expert --feat=rich --loss=adv --rounds=6 --fights=900 --H=8 --max=3 --nh=32 --epochs=8 --lr=.002 --val=800 --test=1200 --dagger=true --arch=cat --rolls=3 --seed=2703"
+  },
+  {
+   "name": "eir_gall_r3",
+   "args": "--trainer=expert --feat=rich --loss=adv --rounds=6 --fights=900 --H=8 --max=3 --nh=32 --epochs=8 --lr=.002 --val=800 --test=1200 --dagger=true --arch=guard --only= --wide=true --rolls=3 --seed=2704"
+  }
+ ]
+}
