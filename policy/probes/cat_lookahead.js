@@ -24,12 +24,17 @@ function lookPolicy(H){
     const others = tg.filter(i => i !== teach).sort((i, j) => A._internals.dist(u, opts[i].t) - A._internals.dist(u, opts[j].t)).slice(0, 3);
     const tries = (teach >= 0 ? [teach] : []).concat(others), ui = w.units.indexOf(u);
     let best = teach, bs = -1e9, sc = []; P.branched++;
+    const K = +process.env.ROLLS || 1; // ROLLS=k: average k rolls per option (needs FAIR; less noisy labels)
     for (const i of tries){
-      const c = L.cloneWorld(w, {policy: {byArch: {cat: {teacher: true}}}}), cu = c.units[ui];
-      if (process.env.FAIR) c.R.seek((w.R.state() ^ Math.imul(P.n * 97 + i + 1, 0x9e3779b9)) >>> 0); // FAIR=1: each branch rolls its own dice (no knowledge of the fight's future)
-      if (opts[i].kind === 'target'){ cu.forceT = c.units[w.units.indexOf(opts[i].t)]; cu.forceUntil = c.t + H; cu.target = cu.forceT; cu.state = 'engage'; cu.carcass = null; }
-      const t1 = c.t + H; while (!c.over && c.t < t1) A.step(c);
-      const v = score(c); sc.push(v); if (v > bs + 1e-9){ bs = v; best = i; }
+      let v = 0;
+      for (let k = 0; k < K; k++){
+        const c = L.cloneWorld(w, {policy: {byArch: {cat: {teacher: true}}}}), cu = c.units[ui];
+        if (process.env.FAIR) c.R.seek((w.R.state() ^ Math.imul(P.n * 97 + i + 1 + 7919 * k, 0x9e3779b9)) >>> 0); // FAIR=1: each branch rolls its own dice (no knowledge of the fight's future)
+        if (opts[i].kind === 'target'){ cu.forceT = c.units[w.units.indexOf(opts[i].t)]; cu.forceUntil = c.t + H; cu.target = cu.forceT; cu.state = 'engage'; cu.carcass = null; }
+        const t1 = c.t + H; while (!c.over && c.t < t1) A.step(c);
+        v += score(c) / K;
+      }
+      sc.push(v); if (v > bs + 1e-9){ bs = v; best = i; }
     }
     if (best !== teach) P.changed++;
     if (P.data){ const X = FP.extract(w, u).X, r4 = x => Math.round(x * 1e4) / 1e4; // same option order as opts (features_plus extends features.js)
