@@ -29,6 +29,12 @@ Each item has a recommendation; reply with a number and "yes", or your own call.
    rares can now turn up on the tundra, so each one is rarer: a themed rare pool (Ice Age / Cretaceous) is an option. (e) The reprice drops the hyena clan to $100, so progressive round 1
    (the $100 round) gets easier: bot first-try 90% (target ~80%), completion 18% (in range). Left for the `prog-ux` work.
 
+- Oct 28 (built on `guard-target-ship`, not merged; owner to merge): **your guards get learned target choice** (`guard_target_m2`:
+  you survive +6 to +9 pts more often, guards die less and don't range further from you) and **enemy chargers get the stronger
+  species-aware scorer** (`charger_target_m1`, beats a1 by +0.073 ± 0.017: chargers come for you a bit more, you −2 pts).
+  Together the game got easier (median best team 96% at the old prices), so it was repriced at 19 s/$100 with the board total
+  kept at $2,600 (88%, typical team 165 s) and progressive retuned (round 1 board back to 12 / $1,200, top-ups
+  400/400/400/350/400/650: round 1 77%, 23.4% complete; START $400 kept). Recommendation: merge.
 - Oct 27 (night): **learned target choice for chargers ships** (owner: "I am fine with herbivores finishing off enemies ...
   teams *are* known and goals *are* shared"; the two-teams premise in CLAUDE.md). `charger_target_a1` is live on top of
   `charger_v1` movement (branch `charger-target`, merged with main a70aae9). Re-check on the merged engine: +0.094 ± 0.013 goal

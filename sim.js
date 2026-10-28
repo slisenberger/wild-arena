@@ -15,19 +15,19 @@ const ANIMALS = [
   traits:['Rideable: you sit 3.2 m up, and its trunk reaches any rider','Matriarch: sometimes a mock charge, often a real one with no warning; it tramples','Mobs predators on sight; momentum hits scatter anything smaller']},
  {id:'rhino', name:'White Rhino', abbr:'RHI', price:400, mass:2300, spd:12.5, dmg:180, cd:1.4, armor:.55, reach:2.6, stam:15, heat:.8, cold:.55, water:0, swim:1, aggr:.3, flee:.25, corner:1.3, pred:false, charge:true, vision:18, tags:[],
   traits:['Placid two-tonne grazer: slow to anger, and it gives way to elephants','Armor-thick hide (only the croc is tougher) and a horn charge that cannot steer','Poor eyesight: it charges what it hears or smells as much as what it sees']},
- {id:'hippo', name:'Hippo', abbr:'HIP', price:400, mass:2000, spd:8, dmg:230, cd:1.3, armor:.55, reach:2.5, stam:8, heat:.5, cold:.4, water:.9, swim:2.5, aggr:.9, flee:.1, corner:1.3, pred:false, charge:true, vision:25, tags:['territorial','sunburn','submerges'],
+ {id:'hippo', name:'Hippo', abbr:'HIP', price:300, mass:2000, spd:8, dmg:230, cd:1.3, armor:.55, reach:2.5, stam:8, heat:.5, cold:.4, water:.9, swim:2.5, aggr:.9, flee:.1, corner:1.3, pred:false, charge:true, vision:25, tags:['territorial','sunburn','submerges'],
   traits:['Deadliest large animal in Africa: holds the river and charges out of it','In water: faster, cooler, territorial, and hard to spot until it surfaces','On dry land: sunburns and overheats']},
  {id:'giraffe', name:'Giraffe', abbr:'GIR', price:200, mass:1200, spd:15, dmg:150, cd:1.8, armor:.2, reach:2.5, stam:25, heat:1, cold:.5, water:-.6, swim:0.8, aggr:.2, flee:.5, corner:1.4, pred:false, charge:false, vision:60, tags:['lookout','kicker'],
   traits:['Lookout: your whole team spots threats 50% farther away','Sees lions a kilometre off, and one kick can kill one','Only kicks what comes at it; never starts a fight']},
- {id:'polar', name:'Polar Bear', abbr:'PBR', price:200, mass:500, spd:11, dmg:145, cd:1.0, armor:.4, reach:2.1, stam:12, heat:.4, cold:1, water:.85, swim:3, aggr:.85, flee:.2, corner:1.3, pred:true, charge:false, vision:30, tags:['scavenger','aquaStalk','snowCamo'], prey:{human:1.6},
+ {id:'polar', name:'Polar Bear', abbr:'PBR', price:100, mass:500, spd:11, dmg:145, cd:1.0, armor:.4, reach:2.1, stam:12, heat:.4, cold:1, water:.85, swim:3, aggr:.85, flee:.2, corner:1.3, pred:true, charge:false, vision:30, tags:['scavenger','aquaStalk','snowCamo'], prey:{human:1.6},
   traits:['Largest land carnivore, actively hunts humans; 10 cm of fat under dense fur blunts bites and claws','Aquatic stalk: hidden under water until 7 m, then surges out for an ambush strike (x1.7)','Overheats fast anywhere warm, but swimming cools it; dominant in snow, and white on white it is hard to spot until 15 m']},
  {id:'croc', name:'Saltwater Crocodile', abbr:'CRO', price:100, mass:1000, spd:4.5, dmg:220, cd:1.2, armor:.6, reach:2.2, stam:5, heat:1.1, cold:.2, water:1, swim:5, aggr:.8, flee:.15, corner:1.2, pred:true, charge:false, vision:20, tags:['deathroll','waterbound','ambush'], prey:{human:1.3},
   traits:['Strongest bite measured: grabs and death-rolls in water','At home in water: almost invisible until 7 m. On land it is slow and tires fast, but the bite is just as deadly','Cold-blooded: never dealt on the tundra']},
- {id:'buffalo', name:'Cape Buffalo', abbr:'BUF', price:300, mass:750, spd:15, dmg:150, cd:1.2, armor:.4, reach:2.3, stam:20, heat:.9, cold:.6, water:.2, swim:1.5, aggr:.7, flee:.25, corner:1.5, pred:false, charge:true, vision:28, tags:['herd','vindictive','lionKiller'], rivals:{lion:3, tiger:1.8, hyena:1.6},
+ {id:'buffalo', name:'Cape Buffalo', abbr:'BUF', price:200, mass:750, spd:15, dmg:150, cd:1.2, armor:.4, reach:2.3, stam:20, heat:.9, cold:.6, water:.2, swim:1.5, aggr:.7, flee:.25, corner:1.5, pred:false, charge:true, vision:28, tags:['herd','vindictive','lionKiller'], rivals:{lion:3, tiger:1.8, hyena:1.6},
   traits:["'Black death': a wounded buffalo circles back for whoever hurt it, for a long time",'+50% damage against lions, tigers and hyenas','Without a herd, it fights alone']},
- {id:'bison', bluffP:0.3, name:'American Bison', abbr:'BIS', price:200, mass:900, spd:15, dmg:140, cd:1.3, armor:.35, reach:2.3, stam:40, heat:.75, cold:1, water:.2, swim:1.5, aggr:.5, flee:.3, corner:1.8, pred:false, charge:true, vision:28, tags:['herd','standsGround','bluff'],
+ {id:'bison', bluffP:0.3, name:'American Bison', abbr:'BIS', price:300, mass:900, spd:15, dmg:140, cd:1.3, armor:.35, reach:2.3, stam:40, heat:.75, cold:1, water:.2, swim:1.5, aggr:.5, flee:.3, corner:1.8, pred:false, charge:true, vision:28, tags:['herd','standsGround','bluff'],
   traits:['Injures more Yellowstone visitors than any other animal','Tail up, mock charge, then the real thing; spins on a dime','Huge stamina; at home in snow']},
- {id:'grizzly', name:'Grizzly Bear', abbr:'GRZ', bluffP:.75, price:100, mass:320, spd:15, dmg:125, cd:.9, armor:.35, reach:2, stam:15, heat:.65, cold:.95, water:.3, swim:1.8, aggr:.6, flee:.25, corner:1.3, pred:true, charge:false, vision:30, hpMul:1.2, tags:['scavenger','bluff'], prey:{human:.5}, rivals:{polar:1.3, wolf:1.3, cougar:1.4},
+ {id:'grizzly', name:'Grizzly Bear', abbr:'GRZ', bluffP:.75, price:200, mass:320, spd:15, dmg:125, cd:.9, armor:.35, reach:2, stam:15, heat:.65, cold:.95, water:.3, swim:1.8, aggr:.6, flee:.25, corner:1.3, pred:true, charge:false, vision:30, hpMul:1.2, tags:['scavenger','bluff'], prey:{human:.5}, rivals:{polar:1.3, wolf:1.3, cougar:1.4},
   traits:['Very hard to kill (+20% durability)','Charges at 56 km/h, often a bluff; if it does not stop, it mauls','Takes kills from cougars and wolves']},
  {id:'tiger', name:'Bengal Tiger', abbr:'TIG', latchMax:4, price:100, mass:220, spd:17, dmg:125, cd:.9, armor:.1, reach:2, stam:6, heat:.75, cold:.65, water:.5, swim:2, aggr:.7, flee:.3, corner:1.3, pred:true, latch:true, charge:false, vision:30, tags:['catSense','ambush'], rivals:{leopard:1.6, cougar:1.6, jaguar:1.4}, prey:{human:1.4},
   traits:['Throat hold: latches onto prey up to 2.5x its mass','Ambush first strike (x1.7, x2 in forest)','Can leap onto an elephant (3.6 m)']},
@@ -44,9 +44,9 @@ const ANIMALS = [
  {id:'hyena', name:'Spotted Hyena', abbr:'HYE', price:100, mass:60, spd:16, dmg:60, cd:.8, armor:.1, reach:1.6, stam:50, heat:.9, cold:.6, water:.1, swim:1.5, aggr:.55, flee:.45, corner:1.3, pred:true, charge:false, vision:35, pierce:.3, hpMul:1.3, tags:['scavenger','boneCrush','pack'], prey:{human:1.0}, rivals:{lion:1.3},
   traits:['Bone-crushing bite ignores 30% of armor and cracks bone: every bite leaves a limp that never wears off (up to -30% speed), and it runs lamed prey down','Tough (+30% durability) and tireless: a clan runs prey down','Clan hunter, not a scavenger: kills most of its own food and eats fast']},
  // ---- added Oct 2026 (no portrait yet: shown as a lettered token) ----
- {id:'blackrhino', bluffP:0.3, name:'Black Rhino', abbr:'BRH', price:300, mass:1200, spd:15, swim:1, dmg:160, cd:1.3, armor:.5, reach:2.3, stam:12, heat:.8, cold:.5, water:0, aggr:.8, flee:.1, corner:1.4, pred:false, charge:true, vision:15, tags:['blindCharger','bluff'],
+ {id:'blackrhino', bluffP:0.3, name:'Black Rhino', abbr:'BRH', price:200, mass:1200, spd:15, swim:1, dmg:160, cd:1.3, armor:.5, reach:2.3, stam:12, heat:.8, cold:.5, water:0, aggr:.8, flee:.1, corner:1.4, pred:false, charge:true, vision:15, tags:['blindCharger','bluff'],
   traits:['The irritable rhino: half the weight of a white rhino, twice the temper','Charges anything that moves within 18 m, though some charges veer off at the last moment','Hooked lip, sharp front horn, turns quickly for a rhino']},
- {id:'bull', name:'Fighting Bull', abbr:'TOR', price:200, mass:550, spd:15.5, swim:1.5, dmg:150, cd:1.2, armor:.25, reach:2.2, stam:14, heat:.8, cold:.7, water:.2, aggr:.95, flee:.1, corner:1.4, pred:false, charge:true, vision:25, tags:['bred','chasesMovement'],
+ {id:'bull', name:'Fighting Bull', abbr:'TOR', price:100, mass:550, spd:15.5, swim:1.5, dmg:150, cd:1.2, armor:.25, reach:2.2, stam:14, heat:.8, cold:.7, water:.2, aggr:.95, flee:.1, corner:1.4, pred:false, charge:true, vision:25, tags:['bred','chasesMovement'],
   traits:['Toro bravo: bred for centuries to charge, it never needs provoking','Charges whatever moves, then turns fast and comes back','Tires in a long fight']},
  {id:'moose', name:'Moose', abbr:'MOO', price:200, mass:600, spd:15.5, swim:2.5, dmg:140, cd:1.0, armor:.15, reach:2.2, stam:30, heat:.5, cold:1, water:.6, aggr:.5, flee:.3, corner:1.5, pred:false, charge:true, vision:25, tags:['standsGround','stomp'],
   traits:['Injures more people than bears do in Alaska','Stands its ground and stomps: front hooves rain down on anything small or knocked down','Long legs: at home in deep snow, a strong swimmer; suffers in heat']},
@@ -56,7 +56,7 @@ const ANIMALS = [
   traits:['Fearless once fighting: its morale never breaks; wary of big predators, it picks fights with its own size','Musk: a predator that gets hold of it gets a blast from its stink glands and reels away (once every 12 s)','Thick loose skin: it twists out of holds, and its bites on the legs keep rattling whatever it pesters']},
  {id:'triceratops', name:'Triceratops', abbr:'TRI', price:800, mass:8000, spd:8, swim:1.2, dmg:300, cd:1.5, armor:.5, reach:3.2, stam:15, heat:.8, cold:.6, water:.3, aggr:.6, flee:.1, corner:1.3, pred:false, charge:true, vision:25, rare:true, tags:['hatesPredators','giant'],
   traits:['Rare: only turns up on the odd board','Eight tonnes, a bony frill and two 1 m brow horns','Rideable 3 m up; charges like a rhino the size of an elephant']},
- {id:'mammoth', bluffP:0.35, name:'Woolly Mammoth', abbr:'MAM', price:600, mass:6000, spd:7, swim:1.5, dmg:260, cd:1.6, armor:.4, reach:3.6, stam:20, heat:.4, cold:1, water:.5, aggr:.55, flee:.15, corner:1.3, pred:false, charge:true, vision:40, rare:true, tags:['hatesPredators','giant','sweep','bluff'],
+ {id:'mammoth', bluffP:0.35, name:'Woolly Mammoth', abbr:'MAM', price:500, mass:6000, spd:7, swim:1.5, dmg:260, cd:1.6, armor:.4, reach:3.6, stam:20, heat:.4, cold:1, water:.5, aggr:.55, flee:.15, corner:1.3, pred:false, charge:true, vision:40, rare:true, tags:['hatesPredators','giant','sweep','bluff'],
   traits:['Rare: only turns up on the odd board','An elephant in a fur coat: shrugs off the cold, wilts in the heat','Huge curved tusks sweep everything in reach; rideable 3.2 m up']},
  {id:'blackbear', name:'Black Bear', abbr:'BBR', bluffP:.7, bluffHumanP:.1, price:100, mass:120, spd:13.5, swim:1.8, dmg:75, cd:.9, armor:.25, reach:1.8, stam:15, heat:.7, cold:.9, water:.4, aggr:.35, flee:.4, corner:1.6, pred:true, charge:false, vision:25, climb:true, tags:['scavenger','bluff','repeatBluff'], prey:{human:.4},
   traits:['Bouncer: huffs, pops its jaws and bluff-charges animals up to three times before it fights (a person it hunts for real); anything its size it rattles is run off','Bolts up the nearest tree when it is in trouble','Fights hard when cornered']},
@@ -70,9 +70,9 @@ const ANIMALS = [
   traits:['Rare: Smilodon fatalis, the Ice Age sabre-tooth (260 kg)','Pins prey with huge forearms, then one killing stab that leaves it bleeding','Fragile sabres: stabbing armor or prey that isn\'t held can snap a canine']},
  // ---- added Oct 27, 2026 (research/mid_tier_candidates.md). habitat = the maps it is dealt on, with a deal weight each
  // (absent = every map, weight 1). The musk ox comes only as a herd (dealWeight 0: the lone form is never dealt).
- {id:'muskox', name:'Musk Ox', abbr:'MOX', price:100, mass:285, spd:11, swim:1.2, dmg:100, cd:1.1, armor:.35, reach:2, stam:15, heat:.3, cold:1, water:.1, aggr:.45, flee:.3, corner:1.6, pred:false, charge:true, vision:25, dealWeight:0, habitat:{tundra:1.5}, tags:['herd','standsGround','ring'],
+ {id:'muskox', name:'Musk Ox', abbr:'MOX', price:200, mass:285, spd:11, swim:1.2, dmg:100, cd:1.1, armor:.35, reach:2, stam:15, heat:.3, cold:1, water:.1, aggr:.45, flee:.3, corner:1.6, pred:false, charge:true, vision:25, dealWeight:0, habitat:{tundra:1.5}, tags:['herd','standsGround','ring'],
   traits:['Tundra only: built for the Arctic, it cooks anywhere warm','The living wall: against one predator the herd lines up shoulder to shoulder in front of you; against several it rings you, horns out','One ox at a time dashes out at a predator that comes close, then backs into its place; bears and anything twice its size break the ring']},
- {id:'gaur', name:'Gaur', abbr:'GAU', price:400, mass:1200, spd:12, swim:1.5, dmg:170, cd:1.3, armor:.4, reach:2.4, stam:18, heat:.75, cold:.6, water:.2, aggr:.3, flee:.25, corner:1.5, pred:false, charge:true, vision:25, tags:['placid','facesDown','forestRunner','standsGround'],
+ {id:'gaur', name:'Gaur', abbr:'GAU', price:300, mass:1200, spd:12, swim:1.5, dmg:170, cd:1.3, armor:.4, reach:2.4, stam:18, heat:.75, cold:.6, water:.2, aggr:.3, flee:.25, corner:1.5, pred:false, charge:true, vision:25, tags:['placid','facesDown','forestRunner','standsGround'],
   traits:['The largest wild cattle: a tonne of muscle, slow to anger, very hard to stop once it is','Faces down stalkers: a cat it spots creeping in loses its ambush, and usually gives up and slinks off','A forest animal: it charges through the trees without crashing into them']},
  {id:'walrus', name:'Walrus', abbr:'WAL', price:100, mass:1200, spd:2.5, swim:2.2, dmg:150, cd:1.4, armor:.5, reach:2.2, stam:4, heat:.3, cold:1, water:1, aggr:.5, flee:.2, corner:1.4, pred:false, charge:false, vision:20, habitat:{tundra:2.5}, tags:['territorial','shoreGuard','tuskStab'],
   traits:['Tundra only, and often there: holds the icy lake the way a croc holds a river','Tusk stab: at the water\'s edge or in the water it drives both tusks down (x1.5, half armor) and pins anything up to its own size','10 cm of hide over 15 cm of blubber; on land it hauls itself along slowly']},
@@ -144,7 +144,7 @@ const STYLE = {
 };
 ANIMALS.forEach(a => Object.assign(a, STYLE[a.id]));
 // Pack items: the same species, but one pick brings several. A board deals a species solo or as a pack, never both.
-for (const [id, n, groupName, price, suffix, dealWeight, rare] of [['wolf', 4, 'Wolf pack', 200, null, 3], ['wolf', 6, 'Great wolf pack', 200, 'pack6', .3, true], ['hyena', 4, 'Hyena clan', 100], ['lion', 2, 'Lion coalition', 200], ['buffalo', 3, 'Buffalo herd', 700, 'herd'], ['bison', 3, 'Bison herd', 700, 'herd'], ['muskox', 3, 'Musk ox herd', 400, 'herd']])
+for (const [id, n, groupName, price, suffix, dealWeight, rare] of [['wolf', 4, 'Wolf pack', 100, null, 3], ['wolf', 6, 'Great wolf pack', 200, 'pack6', .3, true], ['hyena', 4, 'Hyena clan', 200], ['lion', 2, 'Lion coalition', 100], ['buffalo', 3, 'Buffalo herd', 700, 'herd'], ['bison', 3, 'Bison herd', 700, 'herd'], ['muskox', 3, 'Musk ox herd', 500, 'herd']])
   ANIMALS.push(Object.assign({}, ANIMALS.find(a => a.id === id), Object.assign({id: id + (suffix || 'pack'), species: id, group: n, groupName, price, dealWeight: dealWeight || 1}, rare ? {rare: true, traits: ['Rare: six wolves hunting as one', 'They circle, test and hamstring until the biggest prey goes down', 'Endless stamina; nervous only if the pack breaks up']} : {})));
 const HUMAN = {id:'human', name:'You', abbr:'YOU', price:0, mass:75, spd:6.5, dmg:6, cd:1, armor:0, reach:1.2, stam:8, heat:1, cold:.6, water:-.5, aggr:0, flee:0, corner:1, pred:false, charge:false, vision:35, swim:1, strikeH:1.8, mountH:0, gait:'human', climb:true, tags:[]};
 const BY_ID = {}; ANIMALS.forEach(a => BY_ID[a.id] = a); BY_ID.human = HUMAN;
@@ -720,6 +720,23 @@ function allyTarget(w, u){
   return bs > .5 * (1 - .5 * dr) ? best : null;
 }
 
+// the enemies allyTarget can consider (seen by your side or within 10 m of a post, the waterbound / shoreGuard rule, the leash):
+// the learned guard chooser's candidates (milestone 4, policy/guard_features.js; a 'wide' scorer drops the leash and uses its
+// own list). Keep its filters in sync with allyTarget's (sideSees = teamSees without the lookout counter)
+function guardCandidates(w, u){
+  const H = w.human, anchor = u.post || H, dr = u.rider ? 0 : drive(u), out = [];
+  const leash = (u.post ? POST_R : u.rider ? 9 : has(u,'guardian') ? 12 : 24) + 30 * dr;
+  for (const e of w.units){
+    if (e.side !== 'E' || !active(e) || (u.repelBy === e && u.repelUntil > w.t)) continue;
+    if (!sideSees(w, e) && !(u.post && dist(u, e) < 10)) continue;
+    if ((has(u,'waterbound') || has(u,'shoreGuard')) && w.wet && distWater(w, e) > 10) continue;
+    const dh = dist(e, anchor), called = !!(w.bn && w.bn.whistle && e.target === H && dist(e, H) < 25 && !u.rider);
+    if (dh > leash && !(u.target === e && dh < leash + 8) && u.grudge !== e && !called) continue;
+    out.push(e);
+  }
+  return out;
+}
+
 function bestCarcass(w, u){
   let best = null, bs = 0;
   for (const c of w.carcasses){
@@ -741,6 +758,7 @@ function chooseTarget(w, u){
     if (u.withdrawn){ u.target = null; u.state = 'withdraw'; return; }
     u.target = allyTarget(w, u);
     if (u.gT && active(u.gT)) u.target = u.gT; // learned guard intent (policy/, cfg.movePolicy.guard): intercept / help / screen target
+    if (w.cfg.policy && w.cfg.policy.byArch && w.cfg.policy.byArch.guard){ if (!INTERNALS.chooseGuard) throw new Error('cfg.policy.byArch.guard needs policy/policy.js'); u.target = INTERNALS.chooseGuard(w, u, w.cfg.policy, u.target); } // learned guard target choice (milestone 4), opt-in: has the last word, over the guard intents' targets too
     u.state = u.target ? 'engage' : 'guard';
     return;
   }
@@ -1863,7 +1881,7 @@ function evadeMove(w, u){
 function defaultMount(team){ let b = null, h = 2.99; for (const id of team){ const m = BY_ID[id].mountH; if (m > h){ h = m; b = id; } } return b; }
 // Measured value of each pick (price_abs.js, seconds of survival): mine = with you vs left off the board,
 // theirs = against you vs off the board (negative = it hurts you). Written by apply_values.js; shown on the cards.
-const MEASURED = {/*MEASURED*/elephant:{mine:125,theirs:-29}, rhino:{mine:58,theirs:-24}, hippo:{mine:44,theirs:-31}, giraffe:{mine:30,theirs:-7}, polar:{mine:29,theirs:-15}, croc:{mine:20,theirs:-6}, buffalo:{mine:36,theirs:-17}, bison:{mine:28,theirs:-10}, grizzly:{mine:20,theirs:-5}, tiger:{mine:13,theirs:-11}, lion:{mine:9,theirs:0}, gorilla:{mine:4,theirs:-10}, jaguar:{mine:4,theirs:-8}, wolf:{mine:0,theirs:-9}, cougar:{mine:13,theirs:2}, hyena:{mine:1,theirs:-10}, blackrhino:{mine:30,theirs:-20}, bull:{mine:22,theirs:-15}, moose:{mine:28,theirs:-11}, ostrich:{mine:9,theirs:2}, honeybadger:{mine:-2,theirs:-5}, triceratops:{mine:196,theirs:-27}, mammoth:{mine:85,theirs:-19}, blackbear:{mine:7,theirs:-1}, leopard:{mine:-1,theirs:-1}, boar:{mine:9,theirs:-2}, giantkangaroo:{mine:8,theirs:-4}, smilodon:{mine:11,theirs:-12}, muskox:{mine:14,theirs:-7}, gaur:{mine:47,theirs:-24}, walrus:{mine:17,theirs:-7}, woollyrhino:{mine:71,theirs:-23}, shortface:{mine:40,theirs:-14}, utahraptor:{mine:18,theirs:-5}, wolfpack:{mine:21,theirs:-12}, wolfpack6:{mine:30,theirs:-9}, hyenapack:{mine:16,theirs:-10}, lionpack:{mine:20,theirs:-10}, buffaloherd:{mine:125,theirs:-38}, bisonherd:{mine:130,theirs:-32}, muskoxherd:{mine:60,theirs:-21}};
+const MEASURED = {/*MEASURED*/elephant:{mine:129,theirs:-28}, rhino:{mine:67,theirs:-12}, hippo:{mine:36,theirs:-24}, giraffe:{mine:22,theirs:-11}, polar:{mine:16,theirs:-6}, croc:{mine:23,theirs:-5}, buffalo:{mine:27,theirs:-16}, bison:{mine:35,theirs:-17}, grizzly:{mine:18,theirs:-14}, tiger:{mine:12,theirs:-7}, lion:{mine:4,theirs:-7}, gorilla:{mine:14,theirs:-7}, jaguar:{mine:1,theirs:-4}, wolf:{mine:5,theirs:-6}, cougar:{mine:4,theirs:1}, hyena:{mine:11,theirs:0}, blackrhino:{mine:32,theirs:-13}, bull:{mine:16,theirs:-8}, moose:{mine:17,theirs:-22}, ostrich:{mine:-4,theirs:-1}, honeybadger:{mine:4,theirs:-5}, triceratops:{mine:183,theirs:-30}, mammoth:{mine:75,theirs:-25}, blackbear:{mine:1,theirs:-2}, leopard:{mine:-4,theirs:-8}, boar:{mine:5,theirs:-10}, giantkangaroo:{mine:6,theirs:-14}, smilodon:{mine:15,theirs:-3}, muskox:{mine:22,theirs:-15}, gaur:{mine:37,theirs:-23}, walrus:{mine:16,theirs:-7}, woollyrhino:{mine:71,theirs:-22}, shortface:{mine:39,theirs:-15}, utahraptor:{mine:13,theirs:-4}, wolfpack:{mine:16,theirs:-6}, wolfpack6:{mine:24,theirs:-9}, hyenapack:{mine:27,theirs:-11}, lionpack:{mine:13,theirs:-14}, buffaloherd:{mine:145,theirs:-29}, bisonherd:{mine:132,theirs:-31}, muskoxherd:{mine:64,theirs:-23}};
 // ---------- board rules ----------
 // Each game deals a board of RULES.board animals from the roster (a rare animal turns up with probability rareP).
 // You spend up to RULES.budget on the board; every board animal you don't pick is on the other side.
@@ -2115,6 +2133,7 @@ function guardDecide(w, u){
   const t = u.target && active(u.target) ? u.target : null;
   const k = u.gIntent = INTERNALS.moveChoose(w, u, t, t ? dist(u, t) : 0, w.cfg.movePolicy.guard, 'guard');
   u.gT = k === 1 ? guardThreat(w, u, false) : k === 2 ? guardThreat(w, u, true) : k === 4 ? guardHelpTarget(w, u) : null;
+  if (u.gT && w.cfg.policy && w.cfg.policy.byArch && w.cfg.policy.byArch.guard) u.gT = INTERNALS.chooseGuard(w, u, w.cfg.policy, u.gT); // learned target choice re-judges the intent's target (milestone 4)
   if (u.gT){ u.target = u.gT; u.state = 'engage'; }
 }
 function guardSpot(u, H, dx, dy, r, near){ // a point r m from you in direction (dx, dy); null when already there
@@ -2149,7 +2168,7 @@ function guardIdleGo(w, u){
   return null;
 }
 const INTERNALS = { choose: null, predCandidates, predatorTarget, bestCarcass, guardsAround, packStrength, packMates, packMate, strength, hostile, canSee, reachable, distWater, inWater, busy, yieldsTo, wound, heightOf, pressure, active, has, dist, sp, social };
-Object.assign(INTERNALS, { herbivoreTarget, herbCandidates, chooseHerb: null, LIVE_TARGET: {}, moveChoose: null, LIVE: {harrier: null, guard: null}, INTENTS, CAT_INTENTS, CAT_GEO, catSoftness, catSofter, headingOf, archetypeOf, drive, locked, GUARD_INTENTS, GUARD_SPACE, guardThreat, guardHelpTarget, sideSees, evasiveMount, zoneAt });
+Object.assign(INTERNALS, { herbivoreTarget, herbCandidates, chooseHerb: null, guardCandidates, chooseGuard: null, allyTarget, POST_R, LIVE_TARGET: {}, moveChoose: null, LIVE: {harrier: null, guard: null}, INTENTS, CAT_INTENTS, CAT_GEO, catSoftness, catSofter, headingOf, archetypeOf, drive, locked, GUARD_INTENTS, GUARD_SPACE, guardThreat, guardHelpTarget, sideSees, evasiveMount, zoneAt });
 function policyChoose(w, u){
   if (!INTERNALS.choose) throw new Error('cfg.policy is set but no policy is loaded: require policy/policy.js');
   INTERNALS.choose(w, u, w.cfg.policy);

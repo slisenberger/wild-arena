@@ -64,6 +64,12 @@ the shipped policies and reprice after:
     linear 'target-lin' scorer on top of `charger_v1` movement, live via `policy/weights/live.json` "target"). Owner approved
     it under the two-teams premise. Re-check on the merged engine +0.094 ± 0.013 (6,000 fresh fights). Bulldozer/kicker/cat target
     runs found nothing clean so far (bulldozer +0.036 ± 0.028, cat +0.055 with a stillLong gate); guard targets on `m4/guard-target`.
+  - [x] **Built Oct 28 (branch `guard-target-ship`, awaiting merge): learned target choice for your guards** (`guard_target_m2`,
+    species-aware 'target-mlp', no leash; re-judges guard_v1's intercept/help targets) **and charger_target_m1** (species-aware,
+    replaces a1). Fresh re-checks on main's engine: guard m2 +0.114 to +0.152 (± 0.017; you survive +6 to +9 pts, +17 to +22 s;
+    guards range no further from you); charger m1 vs a1 +0.073 ± 0.017 pooled (you −2 pts). Repriced (`abs_r19`) and progressive
+    retuned. Next: enemy cats' target choice with the guard situation (two held-out passes didn't replicate fresh so far);
+    a joint target + timing decision for cats.
   **Owner design direction (Oct 27): speciation from broad archetypes + species tuning + open control + a general
   reward.** (1) Move decisions out of engine rules into the policy (target, approach, attack, bluff, retreat, movement),
   keeping physics in the engine (speed, reach, stamina, armor, morale): bodies are what make species differ. (2) One
@@ -390,3 +396,8 @@ Pick for new roles. Top three for design value: **honey badger, moose, Komodo dr
   tundra only). Extend it to the rest of the roster where realism says so (croc/hippo heavier on the river, polar bear and
   mammoth on the tundra, cats and gaur in the forest, savanna big game), re-measure each map's board strength, and decide
   whether the board total should vary by map.
+
+- [ ] **Walrus on your side rarely stays at the water** (found Oct 28 while checking guard targeting): on tundra-lake fights your
+  walrus is > 6 m from water 97% of the time on main (98% with guard_target_m2, so not a regression). Its `shoreGuard`
+  behaviour applies on the other side; as a guard it escorts you overland as a slow armored lump. Decide: should a walrus guard
+  hold the shore near you (realistic) or escort (current)? Measure value either way.

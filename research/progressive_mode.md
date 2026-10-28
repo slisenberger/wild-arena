@@ -112,16 +112,18 @@ Migration (`migration.js`, `migration_bot.js`, `?migration=1`) was removed; old 
 ### Final constants (tuned with the bot)
 | Round | Cap | Board | Total | Money in | Premium enemy |
 |---|---|---|---|---|---|
-| 1 | $100 | 13 | $1,300 | $400 start | – |
-| 2 | $200 | 10 | $1,200 | +$450 | – |
-| 3 | $300 | 10 | $1,500 | +$500 | the round's top band (hippo / buffalo / gaur …) |
-| 4 | $400 | 10 | $1,800 | +$500 | rhino / hippo / musk ox herd |
-| 5 | $400 | 11 | $2,100 | +$450 | rhino / hippo / musk ox herd |
-| 6 | $700 | 11 | $2,300 | +$550 | buffalo or bison herd |
-| 7 | any | 12 | $2,600 | +$800 | herd; a giant (elephant/mammoth/triceratops) is on the board for sale |
+| 1 | $100 | 12 | $1,200 | $400 start | – |
+| 2 | $200 | 10 | $1,200 | +$400 | – |
+| 3 | $300 | 10 | $1,500 | +$400 | the round's top band (hippo / buffalo / gaur …) |
+| 4 | $400 | 10 | $1,800 | +$400 | rhino / hippo / musk ox herd |
+| 5 | $400 | 11 | $2,100 | +$350 | rhino / hippo / musk ox herd |
+| 6 | $700 | 11 | $2,300 | +$400 | buffalo or bison herd |
+| 7 | any | 12 | $2,600 | +$650 | herd; a giant (elephant/mammoth/triceratops) is on the board for sale |
 
-(Current as of Oct 27 night, with the learned charger target choice live, the prehistoric rares and `abs_r18` prices: bot
-round 1 first-try 79%, median run ends in round 6, 21.4% complete. The bot results below are from an earlier tuning.)
+(Current as of Oct 28, with the learned guard target choice (`guard_target_m2`) and `charger_target_m1` live and `abs_r19` prices:
+bot round 1 first-try 77%, median run ends in round 6, 23.4% complete; at the Oct 27 constants this engine gave 72% / 69.6%,
+so round 1 went back to 12 / $1,200 and the top-ups came down. Oct 27 night (charger a1, `abs_r18`): 79%, round 6, 21.4%.
+The bot results below are from an earlier tuning.)
 
 Plus $25 per kill, at most $150 a won round (`PER_KILL`, `KILL_CAP`). Rares on 10% → 30% of boards. Free rest heals 30% of
 missing health; full heal 25% of price (min $50); sell for half (superseded by the UX pass below). Scar: below 25% health in a fight → −10% max health for
