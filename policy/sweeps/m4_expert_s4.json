@@ -1,0 +1,9 @@
+{
+ "note": "Milestone 4 expert iteration for enemy cats with the targetsOnly fix (the net only re-ranks targets; bc_cat3 with it: +0.054 ± 0.025, style 1.00). Plain teacher.",
+ "runs": [
+  {
+   "name": "ei_cat_fix",
+   "args": "--trainer=expert --arch=cat --rounds=6 --fights=900 --H=8 --max=3 --rolls=3 --nh=32 --epochs=20 --lr=.002 --val=800 --test=1200 --dagger=true --real=0 --seed=2601"
+  }
+ ]
+}
