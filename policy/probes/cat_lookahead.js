@@ -5,10 +5,12 @@
 // branches share the fight's random stream, so this is an optimistic oracle: an upper bound on target choice's worth
 // (FAIR=1: each branch gets its own random stream, so the lookahead can't know the fight's future dice).
 // Paired vs today's cats on the same fresh fights. COLLECT=file.jsonl also writes each branched decision (expert iteration
-// data for policy/bc_target.js). Usage: node policy/probes/cat_lookahead.js [N] [H seconds] [probeIndex]
+// data for policy/bc_target.js); DAGGER=state.json plays the learner's choices and only labels with the lookahead. Usage: node policy/probes/cat_lookahead.js [N] [H seconds] [probeIndex]
 const { Worker, isMainThread, parentPort, workerData } = require('worker_threads');
 const path = require('path'), os = require('os');
 const FP = require(path.join(__dirname, '..', 'features_plus.js')), TR = require(path.join(__dirname, '..', 'traits.js')), fs = require('fs');
+const TM = require(path.join(__dirname, '..', 'target_model.js'));
+const LEARNER = process.env.DAGGER ? (st => Object.assign({}, st.P0, {theta: st.best.theta}))(JSON.parse(fs.readFileSync(process.env.DAGGER, 'utf8'))) : null; // DAGGER=state.json
 const R = require(path.join(__dirname, '..', 'move_run.js')), RW = require(path.join(__dirname, '..', 'move_reward.js')), L = require(path.join(__dirname, '..', 'lookahead.js'));
 require(path.join(__dirname, '..', 'live.js'));
 const A = R.A;
@@ -37,9 +39,11 @@ function lookPolicy(H){
       sc.push(v); if (v > bs + 1e-9){ bs = v; best = i; }
     }
     if (best !== teach) P.changed++;
+    let play = best;
+    if (LEARNER){ const X = TM.inputs(LEARNER, FP.extract(w, u).X, u), sc2 = TM.scores(LEARNER, X, teach); play = 0; sc2.forEach((x, k) => { if (x > sc2[play]) play = k; }); } // DAGGER: the fight follows the learner; the lookahead only labels
     if (P.data){ const X = FP.extract(w, u).X, r4 = x => Math.round(x * 1e4) / 1e4; // same option order as opts (features_plus extends features.js)
       P.data.push({sp: u.s.id, tr: TR.traits(u.s), X: tries.map(i => X[i].map(r4)), s: sc.map(r4), teach: tries.indexOf(teach)}); }
-    return best;
+    return play;
   };
   return P;
 }
