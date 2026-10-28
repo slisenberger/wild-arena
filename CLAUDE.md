@@ -353,7 +353,7 @@ round. Report ± standard errors.
     no gates or drift; your survival −3.4 ± 0.5 pts, time alive −10.2 ± 1.3 s, chargers' own deaths −0.08 ± 0.01/fight; it
     deviates from the heuristic on ~8% of decisions. (Before the merge, probes 71–73: +0.090 ± 0.013. The branch's own
     +0.158 was on its older engine without the musk ox / gaur / walrus.) Fights without an enemy charger are unchanged.
-  - **Milestone 4, round 2 (Oct 28, branch `guard-target-ship`, not merged yet): learned target choice for YOUR guards
+  - **Milestone 4, round 2 (Oct 28, shipped: merged to main in PR #41): learned target choice for YOUR guards
     (`guard_target_m2`) and a stronger enemy-charger scorer (`charger_target_m1`, replaces a1).** Both from the GCP session's
     `m4/guard-target` (only what they need was brought over): 'target-mlp' scorers (`policy/target_model.js`: score =
     .25·[heuristic's pick] + w·x + v·tanh(W1·x + b1); `self` appends the unit's own species trait vector, `policy/traits.js`,
@@ -432,7 +432,7 @@ round. Report ± standard errors.
   median board's best team 88% (min 33, p25 75), typical full-spend team 160 s, 16 distinct best teams over 16 boards, no
   elephant in any; best teams spread over rhino 6, hippo 6, tiger 4, giraffe 4, croc 4 (was elephant 5, rhino 4). For
   comparison, total $2,500 gave 96% / 181 s (not adopted: it would make the other side weaker).
-- **Current prices (`abs_r19`, Oct 28, branch `guard-target-ship`: guard_target_m2 + charger_target_m1 live):** **19 s of swing
+- **Current prices (`abs_r19`, Oct 28, live since PR #41: guard_target_m2 + charger_target_m1 live):** **19 s of swing
   per $100**, giants/herds capped at $700 (triceratops $800), **board total $2,600** (kept; `price_scheme` itself would give $2,400
   at 19–20 s and $2,500 at 18 s: the owner's floor wins), budget $1,200, rares 30%. `price_abs.js 240` (all items) merged with
   `price_abs.js 960` for muskox, musk ox herd, walrus, woolly rhino, short-faced bear, Utahraptor. Changes vs `abs_r18`: hippo
