@@ -5,7 +5,7 @@
 // the current network's (DAgger, so it learns on the states it reaches itself); (2) train the target-mlp on all data so far
 // (policy/bc_target.js, continuing from the last network); (3) validate the greedy network vs today's cats on fresh fights with
 // the realism gates (move_reward.js); the best clean one is kept. Then a held-out test. Data: <state>.data.jsonl.gz.
-//   node policy/expert_iter.js init <state.json> [--arch=cat --rounds=6 --fights=600 --rolls=3 --H=8 --max=3 --nh=32 --epochs=20
+//   node policy/expert_iter.js init <state.json> [--arch=cat --rounds=6 --fights=600 --rolls=3 --H=8 --max=3 --real=0 --nh=32 --epochs=20
 //        --lr=.002 --val=800 --test=1200 --seed=1 --styleThr=.9 --dagger=true]
 //   node policy/expert_iter.js run <state.json> [--threads=N --hours=H]
 //   node policy/expert_iter.js report <state.json>
@@ -17,14 +17,14 @@ const ZW = {kind: 'target-lin', v: 1, nin: 200, margin: .25, wt: new Array(200).
 if (!isMainThread){
   const {jobs, arch, o, learner} = workerData, out = [];
   for (const j of jobs){
-    if (j.k === 'collect'){ const data = [], W = PL.makePlanner({H: o.H, max: o.max, cool: 0, rolls: o.rolls, data, learner}); R.runFight(j.f, W, arch); out.push({k: j.k, i: j.i, data}); }
+    if (j.k === 'collect'){ const data = [], W = PL.makePlanner({H: o.H, max: o.max, cool: 0, rolls: o.rolls, data, learner, real: o.real}); R.runFight(j.f, W, arch); out.push({k: j.k, i: j.i, data}); }
     else out.push({k: j.k, i: j.i, rec: R.runFight(j.f, j.k === 'base' ? ZW : j.W, arch)});
   }
   parentPort.postMessage(out); return;
 }
 const CMDS = ['init', 'run', 'report'], av = process.argv.slice(2), cmd = CMDS.includes(av[0]) ? av.shift() : 'run', [file, ...rest] = av;
 const opt = Object.fromEntries(rest.filter(a => a.startsWith('--')).map(a => { const [k, v] = a.slice(2).split('='); return [k, v === undefined ? true : isNaN(+v) ? (v === 'true' ? true : v === 'false' ? false : v) : +v]; }));
-const DEF = {arch: 'cat', rounds: 6, fights: 600, rolls: 3, H: 8, max: 3, nh: 32, epochs: 20, lr: .002, val: 800, test: 1200, seed: 1, styleThr: .9, dagger: true, threads: Math.min(8, os.cpus().length)};
+const DEF = {arch: 'cat', rounds: 6, fights: 600, rolls: 3, H: 8, max: 3, real: 0, nh: 32, epochs: 20, lr: .002, val: 800, test: 1200, seed: 1, styleThr: .9, dagger: true, threads: Math.min(8, os.cpus().length)};
 const DATA = file + '.data.jsonl.gz';
 const log = m => { console.log(m); fs.appendFileSync(file + '.log', m + '\n'); };
 const save = s => { fs.writeFileSync(file + '.tmp', JSON.stringify(s)); fs.renameSync(file + '.tmp', file); };

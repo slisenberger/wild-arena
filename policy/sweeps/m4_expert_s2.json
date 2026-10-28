@@ -1,0 +1,13 @@
+{
+ "note": "Milestone 4 expert iteration, realism-aware teacher (Oct 28): each branch score loses real x the share of its 8 s the cat spent idle (slow, >10 m from its target) or sprinting (>8 m from its target). ei1 networks drifted to idle 50-76% / sprint-heavy cats (gates failed) although the plain teacher was clean; the realism-aware teacher (real .5) keeps +0.195 ± 0.063, style 0.97.",
+ "runs": [
+  {
+   "name": "ei_cat_real05",
+   "args": "--trainer=expert --arch=cat --rounds=6 --fights=900 --H=8 --max=3 --rolls=3 --nh=32 --epochs=20 --lr=.002 --val=800 --test=1200 --dagger=true --real=0.5 --seed=2401"
+  },
+  {
+   "name": "ei_cat_real1",
+   "args": "--trainer=expert --arch=cat --rounds=6 --fights=900 --H=8 --max=3 --rolls=3 --nh=32 --epochs=20 --lr=.002 --val=800 --test=1200 --dagger=true --real=1 --seed=2402"
+  }
+ ]
+}

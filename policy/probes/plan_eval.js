@@ -6,7 +6,7 @@ const R = require(path.join(__dirname, '..', 'move_run.js')), RW = require(path.
 require(path.join(__dirname, '..', 'live.js')); require(path.join(__dirname, '..', 'policy.js'));
 if (!isMainThread){ parentPort.postMessage(workerData.jobs.map(j => { const t0 = Date.now(), W = j.k === 'plan' ? PL.makePlanner(workerData.o) : {kind: 'target-lin', v: 1, nin: 1, margin: .25, wt: new Array(80).fill(0)};
   const r = R.runFight(j.f, W, 'cat'); r.ms = Date.now() - t0; return {k: j.k, i: j.i, rec: r}; })); return; }
-const [n, h, cool, max, idx] = process.argv.slice(2), N = +n || 300, o = {H: +h || 8, cool: +cool || 0, max: +max || 3};
+const [n, h, cool, max, idx] = process.argv.slice(2), N = +n || 300, o = {H: +h || 8, cool: +cool || 0, max: +max || 3, real: +process.env.REAL || 0}; // REAL=x: the realism-aware teacher
 const fights = R.fightSet('probe', +idx || 71, N, {arch: 'cat', seed: 17, withLive: true, goal: 'checkmate', spec: true}), jobs = [];
 fights.forEach((f, i) => { jobs.push({k: 'base', i, f}, {k: 'plan', i, f}); });
 const T = Math.max(1, Math.min(8, os.cpus().length));

@@ -16,7 +16,9 @@ function score(w){
   const H = w.human; return 2 * (H.maxhp - Math.max(0, H.state === 'dead' ? 0 : H.hp)) / H.maxhp + pl / pm - el / em + (H.state === 'dead' ? 2 : 0);
 }
 function makePlanner(o){
-  o = Object.assign({H: 8, max: 3, cool: 2, rolls: 1, data: null, learner: null}, o || {});
+  o = Object.assign({H: 8, max: 3, cool: 2, rolls: 1, data: null, learner: null, real: 0}, o || {});
+  // real: a realism-aware teacher: each branch's score loses real x (the share of its H seconds this cat spent idle, i.e. slow and
+  // not near its target, or sprinting > 8 m from its target); imitation of the plain teacher drifted into idle / sprint-heavy cats
   // training only (policy/expert_iter.js): rolls = fair rolls averaged per option; data = an array that collects each planned
   // decision (features_plus rows of the tried options, their branch scores, the heuristic's pick, the cat's traits);
   // learner = a target-mlp whose pick is played instead of the plan's (DAgger: the plan only labels) // 8 s measured at least as good as 15 s (+0.247 vs +0.195, same fights) at half the cost
@@ -37,8 +39,10 @@ function makePlanner(o){
         const c = L.cloneWorld(w, inner), cu = c.units[ui];
         c.R.seek((w.R.state() ^ Math.imul(P.n * 97 + i + 1 + 7919 * k, 0x9e3779b9)) >>> 0);
         cu.forceT = c.units[w.units.indexOf(opts[i].t)]; cu.forceUntil = c.t + o.H; cu.target = cu.forceT; cu.state = 'engage'; cu.carcass = null;
-        const t1 = c.t + o.H; while (!c.over && c.t < t1) A.step(c);
-        v += score(c) / o.rolls;
+        const t1 = c.t + o.H; let bad = 0;
+        while (!c.over && c.t < t1){ A.step(c); if (o.real && I.active(cu)){ const sp = Math.hypot(cu.vx, cu.vy), tt = cu.target && I.active(cu.target) ? cu.target : null, d = tt ? I.dist(cu, tt) : 1e9;
+          if ((sp < 1 && d > 10) || (sp > .7 * cu.s.spd && d > 8)) bad += .1; } }
+        v += (score(c) - o.real * bad / o.H) / o.rolls;
       }
       sc.push(v); if (v > bs + 1e-9){ bs = v; best = i; }
     }
