@@ -158,6 +158,10 @@ that gives you one of each animal, they're weaker by design.
   you as the calf)~~ (done for the musk ox herd, Oct 27), stampede contagion when one breaks. Most realistic and fun to watch, hardest to balance.
 
 ## 5. Maps and variety
+- [~] **Terrain features + a smaller field (prototype, `?maps2=1`, Oct 28; `research/map_features.md`):** kopje, donga,
+  termite mounds, cut banks, ravine, deadfall, moraine, erratics, an impassable border (~83% of the area). Formation lift
+  found so far +7.0 ± 5.4 s (not yet clear). Next: a feature-aware formation search; then stronger chokepoints or high
+  ground on a kopje; thickets small animals slip through; a pressure ridge on the lake.
 - [ ] **Moderately procedural maps:** seeded, bounded parameters per map type (not freeform) — river
   position and bends, number of fords, forest density and clearings, snow-depth patches, rocky outcrops
   (high ground, chokepoints), a savanna waterhole. Half there: acacias are already random per seed.

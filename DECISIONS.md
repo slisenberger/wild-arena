@@ -3,6 +3,11 @@
 Each item has a recommendation; reply with a number and "yes", or your own call. Decided items move to the bottom.
 
 ## Open
+10. **Terrain features (`?maps2=1`, prototype).** Kopjes, dongas, cut banks, ravines, deadfall, a moraine with gaps, and an
+   impassable border that trims the field to ~83%. Formation is worth a bit more with them (+15 vs +8 s for the best formation
+   found, a 1.3 SE difference; tundra moraine clearest) and the game didn't measurably get easier (paired −2 ± 6 s; best team
+   per board 88 → 83%, typical team 165 → 175 s). Recommendation: play a few games with `?maps2=1` first; don't turn it on by
+   default until a terrain-aware formation test shows a clear lift (stronger chokepoints next if it doesn't).
 1. **Progressive mode: what a retry undoes.** Built: a lost round goes back to the shop as the round opened (team,
    wounds, XP and money as they were; only the time alive counts), then a new fight seed. The alternative (the dead stay
    dead, no refund) made 17% of bot runs die in round 1 from a crippled retry. Recommendation: keep the undo.

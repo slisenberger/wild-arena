@@ -4,11 +4,12 @@
 // Usage: node board.js [boardsPerSize] [screenSeeds] [verifySeeds] [sizes e.g. 8,10,12] [budget] [total T, 0 = any]
 // Env: PRICES=prices.json (an {id: $} map, or a price_board.js output with .proposed) to test candidate prices;
 //      RAREP=0.1 chance of a rare animal per board. Boards are dealt with the game's own A.dealBoard.
+//      MAPS2=1 fights on the terrain-features prototype (cfg.maps2, research/map_features.md).
 const { Worker, isMainThread, parentPort, workerData } = require('worker_threads');
 const SIM = process.env.SIM || './sim.js';
 const A = require(SIM);
 function tallest(t){ return A.defaultMount(t); } // ride a giant, else on foot
-if (!isMainThread){ parentPort.postMessage(workerData.jobs.map(j => ({k: j.k, s: A.simulate({team: j.team, board: j.board, terrain: j.tr, mode: 'wild', mount: tallest(j.team), seed: j.seed}).result.score}))); return; }
+if (!isMainThread){ parentPort.postMessage(workerData.jobs.map(j => ({k: j.k, s: A.simulate({team: j.team, board: j.board, terrain: j.tr, mode: 'wild', mount: tallest(j.team), seed: j.seed, maps2: !!process.env.MAPS2}).result.score}))); return; }
 const NB = +process.argv[2] || 20, NS = +process.argv[3] || 2, NV = +process.argv[4] || 24, SIZES = (process.argv[5] || '8,10,12').split(',').map(Number), BUD = +process.argv[6] || 1000, TOT = +process.argv[7] || 0;
 const PJ = process.env.PRICES ? JSON.parse(require('fs').readFileSync(process.env.PRICES, 'utf8')) : {}, PR = Object.assign({}, ...A.ANIMALS.map(a => ({[a.id]: a.price})), PJ.proposed || PJ.prices || PJ);
 const RAREP = process.env.RAREP !== undefined ? +process.env.RAREP : 0.1;
