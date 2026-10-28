@@ -1463,7 +1463,7 @@ if (!loadHash()){
   dealNewBoard(); renderAll();
   const run = loadRun(); // a migration in progress picks up where it left off after a reload
   if (MIG_ON && run && !run.over){ S.mig = run; go('mig'); showNotice(`<b>Migration resumed</b> <span>Fight ${run.k + 1} of ${M.MIG.FIGHTS}, $${run.money.toLocaleString()} to spend.</span>`); }
-  if (SMART_ON) showNotice('<b>Smart animals (prototype)</b> <span>Enemy chargers and your guards pick their targets with networks learned in training. These fights don\'t count in your stats.</span>');
+  if (SMART_ON) showNotice('<b>Smart animals (prototype)</b> <span>Enemy cats, enemy chargers and your guards pick their targets with networks learned in training. These fights don\'t count in your stats.</span>');
   else go('arena');
 }
 requestAnimationFrame(frame);
