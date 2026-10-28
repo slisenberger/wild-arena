@@ -353,6 +353,36 @@ round. Report ± standard errors.
     no gates or drift; your survival −3.4 ± 0.5 pts, time alive −10.2 ± 1.3 s, chargers' own deaths −0.08 ± 0.01/fight; it
     deviates from the heuristic on ~8% of decisions. (Before the merge, probes 71–73: +0.090 ± 0.013. The branch's own
     +0.158 was on its older engine without the musk ox / gaur / walrus.) Fights without an enemy charger are unchanged.
+  - **Milestone 4, round 2 (Oct 28, branch `guard-target-ship`, not merged yet): learned target choice for YOUR guards
+    (`guard_target_m2`) and a stronger enemy-charger scorer (`charger_target_m1`, replaces a1).** Both from the GCP session's
+    `m4/guard-target` (only what they need was brought over): 'target-mlp' scorers (`policy/target_model.js`: score =
+    .25·[heuristic's pick] + w·x + v·tanh(W1·x + b1); `self` appends the unit's own species trait vector, `policy/traits.js`,
+    36 traits, so one net can weigh the same candidate differently per species; zero output = the heuristic). charger m1: tgt5
+    ch_mlp_s2 over features.js's 63 + 36 traits. guard m2: tgt9 gaw_mlp over `policy/guard_features.js` (78 guard features incl.
+    the enemy's traits) + 36, `wide` = no leash (candidates: any enemy your side sees or within 10 m). Hook (opt-in):
+    `cfg.policy.byArch.guard` → sim.js `chooseTarget` (guard branch) and `guardDecide` call `INTERNALS.chooseGuard`
+    (policy/policy.js), which has the last word over allyTarget's pick and re-judges guard_v1's intercept/help targets; riders
+    keep the heuristic; if the heuristic's pick isn't a candidate it stands. `guardCandidates` mirrors `allyTarget`'s filters
+    (change both together; used by non-wide scorers). Live: live.json `"target": {"charger": "charger_target_m1.json",
+    "guard": "guard_target_m2.json"}`. Without the new weights the engine is byte-identical to main d58f679 (400 board fights,
+    live on and `livePolicy:false`); with them, `livePolicy:false` is still identical and live fights with a charger-only
+    `cfg.policy` (a1) are identical to main (400), so the guard scorer is the only other change. The bundle (index.html run in a
+    vm) gives the same fights as the Node modules (40/40). `policy/target_ident_test.js` (zero weights = the game, cat /
+    bulldozer / guard) passes.
+    - guard m2 vs off (guard_v1's targets; `eval_target.js … guard 2000 91|92|94 … per-archetype 0`, other policies live):
+      **+0.152 ± 0.017, +0.146 ± 0.017** (charger a1 live), **+0.114 ± 0.018** (charger m1 live), style 1.00, no gates or drift;
+      your survival +8.7 / +8.8 / +6.1 pts (± 1.1), time alive +22.4 / +20.6 / +16.6 s (± 3), guard deaths −0.33 / −0.39 /
+      −0.09 per fight, guards' damage +430–480 per fight, fewer withdraw (−0.13 to −0.23), less standing by (−3 to −8 s); fights
+      with your big cat +25 / +20 / +18 s. It deviates from the heuristic on ~22–30% of guard decisions, mostly about enemy
+      chargers (take one on / hold back from one / switch to another, by guard species: wolves and bears hold back, chargers
+      and cats go in) and going for a cat that is on you. No leash, but guards don't range further: mean distance from you 13.7 →
+      13.7 m (13.5 → 14.0 with m1), > 24 m 15.7 → 16.2% of guard time, > 40 m 2.1 → 2.1%; time something is on you with no
+      guard within 10 m 0.44 → 0.48, 0.52 → 0.47, 0.44 → 0.43 s per fight (within noise).
+    - charger m1 vs the live a1 (`BASE=…a1.json eval_target.js …m1.json charger 2000 91|92|93`): +0.063 ± 0.028, +0.071 ±
+      0.028 (guard targets off), +0.085 ± 0.030 (guard m2 live); pooled **+0.073 ± 0.017** over 6,000 fresh fights (4.4 SE),
+      style 1.00, no gates or drift; your survival −1.6 / −2.1 / −2.4 pts (± 1.1), time alive −8 to −11 s, chargers' own deaths
+      −0.05 to −0.11 per fight. It differs from a1 on ~33% of decisions: species-specific, mostly going for you instead of
+      one of your animals, or leaving a fight with your cat / charger alone (herds, rhinos, gaur, hippo).
   - Training runs on GitHub Actions (`.github/workflows/train.yml`, sweeps in `policy/sweeps/`); `collect.yml` copies
     results to the `training-results` branch (artifact storage isn't reachable from the dev container).
   - GCP spot training: `policy/gcp/gcp.js` (launch/status/resume/stop/collect, failure handling in `policy/gcp/README.md`);
@@ -402,8 +432,20 @@ round. Report ± standard errors.
   median board's best team 88% (min 33, p25 75), typical full-spend team 160 s, 16 distinct best teams over 16 boards, no
   elephant in any; best teams spread over rhino 6, hippo 6, tiger 4, giraffe 4, croc 4 (was elephant 5, rhino 4). For
   comparison, total $2,500 gave 96% / 181 s (not adopted: it would make the other side weaker).
-- **Current prices (`abs_r18`, Oct 27 night, merged engine with the prehistoric rares and the learned charger target choice
-  live):** **19 s of swing per $100**, giants/herds capped at $700 (triceratops $800), **board total $2,600** (kept; `price_scheme`
+- **Current prices (`abs_r19`, Oct 28, branch `guard-target-ship`: guard_target_m2 + charger_target_m1 live):** **19 s of swing
+  per $100**, giants/herds capped at $700 (triceratops $800), **board total $2,600** (kept; `price_scheme` itself would give $2,400
+  at 19–20 s and $2,500 at 18 s: the owner's floor wins), budget $1,200, rares 30%. `price_abs.js 240` (all items) merged with
+  `price_abs.js 960` for muskox, musk ox herd, walrus, woolly rhino, short-faced bear, Utahraptor. Changes vs `abs_r18`: hippo
+  $300, polar $100, buffalo $200, bison $300, grizzly $200, black rhino $200, bull $100, mammoth $500, gaur $300, wolf pack $100,
+  hyena clan $200, lion coalition $100, musk ox herd $500 (lone musk ox $200, never dealt). Validation (`RAREP=.3 board.js 16 2
+  24 12 1200 2600`, same 16 boards each): **19 s/$100 median board's best team 88%** (min 42, p25 83), typical full-spend team
+  **165 s**, 64% of teams win a screen run, 15 distinct best teams; 18 s/$100 92% (p25 75) / 165 s; 20 s/$100 83% / 166 s;
+  `abs_r18` prices on this engine **96%** / 169 s (the stronger guards made it easier, hence the reprice). Mean base-team score
+  in price_abs fell 63 → 52 s (charger m1). Swings: triceratops 213, buffalo herd 174, bison herd 163, elephant 157, mammoth
+  100, woolly rhino 92 ± 8, musk ox herd 87 ± 8, rhino 79, gaur 60, hippo 60, short-faced bear 54 ± 5, walrus 23 ± 6,
+  Utahraptor 17 ± 4.
+- *Previous* prices (`abs_r18`, Oct 27 night, merged engine with the prehistoric rares and the learned charger target choice
+  live): **19 s of swing per $100**, giants/herds capped at $700 (triceratops $800), **board total $2,600** (kept; `price_scheme`
   itself gives $2,600 at 19 s, $2,500 at 20 s), budget $1,200, rares 30%. `price_abs.js 240` (all items) merged with
   `price_abs.js 960` for the map-limited items (musk ox, walrus, woolly rhino, short-faced bear, Utahraptor). Changes vs
   `abs_p1`: hippo $400, black rhino $300, gaur $400, wolf pack $200; croc, grizzly, Smilodon, walrus $100; bison $200.
@@ -490,12 +532,18 @@ round. Report ± standard errors.
 
 ## Progressive mode (prototype Oct 27, `?progressive=1`; details and numbers in `research/progressive_mode.md`)
 - 7 rounds up a price ladder (round 1 $100 animals only … round 7 any, a giant for sale), premium enemy from round 3 (top
-  band, not for sale), $400 start (round 1 is all $100 animals: no stranded $50, owner) + top-ups 450/500/500/450/550/800, boards 13/10/10/10/11/11/12 worth
-  $1,300/1,200/1,500/1,800/2,100/2,300/2,600 (retuned Oct 27 night for the charger target policy and `abs_r18`, see below), $25/kill (cap $150; the last round pays nothing), rest 30%; full heal =
+  band, not for sale), $400 start (round 1 is all $100 animals: no stranded $50, owner) + top-ups 400/400/400/350/400/650, boards 12/10/10/10/11/11/12 worth
+  $1,200/1,200/1,500/1,800/2,100/2,300/2,600 (retuned Oct 28 for the guard + charger target policies and `abs_r19`, see below), $25/kill (cap $150; the last round pays nothing), rest 30%; full heal =
   price × .55 × health missing ($5 steps up, min $10), sell = price × .5 × health ($5 steps down), not under 25% health
   (was a flat 25% heal / half-price sale; .55 kept the bot's completion rate: 1,000 runs 17.3% → 15.9%, round 1 81.5%),
   scars, XP and levels (level 3 ≈ +8% of swing, `level_abs.js`), two retries (a loss restores the round's shop).
-- Bot with the charger target policy live (`abs_r18` prices, merged engine; `progressive_bot.js 500 4 1`): round 1 first-try
+- Bot with guard_target_m2 + charger_target_m1 live (`abs_r19` prices; `progressive_bot.js 500 4 1`): round 1 first-try **77%**,
+  median run ends in round 6, **23.4% complete**; round 6 is the wall (first-try 42%; buffalo herd premium won 26%, bison herd
+  40%). At the old constants the new engine + prices gave round 1 72% and **69.6% complete** (your guards are much better and
+  later-round teams are big). Retune (300-run probes): round 1 back to 12 animals / $1,200 (77%), top-ups 450/500/500/450/550/800
+  → 400/400/400/350/400/650 (all-400 + 450/700: 30.7%; all-350 + 400/600: 9.0%; +$300–400 on the round 3–7 boards instead:
+  31%). Board totals for rounds 2–7 and START unchanged.
+- Previously, with the charger target policy live (`abs_r18` prices, merged engine; `progressive_bot.js 500 4 1`): round 1 first-try
   **79%**, median run ends in round 6, **21.4% complete**; round 6 (herd premium) is still the wall (first-try 35%). Retune: at
   main's constants the reprice (croc, grizzly, Smilodon, walrus back to $100) made round 1 easy (88%, 23.0% complete); round 1's
   board went 11 → 13 animals ($1,100 → $1,300: the other side gets 9 vs your 4; 12 gave 86%), which pushed completion to 27%,

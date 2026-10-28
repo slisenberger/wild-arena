@@ -64,6 +64,12 @@ the shipped policies and reprice after:
     linear 'target-lin' scorer on top of `charger_v1` movement, live via `policy/weights/live.json` "target"). Owner approved
     it under the two-teams premise. Re-check on the merged engine +0.094 ± 0.013 (6,000 fresh fights). Bulldozer/kicker/cat target
     runs found nothing clean so far (bulldozer +0.036 ± 0.028, cat +0.055 with a stillLong gate); guard targets on `m4/guard-target`.
+  - [x] **Built Oct 28 (branch `guard-target-ship`, awaiting merge): learned target choice for your guards** (`guard_target_m2`,
+    species-aware 'target-mlp', no leash; re-judges guard_v1's intercept/help targets) **and charger_target_m1** (species-aware,
+    replaces a1). Fresh re-checks on main's engine: guard m2 +0.114 to +0.152 (± 0.017; you survive +6 to +9 pts, +17 to +22 s;
+    guards range no further from you); charger m1 vs a1 +0.073 ± 0.017 pooled (you −2 pts). Repriced (`abs_r19`) and progressive
+    retuned. Next: enemy cats' target choice with the guard situation (two held-out passes didn't replicate fresh so far);
+    a joint target + timing decision for cats.
   **Owner design direction (Oct 27): speciation from broad archetypes + species tuning + open control + a general
   reward.** (1) Move decisions out of engine rules into the policy (target, approach, attack, bluff, retreat, movement),
   keeping physics in the engine (speed, reach, stamina, armor, morale): bodies are what make species differ. (2) One

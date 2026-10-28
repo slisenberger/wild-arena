@@ -63,10 +63,10 @@ function cfgOf(f){ return {team: f.team, board: f.board, terrain: f.tr, mode: 'w
 // with f.live, the OTHER archetypes use the shipped policies (policy/live.js), so v2 trains against the live game
 function setPolicy(cfg, f, arch, weights){
   const mp = {};
-  if (f.live) for (const [k, v] of Object.entries(I.LIVE || {})) if (v && (k !== arch || (weights && weights.kind === 'target-lin'))) mp[k] = v;
+  if (f.live) for (const [k, v] of Object.entries(I.LIVE || {})) if (v && (k !== arch || (weights && /^target-/.test(weights.kind)))) mp[k] = v;
   const by = {}; // target choice: with f.live the shipped target scorers (policy/weights/live.json "target") too, except the one being trained/evaluated
-  if (f.live) for (const [k, v] of Object.entries(I.LIVE_TARGET || {})) if (v && !(k === arch && weights && weights.kind === 'target-lin')) by[k] = v;
-  if (weights && weights.kind === 'target-lin'){ by[arch] = weights; cfg.policyStats = {}; if (weights.sample) cfg.policyTrace = []; } // target scorer: the arch keeps its shipped movement policy; sample = PPO training
+  if (f.live) for (const [k, v] of Object.entries(I.LIVE_TARGET || {})) if (v && !(k === arch && weights && /^target-/.test(weights.kind))) by[k] = v;
+  if (weights && /^target-/.test(weights.kind)){ by[arch] = weights; cfg.policyStats = {}; if (weights.sample) cfg.policyTrace = []; } // target scorer: the arch keeps its shipped movement policy; sample = PPO training
   else if (weights) mp[arch] = weights;
   if (Object.keys(by).length) cfg.policy = {byArch: by};
   if (Object.keys(mp).length){ cfg.movePolicy = mp; cfg.moveStats = {}; }
@@ -136,7 +136,7 @@ function runFight(f, weights, arch){
   r.deaths = us.filter(u => u.state === 'dead').length; r.escaped = us.filter(u => u.escaped).length;
   r.hmax = H.maxhp; r.killedYou = !w.result.survived && H.state === 'dead' && us.includes(H.lastHitBy) ? 1 : 0;
   r.t = +w.result.t.toFixed(1); r.survived = w.result.survived ? 1 : 0; r.why = w.result.why || null; r.killer = w.result.killer || null;
-  r.intents = weights && weights.kind === 'target-lin' ? (s => [s.agree || 0, (s.n || 0) - (s.agree || 0), 0, 0, 0])(cfg.policyStats || {}) : weights && cfg.moveStats && cfg.moveStats[arch] ? cfg.moveStats[arch] : null; // target scorer: [kept the heuristic's pick, deviated]
+  r.intents = weights && /^target-/.test(weights.kind) ? (s => [s.agree || 0, (s.n || 0) - (s.agree || 0), 0, 0, 0])(cfg.policyStats || {}) : weights && cfg.moveStats && cfg.moveStats[arch] ? cfg.moveStats[arch] : null; // target scorer: [kept the heuristic's pick, deviated]
   r.fp = fingerprint(w);
   if (cfg.policyTrace) r.trace = cfg.policyTrace; // PPO training: each sampled target decision
   return r;
@@ -154,7 +154,7 @@ function runGuardFight(f, weights){
   const us = w.units.filter(u => I.archetypeOf(u) === arch), ids = new Set(us.map(u => u.s.id));
   const S = us.map(u => ({c: guardClass(u.s), cat: !!(u.s.pred && u.s.latch), block: 0, glue: 0, dealt: 0, lastC: 0}));
   const r = {arch, n: us.length, life: 0, fight: 0, close: 0, idle: 0, flee: 0, feed: 0, heat: 0, carry: 0, distH: 0,
-    standbyT: 0, catLife: 0, catBlockT: 0, gluedT: 0, dmgHuman: 0, dmgCollateral: 0};
+    standbyT: 0, catLife: 0, catBlockT: 0, gluedT: 0, dmgHuman: 0, dmgCollateral: 0, far24: 0, far40: 0, aloneT: 0, contactT: 0}; // far24/far40: guard-seconds that far from you; aloneT: seconds something is on you with no guard within 10 m
   for (const c of GCLASS){ r[c + 'Life'] = 0; r[c + 'Fight'] = 0; r[c + 'Idle'] = 0; r[c + 'Near'] = 0; }
   let hp0 = H.hp;
   while (!w.over){
@@ -163,10 +163,11 @@ function runGuardFight(f, weights){
     if (hDrop > 0){ r.dmgHuman += hDrop; const a = H.lastHitBy; if (a && a.side === 'E' && a.target !== H && a.latchOn !== H) r.dmgCollateral += hDrop; }
     let fightOn = false, hContact = !!H.latchedBy;
     for (const e of w.units) if (e.side === 'E' && I.active(e)){ if (I.locked(e) || e.target === H) fightOn = true; if (e.target === H && I.dist(e, H) <= e.r + H.r + e.s.reach + .5) hContact = true; }
+    if (hContact){ r.contactT += DT; if (!us.some(u => I.active(u) && !u.rider && I.dist(u, H) < 10)) r.aloneT += DT; }
     us.forEach((u, i) => {
       if (!I.active(u) || u.rider) return;
       const s = S[i], st = stateOf(u), dH = I.dist(u, H);
-      r.life += DT; r[st] += DT; r.distH += dH * DT;
+      r.life += DT; r[st] += DT; r.distH += dH * DT; if (dH > 24) r.far24 += DT; if (dH > 40) r.far40 += DT;
       r[s.c + 'Life'] += DT; if (st === 'fight') r[s.c + 'Fight'] += DT; if (st === 'idle') r[s.c + 'Idle'] += DT; if (dH < GTEL.near) r[s.c + 'Near'] += DT;
       const dd = u.st.dealt - s.dealt; s.dealt = u.st.dealt; if (st === 'fight' || dd > 0 || u.latchedBy || u.latchOn) s.lastC = w.t;
       // standing by while the fight goes on: idle, or 'closing in' without touching anything for > 10 s (holding a spot)
@@ -183,11 +184,13 @@ function runGuardFight(f, weights){
     });
   }
   r.deaths = us.filter(u => u.state === 'dead').length; r.withdrawn = us.filter(u => u.withdrawn).length;
+  { const cats = us.filter((u, i) => S[i].cat); r.catN = cats.length; r.catDeaths = cats.filter(u => u.state === 'dead').length; r.catDealt = cats.reduce((x, u) => x + u.st.dealt, 0); } // your big cats (telemetry)
   r.dealt = us.reduce((a, u) => a + u.st.dealt, 0); r.protect = us.reduce((a, u) => a + u.st.protect, 0);
   for (const [k, name] of Object.entries(GSIG)){ let n = 0; for (const id of ids) n += w.sig[id + ':' + name] || 0; r['sig_' + k] = n; }
   r.hmax = H.maxhp; r.t = +w.result.t.toFixed(1); r.survived = w.result.survived ? 1 : 0; r.why = w.result.why || null; r.killer = w.result.killer || null;
-  r.intents = weights && cfg.moveStats[arch] ? cfg.moveStats[arch] : null;
+  r.intents = weights && /^target-/.test(weights.kind) ? (s => [s.agree || 0, (s.n || 0) - (s.agree || 0), 0, 0, 0, 0])(cfg.policyStats || {}) : weights && cfg.moveStats[arch] ? cfg.moveStats[arch] : null; // target scorer: [kept allyTarget's pick, deviated]
   r.fp = fingerprint(w);
+  if (cfg.policyTrace) r.trace = cfg.policyTrace;
   return r;
 }
 // a compact fingerprint of the whole fight (event log + final positions) for identity checks
