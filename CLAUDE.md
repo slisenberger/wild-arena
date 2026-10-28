@@ -276,6 +276,19 @@ round. Report ± standard errors.
   savanna waterhole ~44%, river width/ford jitter + a third ford ~36%, forest 22–38 trees, clearing ~39%,
   pool ~29%, tundra deep/light snow ~25%/27% and a half-frozen lake ~44% (cold water slows and drains
   stamina by cold tolerance). World water is `w.band` (river) + `w.ponds`; `w.wet` if any.
+- **Terrain features (prototype Oct 28, hidden unless `?maps2=1`, `MAPS2_ON` in ui.js → `cfg.maps2`; `research/map_features.md`):**
+  `mapVariant(tid, seed, {maps2:true})` draws (after every other variant draw) `v.pb` (playable box: an impassable border trims
+  ~17% of the field per game) and `v.obst` (solid circles: savanna kopje / donga / termite mounds, river cut banks + side gully,
+  forest ravine + deadfall, tundra moraine + erratics; the final arena core x 38–62, y 25–41 kept clear) and `v.nav` (waypoints).
+  Engine (all behind `w.obst` / `w.pb`; `pbOf(w)` = full field without the flag): collision, steering (`steerTrees`) and
+  `m2Route` (Dijkstra over waypoints when a wall is in the way; outside the closing box behind a wall → head for its middle),
+  `canSee` blocked by tall features beyond 4 m, no strikes across a feature, charges stop at one (stun 1.2 s, 3% hp), spawns,
+  wander, flight, the zone and the integrate clamp use the playable box; `placeOK` / `clampPlace` / `zoneFor` respect it.
+  Rendered in `groundFor` (`drawFeatures`). Without the flag byte-identical to origin/main (`research/maps2/ident.js`: 480
+  fights, live on/off). Measured: best-formation gain over the default +8.2 ± 4.5 s plain → +15.2 ± 5.5 s maps2 (paired
+  +7.0 ± 5.4, tundra +33.7); no clear easing (paired score −2.4 ± 5.8 s; board.js best team 88 → 83%, typical 165 → 175 s);
+  stuck beside a feature 0.15 animal-s per fight. Tools: `research/maps2/{ident,probe,formation,shots}.js`; `board.js` takes
+  `MAPS2=1`. DECISIONS.md item 10.
 - **Trees:** animals steer around trunks and detour when wedged; an elephant pushing a trunk ~1 s knocks it
   over (`w.fallen` keeps the time, so replays show it standing until then).
 - **Maps:** savanna (sun climbs: heat ramps for everyone; acacia shade), river (vertical river x 47–57
