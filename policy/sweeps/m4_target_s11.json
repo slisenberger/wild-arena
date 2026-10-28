@@ -1,0 +1,25 @@
+{
+ "note": "Milestone 4 round 11 (Oct 27): replicate guard_target_m2 (tgt9 gaw_mlp: all your guards, wide, species-aware MLP 8 hidden; fresh +0.114 ± 0.022, fights with your cat +0.192 ± 0.028) on 3 more seeds, plus 16 hidden units.",
+ "runs": [
+  {
+   "name": "gaw_mlp_s2",
+   "args": "--arch=guard --target=true --wide=true --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --margin=.25 --thetaClip=0 --pairs=32 --nh=8 --seed=2101"
+  },
+  {
+   "name": "gaw_mlp_s3",
+   "args": "--arch=guard --target=true --wide=true --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --margin=.25 --thetaClip=0 --pairs=32 --nh=8 --seed=2102"
+  },
+  {
+   "name": "gaw_mlp_s4",
+   "args": "--arch=guard --target=true --wide=true --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --margin=.25 --thetaClip=0 --pairs=32 --nh=8 --seed=2103"
+  },
+  {
+   "name": "gaw_mlp16_s1",
+   "args": "--arch=guard --target=true --wide=true --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --margin=.25 --thetaClip=0 --pairs=32 --nh=16 --seed=2104"
+  },
+  {
+   "name": "gaw_mlp16_s2",
+   "args": "--arch=guard --target=true --wide=true --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --margin=.25 --thetaClip=0 --pairs=32 --nh=16 --seed=2105"
+  }
+ ]
+}
