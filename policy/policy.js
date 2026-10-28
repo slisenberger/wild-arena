@@ -23,14 +23,16 @@ function apply(u, o){
 // 'target-lin' (milestone 4 pilot): score(option i) = margin*[i = the heuristic's pick] + wt.x_i, argmax; zero wt = the
 // heuristic exactly, so training learns only where to deviate from it
 // 'target-mlp' adds a hidden layer (policy/target_model.js has both scorers)
-function scoresLin(P, X, teach){ return TM.scores(P, X, teach); }
-function scoreLin(P, X, teach){ const s = scoresLin(P, X, teach); let b = 0; for (let i = 1; i < s.length; i++) if (s[i] > s[b]) b = i; return b; }
+// P.targetsOnly (networks trained on lookahead labels, which only ever compare targets): the net re-ranks the target options;
+// 'none' / 'feed' stay possible only when they are the heuristic's pick (an untrained 'none' score otherwise left cats idle)
+function scoresLin(P, X, teach, mask){ const s = TM.scores(P, X, teach); if (P.targetsOnly && mask) for (let i = 0; i < s.length; i++) if (!mask[i] && i !== teach) s[i] = -Infinity; return s; }
+function scoreLin(P, X, teach, mask){ const s = scoresLin(P, X, teach, mask); let b = 0; for (let i = 1; i < s.length; i++) if (s[i] > s[b]) b = i; return b; }
 // training only (P.sample, policy/ppo_target.js): sample from softmax(score / tau) with a private generator seeded by the fight
 // and the decision count (the engine's own RNG is untouched), and log {X, teach, a, p} into cfg.policyTrace
-function pickLin(w, P, X, teach, u){
+function pickLin(w, P, X, teach, u, mask){
   X = TM.inputs(P, X, u);
-  if (!P.sample) return scoreLin(P, X, teach);
-  const s = scoresLin(P, X, teach), m = Math.max(...s), e = s.map(v => Math.exp((v - m) / (P.tau || 1))), z = e.reduce((a, b) => a + b, 0), p = e.map(v => v / z);
+  if (!P.sample) return scoreLin(P, X, teach, mask);
+  const s = scoresLin(P, X, teach, mask), m = Math.max(...s), e = s.map(v => Math.exp((v - m) / (P.tau || 1))), z = e.reduce((a, b) => a + b, 0), p = e.map(v => v / z);
   const k = w.cfg.policyTrace ? w.cfg.policyTrace.length : 0; let r = A.rng(((w.cfg.seed || 1) * 7919 + k * 104729 + 17) >>> 0)(), a = 0;
   while (a < p.length - 1 && r >= p[a]){ r -= p[a]; a++; }
   if (w.cfg.policyTrace) w.cfg.policyTrace.push({X, teach, a, p: p[a]});
@@ -44,7 +46,7 @@ function choose(w, u, policy){
   const look = policy.kind === 'target-look'; // lookahead (policy/probes/cat_lookahead.js): policy.pick(w, u, opts, teach) chooses
   if (u.forceT && w.t < u.forceUntil){ const k = opts.findIndex(o => o.kind === 'target' && o.t === u.forceT); if (k >= 0){ apply(u, opts[k]); return; } } // a lookahead branch holds its tried target
   const teach = policy.teacher || log || stats || lin || look ? F.heuristicIndex(w, u, opts) : -1;
-  const a = policy.teacher ? teach : look ? policy.pick(w, u, opts, teach) : lin ? pickLin(w, policy, X, teach, u) : M.argmax(policy, X);
+  const a = policy.teacher ? teach : look ? policy.pick(w, u, opts, teach) : lin ? pickLin(w, policy, X, teach, u, opts.map(o => o.kind === 'target')) : M.argmax(policy, X);
   if (policy.commit && a !== teach && opts[a] && opts[a].kind === 'target'){ u.forceT = opts[a].t; u.forceUntil = w.t + policy.commit; } // P.commit s: a learned departure from the heuristic is held that long (follow-through, as in the lookahead's branches)
   if (stats){ stats.n = (stats.n || 0) + 1; if (a === teach) stats.agree = (stats.agree || 0) + 1; }
   if (log && opts.length > 1) log.push({X, y: teach, a, sp: u.s.id});
@@ -55,7 +57,7 @@ function choose(w, u, policy){
 function chooseHerb(w, u, policy){
   const P = policy.byArch[A._internals.archetypeOf(u)], stats = w.cfg.policyStats;
   const {opts, X} = (P.feat === 'plus' ? FP : F).extract(w, u, true), h = F.herbHeuristic(w, u, opts);
-  const a = h.i < 0 ? -1 : pickLin(w, P, X, h.i, u);
+  const a = h.i < 0 ? -1 : pickLin(w, P, X, h.i, u, opts.map(o => o.kind === 'target'));
   if (stats){ stats.n = (stats.n || 0) + 1; if (a === h.i) stats.agree = (stats.agree || 0) + 1; }
   u.target = a < 0 ? h.t : (opts[a].kind === 'target' ? opts[a].t : null); u.state = u.target ? 'engage' : 'roam';
 }
@@ -66,7 +68,7 @@ function chooseGuard(w, u, policy, h){ // returns the target to take (h = the he
   if (u.rider || (P.only === 'cat' && !(u.s.pred && u.s.latch))) return h; // P.only 'cat': only your big cats learn; the rest keep the heuristic
   if (u.forceT && w.t < u.forceUntil) return A._internals.active(u.forceT) ? u.forceT : h; // a lookahead branch holds its tried target
   const {opts, X} = G.extract(w, u, P.wide), i = G.heuristic(opts, h); // P.wide: any enemy your side can see (no leash)
-  const a = i < 0 ? -1 : P.kind === 'target-look' ? P.pick(w, u, opts, i) : pickLin(w, P, X, i, u); // target-look: plan.js (training / headroom tests only)
+  const a = i < 0 ? -1 : P.kind === 'target-look' ? P.pick(w, u, opts, i) : pickLin(w, P, X, i, u, opts.map(o => o.kind === 'target')); // target-look: plan.js (training / headroom tests only)
   if (stats){ stats.n = (stats.n || 0) + 1; if (a === i) stats.agree = (stats.agree || 0) + 1; }
   return a < 0 ? h : opts[a].kind === 'target' ? opts[a].t : null;
 }

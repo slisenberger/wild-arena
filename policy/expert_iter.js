@@ -48,7 +48,7 @@ if (cmd === 'init'){
 if (!s) throw new Error('no state ' + file + ' (run init first)');
 if (s.simHash !== R.simHash() && !process.env.ALLOW_ENGINE_MISMATCH) throw new Error(`${file} was made with sim ${s.simHash}; this checkout has ${R.simHash()}`);
 const c = s.config, T = +opt.threads || c.threads, HOURS = +opt.hours || 0, T0 = Date.now(), fo = {arch: c.arch, seed: c.seed, withLive: true, goal: c.goal, spec: c.spec, withCat: c.arch === 'guard' && c.only === 'cat'};
-const W = theta => Object.assign({}, s.P0, {theta: theta.slice()});
+const W = theta => Object.assign({}, s.P0, {theta: theta.slice(), targetsOnly: true}); // the net only re-ranks targets (its labels only compare targets)
 function pool(jobs, extra){
   return Promise.all([...Array(T).keys()].map(k => new Promise((res, rej) => { const w = new Worker(__filename, {workerData: Object.assign({jobs: jobs.filter((_, q) => q % T === k), arch: c.arch, o: c}, extra || {})}); w.on('message', res); w.on('error', rej); }))).then(p => p.flat());
 }

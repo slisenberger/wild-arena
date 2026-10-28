@@ -53,7 +53,7 @@ function makePlanner(o){
     if (o.data){ const X = feats(), r4 = x => Math.round(x * 1e4) / 1e4; o.data.push({sp: u.s.id, tr: TR.traits(u.s), X: tries.map(i => X[i].map(r4)), s: sc.map(r4), teach: tries.indexOf(teach)}); }
     if (best !== teach) P.changed++;
     u.planT = w.t; u.planTo = opts[best] && opts[best].t;
-    if (o.learner){ const X = TM.inputs(o.learner, feats(), u), q = TM.scores(o.learner, X, teach); let k = 0; q.forEach((x, j) => { if (x > q[k]) k = j; }); return k; }
+    if (o.learner){ const X = TM.inputs(o.learner, feats(), u), q = TM.scores(o.learner, X, teach); if (o.learner.targetsOnly) opts.forEach((x, j) => { if (x.kind !== 'target' && j !== teach) q[j] = -Infinity; }); let k = 0; q.forEach((x, j) => { if (x > q[k]) k = j; }); return k; }
     return best;
   };
   return P;
