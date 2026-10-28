@@ -99,6 +99,11 @@ function init(opts){
     : M.zeros(F.DIM, cfg.nh, cfg.margin, AR.nout);
   if (cfg.target && cfg.feat) P0.feat = cfg.feat; if (cfg.target && cfg.only) P0.only = cfg.only; if (cfg.target && cfg.wide) P0.wide = true; if (cfg.nh && !cfg.target) M.withHidden(P0, R.A.rng(cfg.seed * 31 + 7));
   let theta0 = M.flat(P0, cfg.mode);
+  if (cfg.initWeights && cfg.target){ // a target scorer warm start: a state (bc_target.js / train.js) or a weights file of the same shape
+    const W = JSON.parse(fs.readFileSync(cfg.initWeights, 'utf8')), WP = W.P0 ? Object.assign({}, W.P0, W.best ? {theta: W.best.theta, wt: W.P0.kind === 'target-lin' ? W.best.theta : undefined} : {}) : W;
+    if (WP.kind !== P0.kind || WP.nin !== P0.nin || (WP.nh || 0) !== (P0.nh || 0)) throw new Error(`initWeights ${cfg.initWeights}: ${WP.kind} ${WP.nin}/${WP.nh} does not match ${P0.kind} ${P0.nin}/${P0.nh} (set --nh and --feat to match)`);
+    P0 = Object.assign({}, WP); delete P0.meta; P0.margin = cfg.margin; if (cfg.feat) P0.feat = cfg.feat; theta0 = M.flat(P0, cfg.mode);
+  }
   if (cfg.initWeights && !cfg.target){ // v2: continue from shipped weights (same shape: features, intents, hidden size)
     const W = JSON.parse(fs.readFileSync(cfg.initWeights, 'utf8'));
     const grow = !(W.nh || 0) && cfg.nh > 0; // linear weights into an MLP: keep bl/Wl, fresh random W1/b1, W2 = 0 (same behaviour)

@@ -1,0 +1,21 @@
+{
+ "note": "Milestone 4 round 12 (Oct 28): enemy cats, expert iteration + ES fine-tune. Start = cat_target_bc3 (target-mlp 16 hidden + species traits, plus features, imitating the fair lookahead with 3 rolls per option; in play +0.134 ± 0.034 vs the heuristic but fails sprintRate, style 0.79). ES with the style Lagrangian from there; trust region 0.5-2 around the start.",
+ "runs": [
+  {
+   "name": "cbc_tc05",
+   "args": "--arch=cat --target=true --feat=plus --nh=16 --margin=.25 --initWeights=policy/weights/cat_target_bc3.json --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --goal=checkmate --spec=true --thetaClip=.5 --pairs=24 --seed=2201"
+  },
+  {
+   "name": "cbc_tc1",
+   "args": "--arch=cat --target=true --feat=plus --nh=16 --margin=.25 --initWeights=policy/weights/cat_target_bc3.json --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --goal=checkmate --spec=true --thetaClip=1 --pairs=24 --seed=2202"
+  },
+  {
+   "name": "cbc_tc2",
+   "args": "--arch=cat --target=true --feat=plus --nh=16 --margin=.25 --initWeights=policy/weights/cat_target_bc3.json --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --goal=checkmate --spec=true --thetaClip=2 --pairs=32 --seed=2203"
+  },
+  {
+   "name": "cbc_tc1_s2",
+   "args": "--arch=cat --target=true --feat=plus --nh=16 --margin=.25 --initWeights=policy/weights/cat_target_bc3.json --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --goal=checkmate --spec=true --thetaClip=1 --pairs=32 --seed=2204"
+  }
+ ]
+}
