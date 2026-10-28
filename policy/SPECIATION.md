@@ -104,6 +104,14 @@ each species develop its own realistic fighting style. This note is the plan; th
     5-minute real-time fight in the browser, and deterministic (the branch dice derive from the fight state), so replays and
     game links still work. Tools that run thousands of fights (pricing, board.js) get ~12x slower for fights with enemy cats.
 
+- Expert iteration, round 2 (Oct 28): labels averaged over 3 fair rolls (ROLLS=3; the lookahead itself stays +0.195 ± 0.038).
+  bc_cat3 (16 hidden, 22k decisions): **+0.134 ± 0.034** in play, you 56.3% -> 50.9%, but fails sprintRate (style 0.79; idle
+  5% -> 33%). x0.7 output: +0.062 ± 0.031, style 0.83. + one DAgger round (9k decisions on the learner's own states): bc_cat4
+  +0.057 ± 0.031, style 0.90, no gate; 48 hidden: +0.062 ± 0.032, same. Imitation plateaus at ~1/3 of the lookahead once
+  realism holds; ES fine-tune from bc_cat3 under the style constraint is running (tgt12). Running the lookahead live
+  (planning cats) keeps the whole +0.2 with clean style: waiting for the owner's call (?plan=1 prototype).
+- Guards: guard_target_m2 replicates (tgt11: 4 of 5 seeds significant; m3 = 16 hidden: fresh +0.129 ± 0.021, cat fights +0.180).
+
 ## Phases (each measured before the next)
 1. Plumbing: joint (target, intent) hook for every archetype, zero/heuristic policy byte-identical to today
    (`check_identical.js`), features + trait vector, harness tests.
