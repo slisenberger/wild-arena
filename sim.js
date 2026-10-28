@@ -577,7 +577,7 @@ function predatorTarget(w, u){
     if (!canSee(w, u, t) && !(t.side === 'H' && dist(u, t) < 70)) continue;
     if (u.repelBy === t && u.repelUntil > w.t) continue; // musked: it wants nothing more to do with that honey badger
     const d = dist(u, t);
-    if (has(u,'waterbound') && w.wet && distWater(w, t) > 5) continue; // a croc takes prey at the water's edge, never on open ground
+    if (has(u,'waterbound') && w.wet && !w.lastStand && distWater(w, t) > 5) continue; // a croc takes prey at the water's edge, never on open ground (unless it is all its side has left)
     const ts = strength(t);
     let vuln = Math.min(4, Math.pow(my / ts, 1.2));
     let sc = Math.pow(t.s.mass, expo) * vuln;
@@ -624,7 +624,7 @@ function herbivoreTarget(w, u){
   for (const t of w.units){
     if (!hostile(w, u, t)) continue;
     if (u.repelBy === t && u.repelUntil > w.t) continue; // musked
-    if (has(u,'shoreGuard') && w.wet && distWater(w, t) > 6 && u.grudge !== t) continue; // a walrus defends its water, not the open snow (left alone in its lake, the fight can end 'quiet')
+    if (has(u,'shoreGuard') && w.wet && !(w.lastStand && u.side === 'E') && distWater(w, t) > 6 && u.grudge !== t) continue; // a walrus defends its water, not the open snow (left alone in its lake, the fight can end 'quiet')
     const d = dist(u, t);
     let sc = 0;
     if (u.grudge === t) sc = 5;
@@ -658,7 +658,7 @@ function herbCandidates(w, u){
   const dr = drive(u), out = [];
   for (const t of w.units){
     if (!hostile(w, u, t) || (u.repelBy === t && u.repelUntil > w.t) || !reachable(u, t)) continue;
-    if (has(u,'shoreGuard') && w.wet && distWater(w, t) > 6 && u.grudge !== t) continue;
+    if (has(u,'shoreGuard') && w.wet && !(w.lastStand && u.side === 'E') && distWater(w, t) > 6 && u.grudge !== t) continue;
     const d = dist(u, t);
     if (u.grudge !== t && !canSee(w, u, t) && !(d < 30 + 50 * dr && (Math.hypot(t.vx, t.vy) > 2 || dr > .5))) continue;
     out.push(t);
@@ -1057,6 +1057,10 @@ function step(w){
     // a cat that has been out of the action for a while (no strike for ~8 s, nothing after it) lies low and can ambush again
     if (!u.ambushReady && has(u,'ambush') && (has(u,'catSense') || has(u,'pinDown')) && u.atk < -8 && !u.latchedBy && !u.latchOn && !units.some(o => o.target === u && active(o))) u.ambushReady = true;
   }
+  // last stand: when water lurkers (croc, walrus) are all the other side has left, they leave the water and come for you
+  // (slowly: a croc on land walks 2-4 km/h, a walrus hauls itself along) instead of sitting out the fight in their water
+  if (!w.lastStand && w.wet){ let any = false, only = true; for (const u of units) if (u.side === 'E' && active(u)){ any = true; if (!has(u,'waterbound') && !has(u,'shoreGuard')){ only = false; break; } }
+    if (any && only){ w.lastStand = true; for (const u of units) if (u.side === 'E' && active(u)){ sig(w, u, 'comes out of the water'); log(w, `${capName(u)} is all its side has left: it comes out of the water for you`, 'info', u); } } }
   // closing arena
   if (w.zone){
     w.zb = zoneAt(w, w.t);
@@ -1261,8 +1265,8 @@ function step(w){
       } else { tx = c.x; ty = c.y; frac = .7; }
     } else if (u.state === 'engage' && u.target){
       const t = u.target, d = dist(u, t), touch = u.r + t.r + u.s.reach * .6;
-      if (has(u,'waterbound') && w.wet && distWater(w, t) > 5){ const p = waterPoint(w, u, t); tx = p.x; ty = p.band ? t.y : p.y; frac = .3; }
-      else if (has(u,'shoreGuard') && w.wet && distWater(w, t) > 3 && d > touch + 1){ const p = waterPoint(w, u, t); tx = p.x; ty = p.band ? t.y : p.y; frac = .6; } // a walrus waits in the water by the shore nearest it
+      if (has(u,'waterbound') && w.wet && !w.lastStand && distWater(w, t) > 5){ const p = waterPoint(w, u, t); tx = p.x; ty = p.band ? t.y : p.y; frac = .3; }
+      else if (has(u,'shoreGuard') && w.wet && !(w.lastStand && u.side === 'E') && distWater(w, t) > 3 && d > touch + 1){ const p = waterPoint(w, u, t); tx = p.x; ty = p.band ? t.y : p.y; frac = .6; } // a walrus waits in the water by the shore nearest it
       else if (perchAmbush(w, u, t, d)){ continue; } // up a tree, waiting to drop on it
       else if (u.backT > 0 && t === u.stabbed){ // stabbed and let go: circle out of reach while it bleeds
         const rx = (u.x - t.x) / (d || 1), ry = (u.y - t.y) / (d || 1), vx = -ry * u.orbitDir + rx * (8 - d) * .4, vy = rx * u.orbitDir + ry * (8 - d) * .4, m = Math.hypot(vx, vy) || 1;
@@ -1964,7 +1968,7 @@ function predCandidates(w, u){
   for (const t of w.units){
     if (!hostile(w, u, t)) continue;
     if (!canSee(w, u, t) && !(t.side === 'H' && dist(u, t) < 70)) continue;
-    if (has(u,'waterbound') && w.wet && distWater(w, t) > 5) continue;
+    if (has(u,'waterbound') && w.wet && !w.lastStand && distWater(w, t) > 5) continue;
     if (!reachable(u, t)) continue;
     out.push(t);
   }

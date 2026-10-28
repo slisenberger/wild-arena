@@ -232,6 +232,15 @@ th.n{text-align:right}
 }
 /* progressive UX pass (Oct 27): the shop's round panel, team cards with health/heal/sell/XP, formation roster */
 .progshop{display:flex;flex-direction:column;gap:10px}
+.mapcard{display:flex;gap:12px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:10px}
+.mapcard canvas{flex:0 0 46%;max-width:240px;width:46%;border-radius:6px;display:block}
+.mapcard .mc-t{min-width:0;display:flex;flex-direction:column;gap:5px}
+.mapcard .mc-n{font-family:var(--display);font-weight:800;font-size:22px;letter-spacing:.02em;text-transform:uppercase;line-height:1}
+.mapcard .mc-n small{font-family:var(--body);font-weight:600;font-size:11px;color:var(--muted);letter-spacing:.08em;display:block;margin-bottom:3px}
+.mapcard .mc-f{display:flex;flex-wrap:wrap;gap:4px}
+.mapcard .mc-f span{font-size:11px;font-weight:600;padding:2px 7px;border-radius:999px;background:var(--panel2);border:1px solid var(--line);color:var(--bone)}
+.mapcard .mc-f span.w{border-color:#2a6a82;color:#9fd3e3}
+.mapcard p{margin:0;font-size:12.5px;line-height:1.35;color:var(--muted)}
 .progshop .panel{padding:12px 14px}
 .roundchips{display:flex;flex-wrap:wrap;gap:6px}
 .roundchips > span{display:inline-flex;align-items:center;gap:6px;font-size:13px;padding:4px 10px;border-radius:999px;border:1px solid var(--line);background:var(--panel2)}
@@ -351,6 +360,7 @@ body.hasbar #toDraft, body.hasbar #toDeployD, body.hasbar #startFight{display:no
     <h2 id="draftTitle">Build a team to protect you from the rest</h2>
     <p class="lede" id="boardLede"></p>
   </div>
+  <div class="mapcard" id="draftMap"></div>
   <div class="progshop" id="progShop" hidden></div>
   <div class="teamline" id="teamline"></div>
   <div id="tiers" style="display:flex;flex-direction:column;gap:12px"></div>

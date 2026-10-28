@@ -45,6 +45,7 @@ count as 5:00). Live site: GitHub Pages serves `index.html` from `main`.
   Mobile UX pass (Oct 27, `research/ux_audit/`): a sticky bottom action bar (`renderActBar`) carries each step's next action
   (Fight straight from the draft with auto formation, Skip to result, Play again / New board); `audit.js` re-measures taps
   and scroll on phone/360/desktop, `modes_check.js` checks the hidden modes, daily and share links through the bar.
+  Draft map card (Oct 28, `renderDraftMap`, `#draftMap`): this game's / round's actual map (ground from `groundFor`, your side, your start), its features as chips (river, waterhole, frozen lake, snow depth, tree count) and a one-line tip (`MAP_TIP`); owner: "you don't know the map at draft time".
 - `template.html` — page shell + CSS with placeholders `/*FACES*/`, `/*SIM*/`, `/*UI*/`.
 - `faces.json` — 34 base64 portraits (112×112) keyed by species id, cropped from public-domain/CC0 (giant kangaroo: CC BY 3.0; gaur: CC BY 2.0; woolly rhino: CC BY 2.5)
   Wikimedia Commons images (the original meme crops were replaced: unknown rights). `CREDITS.md` lists each
@@ -253,7 +254,7 @@ round. Report ± standard errors.
   against you. Whole-roster mode (no `cfg.board`) ignores pack items.
 - **Croc:** on a map with water it only takes prey within 5 m of the water and lurks submerged otherwise (it
   used to walk out and spend 86% of the fight on land). Away from water it bites as hard as ever but moves at
-  70% and tires fast. Cold-blooded animals (cold < .3: the croc) are never dealt on the tundra.
+  70% and tires fast. Cold-blooded animals (cold < .3: the croc) are never dealt on the tundra. **Last stand (Oct 28, owner: "won because the last enemy croc never left the water"):** when water lurkers (`waterbound` croc, `shoreGuard` walrus) are all the other side has left, `w.lastStand` lifts their water rules (targets, engage moves) and they come out after you at their land speed (croc 70% → 25% beyond 10 m; walrus hauls along); log line + `sig 'comes out of the water'`. Progressive round-1-style fights on boards with one (`lurk3.js`, 1,242): 'quiet' wins 73 → 4, survival 22.1% → 16.3%; full games 36.0% → 34.9%. Swing croc 29 ± 3 (was 28), walrus 23 (same); progressive bot round 1 76%, 23.6% complete (unchanged). Fights without a last stand are byte-identical (400).
 - **Realism audit (Oct 2026, two zoology reviews + `audit.js` behavior telemetry):**
   - Other-side herbivores notice you by sight (`canSee`) or by sound/smell of movement within 30 m.
   - Mock charges via `bluff` + `bluffP` (gorilla always; elephant/mammoth .6, black bear .7, grizzly .5,

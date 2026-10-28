@@ -136,6 +136,7 @@ function renderDraft(){
   $('progShop').hidden = !R; if (R) $('progShop').innerHTML = progShopHTML(R); else $('progShop').innerHTML = '';
   $('boardLede').textContent = R ? progLede(R)
     : five + daily + (`This game's board: ${onBoard.length} animals worth $${boardTotal().toLocaleString()}. Spend up to $${BUDGET.toLocaleString()}; every board animal you don't pick ends up on the other side. Tap a card to draft it; the panel below shows the full stat line.`);
+  renderDraftMap();
   if (draftAlt()) return; // a prototype draft screen (?draftui=…, DRAFT_UIS below) renders instead of the cards
   // the cards are grouped by price, priciest first
   const groups = [...new Set(onBoard.map(a => a.price))].sort((x, y) => y - x).map(p => [p, onBoard.filter(x => x.price === p)]);
@@ -624,6 +625,27 @@ function makeCfg(){
   const c = { board:S.board.slice(), team:[...S.team], placements:currentPlacements(), human:youAt(), terrain:S.terrain, mode:S.mode, mount:(S.mount && S.team.has(S.mount)) ? S.mount : null, seed:S.seed };
   if (S.prog){ const m = M.cfgFor(S.prog); c.startHp = m.startHp; if (m.maxHp) c.maxHp = m.maxHp; if (m.levels) c.levels = m.levels; } // carried wounds, scars and levels (progressive mode only)
   return c;
+}
+// the map card at the top of the draft: this game's actual ground (water, trees, snow), your side and where you start
+const MAP_TIP = {savanna: 'Heat builds all fight, so shade matters. A grass fire closes in from 0:30.', river: 'The other side starts across the river: crossing is slow except at the fords. A flood closes in from 0:30.',
+  forest: 'Short sight lines: cats ambush for double damage and chargers crash into trees. A fire closes in from 0:30.', tundra: 'Snow slows heavy animals and the cold drains stamina. A blizzard closes in from 0:30.'};
+const WET_FEATURES = ['waterhole', 'pool', 'frozen lake', 'third ford'];
+let mapCardKey = null;
+function renderDraftMap(){
+  const el = $('draftMap'); if (!el) return;
+  const V = curVar(), T = A.TERRAINS[S.terrain], key = S.terrain + ':' + S.seed + ':' + !!S.prog;
+  if (mapCardKey === key && el.firstChild) return;
+  mapCardKey = key;
+  const feats = (V.band ? ['river'] : []).concat(V.features || [], S.terrain === 'forest' && V.trees ? [V.trees + ' trees'] : []), w0 = A.setup({board: [], team: [], terrain: S.terrain, mode: S.mode, seed: S.seed});
+  el.innerHTML = `<canvas width="480" height="${Math.round(480 * A.H / A.W)}" aria-label="Map preview"></canvas><div class="mc-t"><div class="mc-n"><small>${S.prog ? 'THIS ROUND\'S MAP' : 'THIS GAME\'S MAP'}</small>${esc(T.name)}</div>`
+    + `<div class="mc-f">${feats.some(f => WET_FEATURES.includes(f) || f === 'river') ? '' : '<span>No water</span>'}${feats.map(f => `<span class="${WET_FEATURES.includes(f) || f === 'river' ? 'w' : ''}">${esc(f[0].toUpperCase() + f.slice(1))}</span>`).join('')}</div><p>${esc(MAP_TIP[S.terrain] || '')}</p></div>`;
+  const cv = el.querySelector('canvas'), g = cv.getContext('2d'), sc = cv.width / A.W, z = A.zoneFor(S.terrain, V);
+  g.drawImage(groundFor(S.terrain, w0.trees, cv.width, cv.height, w0.shade, w0.variant), 0, 0);
+  g.fillStyle = 'rgba(79,209,189,.12)'; g.fillRect(z.x0 * sc, 0, (z.x1 - z.x0) * sc, cv.height);
+  g.strokeStyle = 'rgba(79,209,189,.8)'; g.lineWidth = 3; g.setLineDash([10, 7]); g.beginPath(); g.moveTo(z.x1 * sc, 0); g.lineTo(z.x1 * sc, cv.height); g.stroke(); g.setLineDash([]);
+  const H = w0.human; g.fillStyle = '#4fd1bd'; g.beginPath(); g.arc(H.x * sc, H.y * sc, 9, 0, 7); g.fill(); g.strokeStyle = '#0d110e'; g.lineWidth = 3; g.stroke();
+  g.font = '800 30px "Big Shoulders Display", sans-serif'; g.fillStyle = 'rgba(79,209,189,.95)'; g.fillText('YOU', z.x0 * sc + 10, 34);
+  g.textAlign = 'right'; g.fillStyle = 'rgba(239,107,75,.95)'; g.fillText('THEM', cv.width - 10, 34); g.textAlign = 'left';
 }
 function drawDeploy(){
   deployWorld = A.setup(makeCfg());
