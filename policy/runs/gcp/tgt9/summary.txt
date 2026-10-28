@@ -1,0 +1,4 @@
+gcw_s1             [test] best (after 36 updates) vs zero weights on 1200 held-out fights: +0.020 ± 0.020 (within 2 SE) | style 0.999 gates [] drift [dodgeRate 0.713→1.001]
+gcw_s2             [test] best (zero) vs zero weights on 1200 held-out fights: +0.000 ± 0.000 (within 2 SE) | style 1.000 gates [] drift []
+gcw_mlp            (no test yet)
+gaw_mlp            [test] best (after 12 updates) vs zero weights on 1200 held-out fights: +0.148 ± 0.022 (beyond 2 SE) | style 1.000 gates [] drift []
