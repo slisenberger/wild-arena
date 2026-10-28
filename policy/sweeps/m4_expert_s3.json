@@ -1,0 +1,13 @@
+{
+ "note": "Milestone 4 expert iteration for YOUR cats (owner: the cats I pick should do okay; nothing may need in-game loading). Headroom (probes/guard_lookahead.js, 300 fights with your cat): the lookahead gives +0.203 ± 0.038, you survive 39.0% -> 50.7% (+30.6 s), your cats die 81% -> 77%, style clean. Network: target-mlp 32 hidden over guard_features + species traits, only your big cats, wide; guard goal; DAgger rounds.",
+ "runs": [
+  {
+   "name": "ei_gcat",
+   "args": "--trainer=expert --arch=guard --only=cat --wide=true --rounds=6 --fights=900 --H=8 --max=3 --rolls=3 --nh=32 --epochs=20 --lr=.002 --val=800 --test=1200 --dagger=true --real=0 --seed=2501"
+  },
+  {
+   "name": "ei_gcat_real05",
+   "args": "--trainer=expert --arch=guard --only=cat --wide=true --rounds=6 --fights=900 --H=8 --max=3 --rolls=3 --nh=32 --epochs=20 --lr=.002 --val=800 --test=1200 --dagger=true --real=0.5 --seed=2502"
+  }
+ ]
+}

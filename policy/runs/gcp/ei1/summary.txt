@@ -1,0 +1,2 @@
+ei_cat_r3          [test] best (round 4) vs today's cats on 1200 held-out fights: +0.060 ± 0.030 (within 2 SE) | style 0.947 gates [] drift [closeShare 0.688→0.491; idleShare 0.062→0.159; humanShare 0.171→0.293] | your survival -1.9 pts
+ei_cat_r5          [test] best (init (= today's cats)) vs today's cats on 1200 held-out fights: +0.000 ± 0.000 (within 2 SE) | style 1.000 gates [] drift [] | your survival 0.0 pts
