@@ -1,0 +1,13 @@
+{
+ "note": "Milestone 4 expert iteration (Oct 28; owner: nothing may need in-game loading, so the lookahead is a training-only teacher): enemy cats target-mlp (32 hidden + species traits, features_plus) imitating the fair 8-s lookahead (+0.247 ± 0.067 itself), DAgger rounds, validation with the realism gates; the shipped result is the network alone. Labels averaged over 3 vs 5 rolls.",
+ "runs": [
+  {
+   "name": "ei_cat_r3",
+   "args": "--trainer=expert --arch=cat --rounds=6 --fights=900 --H=8 --max=3 --nh=32 --epochs=20 --lr=.002 --val=800 --test=1200 --dagger=true --rolls=3 --seed=2301"
+  },
+  {
+   "name": "ei_cat_r5",
+   "args": "--trainer=expert --arch=cat --rounds=6 --fights=900 --H=8 --max=3 --nh=32 --epochs=20 --lr=.002 --val=800 --test=1200 --dagger=true --rolls=5 --seed=2302"
+  }
+ ]
+}

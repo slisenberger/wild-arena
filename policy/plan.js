@@ -9,13 +9,17 @@
 const path = require('path');
 const A = require(process.env.SIM ? path.resolve(process.env.SIM) : path.join(__dirname, '..', 'sim.js'));
 const L = require('./lookahead.js');
+const FP = require('./features_plus.js'), TR = require('./traits.js'), TM = require('./target_model.js');
 function score(w){
   let pl = 0, pm = 0, el = 0, em = 0;
   for (const u of w.units){ const lost = u.maxhp - Math.max(0, u.state === 'dead' ? 0 : u.hp); if (u.side === 'E'){ el += lost; em += u.maxhp; } else { pl += lost; pm += u.maxhp; } }
   const H = w.human; return 2 * (H.maxhp - Math.max(0, H.state === 'dead' ? 0 : H.hp)) / H.maxhp + pl / pm - el / em + (H.state === 'dead' ? 2 : 0);
 }
 function makePlanner(o){
-  o = Object.assign({H: 8, max: 3, cool: 2}, o || {}); // 8 s measured at least as good as 15 s (+0.247 vs +0.195, same fights) at half the cost
+  o = Object.assign({H: 8, max: 3, cool: 2, rolls: 1, data: null, learner: null}, o || {});
+  // training only (policy/expert_iter.js): rolls = fair rolls averaged per option; data = an array that collects each planned
+  // decision (features_plus rows of the tried options, their branch scores, the heuristic's pick, the cat's traits);
+  // learner = a target-mlp whose pick is played instead of the plan's (DAgger: the plan only labels) // 8 s measured at least as good as 15 s (+0.247 vs +0.195, same fights) at half the cost
   const P = {kind: 'target-look', n: 0, branched: 0, changed: 0};
   P.pick = (w, u, opts, teach) => {
     P.n++;
@@ -26,15 +30,22 @@ function makePlanner(o){
     const tries = (teach >= 0 ? [teach] : []).concat(others), ui = w.units.indexOf(u);
     const inner = {policy: {byArch: Object.assign({}, w.cfg.policy.byArch, {cat: {teacher: true}})}}; // inside a branch: today's cats, every other learned choice kept
     let best = teach, bs = -1e9; P.branched++;
+    const sc = [];
     for (const i of tries){
-      const c = L.cloneWorld(w, inner), cu = c.units[ui];
-      c.R.seek((w.R.state() ^ Math.imul(P.n * 97 + i + 1, 0x9e3779b9)) >>> 0);
-      cu.forceT = c.units[w.units.indexOf(opts[i].t)]; cu.forceUntil = c.t + o.H; cu.target = cu.forceT; cu.state = 'engage'; cu.carcass = null;
-      const t1 = c.t + o.H; while (!c.over && c.t < t1) A.step(c);
-      const v = score(c); if (v > bs + 1e-9){ bs = v; best = i; }
+      let v = 0;
+      for (let k = 0; k < o.rolls; k++){
+        const c = L.cloneWorld(w, inner), cu = c.units[ui];
+        c.R.seek((w.R.state() ^ Math.imul(P.n * 97 + i + 1 + 7919 * k, 0x9e3779b9)) >>> 0);
+        cu.forceT = c.units[w.units.indexOf(opts[i].t)]; cu.forceUntil = c.t + o.H; cu.target = cu.forceT; cu.state = 'engage'; cu.carcass = null;
+        const t1 = c.t + o.H; while (!c.over && c.t < t1) A.step(c);
+        v += score(c) / o.rolls;
+      }
+      sc.push(v); if (v > bs + 1e-9){ bs = v; best = i; }
     }
+    if (o.data){ const X = FP.extract(w, u).X, r4 = x => Math.round(x * 1e4) / 1e4; o.data.push({sp: u.s.id, tr: TR.traits(u.s), X: tries.map(i => X[i].map(r4)), s: sc.map(r4), teach: tries.indexOf(teach)}); }
     if (best !== teach) P.changed++;
     u.planT = w.t; u.planTo = opts[best] && opts[best].t;
+    if (o.learner){ const X = TM.inputs(o.learner, FP.extract(w, u).X, u), q = TM.scores(o.learner, X, teach); let k = 0; q.forEach((x, j) => { if (x > q[k]) k = j; }); return k; }
     return best;
   };
   return P;
