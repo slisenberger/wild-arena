@@ -22,6 +22,9 @@ const fmtT = t => { t = Math.max(0, t); const m = Math.floor(t/60), s = Math.flo
 const kmh = v => Math.round(v * 3.6);
 // 5 in a Row (prototype, Oct 27): hidden unless ?five=1
 const FIVE_ON = (() => { try { return /[?&]five=1\b/.test(location.search); } catch(e){ return false; } })();
+// prototype (owner playtest), hidden unless ?smart=1: every learned target choice at once (policy/smart.js): enemy cats plan by
+// lookahead, enemy chargers and your guards pick targets learned in training. Smart fights skip personal stats.
+const SMART_ON = (() => { try { return (/[?&]smart=1\b/.test(location.search) || window.WA_SMART === true) && typeof window.ArenaSmart === 'function'; } catch(e){ return false; } })(); // window.WA_SMART: a playtest copy that is always smart
 const canAdd = a => S.mig ? M.canBuy(S.mig, a.id) : a.price <= BUDGET - spent();
 function strengthOf(a){ return Math.sqrt(A.hpOf(a) * a.dmg / a.cd); }
 function tok(a, size){ const d = document.createElement('span'); d.className = 'tok'; d.style.cssText = tokStyle(a); d.title = a.name; if (size) { d.style.width = d.style.height = size + 'px'; } if (!faceOf(a)) d.textContent = a.abbr; return d; }
@@ -609,6 +612,7 @@ function currentPlacements(){ const y = youAt(), abs = absPlacements(), out = {}
 function makeCfg(){
   const c = { board:S.board.slice(), team:[...S.team], placements:currentPlacements(), human:youAt(), terrain:S.terrain, mode:S.mode, mount:(S.mount && S.team.has(S.mount)) ? S.mount : null, seed:S.seed };
   if (S.mig){ const m = M.cfgFor(S.mig); c.startHp = m.startHp; c.humanHp = m.humanHp; c.boons = m.boons; } // carried wounds and boons (migration only)
+  if (SMART_ON) c.policy = window.ArenaSmart(); // ?smart=1 prototype
   return c;
 }
 function drawDeploy(){
@@ -668,7 +672,9 @@ function drawDeploy(){
 })();
 $('autoForm').addEventListener('click', () => { S.pos = {}; S.youPos = null; drawDeploy(); });
 $('newSeed').addEventListener('click', () => { S.seed = (Math.random()*1e6|0) + 1; $('seedLbl').textContent = S.seed; drawDeploy(); });
-$('startFight').addEventListener('click', () => startBattle());
+// ?smart=1: planning cats take a moment to simulate; say so and let the page paint before the fight is computed
+function startSmart(go){ if (!SMART_ON){ go(); return; } const b = $('startFight'), r = $('rematch'), t = b.textContent; b.disabled = r.disabled = true; b.textContent = 'The animals are planning…'; setTimeout(() => { try { go(); } finally { b.disabled = r.disabled = false; b.textContent = t; } }, 40); }
+$('startFight').addEventListener('click', () => startSmart(startBattle));
 
 // ---------- battle ----------
 function startBattle(){
@@ -677,7 +683,7 @@ function startBattle(){
   // migration: the result counts the moment the fight is simulated (a reload can't undo it)
   if (S.mig){ S.migWorld = w; S.migEntry = M.applyResult(S.mig, w); if (S.mig.over) recordMigEnd(); saveRun(); }
   if (S.five){ S.fiveWorld = w; fiveApply(w); }
-  if (!S.mig) recordStats(w); // personal stats count the fight the moment it's simulated
+  if (!S.mig && !SMART_ON) recordStats(w); // personal stats count the fight the moment it's simulated (not ?smart=1 prototype fights)
   $('rematch').hidden = !!(S.mig || S.five);
   const cg = currentGame(); S.played = Object.assign(cg, {pos: Object.assign({}, S.pos), you: S.youPos && Object.assign({}, S.youPos), daily: S.daily}); // what the result banner's link replays
   S.world = w; S.dur = w.result.t; S.playT = 0; S.playing = true; S.sel = 0;
@@ -687,7 +693,7 @@ function startBattle(){
   renderReport(false);
   S.lastTs = 0;
 }
-$('rematch').addEventListener('click', () => { if (!S.daily){ S.seed = (Math.random()*1e6|0) + 1; $('seedLbl').textContent = S.seed; } startBattle(); });
+$('rematch').addEventListener('click', () => { if (!S.daily){ S.seed = (Math.random()*1e6|0) + 1; $('seedLbl').textContent = S.seed; } startSmart(startBattle); });
 $('replaySame').addEventListener('click', () => { S.playT = 0; S.playing = true; $('report').hidden = true; $('banner').innerHTML = ''; });
 $('playBtn').addEventListener('click', () => { if (S.playT >= S.dur) { S.playT = 0; $('report').hidden = true; $('banner').innerHTML = ''; } S.playing = !S.playing; });
 document.querySelectorAll('#speedSeg button').forEach(b => b.addEventListener('click', () => { S.speed = +b.dataset.v; syncSpeed(); }));
@@ -1459,6 +1465,7 @@ if (!loadHash()){
   dealNewBoard(); renderAll();
   const run = loadRun(); // a migration in progress picks up where it left off after a reload
   if (MIG_ON && run && !run.over){ S.mig = run; go('mig'); showNotice(`<b>Migration resumed</b> <span>Fight ${run.k + 1} of ${M.MIG.FIGHTS}, $${run.money.toLocaleString()} to spend.</span>`); }
+  if (SMART_ON) showNotice('<b>Smart animals (prototype)</b> <span>Enemy cats plan a few seconds ahead before choosing whom to go after; enemy chargers and your guards pick targets learned in training. These fights don\'t count in your stats.</span>');
   else go('arena');
 }
 requestAnimationFrame(frame);

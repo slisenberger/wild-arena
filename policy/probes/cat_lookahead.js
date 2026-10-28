@@ -47,6 +47,7 @@ function lookPolicy(H){
   };
   return P;
 }
+if (isMainThread && require.main !== module){ module.exports = { lookPolicy }; return; } // require()d: just the planner
 if (!isMainThread){
   const out = workerData.jobs.map(j => { const W = j.k === 'look' ? lookPolicy(workerData.H) : {kind: 'target-lin', v: 1, nin: 1, margin: .25, wt: new Array(80).fill(0)};
     const r = R.runFight(j.f, W, 'cat'); if (j.k === 'look'){ r.look = {n: W.n, branched: W.branched, changed: W.changed}; if (W.data) fs.appendFileSync(process.env.COLLECT, W.data.map(d => JSON.stringify(d)).join('\n') + (W.data.length ? '\n' : '')); } return {k: j.k, i: j.i, rec: r}; });
