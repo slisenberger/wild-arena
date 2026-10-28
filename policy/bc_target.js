@@ -8,7 +8,7 @@
 //        --l2=1e-4 --batch=256 --holdout=.1 --seed=1 --arch=cat]
 const fs = require('fs'), path = require('path');
 const TM = require('./target_model.js'), FP = require('./features_plus.js'), TR = require('./traits.js');
-const DEF = {nh: 16, epochs: 40, lr: .003, temp: 'hard', margin: .25, l2: 1e-4, batch: 256, holdout: .1, seed: 1, arch: 'cat'};
+const DEF = {nh: 16, epochs: 40, lr: .003, temp: 'hard', margin: .25, l2: 1e-4, batch: 256, holdout: .1, seed: 1, arch: 'cat', feat: 'plus', only: null, wide: false};
 
 // D: records; o: options; init: optional {theta} to continue from; log: line sink. Returns {P (with theta = best), base, best}
 function train(D, o, log, init){
@@ -17,7 +17,8 @@ function train(D, o, log, init){
   let s = (o.seed >>> 0) || 1; const rnd = () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; };
   for (let i = D.length - 1; i > 0; i--){ const j = Math.floor(rnd() * (i + 1)); [D[i], D[j]] = [D[j], D[i]]; }
   const nv = Math.floor(D.length * o.holdout), V = D.slice(0, nv), Tn = D.slice(nv);
-  const P = TM.mlp(FP.DIM + TR.DIM, o.nh, o.margin, o.seed * 31 + 7, true); P.feat = 'plus';
+  const nin = D.length ? D[0].X[0].length + D[0].tr.length : FP.DIM + TR.DIM; // option features (features_plus, or guard_features for your guards) + traits
+  const P = TM.mlp(nin, o.nh, o.margin, o.seed * 31 + 7, true); if (o.feat) P.feat = o.feat; if (o.only) P.only = o.only; if (o.wide) P.wide = true;
   const NP = TM.npar(P), th0 = TM.thetaOf(P).slice(), th = init && init.theta && init.theta.length === NP ? init.theta.slice() : th0.slice();
   const m = new Array(NP).fill(0), v = new Array(NP).fill(0); let t = 0;
   const inp = d => d.X.map(x => x.concat(d.tr));

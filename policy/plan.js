@@ -9,7 +9,7 @@
 const path = require('path');
 const A = require(process.env.SIM ? path.resolve(process.env.SIM) : path.join(__dirname, '..', 'sim.js'));
 const L = require('./lookahead.js');
-const FP = require('./features_plus.js'), TR = require('./traits.js'), TM = require('./target_model.js');
+const FP = require('./features_plus.js'), G = require('./guard_features.js'), TR = require('./traits.js'), TM = require('./target_model.js');
 function score(w){
   let pl = 0, pm = 0, el = 0, em = 0;
   for (const u of w.units){ const lost = u.maxhp - Math.max(0, u.state === 'dead' ? 0 : u.hp); if (u.side === 'E'){ el += lost; em += u.maxhp; } else { pl += lost; pm += u.maxhp; } }
@@ -18,7 +18,7 @@ function score(w){
 function makePlanner(o){
   o = Object.assign({H: 8, max: 3, cool: 2, rolls: 1, data: null, learner: null, real: 0, arch: 'cat', side: 'E', only: null, wide: false}, o || {});
   // arch / side: whose choice is planned. 'guard' / 'P' = your guards (policy.js chooseGuard; scored for your side; only 'cat' =
-  // just your big cats; wide = no leash), for headroom tests; data / learner are for enemy cats (features_plus) so far
+  // just your big cats; wide = no leash); data / learner use features_plus for enemies and guard_features for your guards
   // real: a realism-aware teacher: each branch's score loses real x (the share of its H seconds this cat spent idle, i.e. slow and
   // not near its target, or sprinting > 8 m from its target); imitation of the plain teacher drifted into idle / sprint-heavy cats
   // training only (policy/expert_iter.js): rolls = fair rolls averaged per option; data = an array that collects each planned
@@ -49,10 +49,11 @@ function makePlanner(o){
       }
       sc.push(v); if (v > bs + 1e-9){ bs = v; best = i; }
     }
-    if (o.data){ const X = FP.extract(w, u).X, r4 = x => Math.round(x * 1e4) / 1e4; o.data.push({sp: u.s.id, tr: TR.traits(u.s), X: tries.map(i => X[i].map(r4)), s: sc.map(r4), teach: tries.indexOf(teach)}); }
+    const feats = () => (o.arch === 'guard' ? G.extract(w, u, o.wide) : FP.extract(w, u)).X;
+    if (o.data){ const X = feats(), r4 = x => Math.round(x * 1e4) / 1e4; o.data.push({sp: u.s.id, tr: TR.traits(u.s), X: tries.map(i => X[i].map(r4)), s: sc.map(r4), teach: tries.indexOf(teach)}); }
     if (best !== teach) P.changed++;
     u.planT = w.t; u.planTo = opts[best] && opts[best].t;
-    if (o.learner){ const X = TM.inputs(o.learner, FP.extract(w, u).X, u), q = TM.scores(o.learner, X, teach); let k = 0; q.forEach((x, j) => { if (x > q[k]) k = j; }); return k; }
+    if (o.learner){ const X = TM.inputs(o.learner, feats(), u), q = TM.scores(o.learner, X, teach); let k = 0; q.forEach((x, j) => { if (x > q[k]) k = j; }); return k; }
     return best;
   };
   return P;

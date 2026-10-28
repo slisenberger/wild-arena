@@ -1,4 +1,4 @@
-// Milestone 4 expert iteration for enemy cats' target choice: the lookahead (policy/plan.js) is a training-only teacher, the
+// Milestone 4 expert iteration for target choice (enemy cats; or --arch=guard: your guards, by default only your big cats): the lookahead (policy/plan.js) is a training-only teacher, the
 // shipped result is a network that needs no in-game search (owner, Oct 28: nothing may need in-game loading).
 // Each round: (1) collect: play fresh fights where every enemy cat decision with 2+ targets is labelled by the fair lookahead
 // (each option's branch score, averaged over `rolls` own-dice rolls); round 0 plays the lookahead's picks, later rounds play
@@ -17,14 +17,14 @@ const ZW = {kind: 'target-lin', v: 1, nin: 200, margin: .25, wt: new Array(200).
 if (!isMainThread){
   const {jobs, arch, o, learner} = workerData, out = [];
   for (const j of jobs){
-    if (j.k === 'collect'){ const data = [], W = PL.makePlanner({H: o.H, max: o.max, cool: 0, rolls: o.rolls, data, learner, real: o.real}); R.runFight(j.f, W, arch); out.push({k: j.k, i: j.i, data}); }
-    else out.push({k: j.k, i: j.i, rec: R.runFight(j.f, j.k === 'base' ? ZW : j.W, arch)});
+    if (j.k === 'collect'){ const g = arch === 'guard', data = [], W = PL.makePlanner({H: o.H, max: o.max, cool: 0, rolls: o.rolls, data, learner, real: o.real, arch, side: g ? 'P' : 'E', only: g ? o.only : null, wide: g && o.wide}); R.runFight(j.f, W, arch); out.push({k: j.k, i: j.i, data}); }
+    else out.push({k: j.k, i: j.i, rec: R.runFight(j.f, j.k === 'base' ? Object.assign({}, ZW, arch === 'guard' ? {only: o.only} : {}) : j.W, arch)});
   }
   parentPort.postMessage(out); return;
 }
 const CMDS = ['init', 'run', 'report'], av = process.argv.slice(2), cmd = CMDS.includes(av[0]) ? av.shift() : 'run', [file, ...rest] = av;
 const opt = Object.fromEntries(rest.filter(a => a.startsWith('--')).map(a => { const [k, v] = a.slice(2).split('='); return [k, v === undefined ? true : isNaN(+v) ? (v === 'true' ? true : v === 'false' ? false : v) : +v]; }));
-const DEF = {arch: 'cat', rounds: 6, fights: 600, rolls: 3, H: 8, max: 3, real: 0, nh: 32, epochs: 20, lr: .002, val: 800, test: 1200, seed: 1, styleThr: .9, dagger: true, threads: Math.min(8, os.cpus().length)};
+const DEF = {arch: 'cat', only: 'cat', wide: true, rounds: 6, fights: 600, rolls: 3, H: 8, max: 3, real: 0, nh: 32, epochs: 20, lr: .002, val: 800, test: 1200, seed: 1, styleThr: .9, dagger: true, threads: Math.min(8, os.cpus().length)};
 const DATA = file + '.data.jsonl.gz';
 const log = m => { console.log(m); fs.appendFileSync(file + '.log', m + '\n'); };
 const save = s => { fs.writeFileSync(file + '.tmp', JSON.stringify(s)); fs.renameSync(file + '.tmp', file); };
@@ -37,15 +37,17 @@ if (cmd === 'report'){ if (!s) process.exit(1); const b = s.best, t = s.test;
   process.exit(0); }
 if (cmd === 'init'){
   if (s) throw new Error(file + ' exists');
-  const c = Object.assign({}, DEF, opt, {trainer: 'expert', target: true, mode: 'linear', feat: 'plus', goal: 'checkmate', spec: true, withLive: true});
-  const P0 = Object.assign({}, require('./target_model.js').mlp(require('./features_plus.js').DIM + require('./traits.js').DIM, c.nh, .25, c.seed * 31 + 7, true), {feat: 'plus'});
-  s = {format: 'wild-arena/expert-iter', simHash: R.simHash(), harnessHash: R.harnessHash(), config: c, features: require('./features_plus.js').NAMES,
+  const c = Object.assign({}, DEF, opt, {trainer: 'expert', target: true, mode: 'linear', withLive: true}); const g = c.arch === 'guard';
+  Object.assign(c, g ? {feat: null, goal: null, spec: false} : {feat: 'plus', goal: 'checkmate', spec: true, only: null, wide: false}); // your guards (arch guard): guard_features, the guard goal, only / wide; enemy cats: features_plus, checkmate
+  const FX = g ? require('./guard_features.js') : require('./features_plus.js');
+  const P0 = Object.assign({}, require('./target_model.js').mlp(FX.DIM + require('./traits.js').DIM, c.nh, .25, c.seed * 31 + 7, true), g ? {only: c.only, wide: !!c.wide} : {feat: 'plus'});
+  s = {format: 'wild-arena/expert-iter', simHash: R.simHash(), harnessHash: R.harnessHash(), config: c, features: FX.NAMES,
     P0, theta: P0.theta.slice(), round: 0, phase: 'collect', dataN: 0, best: {theta: P0.theta.slice(), round: -1, val: 0, from: 'init (= today\'s cats)'}, history: [], test: null};
   save(s); log(`[init] ${file}: ${JSON.stringify(c)}`); process.exit(0);
 }
 if (!s) throw new Error('no state ' + file + ' (run init first)');
 if (s.simHash !== R.simHash() && !process.env.ALLOW_ENGINE_MISMATCH) throw new Error(`${file} was made with sim ${s.simHash}; this checkout has ${R.simHash()}`);
-const c = s.config, T = +opt.threads || c.threads, HOURS = +opt.hours || 0, T0 = Date.now(), fo = {arch: c.arch, seed: c.seed, withLive: true, goal: 'checkmate', spec: true};
+const c = s.config, T = +opt.threads || c.threads, HOURS = +opt.hours || 0, T0 = Date.now(), fo = {arch: c.arch, seed: c.seed, withLive: true, goal: c.goal, spec: c.spec, withCat: c.arch === 'guard' && c.only === 'cat'};
 const W = theta => Object.assign({}, s.P0, {theta: theta.slice()});
 function pool(jobs, extra){
   return Promise.all([...Array(T).keys()].map(k => new Promise((res, rej) => { const w = new Worker(__filename, {workerData: Object.assign({jobs: jobs.filter((_, q) => q % T === k), arch: c.arch, o: c}, extra || {})}); w.on('message', res); w.on('error', rej); }))).then(p => p.flat());
@@ -68,7 +70,7 @@ const timeUp = () => HOURS && Date.now() - T0 > HOURS * 3600e3;
       log(`[round ${r} collect] ${recs.length} decisions from ${fights.length} fights (${learner ? 'the network plays' : 'the lookahead plays'}), ${D.length} total, ${((Date.now() - t0) / 1000).toFixed(0)} s`);
     }
     if (s.phase === 'train'){
-      const t0 = Date.now(), res = BC.train(readData(), {nh: c.nh, epochs: c.epochs, lr: c.lr, seed: c.seed + r}, m => { if (/decisions|\[ep (0|9|19|29)\]/.test(m)) log('  ' + m); }, r > 0 ? {theta: s.theta} : null);
+      const t0 = Date.now(), res = BC.train(readData(), {nh: c.nh, epochs: c.epochs, lr: c.lr, seed: c.seed + r, feat: c.feat, only: c.arch === 'guard' ? c.only : null, wide: c.arch === 'guard' && c.wide}, m => { if (/decisions|\[ep (0|9|19|29)\]/.test(m)) log('  ' + m); }, r > 0 ? {theta: s.theta} : null);
       s.theta = res.P.theta; s.phase = 'val'; save(s);
       log(`[round ${r} train] held-out regret ${res.best.regret.toFixed(4)} (heuristic ${res.base.regret.toFixed(4)}), ${((Date.now() - t0) / 1000).toFixed(0)} s`);
     }
