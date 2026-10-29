@@ -1,7 +1,7 @@
 // Milestone 3 training on GCP spot VMs, built to survive failures. Commands:
 //   node policy/gcp/gcp.js launch  <sweep.json> [--name=ID] [--machine=c2d-highcpu-112] [--threads=8] [--hours=5.5] [--yes] [--dry-run]
 //   node policy/gcp/gcp.js status  <ID>             per-run state; a 'running' run whose heartbeat is stale is 'lost'
-//   node policy/gcp/gcp.js resume  <ID> [--yes]     relaunch every run that isn't done (they continue from their saved state)
+//   node policy/gcp/gcp.js resume  <ID> [--yes] [--only=a,b]  relaunch every run that isn't done (they continue from their saved state)
 //   node policy/gcp/gcp.js stop    <ID> [--yes]     delete every VM of the sweep (states stay in the bucket)
 //   node policy/gcp/gcp.js collect <ID>             download states/logs/reports to policy/runs/gcp/<ID>/ + print a summary
 // Env: GCP_PROJECT, GCP_SA_KEY (service-account JSON), GCP_REGION (default us-central1), GCP_BUCKET (default
@@ -135,7 +135,7 @@ const [cmd, arg] = pos;
   } else if (cmd === 'resume'){
     const m = manifest(arg), vms = vmsOf(arg), v = view(arg, LOCAL ? null : vms), max = +(opt.maxRetries || 3), up = new Set(vms.filter(x => x.status !== 'TERMINATED').map(x => x.name)),
       alive = new Set(vms.length ? Object.values(statuses(arg)).filter(s => Date.now() / 1000 - s.t < STALE_S && (!s.host || up.has(s.host))).map(s => s.run) : []); // fresh heartbeat on a VM that still exists
-    const todo = v.filter(r => r.state !== 'done' && !alive.has(r.name) && (r.state !== 'failed' || r.tries < max)).map(r => r.name);
+    const todo = v.filter(r => r.state !== 'done' && !alive.has(r.name) && (r.state !== 'failed' || r.tries < max) && (!opt.only || String(opt.only).split(',').includes(r.name))).map(r => r.name);
     const skipped = v.filter(r => r.state === 'failed' && r.tries >= max).map(r => r.name);
     if (skipped.length) log(`not retried (failed ${max}×): ${skipped.join(', ')}`);
     if (!todo.length){ log('nothing to resume'); return; }

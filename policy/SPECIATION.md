@@ -157,6 +157,11 @@ each species develop its own realistic fighting style. This note is the plan; th
   fresh +0.068 ± 0.031 (brawler_target_e1 stays). Bulldozers with a 20-s horizon: still worse every round (-0.10 to -0.29,
   damage per fight a third): the paradox isn't the horizon; bulldozers keep today's targets.
 
+- ei9 (Oct 29): **your cats with a 20-s teacher: none found so far** (val +0.017 at best, held-out +0.009 ± 0.015, within noise;
+  the 8-s teacher found nothing either). Enemy cats with a 30-s teacher: held-out +0.066 ± 0.030 (round 4 val +0.115 but failed
+  stillLong), below cat_target_e1's +0.090, so e1 stays: a longer horizon past 20 s doesn't add. All-guard 20-s run still going
+  (round 0 val +0.061; `gcp.js resume --only=` relaunches single runs).
+
 ## Phases (each measured before the next)
 1. Plumbing: joint (target, intent) hook for every archetype, zero/heuristic policy byte-identical to today
    (`check_identical.js`), features + trait vector, harness tests.
