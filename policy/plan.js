@@ -32,7 +32,7 @@ function makePlanner(o){
     if (o.cool && u.planT !== undefined && w.t - u.planT < o.cool){ const k = opts.findIndex(x => x.kind === 'target' && x.t === u.planTo); if (k >= 0) return k; } // cool s: keep a fresh plan
     const I = A._internals, others = tg.filter(i => i !== teach).sort((i, j) => I.dist(u, opts[i].t) - I.dist(u, opts[j].t)).slice(0, o.max);
     const tries = (teach >= 0 ? [teach] : []).concat(others), ui = w.units.indexOf(u);
-    const today = o.arch === 'guard' ? {kind: 'target-lin', v: 1, nin: 200, margin: .25, wt: new Array(200).fill(0)} : {teacher: true};
+    const today = ['cat', 'brawler', 'harrier'].includes(o.arch) ? {teacher: true} : {kind: 'target-lin', v: 1, nin: 200, margin: .25, wt: new Array(200).fill(0)}; // predators: the teacher path; guards and herbivores: zero weights
     const inner = {policy: {byArch: Object.assign({}, w.cfg.policy.byArch, {[o.arch]: today})}}; // inside a branch: today's choices for this archetype, every other learned choice kept
     let best = teach, bs = -1e9; P.branched++;
     const sc = [];

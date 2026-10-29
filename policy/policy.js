@@ -61,7 +61,8 @@ function choose(w, u, policy){
 function chooseHerb(w, u, policy){
   const P = policy.byArch[A._internals.archetypeOf(u)], stats = w.cfg.policyStats;
   const {opts, X} = P.feat === 'rich' || P.feat === 'richh' ? FR.extract(w, u, {herb: true, hidden: P.feat === 'richh'}) : (P.feat === 'plus' ? FP : F).extract(w, u, true), h = F.herbHeuristic(w, u, opts);
-  const a = h.i < 0 ? -1 : pickLin(w, P, X, h.i, u, opts.map(o => o.kind === 'target'));
+  if (u.forceT && w.t < u.forceUntil && A._internals.active(u.forceT)){ u.target = u.forceT; u.state = 'engage'; return; } // a lookahead branch holds its tried target
+  const a = h.i < 0 ? -1 : P.kind === 'target-look' ? P.pick(w, u, opts, h.i) : P.kind === 'target-set' ? pickSet(w, P, u, opts, X, h.i) : pickLin(w, P, X, h.i, u, opts.map(o => o.kind === 'target'));
   if (stats){ stats.n = (stats.n || 0) + 1; if (a === h.i) stats.agree = (stats.agree || 0) + 1; }
   u.target = a < 0 ? h.t : (opts[a].kind === 'target' ? opts[a].t : null); u.state = u.target ? 'engage' : 'roam';
 }
