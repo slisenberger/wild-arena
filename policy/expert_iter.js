@@ -28,8 +28,13 @@ const DEF = {arch: 'cat', only: 'cat', wide: true, loss: 'ce', model: 'mlp', K: 
 const DATA = file + '.data.jsonl.gz';
 const log = m => { console.log(m); fs.appendFileSync(file + '.log', m + '\n'); };
 const save = s => { fs.writeFileSync(file + '.tmp', JSON.stringify(s)); fs.renameSync(file + '.tmp', file); };
-const readData = () => fs.existsSync(DATA) ? zlib.gunzipSync(fs.readFileSync(DATA)).toString('utf8').split('\n').filter(Boolean).map(l => JSON.parse(l)) : [];
-const writeData = D => { fs.writeFileSync(DATA + '.tmp', zlib.gzipSync(D.map(d => JSON.stringify(d)).join('\n') + '\n')); fs.renameSync(DATA + '.tmp', DATA); };
+// the data outgrows one JS string (~0.5 GB) on long runs: write gzip members of 20k lines each (gunzip reads them as one stream)
+// and parse the unzipped buffer line by line
+const readData = () => { if (!fs.existsSync(DATA)) return []; const B = zlib.gunzipSync(fs.readFileSync(DATA)), out = [];
+  for (let i = 0; i < B.length;){ let j = B.indexOf(10, i); if (j < 0) j = B.length; if (j > i) out.push(JSON.parse(B.toString('utf8', i, j))); i = j + 1; } return out; };
+const writeData = D => { const fd = fs.openSync(DATA + '.tmp', 'w');
+  for (let i = 0; i < D.length; i += 20000) fs.writeSync(fd, zlib.gzipSync(D.slice(i, i + 20000).map(d => JSON.stringify(d)).join('\n') + '\n'));
+  fs.closeSync(fd); fs.renameSync(DATA + '.tmp', DATA); };
 let s = fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, 'utf8')) : null;
 if (cmd === 'report'){ if (!s) process.exit(1); const b = s.best, t = s.test;
   console.log(`[round ${s.round}/${s.config.rounds} ${s.phase}] best ${b.from}${b.val != null ? ` val ${b.val >= 0 ? '+' : ''}${(+b.val).toFixed(3)}` : ''} | ${s.config.arch} expert iteration, ${s.dataN || 0} decisions`);

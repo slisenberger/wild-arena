@@ -1,7 +1,7 @@
 // Milestone 3 training on GCP spot VMs, built to survive failures. Commands:
 //   node policy/gcp/gcp.js launch  <sweep.json> [--name=ID] [--machine=c2d-highcpu-112] [--threads=8] [--hours=5.5] [--yes] [--dry-run]
 //   node policy/gcp/gcp.js status  <ID>             per-run state; a 'running' run whose heartbeat is stale is 'lost'
-//   node policy/gcp/gcp.js resume  <ID> [--yes] [--only=a,b]  relaunch every run that isn't done (they continue from their saved state)
+//   node policy/gcp/gcp.js resume  <ID> [--yes] [--only=a,b] [--commit[=sha]]  relaunch every run that isn't done (they continue from their saved state)
 //   node policy/gcp/gcp.js stop    <ID> [--yes]     delete every VM of the sweep (states stay in the bucket)
 //   node policy/gcp/gcp.js collect <ID>             download states/logs/reports to policy/runs/gcp/<ID>/ + print a summary
 // Env: GCP_PROJECT, GCP_SA_KEY (service-account JSON), GCP_REGION (default us-central1), GCP_BUCKET (default
@@ -140,6 +140,9 @@ const [cmd, arg] = pos;
     if (skipped.length) log(`not retried (failed ${max}×): ${skipped.join(', ')}`);
     if (!todo.length){ log('nothing to resume'); return; }
     if (opt.hours) m.hours = +opt.hours;
+    if (opt.commit){ const c = opt.commit === true ? sh('git', ['rev-parse', 'HEAD'], {cwd: ROOT}).trim() : String(opt.commit); // --commit[=sha]: resume on newer code (a fix), from the same saved state
+      if (!LOCAL){ try { sh('git', ['branch', '-r', '--contains', c], {cwd: ROOT}).trim() || (() => { throw 0; })(); } catch (e){ throw new Error(`commit ${c} isn't on the remote: push first (VMs clone it)`); } }
+      log(`code: ${m.commit.slice(0, 8)} -> ${c.slice(0, 8)}`); m.commit = c; }
     if (opt.machine || opt.machines) m.machines = MACHINES; else if (m.machines) MACHINES = m.machines; // resume keeps the launch's machine choice
     log(`resuming ${todo.length}: ${todo.join(', ')}`); const launched = launchRuns(arg, m, todo) || (LOCAL ? todo : []);
     launched.forEach(n => m.tries[n] = (m.tries[n] || 0) + 1); // count an attempt only when a VM was created (a full quota isn't a failure)
