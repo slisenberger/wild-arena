@@ -161,6 +161,10 @@ each species develop its own realistic fighting style. This note is the plan; th
   the 8-s teacher found nothing either). Enemy cats with a 30-s teacher: held-out +0.066 ± 0.030 (round 4 val +0.115 but failed
   stillLong), below cat_target_e1's +0.090, so e1 stays: a longer horizon past 20 s doesn't add. All-guard 20-s run still going
   (round 0 val +0.061; `gcp.js resume --only=` relaunches single runs).
+  Its round 3 (val +0.169) exported as guard_target_e3 and checked head to head (guard_target_rules, ALL=1): 1,200 fresh fights
+  (probe 23) e3 +0.184 ± 0.021 vs m3 +0.182 ± 0.022 (you survive +10.6 vs +10.7 pts); 800 cat fights (probe 65) e3 +0.192 ± 0.025
+  vs m3 +0.180 ± 0.028. A tie: e3 deviates less (20% vs 27%) with style 1.00 and no drift, but doesn't beat m3, so m3 stays in
+  ?smart=1. The 20-s teacher brings guards to where ES got them, not past it.
 
 ## Phases (each measured before the next)
 1. Plumbing: joint (target, intent) hook for every archetype, zero/heuristic policy byte-identical to today

@@ -1,7 +1,7 @@
 // Milestone 4: YOUR cats' target choice. Hand-set 'target-lin' rules over guard_features.js, applied only to your big cats
 // (P.only 'cat'; your other guards keep today's targets), paired vs the heuristic on fresh fights where your team has a cat,
 // every shipped policy live (guard_v1 movement and its intents kept; the chooser re-judges their targets). Reports the guard
-// goal, your survival / time alive, and your cats' deaths and damage. RULES='{"name":{feature:w}}' replaces the list.
+// goal, your survival / time alive, and your cats' deaths and damage. RULES='{"name":{feature:w}}' replaces the list; ALL=1 keeps every fight (not only ones with your cat).
 //   node policy/probes/guard_target_rules.js [N] [probeIndex]
 const { Worker, isMainThread, parentPort, workerData } = require('worker_threads');
 const path = require('path'), os = require('os');
@@ -18,7 +18,7 @@ let RULES = {
 if (process.env.RULES) RULES = JSON.parse(process.env.RULES);
 // fights where your team has a big cat: draw extra and keep those
 const isCat = id => { const s = R.A.ANIMALS.find(a => a.id === id); return !!(s && s.pred && s.latch); };
-const all = R.fightSet('probe', +idx || 61, 3 * N, {arch: 'guard', seed: 13, withLive: true}), fights = all.filter(f => f.team.some(isCat)).slice(0, N), jobs = [];
+const all = R.fightSet('probe', +idx || 61, 3 * N, {arch: 'guard', seed: 13, withLive: true}), fights = all.filter(f => process.env.ALL || f.team.some(isCat)).slice(0, N), jobs = [];
 const FILES = (process.env.WFILES || '').split(',').filter(Boolean); // WFILES=a.json,b.json: also run these weights files (as they are: all guards unless the file says only)
 for (const p of FILES){ const k = path.basename(p, '.json'); RULES[k] = null; }
 fights.forEach((f, i) => { for (const r of Object.keys(RULES)) jobs.push({k: r, i, f, W: RULES[r] ? W(RULES[r]) : RULES[r] === null ? (({meta, ...x}) => x)(require(path.resolve(FILES.find(p => path.basename(p, '.json') === r)))) : W({})}); });
