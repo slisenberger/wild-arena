@@ -146,6 +146,12 @@ each species develop its own realistic fighting style. This note is the plan; th
   43.7%, style 1.00); cats +0.207 ± 0.032. Better targeting is worth ~+0.2 for everyone; how much a network can learn varies
   (chargers by ES: +0.24 fresh; enemy cats ~+0.05; your cats ~0). Expert iteration for bulldozers and brawlers: sweep m4_expert_s7.
 
+- Expert iteration ei7 (Oct 29, rich inputs + gain regression): **brawlers: brawler_target_e1, held-out +0.085 ± 0.032, fresh
+  +0.094 ± 0.030, style 1.000, no drift** (you 53.2% -> 49.5%, -10 s); in the ?smart=1 build. Bulldozers: the network fits the
+  branch gains best of all (0.186 of 0.271 held out) yet plays worse every round (-0.08 to -0.18, damage halved): what wins an
+  8-s branch for a bulldozer (taking fewer hits) loses the fight; a longer horizon or a whole-fight score is the next try.
+  (eval_arch fix: its zero baseline now always uses margin .25; a learned threshold of 0 had made the baseline pick 'none'.)
+
 ## Phases (each measured before the next)
 1. Plumbing: joint (target, intent) hook for every archetype, zero/heuristic policy byte-identical to today
    (`check_identical.js`), features + trait vector, harness tests.

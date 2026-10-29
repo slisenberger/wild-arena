@@ -1,0 +1,31 @@
+[round 0 collect] 26724 decisions from 900 fights (the lookahead plays), 26724 total, 432 s
+  26724 decisions (24052 train, 2672 held out), 4255 weights; held-out gain if every best branch were taken: 0.2710
+  [ep 0] held out: gain-prediction mse 0.4073 | realized gain by kappa 0: +0.1801 (58%), 0.02: +0.1859 (47%), 0.05: +0.1748 (34%), 0.1: +0.1667 (19%), 0.15: +0.1548 (12%), 0.2: +0.1475 (10%), 0.3: +0.0929 (5%), 0.5: +0.0092 (0%)  -> best
+[round 0 train] held-out gain 0.1859 of 0.2710, threshold 0.02, 15 s
+[round 0 val] network vs today's bulldozer on 800 fresh fights: -0.079 ± 0.035 | style 1.000 gates [] drift [dmgPerFight 1310.935→687.362] | your survival 5.0 pts
+[round 1 collect] 21808 decisions from 900 fights (the network plays), 48532 total, 457 s
+  48532 decisions (43679 train, 4853 held out), 4255 weights; held-out gain if every best branch were taken: 0.2813
+  [ep 0] held out: gain-prediction mse 0.3787 | realized gain by kappa 0: +0.1728 (57%), 0.02: +0.1751 (39%), 0.05: +0.1659 (24%), 0.1: +0.1639 (15%), 0.15: +0.1609 (12%), 0.2: +0.1572 (11%), 0.3: +0.1516 (10%), 0.5: +0.1214 (6%)  -> best
+[round 1 train] held-out gain 0.1802 of 0.2813, threshold 0, 26 s
+[round 1 val] network vs today's bulldozer on 800 fresh fights: -0.180 ± 0.041 | style 0.842 gates [] drift [fightShare 0.207→0.088; nearShare 0.309→0.170; noContact 0.204→0.277; fruitless 0.552→0.782; humanShare 0.027→0.145; dmgPerFight 1317.854→274.484] | your survival 8.9 pts  (not clean)
+[round 2 collect] 18919 decisions from 900 fights (the network plays), 67451 total, 406 s
+  67451 decisions (60706 train, 6745 held out), 4255 weights; held-out gain if every best branch were taken: 0.2217
+  [ep 0] held out: gain-prediction mse 0.2585 | realized gain by kappa 0: +0.1239 (69%), 0.02: +0.1245 (43%), 0.05: +0.1189 (19%), 0.1: +0.1174 (11%), 0.15: +0.1147 (9%), 0.2: +0.1122 (8%), 0.3: +0.1089 (7%), 0.5: +0.0998 (6%)  -> best
+[round 2 train] held-out gain 0.1334 of 0.2217, threshold 0, 37 s
+[round 2 val] network vs today's bulldozer on 800 fresh fights: -0.082 ± 0.039 | style 0.849 gates [] drift [fightShare 0.198→0.094; nearShare 0.313→0.166; meanDist 18.249→23.445; fruitless 0.569→0.834; dmgPerFight 1178.852→394.810] | your survival 4.4 pts  (not clean)
+[round 3 collect] 20011 decisions from 900 fights (the network plays), 87462 total, 396 s
+  87462 decisions (78716 train, 8746 held out), 4255 weights; held-out gain if every best branch were taken: 0.2444
+  [ep 0] held out: gain-prediction mse 0.2561 | realized gain by kappa 0: +0.1417 (54%), 0.02: +0.1392 (30%), 0.05: +0.1352 (16%), 0.1: +0.1296 (11%), 0.15: +0.1265 (9%), 0.2: +0.1263 (9%), 0.3: +0.1225 (8%), 0.5: +0.1133 (7%)  -> best
+[round 3 train] held-out gain 0.1437 of 0.2444, threshold 0, 48 s
+[round 3 val] network vs today's bulldozer on 800 fresh fights: -0.095 ± 0.038 | style 0.900 gates [] drift [fruitless 0.543→0.779; dmgPerFight 1300.452→564.287] | your survival 5.1 pts
+[round 4 collect] 21403 decisions from 900 fights (the network plays), 108865 total, 449 s
+  108865 decisions (97979 train, 10886 held out), 4255 weights; held-out gain if every best branch were taken: 0.2356
+  [ep 0] held out: gain-prediction mse 0.2529 | realized gain by kappa 0: +0.1345 (56%), 0.02: +0.1335 (31%), 0.05: +0.1294 (16%), 0.1: +0.1218 (9%), 0.15: +0.1180 (8%), 0.2: +0.1150 (7%), 0.3: +0.1075 (6%), 0.5: +0.0998 (5%)  -> best
+[round 4 train] held-out gain 0.1382 of 0.2356, threshold 0.02, 60 s
+[round 4 val] network vs today's bulldozer on 800 fresh fights: -0.110 ± 0.039 | style 0.890 gates [] drift [fightShare 0.208→0.109; nearShare 0.308→0.189; fruitless 0.556→0.788; dmgPerFight 1320.730→452.965] | your survival 5.4 pts  (not clean)
+[round 5 collect] 20845 decisions from 900 fights (the network plays), 129710 total, 402 s
+  129710 decisions (116739 train, 12971 held out), 4255 weights; held-out gain if every best branch were taken: 0.2337
+  [ep 0] held out: gain-prediction mse 0.2456 | realized gain by kappa 0: +0.1353 (52%), 0.02: +0.1319 (32%), 0.05: +0.1252 (21%), 0.1: +0.1203 (13%), 0.15: +0.1161 (10%), 0.2: +0.1137 (9%), 0.3: +0.1099 (8%), 0.5: +0.1037 (6%)  -> best
+[round 5 train] held-out gain 0.1353 of 0.2337, threshold 0, 72 s
+[round 5 val] network vs today's bulldozer on 800 fresh fights: -0.104 ± 0.037 | style 0.944 gates [] drift [fruitless 0.579→0.756; dmgPerFight 1154.812→456.607] | your survival 5.5 pts
+[test] best (init (= today's cats)) vs today's bulldozer on 1200 held-out fights: +0.000 ± 0.000 (within 2 SE) | style 1.000 gates [] drift [] | your survival 0.0 pts

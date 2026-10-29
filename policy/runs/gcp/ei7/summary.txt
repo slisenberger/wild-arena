@@ -1,0 +1,2 @@
+eir_bd             [test] best (init (= today's cats)) vs today's bulldozer on 1200 held-out fights: +0.000 ± 0.000 (within 2 SE) | style 1.000 gates [] drift [] | your survival 0.0 pts
+eir_br             [test] best (round 4) vs today's brawler on 1200 held-out fights: +0.085 ± 0.032 (beyond 2 SE) | style 1.000 gates [] drift [] | your survival -3.3 pts
