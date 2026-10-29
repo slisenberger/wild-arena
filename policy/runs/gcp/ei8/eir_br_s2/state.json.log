@@ -1,0 +1,32 @@
+[init] policy/runs/gcp/eir_br_s2/state.json: {"arch":"brawler","only":null,"wide":false,"loss":"adv","model":"mlp","K":16,"rounds":6,"fights":900,"rolls":3,"H":8,"max":3,"real":0,"nh":32,"epochs":8,"lr":0.002,"val":800,"test":1200,"seed":3002,"styleThr":0.9,"dagger":true,"threads":8,"trainer":"expert","feat":"rich","target":true,"mode":"linear","withLive":true,"goal":"checkmate","spec":true}
+[round 0 collect] 15117 decisions from 900 fights (the lookahead plays), 15117 total, 333 s
+  15117 decisions (13606 train, 1511 held out), 4255 weights; held-out gain if every best branch were taken: 0.2679
+  [ep 0] held out: gain-prediction mse 0.9466 | realized gain by kappa 0: +0.1004 (57%), 0.02: +0.0939 (50%), 0.05: +0.0913 (41%), 0.1: +0.0835 (25%), 0.15: +0.0794 (16%), 0.2: +0.0785 (9%), 0.3: +0.0596 (4%), 0.5: +0.0059 (1%)  -> best
+[round 0 train] held-out gain 0.1004 of 0.2679, threshold 0, 8 s
+[round 0 val] network vs today's brawler on 800 fresh fights: -0.058 ± 0.039 | style 0.996 gates [] drift [closeShare 0.371→0.482; nearShare 0.271→0.155; humanShare 0.071→0.202; dmgPerFight 307.550→167.447] | your survival 2.4 pts
+[round 1 collect] 10940 decisions from 900 fights (the network plays), 26057 total, 292 s
+  26057 decisions (23452 train, 2605 held out), 4255 weights; held-out gain if every best branch were taken: 0.2491
+  [ep 0] held out: gain-prediction mse 0.6516 | realized gain by kappa 0: +0.0867 (50%), 0.02: +0.0825 (39%), 0.05: +0.0881 (26%), 0.1: +0.0833 (14%), 0.15: +0.0748 (9%), 0.2: +0.0713 (7%), 0.3: +0.0535 (4%), 0.5: +0.0228 (1%)  -> best
+[round 1 train] held-out gain 0.0919 of 0.2491, threshold 0.05, 14 s
+[round 1 val] network vs today's brawler on 800 fresh fights: -0.043 ± 0.027 | style 1.000 gates [] drift [] | your survival 1.9 pts
+[round 2 collect] 12002 decisions from 900 fights (the network plays), 38059 total, 272 s
+  38059 decisions (34254 train, 3805 held out), 4255 weights; held-out gain if every best branch were taken: 0.2538
+  [ep 0] held out: gain-prediction mse 0.6919 | realized gain by kappa 0: +0.0766 (53%), 0.02: +0.0782 (33%), 0.05: +0.0775 (18%), 0.1: +0.0649 (10%), 0.15: +0.0640 (7%), 0.2: +0.0606 (6%), 0.3: +0.0546 (4%), 0.5: +0.0422 (3%)  -> best
+[round 2 train] held-out gain 0.0836 of 0.2538, threshold 0, 22 s
+[round 2 val] network vs today's brawler on 800 fresh fights: +0.090 ± 0.039 | style 1.000 gates [] drift [] | your survival -3.9 pts  -> new best
+[round 3 collect] 13743 decisions from 900 fights (the network plays), 51802 total, 309 s
+  51802 decisions (46622 train, 5180 held out), 4255 weights; held-out gain if every best branch were taken: 0.2210
+  [ep 0] held out: gain-prediction mse 0.6220 | realized gain by kappa 0: +0.0507 (53%), 0.02: +0.0549 (35%), 0.05: +0.0555 (19%), 0.1: +0.0528 (9%), 0.15: +0.0522 (7%), 0.2: +0.0523 (5%), 0.3: +0.0445 (4%), 0.5: +0.0362 (3%)  -> best
+[round 3 train] held-out gain 0.0641 of 0.2210, threshold 0, 28 s
+[round 3 val] network vs today's brawler on 800 fresh fights: +0.039 ± 0.038 | style 1.000 gates [] drift [] | your survival -1.8 pts
+[round 4 collect] 12836 decisions from 900 fights (the network plays), 64638 total, 286 s
+  64638 decisions (58175 train, 6463 held out), 4255 weights; held-out gain if every best branch were taken: 0.2424
+  [ep 0] held out: gain-prediction mse 0.5928 | realized gain by kappa 0: +0.0715 (64%), 0.02: +0.0712 (46%), 0.05: +0.0759 (23%), 0.1: +0.0701 (9%), 0.15: +0.0642 (6%), 0.2: +0.0627 (5%), 0.3: +0.0540 (4%), 0.5: +0.0449 (3%)  -> best
+[round 4 train] held-out gain 0.0833 of 0.2424, threshold 0.02, 35 s
+[round 4 val] network vs today's brawler on 800 fresh fights: +0.044 ± 0.038 | style 1.000 gates [] drift [] | your survival -1.9 pts
+[round 5 collect] 12564 decisions from 900 fights (the network plays), 77202 total, 279 s
+  77202 decisions (69482 train, 7720 held out), 4255 weights; held-out gain if every best branch were taken: 0.2436
+  [ep 0] held out: gain-prediction mse 0.5973 | realized gain by kappa 0: +0.0868 (54%), 0.02: +0.0938 (31%), 0.05: +0.0854 (14%), 0.1: +0.0769 (8%), 0.15: +0.0703 (6%), 0.2: +0.0642 (5%), 0.3: +0.0526 (3%), 0.5: +0.0429 (2%)  -> best
+[round 5 train] held-out gain 0.0938 of 0.2436, threshold 0.02, 42 s
+[round 5 val] network vs today's brawler on 800 fresh fights: +0.010 ± 0.033 | style 1.000 gates [] drift [] | your survival -0.5 pts
+[test] best (round 2) vs today's brawler on 1200 held-out fights: +0.101 ± 0.033 (beyond 2 SE) | style 0.996 gates [] drift [closeShare 0.373→0.477] | your survival -4.2 pts

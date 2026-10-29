@@ -152,6 +152,11 @@ each species develop its own realistic fighting style. This note is the plan; th
   8-s branch for a bulldozer (taking fewer hits) loses the fight; a longer horizon or a whole-fight score is the next try.
   (eval_arch fix: its zero baseline now always uses margin .25; a learned threshold of 0 had made the baseline pick 'none'.)
 
+- ei8 (Oct 29): **enemy cats with a 20-s lookahead teacher: cat_target_e1, held-out +0.064 ± 0.031, fresh +0.090 ± 0.030, style
+  1.000, no drift** (you 56.3% -> 52.6%; replaces cat_target_bc3m in ?smart=1). Brawler replication: held-out +0.101 ± 0.033,
+  fresh +0.068 ± 0.031 (brawler_target_e1 stays). Bulldozers with a 20-s horizon: still worse every round (-0.10 to -0.29,
+  damage per fight a third): the paradox isn't the horizon; bulldozers keep today's targets.
+
 ## Phases (each measured before the next)
 1. Plumbing: joint (target, intent) hook for every archetype, zero/heuristic policy byte-identical to today
    (`check_identical.js`), features + trait vector, harness tests.
