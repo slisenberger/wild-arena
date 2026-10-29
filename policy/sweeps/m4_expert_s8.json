@@ -1,0 +1,17 @@
+{
+ "note": "Milestone 4 expert iteration round 8 (Oct 29): bulldozers with a 20-s lookahead (the 8-s teacher made a network that fits branch gains but plays worse: short branches reward dodging hits); brawler replication (brawler_target_e1 fresh +0.094 ± 0.030); enemy cats with a 20-s horizon.",
+ "runs": [
+  {
+   "name": "eir_bd_h20",
+   "args": "--trainer=expert --feat=rich --loss=adv --rounds=6 --fights=900 --max=3 --rolls=3 --nh=32 --epochs=8 --lr=.002 --val=800 --test=1200 --dagger=true --arch=bulldozer --H=20 --seed=3001"
+  },
+  {
+   "name": "eir_br_s2",
+   "args": "--trainer=expert --feat=rich --loss=adv --rounds=6 --fights=900 --max=3 --rolls=3 --nh=32 --epochs=8 --lr=.002 --val=800 --test=1200 --dagger=true --arch=brawler --H=8 --seed=3002"
+  },
+  {
+   "name": "eir_cat_h20",
+   "args": "--trainer=expert --feat=rich --loss=adv --rounds=6 --fights=900 --max=3 --rolls=3 --nh=32 --epochs=8 --lr=.002 --val=800 --test=1200 --dagger=true --arch=cat --H=20 --seed=3003"
+  }
+ ]
+}
