@@ -141,6 +141,11 @@ each species develop its own realistic fighting style. This note is the plan; th
   hidden-state or whole-field inputs; the lookahead's +0.203 looks like averaging over chaotic close-quarters futures that
   the present state doesn't predict. Best available help for your cats stays learning all guards together (guard_target_m2/m3).
 
+- Lookahead headroom for every enemy archetype (probes/arch_lookahead.js, 300 fresh fights, fair dice, 8 s): bulldozer
+  +0.193 ± 0.056 (you 56.0% -> 49.0%, style .94), kicker +0.211 ± 0.065 (fails farHunt), brawler +0.257 ± 0.064 (you 53.7% ->
+  43.7%, style 1.00); cats +0.207 ± 0.032. Better targeting is worth ~+0.2 for everyone; how much a network can learn varies
+  (chargers by ES: +0.24 fresh; enemy cats ~+0.05; your cats ~0). Expert iteration for bulldozers and brawlers: sweep m4_expert_s7.
+
 ## Phases (each measured before the next)
 1. Plumbing: joint (target, intent) hook for every archetype, zero/heuristic policy byte-identical to today
    (`check_identical.js`), features + trait vector, harness tests.

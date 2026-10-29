@@ -1,0 +1,13 @@
+{
+ "note": "Milestone 4 expert iteration for enemy bulldozers and brawlers (Oct 29): lookahead headroom (probes/arch_lookahead.js, 300 fights, fair dice, 8 s): bulldozer +0.193 ± 0.056 (style .94), brawler +0.257 ± 0.064 (style 1.00), kicker +0.211 ± 0.065 (fails farHunt). Rich inputs, gain regression with a learned threshold, targetsOnly.",
+ "runs": [
+  {
+   "name": "eir_bd",
+   "args": "--trainer=expert --feat=rich --loss=adv --rounds=6 --fights=900 --H=8 --max=3 --rolls=3 --nh=32 --epochs=8 --lr=.002 --val=800 --test=1200 --dagger=true --arch=bulldozer --seed=2901"
+  },
+  {
+   "name": "eir_br",
+   "args": "--trainer=expert --feat=rich --loss=adv --rounds=6 --fights=900 --H=8 --max=3 --rolls=3 --nh=32 --epochs=8 --lr=.002 --val=800 --test=1200 --dagger=true --arch=brawler --seed=2902"
+  }
+ ]
+}

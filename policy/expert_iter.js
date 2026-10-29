@@ -3,7 +3,7 @@
 // Each round: (1) collect: play fresh fights where every enemy cat decision with 2+ targets is labelled by the fair lookahead
 // (each option's branch score, averaged over `rolls` own-dice rolls); round 0 plays the lookahead's picks, later rounds play
 // the current network's (DAgger, so it learns on the states it reaches itself); (2) train the target-mlp on all data so far
-// (policy/bc_target.js, continuing from the last network); (3) validate the greedy network vs today's cats on fresh fights with
+// (policy/bc_target.js, continuing from the last network); (3) validate the greedy network vs today's ${c.arch} on fresh fights with
 // the realism gates (move_reward.js); the best clean one is kept. Then a held-out test. Data: <state>.data.jsonl.gz.
 //   node policy/expert_iter.js init <state.json> [--arch=cat --rounds=6 --fights=600 --rolls=3 --H=8 --max=3 --real=0 --nh=32 --epochs=20
 //        --lr=.002 --val=800 --test=1200 --seed=1 --styleThr=.9 --dagger=true]
@@ -80,12 +80,12 @@ const timeUp = () => HOURS && Date.now() - T0 > HOURS * 3600e3;
       const v = await evalW(s.theta, 'val', r, c.val), ok = !v.gates.length && v.style >= c.styleThr, better = ok && v.diff > (s.best.val || 0); // must beat today's cats (val 0) and every earlier clean round
       s.history.push(Object.assign({round: r, dataN: s.dataN}, v));
       if (better) s.best = {theta: s.theta.slice(), round: r, val: v.diff, from: `round ${r}`, margin: s.margin};
-      log(`[round ${r} val] network vs today's cats on ${v.n} fresh fights: ${v.diff >= 0 ? '+' : ''}${v.diff.toFixed(3)} ± ${v.se.toFixed(3)} | style ${v.style.toFixed(3)} gates [${v.gates}] drift [${v.drift.join('; ')}] | your survival ${(100 * v.surv).toFixed(1)} pts${better ? '  -> new best' : ok ? '' : '  (not clean)'}`);
+      log(`[round ${r} val] network vs today's ${c.arch} on ${v.n} fresh fights: ${v.diff >= 0 ? '+' : ''}${v.diff.toFixed(3)} ± ${v.se.toFixed(3)} | style ${v.style.toFixed(3)} gates [${v.gates}] drift [${v.drift.join('; ')}] | your survival ${(100 * v.surv).toFixed(1)} pts${better ? '  -> new best' : ok ? '' : '  (not clean)'}`);
       s.round++; s.phase = 'collect'; save(s);
     }
   }
   if (!s.test){
     s.margin = s.best.margin != null ? s.best.margin : s.P0.margin; const t = await evalW(s.best.theta, 'test', 0, c.test); // the init (today's game) keeps its own margin s.test = t; s.phase = 'done'; save(s);
-    log(`[test] best (${s.best.from}) vs today's cats on ${t.n} held-out fights: ${t.diff >= 0 ? '+' : ''}${t.diff.toFixed(3)} ± ${t.se.toFixed(3)} (${Math.abs(t.diff) > 2 * t.se ? 'beyond' : 'within'} 2 SE) | style ${t.style.toFixed(3)} gates [${t.gates}] drift [${t.drift.join('; ')}] | your survival ${(100 * t.surv).toFixed(1)} pts`);
+    log(`[test] best (${s.best.from}) vs today's ${c.arch} on ${t.n} held-out fights: ${t.diff >= 0 ? '+' : ''}${t.diff.toFixed(3)} ± ${t.se.toFixed(3)} (${Math.abs(t.diff) > 2 * t.se ? 'beyond' : 'within'} 2 SE) | style ${t.style.toFixed(3)} gates [${t.gates}] drift [${t.drift.join('; ')}] | your survival ${(100 * t.surv).toFixed(1)} pts`);
   }
 })().catch(e => { console.error(e); process.exit(1); });
