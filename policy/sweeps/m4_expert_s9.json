@@ -1,0 +1,17 @@
+{
+ "note": "Milestone 4 expert iteration round 9 (Oct 29): a longer lookahead helped enemy cats (8 s: ~+0.03-0.05; 20 s: cat_target_e1 fresh +0.090 ± 0.030), so: your cats with 20 s (8 s found nothing), all your guards with 20 s, enemy cats with 30 s.",
+ "runs": [
+  {
+   "name": "eir_gcat_h20",
+   "args": "--trainer=expert --feat=rich --loss=adv --rounds=6 --fights=900 --max=3 --rolls=3 --nh=32 --epochs=8 --lr=.002 --val=800 --test=1200 --dagger=true --arch=guard --only=cat --wide=true --H=20 --seed=3101"
+  },
+  {
+   "name": "eir_gall_h20",
+   "args": "--trainer=expert --feat=rich --loss=adv --rounds=6 --fights=900 --max=3 --rolls=3 --nh=32 --epochs=8 --lr=.002 --val=800 --test=1200 --dagger=true --arch=guard --only= --wide=true --H=20 --seed=3102"
+  },
+  {
+   "name": "eir_cat_h30",
+   "args": "--trainer=expert --feat=rich --loss=adv --rounds=6 --fights=900 --max=3 --rolls=3 --nh=32 --epochs=8 --lr=.002 --val=800 --test=1200 --dagger=true --arch=cat --H=30 --seed=3103"
+  }
+ ]
+}
