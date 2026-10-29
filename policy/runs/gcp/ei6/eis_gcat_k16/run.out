@@ -1,0 +1,24 @@
+[round 0 collect] 31916 decisions from 900 fights (the lookahead plays), 31916 total, 738 s
+  31916 decisions (28725 train, 3191 held out), state encoder 5430 weights; held-out gain if every best branch were taken: 0.0769
+  [ep 0] held out: gain-prediction mse 0.1254 | realized gain by kappa 0: +0.0012 (37%), 0.02: -0.0004 (19%), 0.05: +0.0010 (2%), 0.1: +0.0000 (0%), 0.15: +0.0000 (0%), 0.2: +0.0000 (0%), 0.3: +0.0000 (0%), 0.5: +0.0000 (0%)  -> best
+[round 0 train] held-out gain 0.0025 of 0.0769, threshold 0.02, 43 s
+[round 0 val] network vs today's cats on 800 fresh fights: +0.036 ± 0.019 | style 1.000 gates [] drift [] | your survival 2.7 pts  -> new best
+[round 1 collect] 36676 decisions from 900 fights (the network plays), 68592 total, 987 s
+  68592 decisions (61733 train, 6859 held out), state encoder 5430 weights; held-out gain if every best branch were taken: 0.0946
+  [ep 0] held out: gain-prediction mse 0.1579 | realized gain by kappa 0: -0.0031 (35%), 0.02: +0.0009 (5%), 0.05: -0.0000 (0%), 0.1: +0.0000 (0%), 0.15: +0.0000 (0%), 0.2: +0.0000 (0%), 0.3: +0.0000 (0%), 0.5: +0.0000 (0%)  -> best
+[round 1 train] held-out gain 0.0030 of 0.0946, threshold 0.02, 96 s
+[round 1 val] network vs today's cats on 800 fresh fights: -0.005 ± 0.017 | style 1.000 gates [] drift [] | your survival -0.3 pts
+[round 2 collect] 41995 decisions from 900 fights (the network plays), 110587 total, 1068 s
+  110587 decisions (99529 train, 11058 held out), state encoder 5430 weights; held-out gain if every best branch were taken: 0.0942
+  [ep 0] held out: gain-prediction mse 0.1559 | realized gain by kappa 0: -0.0030 (55%), 0.02: +0.0017 (17%), 0.05: +0.0004 (1%), 0.1: +0.0000 (0%), 0.15: +0.0000 (0%), 0.2: +0.0000 (0%), 0.3: +0.0000 (0%), 0.5: +0.0000 (0%)  -> best
+[round 2 train] held-out gain 0.0017 of 0.0942, threshold 0.02, 158 s
+[round 2 val] network vs today's cats on 800 fresh fights: -0.003 ± 0.023 | style 1.000 gates [] drift [] | your survival -0.8 pts
+[round 3 collect] 33519 decisions from 900 fights (the network plays), 144106 total, 903 s
+  144106 decisions (129696 train, 14410 held out), state encoder 5430 weights; held-out gain if every best branch were taken: 0.0958
+  [ep 0] held out: gain-prediction mse 0.1499 | realized gain by kappa 0: -0.0035 (53%), 0.02: -0.0005 (18%), 0.05: +0.0003 (1%), 0.1: +0.0000 (0%), 0.15: +0.0000 (0%), 0.2: +0.0000 (0%), 0.3: +0.0000 (0%), 0.5: +0.0000 (0%)  -> best
+[round 3 train] held-out gain 0.0016 of 0.0958, threshold 0.02, 208 s
+[round 3 val] network vs today's cats on 800 fresh fights: -0.014 ± 0.017 | style 1.000 gates [] drift [] | your survival -1.1 pts
+RangeError: Invalid string length
+    at Array.join (<anonymous>)
+    at writeData (/opt/wild-arena/policy/expert_iter.js:32:102)
+    at /opt/wild-arena/policy/expert_iter.js:70:42
