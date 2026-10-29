@@ -49,7 +49,7 @@ function makePlanner(o){
       }
       sc.push(v); if (v > bs + 1e-9){ bs = v; best = i; }
     }
-    const feats = () => (o.feat === 'rich' ? FR.extract(w, u, {wide: o.wide}) : o.arch === 'guard' ? G.extract(w, u, o.wide) : FP.extract(w, u)).X;
+    const feats = () => (o.feat === 'rich' || o.feat === 'richh' ? FR.extract(w, u, {wide: o.wide, hidden: o.feat === 'richh'}) : o.arch === 'guard' ? G.extract(w, u, o.wide) : FP.extract(w, u)).X;
     if (o.data){ const X = feats(), r4 = x => Math.round(x * 1e4) / 1e4; const rec = {sp: u.s.id, tr: TR.traits(u.s), X: tries.map(i => X[i].map(r4)), s: sc.map(r4), teach: tries.indexOf(teach)};
       if (o.set){ const si = SM.setInputs(w, u, opts); rec.U = si.U.map(r => r.map(r4)); rec.T = tries.map(i => si.T[i] ? si.T[i].map(r => r.map(r4)) : null); } // state encoder data
       o.data.push(rec); }

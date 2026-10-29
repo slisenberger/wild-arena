@@ -134,6 +134,13 @@ each species develop its own realistic fighting style. This note is the plan; th
   species traits and target links pooled into the option scorer), i.e. the dense-input network of the original milestone plan.
   Until then the best help for your cats is learning all guards together (guard_target_m2 / m3: +0.18-0.19 on cat fights).
 
+- State encoder (set_model.js 'target-set', ei6, Oct 28): your cats' held-out gain 0.001-0.007 of ~0.10 (small and large
+  encoders), validation -0.03 to +0.04; enemy cats 0.06 of 0.18, test +0.044 ± 0.028 (like the per-option nets). Adding the
+  engine's hidden state (attack / charge / pounce readiness, morale, stamina, agitation, heat, slow, stun: feat 'richh') gives
+  no correlate above .038 either. **Your cats: no network-learnable target signal found so far** with per-option, rich,
+  hidden-state or whole-field inputs; the lookahead's +0.203 looks like averaging over chaotic close-quarters futures that
+  the present state doesn't predict. Best available help for your cats stays learning all guards together (guard_target_m2/m3).
+
 ## Phases (each measured before the next)
 1. Plumbing: joint (target, intent) hook for every archetype, zero/heuristic policy byte-identical to today
    (`check_identical.js`), features + trait vector, harness tests.

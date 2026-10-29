@@ -24,10 +24,16 @@ function rich(w, u, t){
     +(cos < -.3), -cos, Math.min(2, sp / my), +(t.state === 'flee' && sp > .6 * my), Math.min(4, allies) / 4, Math.min(5, foes) / 5,
     +!!(t.latchedBy || t.latchOn), Math.min(3, lg1(t.hp / 1000)), u.hp / u.maxhp, Math.min(1, u.stam || 0)];
 }
+// HIDDEN (feat 'richh'): the engine state an animal's next moves hinge on, which the lookahead sees and summary inputs don't:
+// attack / charge / pounce readiness, morale, stamina, agitation, heat, slowdown, stun, for the target and the deciding unit
+const HIDDEN = ['tAtkReady', 'tAtkWait', 'tMorale', 'tStam', 'tAgit', 'tChargeReady', 'tPounceReady', 'tHeat', 'tSlow', 'tStun', 'myAtkReady', 'myMorale', 'myHeat', 'myChargeReady'];
+function hidden(w, u, t){ const r = x => +((x || 0) <= 0);
+  return [r(t.atk), Math.min(2, Math.max(0, t.atk || 0)), Math.min(1.5, t.morale || 0), Math.min(1, t.stam || 0), Math.min(1, t.agit || 0), r(t.chargeCd), r(t.pounceCd),
+    Math.min(1.5, t.heat || 0), Math.min(1, t.slow || 0), Math.min(2, t.stun || 0), r(u.atk), Math.min(1.5, u.morale || 0), Math.min(1.5, u.heat || 0), r(u.chargeCd)]; }
 // {opts, X}: the base set's options and rows, each target row extended by RICH (others by zeros)
 function extract(w, u, o){
-  o = o || {}; const base = u.side === 'E' ? FP.extract(w, u, o.herb) : G.extract(w, u, o.wide), z = new Array(RICH.length).fill(0);
-  return {opts: base.opts, X: base.opts.map((op, i) => base.X[i].concat(op.kind === 'target' ? rich(w, u, op.t) : z))};
+  o = o || {}; const base = u.side === 'E' ? FP.extract(w, u, o.herb) : G.extract(w, u, o.wide), n = RICH.length + (o.hidden ? HIDDEN.length : 0), z = new Array(n).fill(0);
+  return {opts: base.opts, X: base.opts.map((op, i) => base.X[i].concat(op.kind === 'target' ? (o.hidden ? rich(w, u, op.t).concat(hidden(w, u, op.t)) : rich(w, u, op.t)) : z))};
 }
-const NAMES_E = [...FP.NAMES, ...RICH], NAMES_G = [...G.NAMES, ...RICH];
-module.exports = { RICH, extract, NAMES_E, NAMES_G, DIM_E: NAMES_E.length, DIM_G: NAMES_G.length };
+const NAMES_E = [...FP.NAMES, ...RICH], NAMES_G = [...G.NAMES, ...RICH], NAMES_EH = [...NAMES_E, ...HIDDEN], NAMES_GH = [...NAMES_G, ...HIDDEN];
+module.exports = { RICH, HIDDEN, extract, NAMES_E, NAMES_G, NAMES_EH, NAMES_GH, DIM_E: NAMES_E.length, DIM_G: NAMES_G.length, DIM_EH: NAMES_EH.length, DIM_GH: NAMES_GH.length };
