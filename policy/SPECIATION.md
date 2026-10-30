@@ -165,6 +165,8 @@ each species develop its own realistic fighting style. This note is the plan; th
   (probe 23) e3 +0.184 ± 0.021 vs m3 +0.182 ± 0.022 (you survive +10.6 vs +10.7 pts); 800 cat fights (probe 65) e3 +0.192 ± 0.025
   vs m3 +0.180 ± 0.028. A tie: e3 deviates less (20% vs 27%) with style 1.00 and no drift, but doesn't beat m3, so m3 stays in
   ?smart=1. The 20-s teacher brings guards to where ES got them, not past it.
+  Run finished: rounds 4-5 fell back (val +0.102, +0.093); its own held-out test of round 3 (= e3) +0.135 ± 0.020, you survive
+  +7.5 pts. ei9 done; nothing replaces m3.
 
 ## Phases (each measured before the next)
 1. Plumbing: joint (target, intent) hook for every archetype, zero/heuristic policy byte-identical to today
