@@ -83,7 +83,7 @@ const ANIMALS = [
  // healed horn wounds from fights; short legs, likely intolerant of deep snow (so no snow bonus of its own: snowFactor by
  // mass). No measured or modelled speed: 10 m/s is the reviewer's analogue estimate, under a white rhino's for the short legs.
  {id:'woollyrhino', name:'Woolly Rhinoceros', abbr:'WRH', price:500, mass:2000, spd:10, swim:1, dmg:175, cd:1.4, armor:.5, reach:2.8, stam:15, heat:.4, cold:1, water:0, aggr:.45, flee:.2, corner:1.4, pred:false, charge:true, vision:18, rare:true, habitat:{tundra:1}, tags:['snowPlough'],
-  traits:['Rare, tundra only: the Ice Age rhino, known from frozen carcasses with skin, fur and stomach contents','Snow plough (speculative, from the wear on its horn): head low, it shoves a furrow through the snow, and anything that follows in it wades through more easily','A metre-long flattened horn and two tonnes behind it; short legs, so deep drifts slow it like anything its size']},
+  traits:['Rare, tundra only: the Ice Age rhino, known from frozen carcasses with skin, fur and stomach contents','Snow plough: head low, it shoves a furrow through the snow, and anything that follows in it wades through more easily','A metre-long flattened horn and two tonnes behind it; short legs, so deep drifts slow it like anything its size']},
  // Giant short-faced bear (Arctodus simus): adults 317-957 kg, females <= 500, males ~800, mean ~625 (Christiansen 1999;
  // Figueirido et al. 2010); 1.67 m at the shoulder, 2.4-3.4 m on its hind legs, vertical arm reach about 4.3 m (a
  // reconstruction); a pacing gait built for efficient travel, top speed 40-45 km/h (Matheus 2003). Sprint stamina is a
@@ -93,7 +93,7 @@ const ANIMALS = [
  // (taking kills from wolves, sabre-tooths, Homotherium) is a hypothesis (Matheus 1995), modelled on the modern analogue:
  // bears displaced cougars at 11 of the 27 cougar kills they visited (Murphy et al. 1998, Ursus 10).
  {id:'shortface', name:'Giant Short-faced Bear', abbr:'SFB', bluffP:.5, price:300, mass:650, spd:12, swim:1.8, dmg:160, cd:1.0, armor:.35, reach:2.3, stam:15, heat:.6, cold:.9, water:.3, aggr:.55, flee:.2, corner:1.3, pred:true, charge:false, vision:30, hpMul:1.1, rare:true, habitat:{tundra:1, forest:1}, tags:['scavenger','bluff','usurps'], prey:{human:.5}, rivals:{grizzly:1.2, wolf:1.3},
-  traits:['Rare, tundra and forest: Arctodus, the Ice Age bear that stood 3.4 m on its hind legs','Bully (a hypothesis): it shoulders in on a predator holding prey and rears over it, and the predator sometimes lets go, the way cougars give up kills to grizzlies','Reaches about 4.3 m standing: a rider even on a mammoth; a long-legged walker built for distance; diet debated, omnivore or scavenger']},
+  traits:['Rare, tundra and forest: Arctodus, the Ice Age bear that stood 3.4 m on its hind legs','Bully: it shoulders in on a predator holding prey and rears over it, and the predator sometimes lets go, the way cougars give up kills to grizzlies','Reaches about 4.3 m standing: a rider even on a mammoth; a long-legged walker built for distance']},
  // Utahraptor ostrommaysi: 6-7 m long; mass estimates ~280-500 kg (Kirkland et al. 1993 "under 500 kg"; Paul 280 kg;
  // Makovicky ~290; specimens 391 and 481 kg), taken here at 350. Robust legs read as an ambush hunter rather than a
  // pursuer (Kirkland; Paul: "not particularly fast"; dromaeosaurids score low on cursorial indices, Persons & Currie 2016):
@@ -1761,7 +1761,7 @@ function faceDown(w, u){
 // nothing from its own fresh furrow (it is the one breaking the snow). Basis: abrasion on the flattened horn read as
 // sweeping snow aside (Fortelius 1983; Wikipedia "Woolly rhinoceros") and the general rule that hoofed animals travel more
 // easily in a broken trail (trail-following is documented in bison, elk and deer; Telfer & Kelsall 1984, Ecology 65, on
-// sinking depth). Speculative for Coelodonta (reviewer): labelled so on the card. w.furrowAll keeps every point for replays.
+// sinking depth). Speculative for Coelodonta (reviewer); the card no longer hedges (owner, Oct 31): the basis stays here. w.furrowAll keeps every point for replays.
 const FURROW = {every: .5, life: 12, r: 1.2, own: 2}; // (shrunk from 20 s / 1.5 m after the review: speculative)
 function plough(w, u){
   if (!active(u) || u.onTree || Math.hypot(u.vx, u.vy) < 1 || w.t - (u.ploughT ?? -9) < FURROW.every) return;
@@ -1781,7 +1781,7 @@ function furrowAt(w, u){ // pure: the furrow point under u, if any
 // reached, Murphy et al. 1998), .25 if it is still fighting (an extrapolation from carcasses to live prey, reviewer); +.2 if
 // the holder is under .3x the bear's mass, -.15 per packmate within 15 m (big wolf packs hold their own against grizzlies
 // at carcasses, Gunther & Smith 2004); a honey badger never. It then leaves that prey alone for 15 s. If it holds on, the bear's next swipe is a
-// maul. 8 s cooldown. Kleptoparasitism in Arctodus is a hypothesis (Matheus 1995); the card says so.
+// maul. 8 s cooldown. Kleptoparasitism in Arctodus is a hypothesis (Matheus 1995); the card no longer hedges (owner, Oct 31): the source stays here.
 const USURP = {r: 35, mass: .5, p: .25, pDown: .4, small: .3, smallP: .2, packP: .15, go: 8, cd: 8, leave: 15};
 // the prey a predator is in the middle of killing: whatever it holds, or a downed target (stunned or under 30% health) it
 // is biting (a wolf pack or hyenas finishing something off)
