@@ -14,11 +14,6 @@ Each item has a recommendation; reply with a number and "yes", or your own call.
    its Stage 4, or sooner if you want results faster.
 16. **Playtest before release:** the whole jointly trained set goes behind `?smart=1` for you to play before it goes live.
    Recommendation: yes.
-11. **Enemy chargers' learned targets: buffalo shy away from predators** (training session's speciation report, Oct 31): the live
-   `charger_target_m1` uses one rule for every charger (onto you and smaller animals, away from predators), and the buffalo
-   avoids predators the most, which is the opposite of real buffalo (they mob lions). Recommendation: keep it live for now (it is
-   +0.073 ± 0.017 over the previous scorer); the training session retrains chargers species-aware (traits v2) with a check that
-   buffalo and bison don't learn to shun predators, and I'll swap it in when it passes.
 1. **Safari (progressive mode): what a retry undoes.** Built: a lost round goes back to the shop as the round opened (team,
    wounds, XP and money as they were; only the time alive counts), then a new fight seed. The alternative (the dead stay
    dead, no refund) made 17% of bot runs die in round 1 from a crippled retry. Recommendation: keep the undo.
@@ -72,7 +67,7 @@ Each item has a recommendation; reply with a number and "yes", or your own call.
   boards. GCP for training; the launcher must fail gracefully.
 
 ## Decided
-- Oct 31: **the buffalo realism check stays, and it is about lions** (owner: "Buffalo attacking lions preferably seems ok. Enemy lions at least."): with an enemy lion (lone or coalition) within 15 m, a buffalo must target it at least as often as the hand-written rules do (0.82); the live charger net is at 0.23, so the charger retrain (es17) has to pass this before it replaces it.
+- Oct 31: **what is in the game's spirit** (owner: "I dont care about predator vs lion. I just am opining it doesnt violate game spirit the way disengaging does."): animals know their team and the objective. Choices that serve the objective are fine even when unrealistic (kickers hunting you, buffalo ignoring lions). Disengaging is not: idling, stalling, avoiding the fight, giving up. So training checks on engagement matter; buffalo-vs-lion is report-only, and the live charger net (`charger_target_m1`) stays as it is. Species realism stays in the engine's physics and signature moves.
 - Oct 31: **every animal on attack takes part in killing the human; it is the only assumption above realism** (owner). Kickers, lumbering herbivores and the walrus get a prototype (training session, behind a flag), then a reprice.
 - Oct 31: **terrain features (maps2) are the default** (owner: "I like maps2 … feels better"); the old open maps stay behind `?maps2=0`. Tree-hiding stalls fixed the same day.
 - Oct 31: **progressive mode is the main mode, named Safari** (owner: "make the progressive mode the main mode and give it a name", then "I like safari as a name"; briefly shipped as Food Chain). It opens the arena screen and owns the bottom bar's main button; the single-board game stays below as **Quick game**. **Versus is the draft screen** for both (owner: "versus the default view"); the old cards, List and Deck stay reachable with `?draftui=…`. That retires item 5 (compact cards on phones).
