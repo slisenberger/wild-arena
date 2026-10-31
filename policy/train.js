@@ -36,6 +36,7 @@ const DEFAULTS = {
   acceptNoDrift: true,       // validation acceptance also requires no telemetry drift flags
   baseline: true,            // also run zero weights on each generation's train fights: curves relative to the heuristic
   initRule: null,            // warm start from a hand-written rule encoded in the linear term (INIT_RULES below)
+  ungate: null,              // comma list of realism gates to lift for this run (owner rule: realism may give way to the objective), e.g. farHunt for kickers
   refZero: false,            // style / realism reference = zero output (today's heuristic) even when warm-starting (a start that fails a realism gate must be fixed, not kept)
   traitsV: 1,                // --target --nh: 2 = traits v2 (policy/traits.js: + signature tags); a v1 initWeights net is widened (same scores)
   initWeights: null,         // warm start from a weights file (e.g. policy/weights/guard_v1.json); 'best' starts there too, so validation must beat it
@@ -83,6 +84,7 @@ const DRY = {calibFights: 24, calibPerturb: 1, pairs: 2, fights: 12, gens: 1, va
 // ---------- state ----------
 function load(file){
   const s = JSON.parse(fs.readFileSync(file, 'utf8'));
+  applyUngate(s.config);
   if (s.format !== STATE_FORMAT || s.version !== STATE_VERSION) throw new Error(`${file}: not a v${STATE_VERSION} ${STATE_FORMAT} file`);
   const sh = R.simHash(), hh = R.harnessHash();
   if ((s.simHash !== sh || s.harnessHash !== hh) && !process.env.ALLOW_ENGINE_CHANGE)
@@ -91,8 +93,10 @@ function load(file){
 }
 function save(file, s){ const tmp = file + '.tmp'; fs.writeFileSync(tmp, JSON.stringify(s)); fs.renameSync(tmp, file); }
 function logLine(file, line, quiet){ fs.appendFileSync(file + '.log', line + '\n'); if (!quiet) console.log(line); }
+function applyUngate(cfg){ if (cfg && cfg.ungate) RW.ungate(cfg.arch, String(cfg.ungate).split(',')); }
 function init(opts){
   const cfg = Object.assign({}, DEFAULTS, opts.dry ? DRY : {}, opts.cfg);
+  applyUngate(cfg);
   const AR = archOf(cfg.arch), F = AR.F;
   const FRm = cfg.target && cfg.feat === 'rich' ? require('./features_rich.js') : null; // --feat=rich: features_rich.js (e.g. fine-tuning an expert-iteration net)
   const TF = cfg.target ? (FRm ? (cfg.arch === 'guard' ? {DIM: FRm.DIM_G, NAMES: FRm.NAMES_G} : {DIM: FRm.DIM_E, NAMES: FRm.NAMES_E}) : require(cfg.arch === 'guard' ? './guard_features.js' : cfg.feat === 'plus' ? './features_plus.js' : './features.js')) : null; // --feat=plus: + the guard situation around each target // --target: train the archetype's target choice (policy/policy.js 'target-lin'), not its intents

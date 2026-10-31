@@ -1,0 +1,6 @@
+{
+ "note": "Enemy kickers (giraffe, ostrich, giant kangaroo) target choice by ES on maps2, species-aware (target-mlp, traits v2), with the farHunt gate lifted: owner rule Oct 31, animals know their team and objective, so kickers may hunt on offense. Expert iteration found nothing (every round played worse and hunted far).",
+ "runs": [
+  {"name": "kick_es1", "args": "--arch=kicker --goal=checkmate --spec=true --seed=4301 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --target=true --nh=8 --pairs=24 --thetaClip=1 --margin=.25 --traitsV=2 --ungate=farHunt"}
+ ]
+}

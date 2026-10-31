@@ -189,4 +189,8 @@ function paired(recsA, recsB, ref){
   return {n: d.length, goalA: mean(recsA.map(goal)), goalB: mean(recsB.map(goal)), diff: mean(d), se: se(d),
     styleA: grade(ma, ref, d.length), styleB: grade(mb, ref, d.length), mA: ma, mB: mb, driftB: drift(mb, ref, d.length)};
 }
-module.exports = { GOAL, GOAL_G, GOAL_C, ANIMAL_SCALE, METRICS, METRICS_G, METRICS_X, defsOf, goal, goalParts, metrics, metricSE, grade, drift, reference, paired, mean, sd, se };
+// owner rule (Oct 31): animals know their team and the objective (kill / protect the human); realism may give way where the
+// unrealistic choice serves that objective (e.g. kickers hunting on offense). ungate(arch, names): those metrics stay in style
+// and drift but no longer gate (both the plain and the --spec definitions)
+function ungate(arch, names){ for (const D of [DEFS, DEFS_SPEC]) if (D[arch]) for (const k of names) if (D[arch][k]) D[arch][k] = Object.assign({}, D[arch][k], {gate: false}); }
+module.exports = { ungate, GOAL, GOAL_G, GOAL_C, ANIMAL_SCALE, METRICS, METRICS_G, METRICS_X, defsOf, goal, goalParts, metrics, metricSE, grade, drift, reference, paired, mean, sd, se };
