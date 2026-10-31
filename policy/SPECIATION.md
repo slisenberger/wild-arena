@@ -199,3 +199,25 @@ each species develop its own realistic fighting style. This note is the plan; th
   40/40 identical to the Node modules; lookahead_test: 53/53 copied fights play on exactly like the original (new species
   included); every class (harrier, charger with traits v2, kicker, cat, guard, bulldozer, brawler) runs a smoke round.
   Training here uses main's live set (move_run adds the live target nets for the classes not being trained).
+
+- **Stage 1, label reliability (Oct 31, sweep st1, main's live set, probes/label_reliability.js: 150 fights per class, 6 rolls
+  per option split 3 / 3, H 8 s).** Split-half r of the gain vs today's pick (fair dice -> common random numbers), best option
+  agreeing between halves vs chance:
+  | class | r fair | r CRN | best agrees (chance) | mean abs gain / SE of a 3-roll gain |
+  |---|---|---|---|---|
+  | chargers | .61 | .66 | .59 (.32) | .31 / .20 |
+  | enemy cats | .70 | .77 | .52 (.30) | .44 / .25 |
+  | elephant group (bulldozers) | .62 | .64 | .61 (.31) | .29 / .18 |
+  | your cats | .32 | .37 | .49 (.29) | .25 / .23 |
+  Per species (fair): chargers .35 (boar) to .73 (triceratops); enemy cats .47 (jaguar, cougar) to .80 (tiger); your cats
+  .19 (jaguar) to .44 (lion); elephant .73, gorilla .59, walrus .62, mammoth .37.
+  - **Labels are not the bottleneck** for chargers, enemy cats and bulldozers: 60-77% of a 3-roll label's variance repeats,
+    yet nets kept 1/7 (chargers, expert iteration), 1/4-1/2 (cats) and less than none in play (bulldozers). So the student
+    (inputs, loss, capacity) or the play-vs-label gap is the bottleneck: per §5, next is a capacity test on the stored labels
+    (bigger offline models), then the teacher-net / distillation path. The bulldozer paradox is not label noise either.
+  - **Your cats have predictable signal** (r .32, best option repeats 49% vs 29% chance), just noisier; "no signal" was
+    the students' inputs, not the labels. Worth one more try once a stronger student exists.
+  - **CRN helps a little** (r +.02 to +.07, SE -5 to -24%), below the 30% bar but free: new runs use --crn.
+- Old-base pilot ei10: **enemy wolves / hyenas (harrier) +0.070 ± 0.031 on 1,200 held-out fights, style 1.00, no gates**
+  (round 1 of 6; you survive -3.1 pts). First class beyond 2 SE with no target net before; retraining on main (ei12).
+  Kickers: none found so far (every round failed farHunt, with the realism-aware teacher too).

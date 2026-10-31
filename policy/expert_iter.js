@@ -17,7 +17,7 @@ const ZW = {kind: 'target-lin', v: 1, nin: 200, margin: .25, wt: new Array(200).
 if (!isMainThread){
   const {jobs, arch, o, learner} = workerData, out = [];
   for (const j of jobs){
-    if (j.k === 'collect'){ const g = arch === 'guard', data = [], W = PL.makePlanner({H: o.H, max: o.max, cool: 0, rolls: o.rolls, data, learner, real: o.real, feat: o.feat === 'rich' || o.feat === 'richh' ? o.feat : null, set: o.model === 'set', arch, side: g ? 'P' : 'E', only: g ? o.only : null, wide: g && o.wide, traitsV: o.traitsV === 2 ? 2 : 1}); R.runFight(j.f, W, arch); out.push({k: j.k, i: j.i, data}); }
+    if (j.k === 'collect'){ const g = arch === 'guard', data = [], W = PL.makePlanner({H: o.H, max: o.max, cool: 0, rolls: o.rolls, data, learner, real: o.real, feat: o.feat === 'rich' || o.feat === 'richh' ? o.feat : null, set: o.model === 'set', arch, side: g ? 'P' : 'E', only: g ? o.only : null, wide: g && o.wide, traitsV: o.traitsV === 2 ? 2 : 1, crn: !!o.crn}); R.runFight(j.f, W, arch); out.push({k: j.k, i: j.i, data}); }
     else out.push({k: j.k, i: j.i, rec: R.runFight(j.f, j.k === 'base' ? Object.assign({}, ZW, arch === 'guard' ? {only: o.only} : {}) : j.W, arch)});
   }
   parentPort.postMessage(out); return;

@@ -1,0 +1,7 @@
+{
+ "note": "Milestone 4 on main (m4/speciation-2): enemy wolves / hyenas (harrier) target choice by expert iteration, 20 s teacher, common random numbers; the old-base pilot gave +0.070 ± 0.031 held out. 3 helper VMs share the leader's fights.",
+ "helpers": 3,
+ "runs": [
+  {"name": "eim_harr", "args": "--trainer=expert --feat=rich --loss=adv --rounds=6 --fights=900 --max=3 --rolls=3 --nh=32 --epochs=8 --lr=.002 --val=800 --test=1200 --dagger=true --arch=harrier --H=20 --crn=true --seed=3401"}
+ ]
+}
