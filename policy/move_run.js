@@ -117,9 +117,10 @@ function runFight(f, weights, arch){
         // long chase: closing in at > 60% of its top speed for > 8 s on end
         if (st === 'close' && Math.hypot(u.vx, u.vy) > XTEL.chaseSpd * u.s.spd){ s.chase = (s.chase || 0) + DT; if (s.chase > XTEL.longChase) r.longChaseT += DT; } else s.chase = 0;
         if (st === 'close' && I.dist(u, t) > XTEL.far) r.farHuntT += DT;   // hunting something far across the field
-        // realism (research/speciation_strategy.md §2.3, buffalo): a lion-killer (Cape buffalo, solo or herd) turns on predators
-        // near it: exposure = time with one of your predators within 15 m, mob = of that, time spent targeting a predator
-        if (I.has(u, 'lionKiller')){ r.mobLife += DT; if (w.units.some(o => o.side === 'P' && o.s.pred && I.active(o) && I.dist(u, o) < 15)){ r.mobExpT += DT; if (t && t.s && t.s.pred) r.mobT += DT; } }
+        // realism (owner, Oct 31: "Buffalo attacking lions preferably seems ok. Enemy lions at least"): a lion-killer (Cape
+        // buffalo, solo or herd) turns on the other side's lions near it: exposure = time with one of your lions (lone or
+        // coalition) within 15 m; mob = of that, time spent targeting a lion
+        if (I.has(u, 'lionKiller')){ r.mobLife += DT; if (w.units.some(o => o.side === 'P' && I.sp(o.s) === 'lion' && I.active(o) && I.dist(u, o) < 15)){ r.mobExpT += DT; if (t && t.s && I.sp(t.s) === 'lion') r.mobT += DT; } }
         if (u.s.id === 'honeybadger'){ r.badgerLife += DT; if (eng && (u.intent === 1 || u.intent === 3 || u.intent === 4)) r.badgerBackT += DT; } // fearless: never waits, regroups or backs off
       }
       if (dd > 0) r.hits++;

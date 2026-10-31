@@ -1,0 +1,13 @@
+{
+ "note": "Realistic chargers with the owner's lion rule (Oct 31: buffalo prefer attacking the other side's lions; mobsPred/mobExposure now lions only): ES from charger_target_m1 widened to traits v2, refZero, gatePenalty 1, lambda0 3, maps2. Replaces es15 chv3 (predator-wide gate).",
+ "runs": [
+  {
+   "name": "chv4_s1",
+   "args": "--arch=charger --goal=checkmate --spec=true --seed=4401 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --target=true --nh=8 --pairs=24 --thetaClip=1 --margin=.25 --traitsV=2 --initWeights=policy/weights/charger_target_m1.json --refZero=true --gatePenalty=1 --lambda0=3"
+  },
+  {
+   "name": "chv4_s2",
+   "args": "--arch=charger --goal=checkmate --spec=true --seed=4402 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --target=true --nh=8 --pairs=24 --thetaClip=1 --margin=.25 --traitsV=2 --initWeights=policy/weights/charger_target_m1.json --refZero=true --gatePenalty=1 --lambda0=3"
+  }
+ ]
+}
