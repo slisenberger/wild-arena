@@ -45,7 +45,7 @@ count as 5:00). Live site: GitHub Pages serves `index.html` from `main`.
   Mobile UX pass (Oct 27, `research/ux_audit/`): a sticky bottom action bar (`renderActBar`) carries each step's next action
   (Fight straight from the draft with auto formation, Skip to result, Play again / New board); `audit.js` re-measures taps
   and scroll on phone/360/desktop, `modes_check.js` checks the hidden modes, daily and share links through the bar.
-  Daily Safari check (Oct 31, `research/daily_check.js <first date> <days> [K] [MIN]`): the bot plays each day's daily run K times; a day whose completion is under MIN gets the next salt (`daily_salt.json`, bundled by build.js as `DAILY_SALT`, read by `progDailySeed`). First run (abs_r20 engine, 45 days from Oct 31, K 30, MIN .08): median completion 17% (min 0, max 47%), 6 days re-dealt (each now ≥ 10%). **Re-run it after any engine, price or Safari change, and before the covered dates run out (Dec 14); never change a date that has already started.**
+  Daily Safari check (Oct 31, `research/daily_check.js <first date> <days> [K] [MIN]`): the bot plays each day's daily run K times; a day whose completion is under MIN gets the next salt (`daily_salt.json`, bundled by build.js as `DAILY_SALT`, read by `progDailySeed`). First run (abs_r20 engine, 45 days from Oct 31, K 30, MIN .08): median completion 17% (min 0, max 47%), 6 days re-dealt (each now ≥ 10%). Re-run (Oct 31, terrain features default + `abs_r21` + the top-up retune, 45 days from Nov 1, K 30, MIN .08; Oct 31 had no salt and is untouched): median completion 17% (min 0, max 50%), 5 days re-dealt (Nov 9 needed salt 2; each now ≥ 13%). **Re-run it after any engine, price or Safari change, and before the covered dates run out (Dec 15); never change a date that has already started.**
   Safari playtest fixes (Oct 31): the post-fight recap (`recapHTML`) and the run summary are key/value tables (`table.kv`), the end screen's "Your animals" is a table (`table.runsum`: rounds, kills, damage, fate; "★ Made it" only on a complete run, "Alive" otherwise) without refunded animals; the loss banner states the retry rule and shows retries left as hearts; formation shows Ride above the team list; animal names in recaps, banners, the run summary, stats and the after-action fate column carry a small portrait (`fn(id, px)`; the fate column shows ✕ + the killer's portrait); the short-faced bear and woolly rhino cards no longer hedge ("hypothesis" / "speculative"; the sources stay in sim.js comments).
   Pre-friends polish (Oct 31): link previews (`<meta>` description / Open Graph / Twitter card in template.html, `preview.png` = a real fight at 1200×630, lion favicon), field notes fold the same line within 15 s into one entry with ×n, the river-only formation tip shows only on the river, and a Safari retry keeps the round's map (`M.mapSeedOf(run)` → `cfg.mapSeed`; first attempts are unchanged since their fight seed equals it).
   Draft map card (Oct 28, `renderDraftMap`, `#draftMap`): this game's / round's actual map (ground from `groundFor`, your side, your start), its features as chips (river, waterhole, frozen lake, snow depth, tree count) and a one-line tip (`MAP_TIP`); owner: "you don't know the map at draft time".
@@ -472,7 +472,20 @@ round. Report ± standard errors.
   median board's best team 88% (min 33, p25 75), typical full-spend team 160 s, 16 distinct best teams over 16 boards, no
   elephant in any; best teams spread over rhino 6, hippo 6, tiger 4, giraffe 4, croc 4 (was elephant 5, rhino 4). For
   comparison, total $2,500 gave 96% / 181 s (not adopted: it would make the other side weaker).
-- **Current prices (`abs_r20`, Oct 31, branch `smart-ship`: cat_target_e1 + brawler_target_e1 live on top of guard m2 +
+- **Current prices (`abs_r21`, Oct 31, terrain features (maps2) as the default game + the human's tree-stall fix and
+  `TREE_MAX`):** **16 s of swing per $100**, giants/herds capped at $700 (triceratops $800), **board total $2,600** (kept;
+  `price_scheme` itself landed on it), budget $1,200, rares 30%. `price_abs.js 240` (all items) merged with `price_abs.js 960`
+  for muskox, musk ox herd, walrus, woolly rhino, short-faced bear, Utahraptor. Mean base-team score 43 → 47 s. Why not keep
+  `abs_r20`: it still sat inside the targets on the new game (median board's best team 88%, min 58, p25 71; typical full-spend
+  team 162 s; 67% of teams win a screen run; 16 distinct best teams), but two items were off by $100 well beyond the SE (bull
+  37 ± 6 s at $100, walrus 32 ± 5 at $100). Changes vs `abs_r20`: giraffe $100, buffalo $300, bison $300, black rhino $200,
+  bull $200, mammoth $700, Smilodon $100, walrus $200, great wolf pack $200, musk ox herd $500. Validation (`RAREP=.3 board.js
+  16 2 24 12 1200 2600`, best-team SE ±7 pts): **16 s/$100 median board's best team 88%** (min 46, p25 71), typical full-spend
+  team **165 s**, 67% of teams win a screen run, 15 distinct best teams; 17 s/$100 88% (p25 67) / 167 s; 15 s/$100 75% (p25 67)
+  / 167 s. Swings: triceratops 213, elephant 157, buffalo herd 157, bison herd 151, mammoth 107, musk ox herd 76 ± 7, woolly
+  rhino 70 ± 7, rhino 70, hippo 70, gaur 53, short-faced bear 46 ± 5, bison 45, buffalo 42, bull 37, croc 35, walrus 32 ± 5,
+  Utahraptor 20 ± 4.
+- *Previous* prices (`abs_r20`, Oct 31, branch `smart-ship`: cat_target_e1 + brawler_target_e1 live on top of guard m2 +
   charger m1):** **16 s of swing per $100**, giants/herds capped at $700 (triceratops $800), **board total $2,600** (kept;
   `price_scheme` itself gives $2,500 at 16 s, $2,600 at 15 s), budget $1,200, rares 30%. `price_abs.js 240` (all items) merged
   with `price_abs.js 960` for muskox, musk ox herd, walrus, woolly rhino, short-faced bear, Utahraptor. The smarter enemy cats
@@ -584,12 +597,17 @@ round. Report ± standard errors.
 
 ## Progressive mode (prototype Oct 27, `?progressive=1`; details and numbers in `research/progressive_mode.md`)
 - 7 rounds up a price ladder (round 1 $100 animals only … round 7 any, a giant for sale), premium enemy from round 3 (top
-  band, not for sale), $400 start (round 1 is all $100 animals: no stranded $50, owner) + top-ups 450/450/450/450/500/750, boards 10/10/10/10/11/11/12 worth
-  $1,000/1,200/1,500/1,800/2,100/2,300/2,600 (retuned Oct 31 for the cat + brawler target policies and `abs_r20`, see below), $25/kill (cap $150; the last round pays nothing), rest 30%; full heal =
+  band, not for sale), $400 start (round 1 is all $100 animals: no stranded $50, owner) + top-ups 450/500/450/450/550/750, boards 10/10/10/10/11/11/12 worth
+  $1,000/1,200/1,500/1,800/2,100/2,300/2,600 (retuned Oct 31 for the cat + brawler target policies and `abs_r20`, top-ups again for terrain features and `abs_r21`, see below), $25/kill (cap $150; the last round pays nothing), rest 30%; full heal =
   price × .55 × health missing ($5 steps up, min $10), sell = price × .5 × health ($5 steps down), not under 25% health
   (was a flat 25% heal / half-price sale; .55 kept the bot's completion rate: 1,000 runs 17.3% → 15.9%, round 1 81.5%),
   scars, XP and levels (level 3 ≈ +8% of swing, `level_abs.js`), two retries (a loss restores the round's shop).
-- Bot with the cat + brawler target nets live (`abs_r20` prices, retries keep the round's map since PR #46;
+- Bot on terrain features (maps2 default, tree-stall fix + `TREE_MAX`, `abs_r21` prices; `progressive_bot.js 500 4 1`): round 1
+  first-try **82%**, median run ends in round 6, **18.8% complete**; round 6 is the wall (first-try 38%; buffalo herd premium won
+  35%, bison herd 40%). At the previous constants the new game gave round 1 82% and **12.4% complete**. Retune (300-run probes):
+  top-ups 450/450/450/450/500/750 → 450/500/450/450/550/750 (500/450/450/450/500/750: 16.0%; 500/500/500/450/550/750: 34%;
+  500/500/500/500/550/800: 39%; at 500 runs 500/500/450/450/550/750: 26.4%). Boards and START unchanged.
+- Previously, bot with the cat + brawler target nets live (`abs_r20` prices, retries keep the round's map since PR #46;
   `progressive_bot.js 500 4 1`): round 1 first-try **80%**, median run ends in round 6, **19.8% complete**; round 6 is the wall
   (first-try 34%; buffalo herd premium won 30%, bison herd 31%). At the old constants the new engine + prices gave round 1 65%
   and **2.8% complete** (smarter cats and brawlers; croc, polar and Smilodon left round 1's $100 pool). Retune (300-run probes):
