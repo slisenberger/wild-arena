@@ -35,6 +35,11 @@ count as 5:00). Live site: GitHub Pages serves `index.html` from `main`.
   (owner, Oct 27: "all animals believe they are enemies with the other team ... teams *are* known and goals *are* shared").
   So herbivores finishing off enemies, or picking targets for the team, is in-premise; realism applies to *how* each animal
   fights (gait, weapons, temperament, sourced behaviour), not to whether it takes part.
+- **The objective outranks realism (owner, Oct 31): "all animals on attack should at least participate in the objective of
+  killing the human. It is the only assumption higher than realism. Each team understands their team's goal and helps."** So
+  realism may bend only where it serves an animal taking part in its team's objective (e.g. kickers hunting on offense);
+  physical abilities and species signatures still hold. Measured then (500 fights, maps2): share of active time targeting you
+  — gorilla 1.0%, elephant 1.3%, mammoth 1.4%, ostrich 2.2%, giraffe 2.9%, walrus 5.2%, chargers 11–20%, predators 24–76%.
 - **Pricing rules:** $100 steps, the elephant stays affordable ($700 cap), budget $1,200. Re-measure after any roster or
   behaviour change.
 
