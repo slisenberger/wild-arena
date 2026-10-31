@@ -1,4 +1,13 @@
 <title>Wild Arena</title>
+<meta name="description" content="You have $1,200. Build a team of real animals to protect you from all the rest. Survive five minutes.">
+<meta property="og:title" content="Wild Arena">
+<meta property="og:description" content="You have $1,200. Build a team of real animals to protect you from all the rest. Survive five minutes.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://slisenberger.github.io/wild-arena/">
+<meta property="og:image" content="https://slisenberger.github.io/wild-arena/preview.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#0d110e">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%A6%81%3C/text%3E%3C/svg%3E">
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800;900&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
@@ -371,7 +380,7 @@ body.hasbar #toDraft, body.hasbar #toDeployD, body.hasbar #startFight{display:no
 
 <!-- ARENA -->
 <section class="screen" id="s-arena" hidden>
-  <div class="panel progentry foodchain"><div class="label" style="color:var(--gold)">Main mode</div><h2>Food Chain</h2><p class="lede">Seven rounds, from $100 animals up to the giants. Your survivors carry their wounds into the next round.</p>
+  <div class="panel progentry foodchain"><div class="label" style="color:var(--gold)">Main mode</div><h2>Safari</h2><p class="lede">Seven rounds, from $100 animals up to the giants. Your survivors carry their wounds into the next round.</p>
     <div class="btnrow"><button class="btn primary" id="progNew">Start a run</button><button class="btn" id="progDaily" title="Today's run: the same maps, boards and fights for everyone">Daily run</button><button class="btn" id="progResume" hidden>Resume</button></div><p class="notes" id="progBest"></p>
   <details class="howrun"><summary>How a run works</summary><p class="notes">Seven rounds up the price ladder: round 1 is all $100 animals (honey badgers, boars, leopards...), each round lets pricier animals onto the board, and the giants come at the end. Your survivors carry their wounds and scars, earn XP and level up. From round 3 one premium enemy joins the other side. Every round brings fresh money; you can heal, sell or buy. Two retries for the whole run.</p></details></div>
   <h3 class="qgh">Quick game</h3>
@@ -395,7 +404,7 @@ body.hasbar #toDraft, body.hasbar #toDeployD, body.hasbar #startFight{display:no
     <h2>Set your formation</h2>
   </div>
   <div class="panel progform" id="progForm" hidden></div>
-  <p class="lede" id="deployHelp">Drag anyone, including yourself, anywhere on your side of the map. Animals inside the escort ring move with you. Anything placed farther out holds that spot as a guard post and fights whatever comes within 14 m of it. On the river, swimmers can start in the water: a croc beside a ford ambushes whatever crosses.</p>
+  <p class="lede" id="deployHelp">Drag anyone, including yourself, anywhere on your side of the map. Animals inside the escort ring move with you. Anything placed farther out holds that spot as a guard post and fights whatever comes within 14 m of it.<span id="deployRiver"> On the river, swimmers can start in the water: a croc beside a ford ambushes whatever crosses.</span></p>
   <div class="panel" style="display:flex;flex-direction:column;gap:10px"><div class="label">Ride one of your animals</div><div class="mounts" id="mountOpts"></div><p class="notes" id="mountNote"></p></div>
   <div class="stage" id="deployStage"><canvas id="deployCanvas"></canvas></div>
   <p class="notes" id="mapNote" hidden></p>
