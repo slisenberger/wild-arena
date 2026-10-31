@@ -37,6 +37,8 @@ const LEVEL_NAME = ['Rookie', 'Seasoned', 'Cunning', 'Veteran'];
 const LEVEL_DESC = ['', 'Morale breaks later; a fallen packmate shakes it less.', 'Spots threats 15% farther away.', '+10% damage and +10% max health.'];
 const GIANTS = ['elephant', 'mammoth', 'triceratops']; // the last round guarantees one of these on the board
 
+// a round's map is the one its first fight was dealt on: a retry (new fight seed) keeps the map you planned around
+function mapSeedOf(run){ return hash('fight:' + run.seed + ':' + run.k); }
 function hash(s){ let h = 2166136261; for (const c of String(s)){ h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); } return (h >>> 0) % 1e6 + 1; }
 const groupOf = id => A.BY_ID[id].group || 1;
 const spOf = id => A.BY_ID[id].species || id;
@@ -102,7 +104,7 @@ function cfgFor(run){
     if (e.scar.some(s => s > 0)) maxHp[e.id] = e.scar.map(s => 1 - PROG.SCAR * s);
     if (e.lv) levels[e.id] = e.lv;
   }
-  const c = {board: run.board.concat(run.premium ? [run.premium] : []), team: ids, terrain: run.terrain, mode: 'wild', seed: run.fightSeed, mount: A.defaultMount(ids), startHp};
+  const c = {board: run.board.concat(run.premium ? [run.premium] : []), team: ids, terrain: run.terrain, mode: 'wild', seed: run.fightSeed, mapSeed: mapSeedOf(run), mount: A.defaultMount(ids), startHp};
   if (Object.keys(maxHp).length) c.maxHp = maxHp;
   if (Object.keys(levels).length) c.levels = levels;
   return c;
@@ -183,7 +185,7 @@ function applyResult(run, w){
 // runs compare by rounds won, then total time alive
 const better = (a, b) => !b || a.won > b.won || (a.won === b.won && a.total > b.total + .05);
 
-const API = {histOf, PROG, LEVEL_NAME, LEVEL_DESC, GIANTS, hash, newRun, dealRound, cfgFor, teamIds, canBuy, buy, unbuy, sell, canSell, sellPrice, tooHurtToSell, condition, missing, canHeal, heal, healCost, needsHeal,
+const API = {histOf, PROG, LEVEL_NAME, LEVEL_DESC, GIANTS, hash, mapSeedOf, newRun, dealRound, cfgFor, teamIds, canBuy, buy, unbuy, sell, canSell, sellPrice, tooHurtToSell, condition, missing, canHeal, heal, healCost, needsHeal,
   applyResult, better, terrainOrder, groupOf, levelOf};
 if (typeof module !== 'undefined' && module.exports) module.exports = API; else root.Progressive = API;
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -118,7 +118,7 @@ document.querySelectorAll('#steps button[data-s]').forEach(b => b.addEventListen
 
 // ---------- draft ----------
 function renderBudget(){
-  if (S.prog){ const f = S.screen === 'fight'; $('spent').textContent = f ? '' : '$' + S.prog.money.toLocaleString(); $('meter').innerHTML = ''; $('budgetMax').textContent = f ? 'Food Chain' : 'to spend'; return; } // no spoilers during a fight
+  if (S.prog){ const f = S.screen === 'fight'; $('spent').textContent = f ? '' : '$' + S.prog.money.toLocaleString(); $('meter').innerHTML = ''; $('budgetMax').textContent = f ? 'Safari' : 'to spend'; return; } // no spoilers during a fight
   const sp = spent();
   $('spent').textContent = '$' + sp.toLocaleString();
   const m = $('meter'); m.innerHTML = '';
@@ -641,7 +641,8 @@ let deployWorld = null;
 function youAt(){ return S.youPos || A.homeFor(S.terrain); }
 // this game's map variant (waterhole, fords, tree density...): it follows the terrain and the seed
 let varMemo = null;
-function curVar(){ if (!varMemo || varMemo.tid !== S.terrain || varMemo.seed !== S.seed) varMemo = {tid: S.terrain, seed: S.seed, v: A.mapVariant(S.terrain, S.seed, MAPS2_ON ? {maps2: true} : undefined)}; return varMemo.v; }
+const mapSeed = () => S.prog ? M.mapSeedOf(S.prog) : S.seed; // a Safari retry keeps the round's map
+function curVar(){ const ms = mapSeed(); if (!varMemo || varMemo.tid !== S.terrain || varMemo.seed !== ms) varMemo = {tid: S.terrain, seed: ms, v: A.mapVariant(S.terrain, ms, MAPS2_ON ? {maps2: true} : undefined)}; return varMemo.v; }
 function absPlacements(){
   const out = {}, team = [...S.team], h = A.homeFor(S.terrain);
   team.forEach((id, i) => {
@@ -655,7 +656,7 @@ function currentPlacements(){ const y = youAt(), abs = absPlacements(), out = {}
 function makeCfg(){
   const c = { board:S.board.slice(), team:[...S.team], placements:currentPlacements(), human:youAt(), terrain:S.terrain, mode:S.mode, mount:(S.mount && S.team.has(S.mount)) ? S.mount : null, seed:S.seed };
   if (MAPS2_ON) c.maps2 = true;
-  if (S.prog){ const m = M.cfgFor(S.prog); c.startHp = m.startHp; if (m.maxHp) c.maxHp = m.maxHp; if (m.levels) c.levels = m.levels; } // carried wounds, scars and levels (progressive mode only)
+  if (S.prog){ const m = M.cfgFor(S.prog); c.mapSeed = m.mapSeed; c.startHp = m.startHp; if (m.maxHp) c.maxHp = m.maxHp; if (m.levels) c.levels = m.levels; } // carried wounds, scars and levels (progressive mode only)
   return c;
 }
 // the map card at the top of the draft: this game's actual ground (water, trees, snow), your side and where you start
@@ -665,10 +666,10 @@ const WET_FEATURES = ['waterhole', 'pool', 'frozen lake', 'third ford'];
 let mapCardKey = null;
 function renderDraftMap(){
   const el = $('draftMap'); if (!el) return;
-  const V = curVar(), T = A.TERRAINS[S.terrain], key = S.terrain + ':' + S.seed + ':' + !!S.prog;
+  const V = curVar(), T = A.TERRAINS[S.terrain], key = S.terrain + ':' + mapSeed() + ':' + !!S.prog;
   if (mapCardKey === key && el.firstChild) return;
   mapCardKey = key;
-  const feats = (V.band ? ['river'] : []).concat(V.features || [], S.terrain === 'forest' && V.trees ? [V.trees + ' trees'] : [], [...new Set((V.feats || []).map(f => ({kopje: 'rock kopje', donga: 'gully', ravine: 'ravine', bank: 'cut banks', moraine: 'boulder ridge', log: 'fallen trunks'})[f.k]).filter(Boolean))]), w0 = A.setup(Object.assign({board: [], team: [], terrain: S.terrain, mode: S.mode, seed: S.seed}, MAPS2_ON ? {maps2: true} : {}));
+  const feats = (V.band ? ['river'] : []).concat(V.features || [], S.terrain === 'forest' && V.trees ? [V.trees + ' trees'] : [], [...new Set((V.feats || []).map(f => ({kopje: 'rock kopje', donga: 'gully', ravine: 'ravine', bank: 'cut banks', moraine: 'boulder ridge', log: 'fallen trunks'})[f.k]).filter(Boolean))]), w0 = A.setup(Object.assign({board: [], team: [], terrain: S.terrain, mode: S.mode, seed: S.seed, mapSeed: mapSeed()}, MAPS2_ON ? {maps2: true} : {}));
   el.innerHTML = `<canvas width="480" height="${Math.round(480 * A.H / A.W)}" aria-label="Map preview"></canvas><div class="mc-t"><div class="mc-n"><small>${S.prog ? 'THIS ROUND\'S MAP' : 'THIS GAME\'S MAP'}</small>${esc(T.name)}</div>`
     + `<div class="mc-f">${feats.some(f => WET_FEATURES.includes(f) || f === 'river') ? '' : '<span>No water</span>'}${feats.map(f => `<span class="${WET_FEATURES.includes(f) || f === 'river' ? 'w' : ''}">${esc(f[0].toUpperCase() + f.slice(1))}</span>`).join('')}</div><p>${esc(MAP_TIP[S.terrain] || '')}</p></div>`;
   const cv = el.querySelector('canvas'), g = cv.getContext('2d'), sc = cv.width / A.W, z = A.zoneFor(S.terrain, V);
@@ -685,6 +686,7 @@ function drawDeploy(){
   g.drawImage(groundFor(S.terrain, deployWorld.trees, cv.width, cv.height, deployWorld.shade, deployWorld.variant), 0, 0);
   const H = deployWorld.human, z = A.zoneFor(S.terrain, curVar());
   const mn = $('mapNote'), note = curVar().note; mn.hidden = !note; mn.textContent = note || '';
+  $('deployRiver').hidden = !curVar().band; // the swimmers' tip only where there is a river
   // your side of the map
   g.fillStyle = 'rgba(79,209,189,.07)'; g.fillRect(z.x0*sc, 0, (z.x1 - z.x0)*sc, cv.height);
   g.strokeStyle = 'rgba(79,209,189,.7)'; g.lineWidth = Math.max(1.5, sc*.2); g.setLineDash([sc*1.2, sc*.8]);
@@ -1180,7 +1182,10 @@ function renderSide(){
   const lg = $('log'); const evs = w.events.slice(0, fr.ne).filter(e => e.t <= S.playT + .05);
   if (lg._n !== evs.length){
     lg._n = evs.length;
-    lg.innerHTML = evs.slice().reverse().slice(0, 80).map(e => `<div data-t="${e.t}"><span class="t">${fmtT(e.t)}</span><span class="${e.kind==='info'?'k-info':''}" style="${e.kind!=='info'?'color:'+KINDCOL[e.kind]:''}">${esc(e.text)}</span></div>`).join('');
+    // the same line again within 15 s folds into one entry with a count ("charge founders in the deep water ×5")
+    const rows = [], last = new Map();
+    for (const e of evs){ const r = last.get(e.text); if (r && e.t - r.t < 15){ r.n++; r.t = e.t; continue; } const nr = {e, t: e.t, n: 1}; rows.push(nr); last.set(e.text, nr); }
+    lg.innerHTML = rows.slice().sort((a, b) => b.t - a.t).slice(0, 80).map(({e, t, n}) => `<div data-t="${t}"><span class="t">${fmtT(t)}</span><span class="${e.kind==='info'?'k-info':''}" style="${e.kind!=='info'?'color:'+KINDCOL[e.kind]:''}">${esc(e.text)}${n > 1 ? ` <b class="mono" style="opacity:.7">×${n}</b>` : ''}</span></div>`).join('');
   }
   if (S.playT >= S.dur - 1e-6 && $('report').hidden){ renderReport(true); }
 }
@@ -1334,7 +1339,7 @@ $('runPrice').addEventListener('click', () => {
 });
 
 // ---------- progressive mode (a 7-round run up a price ladder; rules in progressive.js) ----------
-// Food Chain (progressive mode): the main mode since Oct 31 (owner: "make the progressive mode the main mode and give it a name")
+// Safari (progressive mode): the main mode since Oct 31 (owner: "make the progressive mode the main mode and give it a name")
 const PROG_ON = true;
 { const p = document.querySelector('.progentry'); if (p && !PROG_ON){ p.hidden = true; p.style.display = 'none'; } }
 const PROG_KEY = 'wa-prog', PROG_BEST = 'wa-prog-best', progDailyKey = d => 'wa-prog-daily:' + d;
@@ -1498,7 +1503,7 @@ function renderHud(){
   const roundTxt = r.over ? (r.complete ? 'Run complete' : `Run over · ${r.won} of ${RN} rounds won`) : `Round ${r.k + 1}/${RN} · ${A.TERRAINS[r.terrain].name}`;
   const team = r.team.map(e => `<span class="hudpick" title="${esc(itemName(A.BY_ID[e.id]))}: ${e.hp.map(pctHp).join(', ')}, ${M.LEVEL_NAME[e.lv]}">${tokHTML(A.BY_ID[e.id], 24)}<i><b style="width:${Math.round(e.hp.reduce((s, x) => s + x, 0) / e.hp.length * 100)}%;background:${hpCol(Math.min(...e.hp))}"></b></i>${e.lv ? `<span class="stars">${'★'.repeat(e.lv)}</span>` : ''}</span>`).join('');
   const lives = `<span class="lives" title="Retries left: ${retriesLeft(r)}">${'♥'.repeat(retriesLeft(r))}<span class="off">${'♥'.repeat(M.PROG.RETRIES - retriesLeft(r))}</span></span>`;
-  hud.innerHTML = `<b>Food Chain${r.daily ? ' · daily' : ''}</b><span>${roundTxt}</span><span class="money">$${r.money.toLocaleString()}</span>${lives}`
+  hud.innerHTML = `<b>Safari${r.daily ? ' · daily' : ''}</b><span>${roundTxt}</span><span class="money">$${r.money.toLocaleString()}</span>${lives}`
     + (team ? `<span class="hudteam">${team}</span>` : '')
     + `<span class="btnrow">${S.screen !== 'prog' ? '<button class="btn" data-hud="run" title="All seven rounds, your team and the last fight">Run overview</button>' : ''}<button class="btn" data-hud="abandon" title="${r.over ? 'Close the finished run' : 'End this run for good (it can\'t be resumed)'}">${r.over ? 'Close run' : 'Abandon run'}</button></span>`;
   hud.hidden = false;
@@ -1518,7 +1523,7 @@ $('progHud').addEventListener('click', e => {
 function runMvp(r){ const e = Object.entries(r.mvp || {}).sort((a, b) => b[1] - a[1])[0]; return e ? A.BY_ID[e[0]] : null; }
 function progShare(r){
   const last = r.log[r.log.length - 1], team = last ? last.team.map(id => A.BY_ID[id].abbr).join('+') || 'no animals' : 'no animals', mvp = runMvp(r);
-  return `Wild Arena ${r.daily ? 'Food Chain daily ' + r.daily : 'Food Chain'}: ${r.complete ? `all ${RN} rounds won` : `${r.won} of ${RN} rounds won`}, ${r.kills} kills, ${fmtT(r.total)} alive in all${mvp ? ', MVP ' + mvp.name : ''}, last team ${team}.`;
+  return `Wild Arena ${r.daily ? 'Safari daily ' + r.daily : 'Safari'}: ${r.complete ? `all ${RN} rounds won` : `${r.won} of ${RN} rounds won`}, ${r.kills} kills, ${fmtT(r.total)} alive in all${mvp ? ', MVP ' + mvp.name : ''}, last team ${team}.`;
 }
 const upsTxt = e => e.ups.map(u => `${itemName(A.BY_ID[u.id])} is now ${M.LEVEL_NAME[u.lv]} (${LV_FX[u.lv]})`).join('; ');
 function progBanner(e, res){
@@ -1716,7 +1721,7 @@ function renderActBar(){
   $('skipEnd').hidden = ended;
   const box = $('actbarIn'); box.innerHTML = '';
   const add = (...b) => b.forEach(x => box.appendChild(x));
-  if (sc === 'arena'){ const r = loadRun(), live = r && !r.over; add(actBtn(live ? `Resume run · round ${r.k + 1}` : 'Start a run', () => $(live ? 'progResume' : 'progNew').click(), true, 'Food Chain: seven rounds up the food chain'), actBtn('Quick game', () => $('toDraft').click(), false, 'One board, one fight')); }
+  if (sc === 'arena'){ const r = loadRun(), live = r && !r.over; add(actBtn(live ? `Resume run · round ${r.k + 1}` : 'Start a run', () => $(live ? 'progResume' : 'progNew').click(), true, 'Safari: seven rounds, from $100 animals up to the giants'), actBtn('Quick game', () => $('toDraft').click(), false, 'One board, one fight')); }
   else if (sc === 'draft'){
     const n = S.prog ? M.teamIds(S.prog).length : S.team.size;
     const sum = document.createElement('span'); sum.className = 'sum';
