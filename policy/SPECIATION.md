@@ -230,3 +230,10 @@ each species develop its own realistic fighting style. This note is the plan; th
   (fight-level credit, which learns the ranking it needs without predicting branch gains). Next for chargers: ES on the
   species-aware net (traits v2) with the realism-band Lagrangian, warm from charger_target_m1; for the other classes the
   student, not the label, is what to change (inputs, ranking loss), or ES fine-tuning after expert iteration.
+- **Harrier ship check (Oct 31, eval_target.js vs main's live set, 2 × 2,000 fresh fights):** ei12 on main (eim_harr,
+  helpers) held-out +0.027 ± 0.028 (within noise; harrier_target_e1, not live). The old-base pilot harrier_target_p1 on main:
+  probe 23 **+0.092 ± 0.025**, you -3.5 pts; probe 41 +0.019 ± 0.026 (within noise), you -0.6 pts; style 1.00, no gates,
+  wolves/hyenas onto you 7% -> 23% of picks both times. Pooled about +0.055 ± 0.018, but draw 2 misses the 2 SE bar: not
+  sent for shipping. Next: train harriers on main with ES fine-tuning from p1 (fight-level credit), then re-check.
+- **Buffalo realism check validity:** the live charger_target_m1 fails mobsPred (with one of your predators within 15 m,
+  share targeting a predator 0.576 -> 0.349; 1,000 fights, eval_target BASE=none), so the check catches the known flaw.
