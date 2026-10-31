@@ -52,6 +52,7 @@ function fightSet(pool, index, n, opts){
     const team = []; let left = A.RULES.budget; for (const id of order) if (A.BY_ID[id].price <= left){ team.push(id); left -= A.BY_ID[id].price; }
     const seed = Math.floor(R() * 2e9) + 1;
     if (!hasArch(board, team, arch)) continue;
+    if (opts.withCat && !team.some(id => A.BY_ID[id].pred && A.BY_ID[id].latch)) continue; // only fights where your team has a big cat
     out.push({pool, index, i: out.length, tr, bseed, board, team, mount: A.defaultMount(team), seed, live: !!opts.withLive, goal: opts.goal || null, spec: !!opts.spec}); k++;
   }
   return out;

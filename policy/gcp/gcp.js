@@ -1,9 +1,12 @@
 // Milestone 3 training on GCP spot VMs, built to survive failures. Commands:
 //   node policy/gcp/gcp.js launch  <sweep.json> [--name=ID] [--machine=c2d-highcpu-112] [--threads=8] [--hours=5.5] [--yes] [--dry-run]
 //   node policy/gcp/gcp.js status  <ID>             per-run state; a 'running' run whose heartbeat is stale is 'lost'
-//   node policy/gcp/gcp.js resume  <ID> [--yes]     relaunch every run that isn't done (they continue from their saved state)
+//   node policy/gcp/gcp.js resume  <ID> [--yes] [--only=a,b] [--commit[=sha]]  relaunch every run that isn't done (they continue from their saved state)
 //   node policy/gcp/gcp.js stop    <ID> [--yes]     delete every VM of the sweep (states stay in the bucket)
 //   node policy/gcp/gcp.js collect <ID>             download states/logs/reports to policy/runs/gcp/<ID>/ + print a summary
+//   node policy/gcp/gcp.js helpers <ID> --n=K [--only=a,b] [--yes]   top each unfinished run up to K helper VMs
+// Helpers (expert_iter runs): a run entry {helpers: K} (or launch --helpers=K) adds K helper VMs that run chunks of the run's
+// fights (policy/dist.js; the leader sets WA_DIST); results are identical to a one-VM run, only faster. Resume re-adds them.
 // Env: GCP_PROJECT, GCP_SA_KEY (service-account JSON), GCP_REGION (default us-central1), GCP_BUCKET (default
 // gs://<project>-wild-arena-runs), GCP_VM_SA (service account the VMs run as; default: the project's compute default,
 // which needs storage access and permission to delete its own instance). Tests: --bucket=<local folder> --local runs the VM script locally instead of on VMs.
@@ -49,17 +52,17 @@ function view(id, vms){ // vms (optional, from vmsOf): a 'running' run whose VM 
     return {name: r.name, state, tries, age: s ? Math.round(now - s.t) : null, host: s && s.host, note: s ? s.note : ''}; });
 }
 // ---------- VMs ----------
-function vmsOf(id){ if (LOCAL) return []; try { return JSON.parse(sh('gcloud', ['compute', 'instances', 'list', '--filter', `labels.wa-sweep=${id}`, '--format', 'json(name,zone,status)'])); } catch (e){ return []; } }
+function vmsOf(id){ if (LOCAL) return []; try { return JSON.parse(sh('gcloud', ['compute', 'instances', 'list', '--filter', `labels.wa-sweep=${id}`, '--format', 'json(name,zone,status,labels)'])); } catch (e){ return []; } }
 function zones(){ if (opt.zones) return opt.zones.split(','); return REGIONS.flatMap(R => { try { return sh('gcloud', ['compute', 'zones', 'list', '--filter', `region:${R} AND status:UP`, '--format', 'value(name)']).split('\n').filter(Boolean); } catch (e){ return ['b', 'c', 'a', 'f'].map(z => `${R}-${z}`); } }); }
 const RETRYABLE = /ZONE_RESOURCE_POOL_EXHAUSTED|RESOURCE_EXHAUSTED|QUOTA_EXCEEDED|Quota .* exceeded|does not have enough resources|not available in zone|UNSUPPORTED_OPERATION|was not found/i;
-function createVM(id, idx, runs, m, hours){
+function createVM(id, idx, runs, m, hours, role){
   const name = `wa-${id}-${idx}-${Date.now().toString(36).slice(-4)}`.toLowerCase().replace(/[^a-z0-9-]/g, '-').slice(0, 62);
-  const meta = {bucket: BUCKET, sweep: id, runs: runs.join('+'), commit: m.commit, hours: String(hours), threads: String(m.threads), repo: m.repo};
+  const meta = {bucket: BUCKET, sweep: id, runs: runs.join('+'), commit: m.commit, hours: String(hours), threads: String(m.threads), repo: m.repo, role: role || 'leader'};
   const startup = path.join(__dirname, 'vm_runner.sh'), errors = [];
   for (const machine of MACHINES.filter(x => CORES(x) >= m.threads)) for (const zone of zones()){
     const a = ['compute', 'instances', 'create', name, '--zone', zone, '--machine-type', machine, '--provisioning-model', 'SPOT', '--instance-termination-action', 'DELETE',
       '--max-run-duration', `${Math.ceil((hours + .75) * 60)}m`, '--image-family', 'debian-12', '--image-project', 'debian-cloud', '--boot-disk-size', '20GB',
-      '--scopes', 'cloud-platform', ...(process.env.GCP_VM_SA ? ['--service-account', process.env.GCP_VM_SA] : []), '--labels', `wa-sweep=${id}`, '--metadata', Object.entries(meta).map(([k, v]) => `${k}=${v}`).join(','), '--metadata-from-file', `startup-script=${startup}`, '--quiet'];
+      '--scopes', 'cloud-platform', ...(process.env.GCP_VM_SA ? ['--service-account', process.env.GCP_VM_SA] : []), '--labels', `wa-sweep=${id},wa-role=${role || 'leader'}${role === 'helper' ? ',wa-run=' + runs[0].toLowerCase().replace(/[^a-z0-9_-]/g, '-') : ''}`, '--metadata', Object.entries(meta).map(([k, v]) => `${k}=${v}`).join(','), '--metadata-from-file', `startup-script=${startup}`, '--quiet'];
     if (opt['dry-run']){ log('  [dry-run] gcloud ' + a.join(' ')); return {name, zone, machine}; }
     try { sh('gcloud', a); log(`  ${name}: ${machine} in ${zone}, runs ${runs.join(', ')}`); return {name, zone, machine}; }
     catch (e){ const msg = String(e.stderr || e.message); errors.push(`${machine}@${zone}: ${msg.split('\n').find(l => /ERROR/.test(l)) || msg.slice(0, 200)}`);
@@ -79,6 +82,18 @@ function launchRuns(id, m, names){
   if (!opt.yes && !opt['dry-run']){ log('not launched: add --yes to launch (or --dry-run to see the commands)'); return; }
   const launched = []; let full = false; groups.forEach((g, i) => { if (full) return; const v = createVM(id, i, g, m, m.hours); if (v === 'quota') full = true; else if (v) launched.push(...g); });
   log(`${groups.filter(g => launched.includes(g[0])).length}/${groups.length} VMs created`); return launched;
+}
+const helpersOf = (m, name) => { const r = m.runs.find(x => x.name === name); return +((r && r.helpers) != null ? r.helpers : (m.helpers || 0)); };
+function launchHelpers(id, m, names, want){ // top each run up to its helper count (want overrides), counting helper VMs still up
+  const vms = vmsOf(id).filter(v => v.status !== 'TERMINATED' && v.labels && v.labels['wa-role'] === 'helper'), plan = [];
+  for (const n of names){ const k = want != null ? want : helpersOf(m, n), have = vms.filter(v => v.labels['wa-run'] === n.toLowerCase().replace(/[^a-z0-9_-]/g, '-')).length; for (let i = have; i < k; i++) plan.push(n); }
+  if (!plan.length) return 0;
+  const cost = plan.length * CORES(MACHINES[0]) * m.hours * (PRICE_PER_CORE_H[MACHINES[0].split('-')[0]] || .008);
+  log(`${plan.length} helper VMs (${MACHINES[0]}) for ${[...new Set(plan)].join(', ')}: worst case ≈ $${cost.toFixed(2)} (spot estimate)`);
+  if (LOCAL){ plan.forEach(n => { const p = spawn('node', [path.join(ROOT, 'policy', 'dist_helper.js'), path.join(BUCKET, 'sweeps', id, 'runs', n, 'dist'), '--threads=' + m.threads, '--hours=' + m.hours], {stdio: 'inherit', detached: !!opt.detach}); if (opt.detach) p.unref(); }); return plan.length; }
+  if (!opt.yes && !opt['dry-run']) return 0;
+  let made = 0; for (let i = 0; i < plan.length; i++){ const v = createVM(id, 'h' + i, [plan[i]], m, m.hours, 'helper'); if (v === 'quota') break; if (v) made++; }
+  log(`${made}/${plan.length} helper VMs created`); return made;
 }
 // ---------- check: is the GCP setup usable? (each step says what to fix) ----------
 function check(){
@@ -124,10 +139,10 @@ const [cmd, arg] = pos;
     if (S.get(`sweeps/${id}/manifest.json`)) throw new Error(`sweep ${id} exists: use 'resume ${id}'`);
     const commit = opt.commit || sh('git', ['rev-parse', 'HEAD'], {cwd: ROOT}).trim();
     if (!LOCAL){ try { sh('git', ['branch', '-r', '--contains', commit], {cwd: ROOT}).trim() || (() => { throw 0; })(); } catch (e){ throw new Error(`commit ${commit} isn't on the remote: push first (VMs clone it)`); } }
-    const m = {id, created: new Date().toISOString(), sweepFile: arg, note: sweep.note, commit, repo: opt.repo || 'https://github.com/slisenberger/wild-arena.git', threads: +(opt.threads || 8), hours: +(opt.hours || 5.5), machines: MACHINES, runs: sweep.runs, tries: {}};
+    const m = {id, created: new Date().toISOString(), sweepFile: arg, note: sweep.note, commit, repo: opt.repo || 'https://github.com/slisenberger/wild-arena.git', threads: +(opt.threads || 8), hours: +(opt.hours || 5.5), machines: MACHINES, runs: sweep.runs, tries: {}, helpers: +(opt.helpers || sweep.helpers || 0)};
     sweep.runs.forEach(r => m.tries[r.name] = 1);
     if (!opt['dry-run']) S.putText(`sweeps/${id}/manifest.json`, JSON.stringify(m, null, 1));
-    log(`sweep ${id} @ ${commit.slice(0, 10)} -> ${BUCKET}/sweeps/${id}/`); launchRuns(id, m, sweep.runs.map(r => r.name));
+    log(`sweep ${id} @ ${commit.slice(0, 10)} -> ${BUCKET}/sweeps/${id}/`); launchRuns(id, m, sweep.runs.map(r => r.name)); launchHelpers(id, m, sweep.runs.map(r => r.name));
   } else if (cmd === 'status'){
     const vms = vmsOf(arg), v = view(arg, vms), c = {};
     for (const r of v){ c[r.state] = (c[r.state] || 0) + 1; log(`${r.name.padEnd(18)} ${r.state.padEnd(8)} tries ${r.tries}  ${r.age == null ? '' : r.age + ' s ago'}  ${String(r.note || '').split('\n')[0].slice(0, 110)}`); }
@@ -135,15 +150,22 @@ const [cmd, arg] = pos;
   } else if (cmd === 'resume'){
     const m = manifest(arg), vms = vmsOf(arg), v = view(arg, LOCAL ? null : vms), max = +(opt.maxRetries || 3), up = new Set(vms.filter(x => x.status !== 'TERMINATED').map(x => x.name)),
       alive = new Set(vms.length ? Object.values(statuses(arg)).filter(s => Date.now() / 1000 - s.t < STALE_S && (!s.host || up.has(s.host))).map(s => s.run) : []); // fresh heartbeat on a VM that still exists
-    const todo = v.filter(r => r.state !== 'done' && !alive.has(r.name) && (r.state !== 'failed' || r.tries < max)).map(r => r.name);
+    const todo = v.filter(r => r.state !== 'done' && !alive.has(r.name) && (r.state !== 'failed' || r.tries < max) && (!opt.only || String(opt.only).split(',').includes(r.name))).map(r => r.name);
     const skipped = v.filter(r => r.state === 'failed' && r.tries >= max).map(r => r.name);
     if (skipped.length) log(`not retried (failed ${max}×): ${skipped.join(', ')}`);
     if (!todo.length){ log('nothing to resume'); return; }
     if (opt.hours) m.hours = +opt.hours;
+    if (opt.commit){ const c = opt.commit === true ? sh('git', ['rev-parse', 'HEAD'], {cwd: ROOT}).trim() : String(opt.commit); // --commit[=sha]: resume on newer code (a fix), from the same saved state
+      if (!LOCAL){ try { sh('git', ['branch', '-r', '--contains', c], {cwd: ROOT}).trim() || (() => { throw 0; })(); } catch (e){ throw new Error(`commit ${c} isn't on the remote: push first (VMs clone it)`); } }
+      log(`code: ${m.commit.slice(0, 8)} -> ${c.slice(0, 8)}`); m.commit = c; }
     if (opt.machine || opt.machines) m.machines = MACHINES; else if (m.machines) MACHINES = m.machines; // resume keeps the launch's machine choice
     log(`resuming ${todo.length}: ${todo.join(', ')}`); const launched = launchRuns(arg, m, todo) || (LOCAL ? todo : []);
     launched.forEach(n => m.tries[n] = (m.tries[n] || 0) + 1); // count an attempt only when a VM was created (a full quota isn't a failure)
+    launchHelpers(arg, m, todo);
     if (!opt['dry-run'] && (opt.yes || LOCAL)) S.putText(`sweeps/${arg}/manifest.json`, JSON.stringify(m, null, 1));
+  } else if (cmd === 'helpers'){ // add helper VMs to unfinished runs (e.g. after a quota increase)
+    const m = manifest(arg), v = view(arg, LOCAL ? null : vmsOf(arg)), names = v.filter(r => r.state !== 'done' && r.state !== 'failed' && (!opt.only || String(opt.only).split(',').includes(r.name))).map(r => r.name);
+    if (m.machines) MACHINES = m.machines; launchHelpers(arg, m, names, opt.n != null ? +opt.n : null);
   } else if (cmd === 'stop'){
     const vms = vmsOf(arg); if (!vms.length){ log('no VMs alive for ' + arg); return; }
     if (!opt.yes){ log(`would delete ${vms.length} VMs: ${vms.map(x => x.name).join(' ')} (add --yes)`); return; }
