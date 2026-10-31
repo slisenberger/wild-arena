@@ -40,6 +40,9 @@ const DEFAULTS = {
   thetaClip: 0,              // > 0: keep every weight within ±thetaClip of the start (stops the collapse into 'never deviate')
   spec: false,               // true: add the behavior-spec metrics (move_reward.js SPEC_X / SPEC_INFO)
   target: false,             // true: train the archetype's target choice (milestone-4 pilot) instead of its movement intents
+  feat: null,                // with target: 'plus' = features_plus.js (+ the guard situation around each target)
+  only: null,                // with target, arch guard: 'cat' = only your big cats learn (the rest keep today's targets), fights with your cat only
+  wide: false,               // with target, arch guard: true = candidates are any enemy your side sees (no leash)
   goal: null,                // 'checkmate': side-level goal (kill the human, sooner is better; move_reward.js goalPartsCheckmate)
   withLive: false,           // the other archetypes use the shipped policies in every fight (train against the live game)
             // warm start: 'patient' = wait while stronger guards block and the target isn't busy or easy (probe winner, +0.06)
@@ -89,11 +92,19 @@ function logLine(file, line, quiet){ fs.appendFileSync(file + '.log', line + '\n
 function init(opts){
   const cfg = Object.assign({}, DEFAULTS, opts.dry ? DRY : {}, opts.cfg);
   const AR = archOf(cfg.arch), F = AR.F;
-  const TF = cfg.target ? require('./features.js') : null; // --target: train the archetype's target choice (policy/policy.js 'target-lin'), not its intents
-  if (cfg.target && (cfg.initRule || cfg.nh)) throw new Error('--target supports neither initRule nor nh yet');
-  if (cfg.target && cfg.arch === 'guard') throw new Error('--target: no learned target hook for guards yet');
-  let P0 = cfg.target ? M.zerosTarget(TF.DIM, cfg.margin) : M.zeros(F.DIM, cfg.nh, cfg.margin, AR.nout); if (cfg.nh) M.withHidden(P0, R.A.rng(cfg.seed * 31 + 7));
+  const TF = cfg.target ? require(cfg.arch === 'guard' ? './guard_features.js' : cfg.feat === 'plus' ? './features_plus.js' : './features.js') : null; // --feat=plus: + the guard situation around each target // --target: train the archetype's target choice (policy/policy.js 'target-lin'), not its intents
+  if (cfg.target && cfg.initRule) throw new Error('--target does not support initRule');
+  // --target --nh=K: the 'target-mlp' scorer (policy/target_model.js), K hidden units over the option's features + the unit's species traits
+  let P0 = cfg.target ? (cfg.nh ? Object.assign(require('./target_model.js').mlp(TF.DIM + require('./traits.js').dimV(cfg.traitsV), cfg.nh, cfg.margin, cfg.seed * 31 + 7, true), cfg.traitsV === 2 ? {traitsV: 2} : {}) /* --traitsV=2: traits v2 (+ signature tags) */ : M.zerosTarget(TF.DIM, cfg.margin))
+    : M.zeros(F.DIM, cfg.nh, cfg.margin, AR.nout);
+  if (cfg.target && cfg.feat) P0.feat = cfg.feat; if (cfg.target && cfg.only) P0.only = cfg.only; if (cfg.target && cfg.wide) P0.wide = true; if (cfg.nh && !cfg.target) M.withHidden(P0, R.A.rng(cfg.seed * 31 + 7));
   let theta0 = M.flat(P0, cfg.mode);
+  if (cfg.initWeights && cfg.target){ // a target scorer warm start: a state (bc_target.js / train.js) or a weights file of the same shape
+    const W = JSON.parse(fs.readFileSync(cfg.initWeights, 'utf8')), WP = W.P0 ? Object.assign({}, W.P0, W.best ? {theta: W.best.theta, wt: W.P0.kind === 'target-lin' ? W.best.theta : undefined} : {}) : W;
+    const TRm = require('./traits.js'); if (cfg.traitsV === 2 && WP.kind === 'target-mlp' && WP.traitsV !== 2 && WP.nin + TRm.DIM2 - TRm.DIM === P0.nin){ Object.assign(WP, require('./target_model.js').widen(WP, TRm.DIM2 - TRm.DIM), {traitsV: 2}); } // a v1 net widened to traits v2: same scores, new inputs at 0
+    if (WP.kind !== P0.kind || WP.nin !== P0.nin || (WP.nh || 0) !== (P0.nh || 0)) throw new Error(`initWeights ${cfg.initWeights}: ${WP.kind} ${WP.nin}/${WP.nh} does not match ${P0.kind} ${P0.nin}/${P0.nh} (set --nh and --feat to match)`);
+    P0 = Object.assign({}, WP); delete P0.meta; P0.margin = cfg.margin; if (cfg.feat) P0.feat = cfg.feat; theta0 = M.flat(P0, cfg.mode);
+  }
   if (cfg.initWeights && !cfg.target){ // v2: continue from shipped weights (same shape: features, intents, hidden size)
     const W = JSON.parse(fs.readFileSync(cfg.initWeights, 'utf8'));
     const grow = !(W.nh || 0) && cfg.nh > 0; // linear weights into an MLP: keep bl/Wl, fresh random W1/b1, W2 = 0 (same behaviour)
@@ -119,7 +130,7 @@ const weightsOf = (s, theta) => M.unflat(s.P0, theta, s.config.mode);
 // ES noise for generation g: deterministic from (seed, g), so a resumed run draws the same perturbations
 function gauss(R0){ let u = 0; while (!u) u = R0(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * R0()); }
 function noise(s, g, salt){ const R0 = R.A.rng((s.config.seed * 1000003 + g * 7919 + (salt || 0)) >>> 0); return [...Array(s.config.pairs)].map(() => s.theta.map(() => gauss(R0))); }
-const fopts = s => ({seed: s.config.seed, arch: s.config.arch, holdMap: s.config.holdMap, withLive: !!s.config.withLive, goal: s.config.goal || null, spec: !!s.config.spec});
+const fopts = s => ({seed: s.config.seed, arch: s.config.arch, holdMap: s.config.holdMap, withLive: !!s.config.withLive, goal: s.config.goal || null, spec: !!s.config.spec, withCat: s.config.only === 'cat'});
 
 // ---------- jobs ----------
 // validation: the current centre vs the best so far, on a fresh draw from the validation pool (each check its own draw)

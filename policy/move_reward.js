@@ -132,6 +132,11 @@ const SPEC_X = {
   // cats: the rush starts within ~15-30 m; a spotted cat doesn't run prey down from range (Laundre & Hernandez 2003; Schaller
   // 1967). Cap = the heuristic's own level (~2% of life, 80 fights), so learning can't add long-range sprints
   cat: {farSprint: {num: r => r.farSprintT, den: r => r.life, kind: 'abs', cap: .02, tol: .01}},
+  // chargers: Cape buffalo turn on lions attacking the herd (Tambling et al., Addo; ACE, Nelson Mandela Univ.): with one of your
+  // predators within 15 m, the share of that time a buffalo targets a predator must not fall below the heuristic's; and the
+  // exposure itself must not fall (no meeting the rule by keeping away from predators). Records before Oct 31 read 0.
+  charger: {mobsPred: {num: r => r.mobT || 0, den: r => r.mobExpT || 0, kind: 'down', tol: .05, gate: true},
+            mobExposure: {num: r => r.mobExpT || 0, den: r => r.mobLife || 0, kind: 'down', tol: .05, gate: true}},
 };
 const DEFS_SPEC = Object.fromEntries(Object.keys(DEFS).filter(a => a !== 'guard').map(a => [a, Object.assign({}, DEFS[a], SPEC_INFO, SPEC_X[a] || {})]));
 const defsOf = (arch, spec) => { const d = (spec ? DEFS_SPEC : DEFS)[arch || 'harrier'] || (spec && DEFS[arch || 'harrier']); if (!d) throw new Error('no reward metrics for archetype ' + arch); return d; };

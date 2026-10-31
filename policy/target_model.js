@@ -41,4 +41,12 @@ function mlp(nin, nh, margin, seed, self){
   for (let i = nin + 2 * nh; i < th.length; i++) th[i] = (r() * 2 - 1) * sc;
   return {kind: 'target-mlp', v: 1, nin, nh, margin, self: !!self, theta: th};
 }
-module.exports = { npar, thetaOf, withTheta, inputs, scores, addGrad, mlp, TRAITS: TR.DIM };
+// widen a target-mlp by `add` inputs appended at the end (e.g. traits v1 -> v2): their weights start at 0, so the widened net
+// scores exactly as before; training then learns what the new inputs add
+function widen(P, add){
+  if (P.kind !== 'target-mlp' || !add) return P;
+  const {nin, nh} = P, th = P.theta, z = new Array(add).fill(0), o = nin + 2 * nh;
+  const out = th.slice(0, nin).concat(z, th.slice(nin, o)); for (let j = 0; j < nh; j++) out.push(...th.slice(o + j * nin, o + (j + 1) * nin), ...z);
+  return Object.assign({}, P, {nin: nin + add, theta: out});
+}
+module.exports = { npar, thetaOf, withTheta, inputs, scores, addGrad, mlp, widen, TRAITS: TR.DIM };

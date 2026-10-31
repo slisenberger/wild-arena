@@ -88,7 +88,7 @@ function runFight(f, weights, arch){
   if (f.goal) r.goalMode = f.goal;
   // the other non-harrier archetypes (records tagged with arch): signature-move starts and the realism-gate telemetry
   const X = arch !== 'harrier';
-  if (X) Object.assign(r, {arch, charges: 0, pounces: 0, longChaseT: 0, farHuntT: 0, badgerLife: 0, badgerBackT: 0});
+  if (X) Object.assign(r, {arch, charges: 0, pounces: 0, longChaseT: 0, farHuntT: 0, badgerLife: 0, badgerBackT: 0, mobLife: 0, mobExpT: 0, mobT: 0});
   // cats: stalk-then-pounce, lion (rush) vs stalker profiles, long holds in cover, sprint distance
   const CAT = arch === 'cat';
   if (CAT) Object.assign(r, {stalkPounces: 0, pRush: 0, pStalk: 0, engRush: 0, engStalk: 0, nearRush: 0, nearStalk: 0, stillLongT: 0, sprintM: 0});
@@ -117,6 +117,9 @@ function runFight(f, weights, arch){
         // long chase: closing in at > 60% of its top speed for > 8 s on end
         if (st === 'close' && Math.hypot(u.vx, u.vy) > XTEL.chaseSpd * u.s.spd){ s.chase = (s.chase || 0) + DT; if (s.chase > XTEL.longChase) r.longChaseT += DT; } else s.chase = 0;
         if (st === 'close' && I.dist(u, t) > XTEL.far) r.farHuntT += DT;   // hunting something far across the field
+        // realism (research/speciation_strategy.md §2.3, buffalo): a lion-killer (Cape buffalo, solo or herd) turns on predators
+        // near it: exposure = time with one of your predators within 15 m, mob = of that, time spent targeting a predator
+        if (I.has(u, 'lionKiller')){ r.mobLife += DT; if (w.units.some(o => o.side === 'P' && o.s.pred && I.active(o) && I.dist(u, o) < 15)){ r.mobExpT += DT; if (t && t.s && t.s.pred) r.mobT += DT; } }
         if (u.s.id === 'honeybadger'){ r.badgerLife += DT; if (eng && (u.intent === 1 || u.intent === 3 || u.intent === 4)) r.badgerBackT += DT; } // fearless: never waits, regroups or backs off
       }
       if (dd > 0) r.hits++;
