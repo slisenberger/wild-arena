@@ -1106,7 +1106,9 @@ function outsideZone(w, u){ const z = w.zb; return !!z && z.p > 0 && (u.x < z.x0
 function hazardHurt(w, u, dmg){
   u.hp -= dmg; u.st.taken += dmg;
   if (u.hp > 0) return;
-  if (u.side === 'H'){ u.hp = 0; u.state = 'dead'; u.deathT = w.t; log(w, `You were caught by the ${HAZARD_NAME[w.zone.kind]}`, 'death', u); w.over = true; w.result = {survived:false, t:w.t, score:w.t, killer:w.zone.kind}; return; }
+  if (u.side === 'H'){ // the hazard's last tick: the animal that hit you in the last 5 s gets the kill (it did the damage), else the hazard
+    const by = u.lastHitBy && u.lastHitBy.side === 'E' && w.t - (u.lastHitT ?? -99) < 5 ? u.lastHitBy : null;
+    u.hp = 0; u.state = 'dead'; u.deathT = w.t; log(w, by ? `You were killed by ${nameOf(by)} in the ${HAZARD_NAME[w.zone.kind]}` : `You were caught by the ${HAZARD_NAME[w.zone.kind]}`, 'death', u); w.over = true; w.result = {survived:false, t:w.t, score:w.t, killer: by ? by.s.id : w.zone.kind}; return; }
   kill(w, u, null);
 }
 // ---------- helpers ----------
@@ -1603,7 +1605,7 @@ function sweep(w, a, main){
   if (n){ sig(w, a, 'sweep'); log(w, `${capName(a)} sweeps ${n + 1} attackers at once`, 'sweep', a); }
 }
 function applyDamage(w, a, t, dmg){
-  t.hp -= dmg; t.lastHitBy = a;
+  t.hp -= dmg; t.lastHitBy = a; t.lastHitT = w.t;
 
   a.st.dealt += dmg; t.st.taken += dmg; if (t.side !== 'E') a.st.foe += dmg; // foe: damage to your side (stat only)
   if (a.side === 'P' && t.target === w.human) a.st.protect += dmg;
@@ -2013,7 +2015,7 @@ function step(w){
       if (a.latchOn === b || b.latchOn === a || a.rider === b || b.rider === a) continue;
       const dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy), m = (a.r + b.r) * .85;
       if (d < m && d > 1e-4){
-        const o = m - d, ta = b.s.mass / (a.s.mass + b.s.mass);
+        const o = m - d, ta = a.side === 'H' && b.side === 'P' ? 0 : b.side === 'H' && a.side === 'P' ? 1 : b.s.mass / (a.s.mass + b.s.mass); // your own animals make way for you (they used to shove you into the closing fire)
         a.x -= dx/d*o*ta; a.y -= dy/d*o*ta; b.x += dx/d*o*(1-ta); b.y += dy/d*o*(1-ta);
       }
     }
@@ -2030,6 +2032,7 @@ function step(w){
       if (d < m && d > 1e-4){ a.x = t.x + dx/d*m; a.y = t.y + dy/d*m; }
     }
   }
+  if (w.pb){ const P = w.pb; for (const u of units) if (active(u) && !u.riding && !u.onTree && !u.routing){ u.x = clamp(u.x, P.x0 + u.r * .6, P.x1 - u.r * .6); u.y = clamp(u.y, P.y0 + u.r * .6, P.y1 - u.r * .6); } } // (maps2) nobody is shoved through the border
   if (w.trees.some(t => t.fell)){
     for (const t of w.trees) if (t.fell){ (w.fallen = w.fallen || []).push({x: t.x, y: t.y, r: t.r, t: w.t}); if (w.human.onTree === t){ w.human.onTree = null; log(w, 'Your tree goes down and you scramble clear', 'danger', w.human); } for (const o of w.units) if (o !== w.human && o.onTree === t) o.onTree = null; }
     w.trees = w.trees.filter(t => !t.fell);
@@ -2413,6 +2416,10 @@ function moveHuman(w, h){
   // stay clear of the field edges and of the closing hazard (hard push once you are in it)
   const zb = w.zb && w.zb.p > 0 ? w.zb : pbOf(w), out = outsideZone(w, h), ek = out ? 4 : 1;
   if (h.x < zb.x0 + 4) dx += ek; if (h.x > zb.x1 - 4) dx -= ek; if (h.y < zb.y0 + 4) dy += ek; if (h.y > zb.y1 - 4) dy -= ek;
+  if (out && w.zone && w.obst){ // (maps2) caught in the hazard: make for the safe box's middle, round any wall (trees and the border used to keep you running along its edge until you burned)
+    let tx = w.zone.cx, ty = w.zone.cy; const r = m2Route(w, h, tx, ty); if (r){ tx = r.x; ty = r.y; }
+    const gx2 = tx - h.x, gy2 = ty - h.y, gm = Math.hypot(gx2, gy2) || 1; dx += gx2 / gm * 6; dy += gy2 / gm * 6;
+  }
   const m = Math.hypot(dx, dy);
   if (m < .05){ damp(h); return; }
   const urgent = (nearest && nd < 10) || out;
@@ -3850,7 +3857,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = API; else 
 
 </script>
 <script>
-const DAILY_SALT = {"2026-11-22":1,"2026-12-04":1,"2026-12-10":1,"2026-12-13":1,"2026-11-09":2}; // research/daily_check.js: days whose first daily deal the bot found near-unwinnable
+const DAILY_SALT = {"2026-11-02":1,"2026-11-08":1,"2026-11-09":1,"2026-11-18":1,"2026-11-22":1,"2026-11-26":1,"2026-11-29":1,"2026-12-07":1,"2026-12-01":2}; // research/daily_check.js: days whose first daily deal the bot found near-unwinnable
 (function(){
 'use strict';
 const A = window.Arena;
@@ -3883,6 +3890,9 @@ function tok(a, size){ const d = document.createElement('span'); d.className = '
 const faceOf = a => FACES[a.species || a.id]; // pack items share their species' portrait
 function tokStyle(a){ return faceOf(a) ? `background:#222 url(${faceOf(a)}) center/cover;border:2px solid ${tierHex(a.price)}` : `background:${tierHex(a.price)};color:#14130f;font-weight:700`; }
 function tokHTML(a, px){ return `<span class="tok" title="${esc(a.name)}" style="${tokStyle(a)};width:${px}px;height:${px}px;font-size:${Math.round(px*.4)}px">${faceOf(a) ? '' : a.abbr}</span>`; }
+// what killed you: an animal (portrait + name) or the closing hazard (the engine records 'fire' / 'flood' / 'blizzard')
+const HAZ = {fire: ['🔥', 'the fire'], flood: ['🌊', 'the flood water'], blizzard: ['❄️', 'the blizzard']};
+function killerHTML(id, px){ if (A.BY_ID[id]) return fn(id, px); const h = HAZ[id]; return h ? `<span class="fn"><span class="hz" style="font-size:${Math.round((px || 18) * .8)}px">${h[0]}</span>${h[1]}</span>` : 'a wound'; }
 // an animal's name with its portrait in front (tables, banners, recaps)
 function fn(id, px){ const a = A.BY_ID[id]; return a ? `<span class="fn">${tokHTML(a, px || 18)}${esc(itemName(a))}</span>` : ''; }
 const FACEIMG = {}; for (const id in FACES){ const im = new Image(); im.src = FACES[id]; FACEIMG[id] = im; }
@@ -4160,7 +4170,7 @@ function fiveBanner(res){
   else if (R.pending){ msg = `You get one retry per run, and this is it: same board, a new fight seed. Redraft if you like.`; btn = 'Retry this board'; }
   else { msg = `${wins} of 5 down${R.retry ? ', retry still in hand' : ', retry used'}.`; btn = `Board ${R.k + 1} of 5`; }
   const share = R.over ? `<div class="btnrow"><button class="btn" id="copyFive">Copy result</button><span class="copyOut" id="copyFiveOut"></span></div>` : '';
-  return `<div class="banner ${res.survived ? 'win' : 'lose'}"><span class="big">${head}</span><span class="mono">${fivePips(R)}</span><span>${res.survived ? '' : (A.BY_ID[res.killer] ? 'Killed by ' + fn(res.killer, 20) + '. ' : 'Killed. ')}${msg}</span><div class="btnrow"><button class="btn primary" id="fiveNext">${btn}</button></div>${share}</div>`;
+  return `<div class="banner ${res.survived ? 'win' : 'lose'}"><span class="big">${head}</span><span class="mono">${fivePips(R)}</span><span>${res.survived ? '' : ('Killed by ' + killerHTML(res.killer, 20) + '. ')}${msg}</span><div class="btnrow"><button class="btn primary" id="fiveNext">${btn}</button></div>${share}</div>`;
 }
 function fiveNext(){
   const R = S.five; if (!R) return;
@@ -5077,7 +5087,7 @@ function renderReport(show){
     b.innerHTML = `<div class="banner win"><span class="big">Survived · ${fmtT(HZ)}</span><span>${why} Full score. ${bestLine}${sharedLine}${dailyLine}</span>${shareRow}</div>`;
   } else {
     const k = A.BY_ID[res.killer];
-    b.innerHTML = `<div class="banner lose"><span class="big">You lasted ${fmtT(score)}</span><span>Killed by ${k ? fn(k.id, 20) : 'the unknown'}. ${bestLine}${sharedLine}${dailyLine}</span>${shareRow}</div>`;
+    b.innerHTML = `<div class="banner lose"><span class="big">You lasted ${fmtT(score)}</span><span>Killed by ${killerHTML(res.killer, 20)}. ${bestLine}${sharedLine}${dailyLine}</span>${shareRow}</div>`;
   }
   renderTeamReport(w, sum);
 }
@@ -5392,7 +5402,7 @@ function progBanner(e, res){
   const tail = r.over ? `<span class="bl"><b>Run over:</b> that was your last retry.</span>`
     : `<span class="bl"><b>Retry:</b> you go back to round ${n}'s shop exactly as it opened (same team, money, wounds and map) and fight it again.</span>`
       + `<span class="bl">Retries left: <b class="hearts">${hearts}</b> ${left}${left ? '' : ' · lose this round again and the run ends'}</span>`;
-  return `<div class="banner lose"><span class="big">Round ${n} lost</span><span>Killed by ${k ? fn(res.killer, 20) : 'the unknown'} at ${fmtT(res.score)}.</span>${tail}${cont}</div>`;
+  return `<div class="banner lose"><span class="big">Round ${n} lost</span><span>Killed by ${killerHTML(res.killer, 20)} at ${fmtT(res.score)}.</span>${tail}${cont}</div>`;
 }
 // what each animal earned its XP for, in words
 function xpWhyTxt(w){
@@ -5411,7 +5421,7 @@ function recapHTML(r, e, compact){
   const head = e.survived ? `<span class="big" style="color:var(--you)">Round ${n} won · ${fmtT(e.t)}</span>` : `<span class="big" style="color:var(--red)">Round ${n} lost · ${fmtT(e.t)}</span>`;
   const rows = [
     compact ? '' : '', row('Map', esc(A.TERRAINS[e.terrain].name)), e.premium ? row('Premium enemy', fn(e.premium)) : '',
-    e.survived ? row('Result', e.why === 'cleared' ? 'Cleared the field' : e.why === 'quiet' ? 'The other side gave up' : 'Held out to 5:00') : row('Killed by', kill ? fn(e.killer) : 'unknown'),
+    e.survived ? row('Result', e.why === 'cleared' ? 'Cleared the field' : e.why === 'quiet' ? 'The other side gave up' : 'Held out to 5:00') : row('Killed by', killerHTML(e.killer)),
     row('Enemies', `${e.down} down${e.routed ? ', ' + e.routed + ' routed' : ''}`),
     row('Your losses', lost.length ? `<span class="fnl">${lost.join('')}</span>` : e.team.length ? 'None' : '–'),
   ];
@@ -5548,7 +5558,7 @@ function renderStats(){
   const maps = Object.keys(A.TERRAINS).map(t => { const m = st.maps[t]; return `<tr><td>${esc(A.TERRAINS[t].name)}</td><td class="n">${m ? m.g : 0}</td><td class="n">${m ? pct(m.w, m.g) : '–'}</td><td class="n">${m ? fmtT(m.best) : '–'}</td></tr>`; }).join('');
   const rows = Object.entries(st.mine).sort((a, b) => b[1].g - a[1].g).map(([id, r]) => `<tr><td><span style="display:inline-flex;gap:6px;align-items:center">${tokHTML(A.BY_ID[id] || A.HUMAN, 18)}${esc(name(id))}</span></td><td class="n">${r.g}</td><td class="n">${pct(r.w, r.g)}</td><td class="n">${r.k}</td><td class="n">${r.d >= 1000 ? (r.d / 1000).toFixed(r.d >= 1e5 ? 0 : 1) + 'k' : r.d}</td></tr>`).join('');
   const hist = st.hist.slice(0, 12).map(h => `<li><span class="mono">${esc(h.d.slice(5))}</span> ${esc(A.TERRAINS[h.m] ? A.TERRAINS[h.m].name : h.m)} · ${h.won ? '<b style="color:var(--gold)">survived</b>' : 'lasted ' + fmtT(h.sc) + (h.k && A.BY_ID[h.k] ? ' (' + esc(A.BY_ID[h.k].name) + ')' : '')} · ${esc(h.t.map(id => A.BY_ID[id] ? A.BY_ID[id].abbr : id).join('+') || 'alone')}${h.l ? ` · <a href="${esc(h.l)}">replay</a>` : ''}</li>`).join('');
-  $('statsBody').innerHTML = `<p class="notes">${[nem ? `Nemesis: ${fn(nem[0])} (killed you ${nem[1].kd}×).` : '', top && top[1].k ? `Top killer on your side: ${fn(top[0])} (${top[1].k} kills).` : '', best ? `Best record: ${fn(best[0])} (${pct(best[1].w, best[1].g)} of ${best[1].g}).` : '', st.you ? `You've finished off ${st.you} animal${st.you === 1 ? '' : 's'} with your own hands.` : ''].filter(Boolean).join(' ')}</p>
+  $('statsBody').innerHTML = `<p class="notes">${[nem ? `Nemesis: ${killerHTML(nem[0])} (killed you ${nem[1].kd}×).` : '', top && top[1].k ? `Top killer on your side: ${fn(top[0])} (${top[1].k} kills).` : '', best ? `Best record: ${fn(best[0])} (${pct(best[1].w, best[1].g)} of ${best[1].g}).` : '', st.you ? `You've finished off ${st.you} animal${st.you === 1 ? '' : 's'} with your own hands.` : ''].filter(Boolean).join(' ')}</p>
     <div class="tblwrap"><table><thead><tr><th>Map</th><th class="n">Games</th><th class="n">Survived</th><th class="n">Best</th></tr></thead><tbody>${maps}</tbody></table></div>
     <div class="tblwrap" style="margin-top:10px"><table><thead><tr><th>Your animals</th><th class="n">Games</th><th class="n">Won</th><th class="n">Kills</th><th class="n">Damage</th></tr></thead><tbody>${rows}</tbody></table></div>
     <h4 style="margin:12px 0 6px">Recent games</h4><ul class="hist">${hist}</ul>`;
