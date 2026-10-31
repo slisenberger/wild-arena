@@ -1276,7 +1276,7 @@ function herbivoreTarget(w, u){
     return reachable(u, w.human) ? w.human : (blocker || nearestPlayer(w,u));
   }
   let best = null, bs = 0;
-  const dr = drive(u);
+  const dr = drive(u), onH = !!w.cfg.objective && u.side === 'E' && u.target === w.human && active(w.human);
   let R = 20 + 16 * u.agit + 30 * pressure(w) + 60 * dr; // a crowd of intruders in its space: it notices and closes sooner
   if (has(u,'territorial') && inWater(w,u)) R += 8;
   if (has(u,'blindCharger')) R = Math.max(R, 18);
@@ -1289,6 +1289,7 @@ function herbivoreTarget(w, u){
     const ob = w.cfg.objective && u.side === 'E' && t.side === 'H', OB = ob ? objectiveOf(w) : null;
     if (has(u,'shoreGuard') && w.wet && !(w.lastStand && u.side === 'E') && distWater(w, t) > 6 && u.grudge !== t && !(ob && drive(u) >= OB.shoreDrive)) continue; // a walrus defends its water, not the open snow (left alone in its lake, the fight can end 'quiet')
     const d = dist(u, t);
+    if (onH && t.side !== 'H' && u.grudge !== t && t.target !== u && d >= 8) continue; // cfg.objective: going for you, it turns only on what hits it, comes at it or blocks it (within 8 m)
     let sc = 0;
     if (u.grudge === t) sc = 5;
     if (sc === 0 && !canSee(w, u, t) && !(d < 30 + 50 * dr && (Math.hypot(t.vx, t.vy) > 2 || dr > .5))) continue; // poor-sighted grazers go by sound and smell (and by the noise of the fight, once restless)
@@ -1300,7 +1301,6 @@ function herbivoreTarget(w, u){
       else if (t.side === 'P') sc = .6 + u.agit;           // intruders: your team
       else if (t.side === 'H') sc = .35 + u.agit * .6 + .6 * dr; // you: a nuisance more than a target, until it has been kept waiting
       else sc = 1.5;                                        // an active feud
-      if (ob) sc = Math.max(sc, OB.base + OB.slope * dr);    // cfg.objective: you are a target like your animals are, more so as it is kept waiting
       if ((has(u,'blindCharger') || has(u,'chasesMovement')) && Math.hypot(t.vx, t.vy) > 2) sc += t.side === 'E' ? .4 : 1.5;
     }
     if (u.s.rivals && u.s.rivals[sp(t.s)]) sc *= u.s.rivals[sp(t.s)];
@@ -1310,6 +1310,7 @@ function herbivoreTarget(w, u){
     if (u.target === t) sc *= 1.3;
     if (has(u,'herd')) for (const o of w.units) if (packMate(u, o) && o.target === t && dist(o, u) < 25){ sc *= 1.5; break; } // the herd mobs together
     sc /= (1 + d / 10);
+    if (ob) sc = Math.max(sc, (OB.base + OB.slope * dr) * (u.target === t ? OB.stick : 1)); // cfg.objective: you stay a target from across the field (after the distance discount; a grudge or a close fight still wins), more so as it is kept waiting
     if (sc > bs){ bs = sc; best = t; }
   }
   if (bs <= 0.08) return null;
@@ -1318,8 +1319,8 @@ function herbivoreTarget(w, u){
 }
 // the targets herbivoreTarget can consider (hostile, not musk-repelled, the walrus's shore rule, seen or heard, reachable):
 // the learned herbivore chooser's candidates (milestone 4, policy/policy.js chooseHerb). Keep its filters in sync with herbivoreTarget's
-// cfg.objective: true (defaults) or {base, slope, shoreDrive}
-function objectiveOf(w){ const o = w.cfg.objective; return Object.assign({base: .7, slope: 1.1, shoreDrive: .5}, typeof o === 'object' ? o : {}); }
+// cfg.objective: true (defaults) or {base, slope, stick (x while already going for you), shoreDrive}
+function objectiveOf(w){ const o = w.cfg.objective; return Object.assign({base: .45, slope: 1, stick: 1.6, shoreDrive: .5}, typeof o === 'object' ? o : {}); }
 function herbCandidates(w, u){
   const dr = drive(u), out = [];
   for (const t of w.units){
