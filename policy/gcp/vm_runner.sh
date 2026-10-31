@@ -41,6 +41,15 @@ if [ "$ROLE" = helper ]; then   # helper VM (policy/dist.js): run chunks of each
 fi
 for r in ${RUNS//+/ }; do
   ( d="policy/runs/gcp/$r"; mkdir -p "$d"; f="$d/state.json"
+    pargs=$(node -e "const m=require('/tmp/manifest.json');const x=m.runs.find(q=>q.name===process.argv[1]);console.log(x?x.args:'')" "$r")
+    if [[ " $pargs " == *" --trainer=probe "* ]]; then   # a probe (one script, one result file): --script=policy/probes/x.js + its args; reruns from scratch if lost
+      script=$(printf '%s\n' $pargs | sed -n 's/^--script=//p'); rest=$(printf '%s\n' $pargs | grep -v '^--trainer=\|^--script=' | tr '\n' ' ')
+      status "$r" running "probe $script"
+      node "$script" $rest --threads="$THREADS" --out="$d/result.json" > "$d/run.out" 2>&1; rc=$?
+      put "$d/run.out" "sweeps/$SWEEP/runs/$r/run.out"; [ -f "$d/result.json" ] && put "$d/result.json" "sweeps/$SWEEP/runs/$r/result.json"
+      if [ $rc -eq 0 ] && [ -f "$d/result.json" ]; then status "$r" done "probe done"; else status "$r" failed "exit $rc: $(tail -c 1500 "$d/run.out")"; fi
+      exit 0
+    fi
     get "sweeps/$SWEEP/runs/$r/state.json" "$f" && get "sweeps/$SWEEP/runs/$r/state.json.log" "$f.log" || true   # resume if saved
     if [ ! -f "$f" ]; then
       args=$(node -e "const m=require('/tmp/manifest.json');const x=m.runs.find(q=>q.name===process.argv[1]);if(!x)process.exit(3);console.log(x.args)" "$r") || { status "$r" failed "not in manifest"; exit 0; }

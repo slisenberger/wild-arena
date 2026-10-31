@@ -1,0 +1,9 @@
+{
+ "note": "Stage 1 (research/speciation_strategy.md): label reliability of the lookahead teacher, fair dice vs common random numbers, per class, on main's live set. Decides whether capture is limited by label noise (stop chasing it) or by the student (bigger teacher net + distillation).",
+ "runs": [
+  {"name": "rel_charger", "args": "--trainer=probe --script=policy/probes/label_reliability.js --arch=charger --fights=150 --K=3 --H=8"},
+  {"name": "rel_cat", "args": "--trainer=probe --script=policy/probes/label_reliability.js --arch=cat --fights=150 --K=3 --H=8"},
+  {"name": "rel_yourcat", "args": "--trainer=probe --script=policy/probes/label_reliability.js --arch=guard --only=cat --fights=150 --K=3 --H=8"},
+  {"name": "rel_bulldozer", "args": "--trainer=probe --script=policy/probes/label_reliability.js --arch=bulldozer --fights=150 --K=3 --H=8"}
+ ]
+}

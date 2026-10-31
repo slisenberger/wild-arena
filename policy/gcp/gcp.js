@@ -173,8 +173,8 @@ const [cmd, arg] = pos;
   } else if (cmd === 'collect'){
     const m = manifest(arg), out = path.join(ROOT, 'policy', 'runs', 'gcp', arg), lines = [];
     for (const r of m.runs){ const d = path.join(out, r.name); fs.mkdirSync(d, {recursive: true});
-      for (const f of ['state.json', 'state.json.log', 'report.txt', 'run.out']){ const t = S.get(`sweeps/${arg}/runs/${r.name}/${f}`); if (t != null) fs.writeFileSync(path.join(d, f), t); }
-      const rep = fs.existsSync(path.join(d, 'state.json.log')) ? fs.readFileSync(path.join(d, 'state.json.log'), 'utf8').split('\n').filter(l => l.startsWith('[test]')).pop() : null;
+      for (const f of ['state.json', 'state.json.log', 'report.txt', 'run.out', 'result.json']){ const t = S.get(`sweeps/${arg}/runs/${r.name}/${f}`); if (t != null) fs.writeFileSync(path.join(d, f), t); }
+      const rep = fs.existsSync(path.join(d, 'result.json')) ? 'probe result: ' + path.join(d, 'result.json') : fs.existsSync(path.join(d, 'state.json.log')) ? fs.readFileSync(path.join(d, 'state.json.log'), 'utf8').split('\n').filter(l => l.startsWith('[test]')).pop() : null;
       lines.push(`${r.name.padEnd(18)} ${rep || '(no test yet)'}`); }
     fs.writeFileSync(path.join(out, 'summary.txt'), lines.join('\n') + '\n'); log(lines.join('\n')); log(`-> ${out}`);
   } else { log(fs.readFileSync(__filename, 'utf8').split('\n').slice(0, 16).join('\n')); }
