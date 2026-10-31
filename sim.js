@@ -1846,6 +1846,7 @@ function steerTrees(w, u, nx, ny){
   const m = Math.hypot(sx, sy) || 1; return {x: sx / m, y: sy / m};
 }
 
+const TREE_MAX = 30; // seconds a human may spend up trees in one match, all climbs together
 function moveHuman(w, h){
   if (h.riding){ return; }
   if (h.stun > 0){ damp(h); return; }
@@ -1867,12 +1868,14 @@ function moveHuman(w, h){
   // tree logic
   if (h.onTree && outsideZone(w, h)){ h.onTree = null; h.safeT = 0; log(w, `You climb down to get away from the ${HAZARD_NAME[w.zone.kind]}`, 'danger', h); }
   if (h.onTree){
+    h.treeT = (h.treeT || 0) + DT; // 30 s up a tree per match, all climbs together (owner, Oct 31: against stalling); then your arms give out
+    if (h.treeT >= TREE_MAX){ h.onTree = null; h.safeT = 0; log(w, 'Your arms give out: you climb down and can\'t climb again this fight', 'danger', h); return; }
     let safe = true; for (const e of units) if (e.side === 'E' && active(e) && e.target === h && e.state !== 'flee' && !e.onTree && dist(e,h) < 18) safe = false; // a treed or fleeing animal isn't coming for you (a stale target kept a human up a tree 100 s)
     if (safe){ h.safeT = (h.safeT || 0) + DT; if (h.safeT > 5){ h.onTree = null; h.safeT = 0; log(w, 'You climb down', 'info', h); } }
     else h.safeT = 0;
     return;
   }
-  if (w.trees.length && treeTh && td < 14){
+  if (w.trees.length && treeTh && td < 14 && (h.treeT || 0) < TREE_MAX){
     let bt = null, bd = 1e9; for (const t of w.trees){ if (outsideZone(w, t)) continue; const d = Math.hypot(t.x-h.x, t.y-h.y); if (d < bd){ bd = d; bt = t; } }
     let guarded = false; for (const a of units) if (a.side === 'P' && active(a) && dist(a, h) < 6 && strength(a) > strength(treeTh)*.6) guarded = true;
     if (bt && bd < 10 && !guarded){
