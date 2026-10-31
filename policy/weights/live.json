@@ -5,5 +5,5 @@
  "bulldozer": "bulldozer_v1.json",
  "charger": "charger_v1.json",
  "cat": "cat_v1.json",
- "target": {"charger": "charger_target_m1.json", "guard": "guard_target_m2.json"}
+ "target": {"charger": "charger_target_m1.json", "guard": "guard_target_m2.json", "cat": "cat_target_e1.json", "brawler": "brawler_target_e1.json"}
 }

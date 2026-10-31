@@ -8,6 +8,9 @@
 const F = require('./features.js');
 const G = require('./guard_features.js'); // your guards' target features (milestone 4)
 const TM = require('./target_model.js'); // 'target-lin' and 'target-mlp' scorers
+// P.feat === 'plus' (features_plus.js: + the guard situation around each target) and 'rich' (features_rich.js: + timing, kill race,
+// openings, who is after whom; milestone 4 round 3), required on first use: they require sim.js, which may still be loading us
+let FP_ = null, FR_ = null; const FP = () => FP_ || (FP_ = require('./features_plus.js')), FR = () => FR_ || (FR_ = require('./features_rich.js'));
 const M = require('./model.js');
 const path = require('path');
 const A = require(process.env.SIM ? path.resolve(process.env.SIM) : path.join(__dirname, '..', 'sim.js'));
@@ -22,14 +25,19 @@ function apply(u, o){
 // 'target-lin' (milestone 4 pilot): score(option i) = margin*[i = the heuristic's pick] + wt.x_i, argmax; zero wt = the
 // heuristic exactly, so training learns only where to deviate from it
 // 'target-mlp' adds a hidden layer and (with P.self) the unit's own species traits (policy/target_model.js has both scorers)
-function scoresLin(P, X, teach){ return TM.scores(P, X, teach); }
-function scoreLin(P, X, teach){ const s = scoresLin(P, X, teach); let b = 0; for (let i = 1; i < s.length; i++) if (s[i] > s[b]) b = i; return b; }
+// P.targetsOnly (networks trained on lookahead labels, which only ever compare targets): the net re-ranks the target options;
+// 'none' / 'feed' stay possible only when they are the heuristic's pick
+function scoresLin(P, X, teach, mask){ const s = TM.scores(P, X, teach); if (P.targetsOnly && mask) for (let i = 0; i < s.length; i++) if (!mask[i] && i !== teach) s[i] = -Infinity; return s; }
+function scoreLin(P, X, teach, mask){ const s = scoresLin(P, X, teach, mask); let b = 0; for (let i = 1; i < s.length; i++) if (s[i] > s[b]) b = i; return b; }
+// a scorer's option rows: P.feat 'rich' (features_rich.js), 'plus' (features_plus.js), else features.js / guard_features.js
+function extractE(w, u, P, herb){ return P.feat === 'rich' ? FR().extract(w, u, {herb}) : P.feat === 'plus' ? FP().extract(w, u, herb) : F.extract(w, u, herb); }
+const targetMask = opts => opts.map(o => o.kind === 'target');
 // training only (P.sample, policy/ppo_target.js): sample from softmax(score / tau) with a private generator seeded by the fight
 // and the decision count (the engine's own RNG is untouched), and log {X, teach, a, p} into cfg.policyTrace
-function pickLin(w, P, X, teach, u){
+function pickLin(w, P, X, teach, u, mask){
   X = TM.inputs(P, X, u);
-  if (!P.sample) return scoreLin(P, X, teach);
-  const s = scoresLin(P, X, teach), m = Math.max(...s), e = s.map(v => Math.exp((v - m) / (P.tau || 1))), z = e.reduce((a, b) => a + b, 0), p = e.map(v => v / z);
+  if (!P.sample) return scoreLin(P, X, teach, mask);
+  const s = scoresLin(P, X, teach, mask), m = Math.max(...s), e = s.map(v => Math.exp((v - m) / (P.tau || 1))), z = e.reduce((a, b) => a + b, 0), p = e.map(v => v / z);
   const k = w.cfg.policyTrace ? w.cfg.policyTrace.length : 0; let r = A.rng(((w.cfg.seed || 1) * 7919 + k * 104729 + 17) >>> 0)(), a = 0;
   while (a < p.length - 1 && r >= p[a]){ r -= p[a]; a++; }
   if (w.cfg.policyTrace) w.cfg.policyTrace.push({X, teach, a, p: p[a]});
@@ -38,10 +46,10 @@ function pickLin(w, P, X, teach, u){
 function choose(w, u, policy){
   const cfg = w.cfg, log = cfg.policyLog, stats = cfg.policyStats;
   if (policy.byArch) policy = policy.byArch[A._internals.archetypeOf(u)];
-  const {opts, X} = F.extract(w, u);
+  const {opts, X} = policy.kind === 'target-lin' || policy.kind === 'target-mlp' ? extractE(w, u, policy) : F.extract(w, u);
   const lin = policy.kind === 'target-lin' || policy.kind === 'target-mlp';
   const teach = policy.teacher || log || stats || lin ? F.heuristicIndex(w, u, opts) : -1;
-  const a = policy.teacher ? teach : lin ? pickLin(w, policy, X, teach, u) : M.argmax(policy, X);
+  const a = policy.teacher ? teach : lin ? pickLin(w, policy, X, teach, u, targetMask(opts)) : M.argmax(policy, X);
   if (stats){ stats.n = (stats.n || 0) + 1; if (a === teach) stats.agree = (stats.agree || 0) + 1; }
   if (log && opts.length > 1) log.push({X, y: teach, a, sp: u.s.id});
   apply(u, opts[a]);
@@ -50,8 +58,8 @@ function choose(w, u, policy){
 // of the candidates the heuristic stands (so zero weights = the engine exactly)
 function chooseHerb(w, u, policy){
   const P = policy.byArch[A._internals.archetypeOf(u)], stats = w.cfg.policyStats;
-  const {opts, X} = F.extract(w, u, true), h = F.herbHeuristic(w, u, opts);
-  const a = h.i < 0 ? -1 : pickLin(w, P, X, h.i, u);
+  const {opts, X} = extractE(w, u, P, true), h = F.herbHeuristic(w, u, opts);
+  const a = h.i < 0 ? -1 : pickLin(w, P, X, h.i, u, targetMask(opts));
   if (stats){ stats.n = (stats.n || 0) + 1; if (a === h.i) stats.agree = (stats.agree || 0) + 1; }
   u.target = a < 0 ? h.t : (opts[a].kind === 'target' ? opts[a].t : null); u.state = u.target ? 'engage' : 'roam';
 }
@@ -60,8 +68,8 @@ function chooseHerb(w, u, policy){
 function chooseGuard(w, u, policy, h){ // returns the target to take (h = the heuristic's, or the guard intent's: unchanged)
   const P = policy.byArch.guard, stats = w.cfg.policyStats;
   if (u.rider || (P.only === 'cat' && !(u.s.pred && u.s.latch))) return h; // P.only 'cat': only your big cats learn; the rest keep the heuristic
-  const {opts, X} = G.extract(w, u, P.wide), i = G.heuristic(opts, h); // P.wide: any enemy your side can see (no leash)
-  const a = i < 0 ? -1 : pickLin(w, P, X, i, u);
+  const {opts, X} = P.feat === 'rich' ? FR().extract(w, u, {wide: P.wide}) : G.extract(w, u, P.wide), i = G.heuristic(opts, h); // P.wide: any enemy your side can see (no leash)
+  const a = i < 0 ? -1 : pickLin(w, P, X, i, u, targetMask(opts));
   if (stats){ stats.n = (stats.n || 0) + 1; if (a === i) stats.agree = (stats.agree || 0) + 1; }
   return a < 0 ? h : opts[a].kind === 'target' ? opts[a].t : null;
 }

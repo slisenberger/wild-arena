@@ -399,6 +399,28 @@ round. Report ± standard errors.
       style 1.00, no gates or drift; your survival −1.6 / −2.1 / −2.4 pts (± 1.1), time alive −8 to −11 s, chargers' own deaths
       −0.05 to −0.11 per fight. It differs from a1 on ~33% of decisions: species-specific, mostly going for you instead of
       one of your animals, or leaving a fight with your cat / charger alone (herds, rhinos, gaur, hippo).
+  - **Milestone 4, round 3 (Oct 31, branch `smart-ship`): learned target choice for enemy big cats (`cat_target_e1`) and
+    brawlers (`brawler_target_e1`) is live; your guards keep `guard_target_m2`.** Both from the GCP session's `m4/guard-target`
+    (`policy/SPECIATION.md` ei7–ei8: expert iteration with a 20-s / 8-s lookahead teacher, gain regression): 'target-mlp' 32
+    hidden over `policy/features_rich.js` (features_plus.js's 71 + 20 'rich' per-target inputs: time to contact, kill race,
+    who is after whom, facing, ...) + 36 species traits, `targetsOnly` (the net re-ranks targets; 'none' / 'feed' only when
+    they are the heuristic's pick), margin .001. Ported only the inference: policy.js `P.feat === 'rich'|'plus'` and the
+    targets-only mask (FP/FR required on first use: they require sim.js); no sim.js change (the hooks were already on main).
+    Live via live.json `"target"` `cat` and `brawler`; build.js bundles features_plus.js / features_rich.js. No in-game planning.
+    - Evaluated in order on today's engine (`eval_target.js … 2000 101|102`, checkmate goal + spec, zero target weights as the
+      base, every other live policy on): **cat +0.113 ± 0.026, +0.077 ± 0.024** (style 1.00, no gates; telemetry drift
+      humanShare .18 → .32: the cats put more of their damage on you, in-premise); your survival −4.2 / −2.6 pts (± 1.1),
+      time alive −12.7 / −8.0 s (± 2.8); cats deviate from the heuristic on 30% of decisions. Then with the cat net live,
+      **brawler +0.104 ± 0.027, +0.096 ± 0.026** (style 1.00, no gates or drift); your survival −4.0 / −3.6 pts, time alive
+      −11.8 / −11.1 s. Then **guard_target_m3 vs live m2** (`BASE=…m2.json … guard 2000 101|102 2027 per-archetype 0`, cat and
+      brawler nets live): **−0.003 ± 0.018, −0.008 ± 0.018** (survival −0.1 / +0.1 pts, time alive +0.3 / +0.7 s): a tie, so m2
+      stays and m3 isn't on this branch (it is on `m4/guard-target`). m3 does idle more (35% → 41%, standby +10 s/fight).
+    - Determinism (`policy/ship_ident.js <worktree of origin/main 755c5f5> 400`, before the reprice): livePolicy:false
+      identical 400/400; live fights whose other side has no cat or brawler identical 91/91 (the other 309 differ, as they
+      should); the bundle (index.html in a vm) gives the same fights as the Node modules 40/40 (again after the reprice).
+      `policy/target_ident_test.js` (now cat, brawler, bulldozer, guard; zero weights incl. a fresh rich targets-only MLP =
+      the game; its base arm is now `{kind:'target-none'}` = the arch's shipped movement without a target scorer, which also
+      fixes its stale guard FAIL since m2 went live) passes. `eval_target.js` takes `BASE=none` (no target scorer for the arch).
   - Training runs on GitHub Actions (`.github/workflows/train.yml`, sweeps in `policy/sweeps/`); `collect.yml` copies
     results to the `training-results` branch (artifact storage isn't reachable from the dev container).
   - GCP spot training: `policy/gcp/gcp.js` (launch/status/resume/stop/collect, failure handling in `policy/gcp/README.md`);
@@ -448,7 +470,19 @@ round. Report ± standard errors.
   median board's best team 88% (min 33, p25 75), typical full-spend team 160 s, 16 distinct best teams over 16 boards, no
   elephant in any; best teams spread over rhino 6, hippo 6, tiger 4, giraffe 4, croc 4 (was elephant 5, rhino 4). For
   comparison, total $2,500 gave 96% / 181 s (not adopted: it would make the other side weaker).
-- **Current prices (`abs_r19`, Oct 28, live since PR #41: guard_target_m2 + charger_target_m1 live):** **19 s of swing
+- **Current prices (`abs_r20`, Oct 31, branch `smart-ship`: cat_target_e1 + brawler_target_e1 live on top of guard m2 +
+  charger m1):** **16 s of swing per $100**, giants/herds capped at $700 (triceratops $800), **board total $2,600** (kept;
+  `price_scheme` itself gives $2,500 at 16 s, $2,600 at 15 s), budget $1,200, rares 30%. `price_abs.js 240` (all items) merged
+  with `price_abs.js 960` for muskox, musk ox herd, walrus, woolly rhino, short-faced bear, Utahraptor. The smarter enemy cats
+  and brawlers cut every swing: mean base-team score 52 → 43 s. Changes vs `abs_r19`: hippo $400, polar $200, croc $200,
+  bison $200, black rhino $300, mammoth $600, Smilodon $200, woolly rhino $400, musk ox herd $400 (lone musk ox $100, never
+  dealt), great wolf pack $100, lion coalition $200. Validation (`RAREP=.3 board.js 16 2 24 12 1200 2600`; boards depend on
+  prices, best-team SE ±7–8 pts): **16 s/$100 median board's best team 88%** (min 42, p25 75), typical full-spend team
+  **163 s**, 65% of teams win a screen run, 16 distinct best teams; 15 s/$100 71% (p25 58) / 164 s; 17 s/$100 79% / 162 s;
+  `abs_r19` prices on this engine 79% (p25 71) / 162 s. Swings: triceratops 197, elephant 137, bison herd 134, buffalo herd
+  114, mammoth 95, woolly rhino 64 ± 7, musk ox herd 59 ± 7, hippo 57, rhino 56, gaur 52, short-faced bear 42 ± 4, croc 36,
+  walrus 22 ± 5, Utahraptor 19 ± 3.
+- *Previous* prices (`abs_r19`, Oct 28, live since PR #41: guard_target_m2 + charger_target_m1 live): **19 s of swing
   per $100**, giants/herds capped at $700 (triceratops $800), **board total $2,600** (kept; `price_scheme` itself would give $2,400
   at 19–20 s and $2,500 at 18 s: the owner's floor wins), budget $1,200, rares 30%. `price_abs.js 240` (all items) merged with
   `price_abs.js 960` for muskox, musk ox herd, walrus, woolly rhino, short-faced bear, Utahraptor. Changes vs `abs_r18`: hippo
@@ -548,12 +582,18 @@ round. Report ± standard errors.
 
 ## Progressive mode (prototype Oct 27, `?progressive=1`; details and numbers in `research/progressive_mode.md`)
 - 7 rounds up a price ladder (round 1 $100 animals only … round 7 any, a giant for sale), premium enemy from round 3 (top
-  band, not for sale), $400 start (round 1 is all $100 animals: no stranded $50, owner) + top-ups 400/400/400/350/400/650, boards 12/10/10/10/11/11/12 worth
-  $1,200/1,200/1,500/1,800/2,100/2,300/2,600 (retuned Oct 28 for the guard + charger target policies and `abs_r19`, see below), $25/kill (cap $150; the last round pays nothing), rest 30%; full heal =
+  band, not for sale), $400 start (round 1 is all $100 animals: no stranded $50, owner) + top-ups 450/450/450/450/500/750, boards 10/10/10/10/11/11/12 worth
+  $1,000/1,200/1,500/1,800/2,100/2,300/2,600 (retuned Oct 31 for the cat + brawler target policies and `abs_r20`, see below), $25/kill (cap $150; the last round pays nothing), rest 30%; full heal =
   price × .55 × health missing ($5 steps up, min $10), sell = price × .5 × health ($5 steps down), not under 25% health
   (was a flat 25% heal / half-price sale; .55 kept the bot's completion rate: 1,000 runs 17.3% → 15.9%, round 1 81.5%),
   scars, XP and levels (level 3 ≈ +8% of swing, `level_abs.js`), two retries (a loss restores the round's shop).
-- Bot with guard_target_m2 + charger_target_m1 live (`abs_r19` prices; `progressive_bot.js 500 4 1`): round 1 first-try **77%**,
+- Bot with the cat + brawler target nets live (`abs_r20` prices, retries keep the round's map since PR #46;
+  `progressive_bot.js 500 4 1`): round 1 first-try **80%**, median run ends in round 6, **19.8% complete**; round 6 is the wall
+  (first-try 34%; buffalo herd premium won 30%, bison herd 31%). At the old constants the new engine + prices gave round 1 65%
+  and **2.8% complete** (smarter cats and brawlers; croc, polar and Smilodon left round 1's $100 pool). Retune (300-run probes):
+  round 1's board 12 → 10 animals ($1,200 → $1,000: 82%; 11 gave 70%), top-ups 400/400/400/350/400/650 → 450/450/450/450/500/750
+  (450/500/500/450/550/800: 33%; 400/450/450/400/500/750: 12%; 400/450/500/450/550/750: 23%). Rounds 2–7 boards and START unchanged.
+- Previously, bot with guard_target_m2 + charger_target_m1 live (`abs_r19` prices; `progressive_bot.js 500 4 1`): round 1 first-try **77%**,
   median run ends in round 6, **23.4% complete**; round 6 is the wall (first-try 42%; buffalo herd premium won 26%, bison herd
   40%). At the old constants the new engine + prices gave round 1 72% and **69.6% complete** (your guards are much better and
   later-round teams are big). Retune (300-run probes): round 1 back to 12 animals / $1,200 (77%), top-ups 450/500/500/450/550/800
