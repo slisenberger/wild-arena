@@ -267,3 +267,12 @@ each species develop its own realistic fighting style. This note is the plan; th
   farSprint, and the buffalo check counts only while the buffalo is not going for you (fighting your animals is helping).
   Re-check, 600 fights vs the heuristic: live charger_target_m1 still fails it (with one of your lions within 15 m and not
   going for you, a buffalo targets the lion .83 -> .26); live cat_target_e1 passes every gate (style 1.00).
+- **cfg.objective prototype (Oct 31, owner: every enemy animal takes part in killing the human).** Kicker-only first version
+  (floor .8 + 1.2·drive before the distance discount; 1,200 fights): kickers targeted you 10× more (giraffe 0.6% -> 7.6% of
+  life, ostrich 0.2% -> 9.9%) but never came within 6 m, no change in score or survival. Trace: they picked you from ~50 m and
+  switched to one of your animals within ~1.4 s (26 of 28). Tuned: floor applied after the distance discount (.45 + 1.0·drive,
+  ×1.6 while already going for you), and while going for you an enemy herbivore turns only on what hits it, comes at it or
+  blocks it within 8 m. Trace (60 fights): closest approach median 50 -> 25 m; 41 of 46 switches away are interceptions by your
+  animals (realistic: the team's blockers get fought). Per-class measurement on maps2: sweep obj19.
+- Kickers by ES (kick16, farHunt lifted, species-aware, from zero): none found so far (best stayed at today's targets).
+  Harrier ES fine-tune from p1 (es15 harr_es1): best stayed at p1 through gen 56.
