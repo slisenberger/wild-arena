@@ -1,0 +1,7 @@
+{
+ "note": "Realistic species-aware chargers (research/speciation_strategy.md Stage 2, ES variant): ES from the live charger_target_m1 widened to traits v2 (buffalo vindictive/lionKiller, bison standsGround, musk ox ring, ...), with the new realism gates (buffalo must keep turning on predators near it, and not avoid them). m1 itself fails mobsPred (0.576 -> 0.349). Test is vs the start (m1); the ship check is vs main's live set and today's heuristic.",
+ "runs": [
+  {"name": "chv2_s1", "args": "--arch=charger --goal=checkmate --spec=true --seed=4101 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --target=true --nh=8 --pairs=24 --thetaClip=1 --margin=.25 --traitsV=2 --initWeights=policy/weights/charger_target_m1.json --refZero=true"},
+  {"name": "chv2_s2", "args": "--arch=charger --goal=checkmate --spec=true --seed=4102 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --target=true --nh=8 --pairs=24 --thetaClip=1 --margin=.25 --traitsV=2 --initWeights=policy/weights/charger_target_m1.json --refZero=true"}
+ ]
+}

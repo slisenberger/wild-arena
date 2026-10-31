@@ -36,6 +36,8 @@ const DEFAULTS = {
   acceptNoDrift: true,       // validation acceptance also requires no telemetry drift flags
   baseline: true,            // also run zero weights on each generation's train fights: curves relative to the heuristic
   initRule: null,            // warm start from a hand-written rule encoded in the linear term (INIT_RULES below)
+  refZero: false,            // style / realism reference = zero output (today's heuristic) even when warm-starting (a start that fails a realism gate must be fixed, not kept)
+  traitsV: 1,                // --target --nh: 2 = traits v2 (policy/traits.js: + signature tags); a v1 initWeights net is widened (same scores)
   initWeights: null,         // warm start from a weights file (e.g. policy/weights/guard_v1.json); 'best' starts there too, so validation must beat it
   thetaClip: 0,              // > 0: keep every weight within ±thetaClip of the start (stops the collapse into 'never deviate')
   spec: false,               // true: add the behavior-spec metrics (move_reward.js SPEC_X / SPEC_INFO)
@@ -143,6 +145,7 @@ function makeJobs(s){
     // reward variance and the paired-difference noise that sets N
     const Z = add(weightsOf(s, s.theta)), eps = noise(s, -1, 99), ids = [Z];
     for (let k = 0; k < c.calibPerturb; k++) ids.push(add(weightsOf(s, s.theta.map((v, i) => v + c.sigma * eps[k % eps.length][i]))));
+    if (c.refZero) ids.push(add(weightsOf(s, s.theta.map(() => 0)))); // --refZero: the heuristic's profile is the reference
     sets.push({name: 'calib', cands: ids, fights: R.fightSet('calib', 0, c.calibFights, fopts(s))});
   } else if (s.phase === 'train'){
     const eps = noise(s, s.gen), ids = [];
@@ -226,8 +229,8 @@ function merge(s, jobs, outs, wall, file, quiet){
   const recs = collect(jobs, outs), c = s.config, nf = WK.tasksOf(jobs).length, fps = wall ? nf / wall : null;
   const out = file ? l => logLine(file, l, quiet) : () => {};
   if (s.phase === 'calib'){
-    const [z, ...perts] = recs[0];
-    s.ref = RW.reference(z);
+    const all = recs[0], z0 = c.refZero ? all[all.length - 1] : null, [z, ...perts] = c.refZero ? all.slice(0, -1) : all;
+    s.ref = RW.reference(z0 || z);
     const {N, calib} = calibN(s, z, perts); s.N = N; s.calib = calib;
     const zs = candSummary(s, z, z.length);
     s.calib.heuristic = zs;
