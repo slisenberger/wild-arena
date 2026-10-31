@@ -3,6 +3,12 @@
 Each item has a recommendation; reply with a number and "yes", or your own call. Decided items move to the bottom.
 
 ## Open
+17. **Does the "realism can bend for the team's objective" rule lift the buffalo check?** (Your rule, relayed by the training
+   session Oct 31: "realism can be violated ONLY IF it allows for the grounding assumption of animals know their team and ultimate
+   objective"; e.g. kickers may hunt on offense, so that gate is lifted for the kicker run.) The charger nets learn to have buffalo
+   steer clear of predators because that helps them get at you. Recommendation: keep the buffalo check. Mobbing lions is the buffalo's
+   signature behaviour (like gates on physical ability, signatures stay), and the realistic charger net is already as strong as the
+   live one.
 12. **Two-sided species training: how much a sourced tendency may cost** (training session, `research/speciation_strategy.md` on
    `m4/guard-target`: animals on both sides learn per species, with realism checks shaping the reward). Recommendation: a well-sourced
    tendency (e.g. buffalo mobbing lions) may cost up to all of the gain training finds, but never make an animal weaker than today.
