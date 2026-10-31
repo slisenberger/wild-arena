@@ -1,0 +1,13 @@
+{
+ "note": "Ship checks for the realistic chargers (es13 final centres v2a/v2b, which pass the buffalo gates): vs today's heuristic (BASE=none) on two draws, vs the live charger_target_m1, plus the speciation report.",
+ "runs": [
+  {"name": "v2a_h23", "args": "--trainer=probe --script=policy/probes/eval_target_cli.js policy/weights/charger_target_v2a.json charger 2000 23 91 checkmate 1 --base=none"},
+  {"name": "v2a_h41", "args": "--trainer=probe --script=policy/probes/eval_target_cli.js policy/weights/charger_target_v2a.json charger 2000 41 91 checkmate 1 --base=none"},
+  {"name": "v2a_m1", "args": "--trainer=probe --script=policy/probes/eval_target_cli.js policy/weights/charger_target_v2a.json charger 2000 23 91 checkmate 1 --base=policy/weights/charger_target_m1.json"},
+  {"name": "v2b_h23", "args": "--trainer=probe --script=policy/probes/eval_target_cli.js policy/weights/charger_target_v2b.json charger 2000 23 91 checkmate 1 --base=none"},
+  {"name": "v2b_h41", "args": "--trainer=probe --script=policy/probes/eval_target_cli.js policy/weights/charger_target_v2b.json charger 2000 41 91 checkmate 1 --base=none"},
+  {"name": "v2b_m1", "args": "--trainer=probe --script=policy/probes/eval_target_cli.js policy/weights/charger_target_v2b.json charger 2000 23 91 checkmate 1 --base=policy/weights/charger_target_m1.json"},
+  {"name": "spec_v2a", "args": "--trainer=probe --script=policy/probes/speciation.js 600 71 --net=policy/weights/charger_target_v2a.json --arch=charger"},
+  {"name": "spec_v2b", "args": "--trainer=probe --script=policy/probes/speciation.js 600 71 --net=policy/weights/charger_target_v2b.json --arch=charger"}
+ ]
+}
