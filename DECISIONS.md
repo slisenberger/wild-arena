@@ -3,6 +3,10 @@
 Each item has a recommendation; reply with a number and "yes", or your own call. Decided items move to the bottom.
 
 ## Open
+18. **Retrain the enemy chargers for the buffalo tendency?** Under your latest framing ("engage the way they'd realistically would as
+   part of a hunting team"), the training session re-checked the live `charger_target_m1`: with one of your lions within 15 m and the
+   buffalo not going for you, it targets the lion 26% of that time vs 83% under the hand-written rules. Recommendation: yes, retrain:
+   the earlier realistic charger net was as strong as m1, so the game shouldn't get easier, and buffalo will look like buffalo.
 12. **Two-sided species training: how much a sourced tendency may cost** (training session, `research/speciation_strategy.md` on
    `m4/guard-target`: animals on both sides learn per species, with realism checks shaping the reward). Recommendation: a well-sourced
    tendency (e.g. buffalo mobbing lions) may cost up to all of the gain training finds, but never make an animal weaker than today.
