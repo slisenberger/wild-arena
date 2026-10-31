@@ -3,6 +3,17 @@
 Each item has a recommendation; reply with a number and "yes", or your own call. Decided items move to the bottom.
 
 ## Open
+12. **Two-sided species training: how much a sourced tendency may cost** (training session, `research/speciation_strategy.md` on
+   `m4/guard-target`: animals on both sides learn per species, with realism checks shaping the reward). Recommendation: a well-sourced
+   tendency (e.g. buffalo mobbing lions) may cost up to all of the gain training finds, but never make an animal weaker than today.
+13. **Who writes the realism checks per species.** Recommendation: a zoology subagent drafts them from sources; you spot-check 8
+   species; anecdotal sources count at most half (confidence ≤ .5).
+14. **Network size:** ~8k weights per animal class instead of ~5k. Recommendation: allow it, then check the game still runs
+   smoothly on a phone (frame time).
+15. **Training compute (GCP CPU quota):** the training session asked you for a quota of 1,000. Recommendation: raise it after
+   its Stage 4, or sooner if you want results faster.
+16. **Playtest before release:** the whole jointly trained set goes behind `?smart=1` for you to play before it goes live.
+   Recommendation: yes.
 11. **Enemy chargers' learned targets: buffalo shy away from predators** (training session's speciation report, Oct 31): the live
    `charger_target_m1` uses one rule for every charger (onto you and smaller animals, away from predators), and the buffalo
    avoids predators the most, which is the opposite of real buffalo (they mob lions). Recommendation: keep it live for now (it is
