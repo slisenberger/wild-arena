@@ -3,6 +3,11 @@
 Each item has a recommendation; reply with a number and "yes", or your own call. Decided items move to the bottom.
 
 ## Open
+11. **Enemy chargers' learned targets: buffalo shy away from predators** (training session's speciation report, Oct 31): the live
+   `charger_target_m1` uses one rule for every charger (onto you and smaller animals, away from predators), and the buffalo
+   avoids predators the most, which is the opposite of real buffalo (they mob lions). Recommendation: keep it live for now (it is
+   +0.073 ± 0.017 over the previous scorer); the training session retrains chargers species-aware (traits v2) with a check that
+   buffalo and bison don't learn to shun predators, and I'll swap it in when it passes.
 10. **Terrain features (`?maps2=1`, prototype).** Kopjes, dongas, cut banks, ravines, deadfall, a moraine with gaps, and an
    impassable border that trims the field to ~83%. Formation is worth a bit more with them (+15 vs +8 s for the best formation
    found, a 1.3 SE difference; tundra moraine clearest) and the game didn't measurably get easier (paired −2 ± 6 s; best team

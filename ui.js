@@ -30,6 +30,8 @@ function tok(a, size){ const d = document.createElement('span'); d.className = '
 const faceOf = a => FACES[a.species || a.id]; // pack items share their species' portrait
 function tokStyle(a){ return faceOf(a) ? `background:#222 url(${faceOf(a)}) center/cover;border:2px solid ${tierHex(a.price)}` : `background:${tierHex(a.price)};color:#14130f;font-weight:700`; }
 function tokHTML(a, px){ return `<span class="tok" title="${esc(a.name)}" style="${tokStyle(a)};width:${px}px;height:${px}px;font-size:${Math.round(px*.4)}px">${faceOf(a) ? '' : a.abbr}</span>`; }
+// an animal's name with its portrait in front (tables, banners, recaps)
+function fn(id, px){ const a = A.BY_ID[id]; return a ? `<span class="fn">${tokHTML(a, px || 18)}${esc(itemName(a))}</span>` : ''; }
 const FACEIMG = {}; for (const id in FACES){ const im = new Image(); im.src = FACES[id]; FACEIMG[id] = im; }
 function esc(s){ return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 
@@ -77,8 +79,8 @@ const SIGNATURE = {
   muskox: ['Living wall', 'lines up or rings you, horns out, when predators close in'],
   gaur: ['Faces it down', 'walks straight at a stalking cat, which usually slinks off'],
   walrus: ['Tusk stab', 'waits in the icy lake and stabs whatever comes to the edge'],
-  woollyrhino: ['Snow plough', 'ploughs a furrow others wade through faster (speculative: from its horn wear)'],
-  shortface: ['Kill thief?', 'rears over predators holding prey to make them let go (a hypothesis)'],
+  woollyrhino: ['Snow plough', 'ploughs a furrow through the snow that others wade through faster'],
+  shortface: ['Kill thief', 'rears over predators holding prey to make them let go'],
   utahraptor: ['Pin', 'leaps onto prey its own size and pins it under its sickle claws'],
 };
 const sigOf = a => SIGNATURE[a.species || a.id] || null;
@@ -305,7 +307,7 @@ function fiveBanner(res){
   else if (R.pending){ msg = `You get one retry per run, and this is it: same board, a new fight seed. Redraft if you like.`; btn = 'Retry this board'; }
   else { msg = `${wins} of 5 down${R.retry ? ', retry still in hand' : ', retry used'}.`; btn = `Board ${R.k + 1} of 5`; }
   const share = R.over ? `<div class="btnrow"><button class="btn" id="copyFive">Copy result</button><span class="copyOut" id="copyFiveOut"></span></div>` : '';
-  return `<div class="banner ${res.survived ? 'win' : 'lose'}"><span class="big">${head}</span><span class="mono">${fivePips(R)}</span><span>${res.survived ? '' : 'Killed by the ' + esc((A.BY_ID[res.killer] || {}).name || 'unknown') + '. '}${msg}</span><div class="btnrow"><button class="btn primary" id="fiveNext">${btn}</button></div>${share}</div>`;
+  return `<div class="banner ${res.survived ? 'win' : 'lose'}"><span class="big">${head}</span><span class="mono">${fivePips(R)}</span><span>${res.survived ? '' : (A.BY_ID[res.killer] ? 'Killed by ' + fn(res.killer, 20) + '. ' : 'Killed. ')}${msg}</span><div class="btnrow"><button class="btn primary" id="fiveNext">${btn}</button></div>${share}</div>`;
 }
 function fiveNext(){
   const R = S.five; if (!R) return;
@@ -1222,14 +1224,14 @@ function renderReport(show){
     b.innerHTML = `<div class="banner win"><span class="big">Survived · ${fmtT(HZ)}</span><span>${why} Full score. ${bestLine}${sharedLine}${dailyLine}</span>${shareRow}</div>`;
   } else {
     const k = A.BY_ID[res.killer];
-    b.innerHTML = `<div class="banner lose"><span class="big">You lasted ${fmtT(score)}</span><span>Killed by the ${esc(k ? k.name : 'unknown')}. ${bestLine}${sharedLine}${dailyLine}</span>${shareRow}</div>`;
+    b.innerHTML = `<div class="banner lose"><span class="big">You lasted ${fmtT(score)}</span><span>Killed by ${k ? fn(k.id, 20) : 'the unknown'}. ${bestLine}${sharedLine}${dailyLine}</span>${shareRow}</div>`;
   }
   renderTeamReport(w, sum);
 }
 function renderTeamReport(w, sum){
   const mine = sum.units.filter(u => u.side === 'P');
   const mvp = mine.slice().sort((a, b) => (b.protect*1.5 + b.dealt) - (a.protect*1.5 + a.dealt))[0];
-  const rows = mine.map(u => { const a = A.BY_ID[u.id]; const status = u.alive ? 'Alive' : 'Killed by ' + (A.BY_ID[u.killedBy] ? A.BY_ID[u.killedBy].name : '?'); return `<tr><td><span style="display:inline-flex;gap:6px;align-items:center">${tokHTML(a, 26)}${esc(a.name)}${mvp && u === mvp && (u.dealt > 0) ? ' <b style="color:var(--gold)">MVP</b>' : ''}</span></td><td class="n">${u.dealt.toLocaleString()}</td><td class="n">${u.protect.toLocaleString()}</td><td class="n">${u.taken.toLocaleString()}</td><td class="n">${u.kills}</td><td>${esc(status)}</td></tr>`; }).join('');
+  const rows = mine.map(u => { const a = A.BY_ID[u.id]; const kb = A.BY_ID[u.killedBy], status = u.alive ? 'Alive' : kb ? `<span class="fn" title="Killed by the ${esc(kb.name)}">✕ ${tokHTML(kb, 20)}</span>` : 'Killed'; return `<tr><td><span style="display:inline-flex;gap:6px;align-items:center">${tokHTML(a, 26)}${esc(a.name)}${mvp && u === mvp && (u.dealt > 0) ? ' <b style="color:var(--gold)">MVP</b>' : ''}</span></td><td class="n">${u.dealt.toLocaleString()}</td><td class="n">${u.protect.toLocaleString()}</td><td class="n">${u.taken.toLocaleString()}</td><td class="n">${u.kills}</td><td>${esc(status)}</td></tr>`; }).join('');
   const foes = sum.units.filter(u => u.side === 'E');
   const deadF = foes.filter(u => !u.alive && !u.escaped).length; const ranF = foes.filter(u => u.escaped).length;
   const fed = w.units.filter(u => u.side === 'E' && u.sated && u.state !== 'dead').length;
@@ -1531,10 +1533,13 @@ function progBanner(e, res){
   const cont = `<div class="btnrow"><button class="btn primary" id="progContinue">${r.over ? 'See how the run went' : e.retry ? `Retry round ${n}: to the shop` : `Round ${r.k + 1}: to the shop`}</button></div>`;
   if (res.survived){
     const why = res.why === 'cleared' ? `The other side was dead, routed or full by ${fmtT(res.t)}.` : res.why === 'quiet' ? `Nothing came at you for ${A.QUIET_T} s, so the other side gave up at ${fmtT(res.t)}.` : `You held out the full ${fmtT(HZ)}.`;
-    return `<div class="banner win"><span class="big">Round ${n} won</span><span>${why} ${e.down} kills${r.complete ? '' : `: +$${e.earned}`}.${e.ups.length ? ' ' + esc(upsTxt(e)) + '.' : ''}${r.complete ? ' That was the last round: the run is complete.' : ''}</span>${cont}</div>`;
+    return `<div class="banner win"><span class="big">Round ${n} won</span><span>${why} ${e.down} kills${r.complete ? '' : `: +$${e.earned}`}.${e.ups.length ? `<span class="fnl">${e.ups.map(u => `${fn(u.id)} <b>${M.LEVEL_NAME[u.lv]}</b>`).join('')}</span>` : ''}${r.complete ? ' That was the last round: the run is complete.' : ''}</span>${cont}</div>`;
   }
-  const tail = r.over ? 'That was your last retry: the run ends here.' : `You refight it from the shop as the round opened: same team, wounds, XP and money, a new fight (${retriesLeft(r)} retr${retriesLeft(r) === 1 ? 'y' : 'ies'} left after this one).`;
-  return `<div class="banner lose"><span class="big">Round ${n} lost</span><span>You lasted ${fmtT(res.score)}, killed by the ${esc(k ? k.name : 'unknown')}. ${tail}</span>${cont}</div>`;
+  const left = retriesLeft(r), hearts = '♥'.repeat(left) + '♡'.repeat(Math.max(0, M.PROG.RETRIES - left));
+  const tail = r.over ? `<span class="bl"><b>Run over:</b> that was your last retry.</span>`
+    : `<span class="bl"><b>Retry:</b> you go back to round ${n}'s shop exactly as it opened (same team, money, wounds and map) and fight it again.</span>`
+      + `<span class="bl">Retries left: <b class="hearts">${hearts}</b> ${left}${left ? '' : ' · lose this round again and the run ends'}</span>`;
+  return `<div class="banner lose"><span class="big">Round ${n} lost</span><span>Killed by ${k ? fn(res.killer, 20) : 'the unknown'} at ${fmtT(res.score)}.</span>${tail}${cont}</div>`;
 }
 // what each animal earned its XP for, in words
 function xpWhyTxt(w){
@@ -1547,47 +1552,46 @@ function xpWhyTxt(w){
   return bits.join(', ');
 }
 function recapHTML(r, e, compact){
-  const n = e.k + 1, nm = id => itemName(A.BY_ID[id]);
-  const lost = e.lost.map(l => { const a = A.BY_ID[l.id]; return M.groupOf(l.id) > 1 && !l.all ? `${l.n} of your ${a.groupName.toLowerCase()}` : `your ${M.groupOf(l.id) > 1 ? a.groupName.toLowerCase() : a.name}`; });
+  const n = e.k + 1, nm = id => itemName(A.BY_ID[id]), row = (k, v) => `<tr><th>${k}</th><td>${v}</td></tr>`;
+  const lost = e.lost.map(l => M.groupOf(l.id) > 1 && !l.all ? `${fn(l.id)} <span class="label">×${l.n}</span>` : fn(l.id));
   const kill = A.BY_ID[e.killer];
   const head = e.survived ? `<span class="big" style="color:var(--you)">Round ${n} won · ${fmtT(e.t)}</span>` : `<span class="big" style="color:var(--red)">Round ${n} lost · ${fmtT(e.t)}</span>`;
-  const lines = [
-    `${A.TERRAINS[e.terrain].name}${e.premium ? ' · with the ' + esc(nm(e.premium)) : ''}. ${e.survived ? (e.why === 'cleared' ? 'You cleared the field.' : e.why === 'quiet' ? 'The other side gave up.' : 'You held out the full five minutes.') : `Killed by the ${esc(kill ? kill.name : 'unknown')}.`}`,
-    `Other side: ${e.down} down${e.routed ? ', ' + e.routed + ' routed' : ''}.` + (lost.length ? ` You lost ${esc(lost.join(', '))}.` : e.team.length ? ' Your whole team made it.' : ''),
+  const rows = [
+    compact ? '' : '', row('Map', esc(A.TERRAINS[e.terrain].name)), e.premium ? row('Premium enemy', fn(e.premium)) : '',
+    e.survived ? row('Result', e.why === 'cleared' ? 'Cleared the field' : e.why === 'quiet' ? 'The other side gave up' : 'Held out to 5:00') : row('Killed by', kill ? fn(e.killer) : 'unknown'),
+    row('Enemies', `${e.down} down${e.routed ? ', ' + e.routed + ' routed' : ''}`),
+    row('Your losses', lost.length ? `<span class="fnl">${lost.join('')}</span>` : e.team.length ? 'None' : '–'),
   ];
-  const ks = Object.entries(e.kills || {}).map(([id, c]) => `${esc(nm(id))} ${c}`);
-  if (ks.length) lines.push(`Kills: ${ks.join(', ')}.${e.mvp ? ` MVP: the ${esc(nm(e.mvp))}.` : ''}`);
+  const ks = Object.entries(e.kills || {}).sort((a, b) => b[1] - a[1]).map(([id, c]) => `${fn(id)} <b class="mono">${c}</b>`);
+  if (ks.length) rows.push(row('Kills', `<span class="fnl">${ks.join('')}</span>`));
+  if (e.mvp) rows.push(row('MVP', fn(e.mvp)));
   let xp = '';
   if (e.survived){
-    const rows = Object.entries(e.xp).filter(([, v]) => v > 0).map(([id, v]) => { const w = e.xpWhy && e.xpWhy[id], up = e.ups.find(u => u.id === id);
-      const gone = e.lost.some(l => l.id === id && l.all);
-      return `<li><b>${esc(nm(id))} +${v} XP</b>${gone ? ' (lost in the fight)' : ''}${w ? ': ' + esc(xpWhyTxt(w)) : ''}${up ? ` · <b style="color:var(--gold)">now ${M.LEVEL_NAME[up.lv]}: ${esc(LV_FX[up.lv])}</b>` : ''}</li>`; });
-    if (rows.length) xp = `<p class="notes" style="margin:0">XP earned:</p><ul class="xplist">${rows.join('')}</ul>`;
-    if (e.scars.length) lines.push(`Scarred (fell below ${M.PROG.SCAR_AT * 100}% health): ${e.scars.map(s => esc(nm(s.id))).join(', ')}, −${M.PROG.SCAR * 100}% max health for the run.`);
-    if (e.topup != null) lines.push(`Money: +$${e.earned} for kills ($${M.PROG.PER_KILL} each, up to $${M.PROG.KILL_CAP}), +$${e.topup} for the new round. Survivors rested: each healed ${M.PROG.REST * 100}% of its wounds for free.`); // the last round pays nothing
-  } else if (e.retry) lines.push('The lost fight is undone: your team, money, wounds and XP are back as they were when the round opened.');
-  return (compact ? '' : head) + lines.map(l => `<p class="notes" style="margin:0">${l}</p>`).join('') + xp;
+    if (e.scars.length) rows.push(row('Scarred', `<span class="fnl">${e.scars.map(x => fn(x.id)).join('')}</span> <span class="label">−${M.PROG.SCAR * 100}% max health</span>`));
+    if (e.topup != null) rows.push(row('Money', `+$${e.earned} kills · +$${e.topup} new round`), row('Rest', `+${M.PROG.REST * 100}% of each wound healed`)); // the last round pays nothing
+    const xr = Object.entries(e.xp).filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1]).map(([id, v]) => { const w = e.xpWhy && e.xpWhy[id], up = e.ups.find(u => u.id === id), gone = e.lost.some(l => l.id === id && l.all);
+      return `<tr title="${esc(w ? xpWhyTxt(w) : '')}"><td>${fn(id)}${gone ? ' <span class="label">lost</span>' : ''}</td><td class="n">+${v}</td><td>${up ? `<b style="color:var(--gold)">${M.LEVEL_NAME[up.lv]}</b>` : ''}</td></tr>`; });
+    if (xr.length) xp = `<table class="kv xpt"><thead><tr><th>XP</th><th class="n">earned</th><th>level up</th></tr></thead><tbody>${xr.join('')}</tbody></table>`;
+  } else if (e.retry) rows.push(row('Retry', 'Undone: team, money, wounds and XP are back as the round opened'));
+  return (compact ? '' : head) + `<table class="kv"><tbody>${rows.join('')}</tbody></table>` + xp;
 }
-// the end of a run: every animal that fought for you (alive, dead, sold), survivors first, then by kills
+// the end of a run: every animal that fought for you (alive, dead, sold), those alive at the end first, then by kills
 const kfmt = n => n >= 1000 ? (n / 1000).toFixed(n >= 1e5 ? 0 : 1) + 'k' : String(n);
 function runSummaryHTML(r){
-  const alive = new Set(r.team.map(e => e.uid)), hs = (r.hist || []).slice();
-  const rank = h => alive.has(h.uid) ? 0 : h.out && h.out.how === 'undone' ? 2 : 1;
+  const alive = new Set(r.team.map(e => e.uid));
+  const hs = (r.hist || []).filter(h => !(h.out && h.out.how === 'undone')); // animals refunded when a lost round was replayed never count
+  const rank = h => alive.has(h.uid) ? 0 : 1;
   hs.sort((a, b) => rank(a) - rank(b) || b.kills - a.kills || (b.dealt + b.protect) - (a.dealt + a.protect));
   if (!hs.length) return '<p class="notes">No animal fought for you this run.</p>';
   const rows = hs.map(h => {
     const a = A.BY_ID[h.id], o = h.out, rs = h.rounds.slice().sort((x, y) => x - y), live = alive.has(h.uid);
-    const fate = live ? `<span class="flag surv">★ Survivor${r.complete ? ': went the distance' : ''}</span>`
-      : !o ? '' : o.how === 'died' ? `<span class="flag bad">Died in round ${o.k + 1}${o.by && A.BY_ID[o.by] ? ' to the ' + esc(A.BY_ID[o.by].name) : ''}</span>`
-      : o.how === 'fled' ? `<span class="flag hurt">Fled in round ${o.k + 1}</span>` : o.how === 'sold' ? `<span class="flag">Sold before round ${o.k + 1} · $${o.price}</span>`
-      : `<span class="flag">Refunded: round ${o.k + 1} was replayed</span>`;
-    const span = rs.length ? (rs.length === 1 ? `round ${rs[0] + 1}` : `rounds ${rs[0] + 1}–${rs[rs.length - 1] + 1} (${rs.length})`) : '';
-    const stats = [span, `${h.kills} kill${h.kills === 1 ? '' : 's'}`, `${kfmt(h.dealt + h.protect)} damage${h.protect ? ` (${kfmt(h.protect)} protecting you)` : ''}`,
-      `${M.LEVEL_NAME[h.lv]} · ${h.xp} XP`, h.scars ? `${h.scars} scar${h.scars > 1 ? 's' : ''}` : '', h.mvp ? `MVP ${h.mvp}×` : ''].filter(Boolean).join(' · ');
-    return `<div class="mt sumrow${live ? ' surv' : ''}">${tokHTML(a, 34)}<div class="mtb"><div class="nm">${esc(itemName(a))} ${stars(h.lv)}</div><div class="hpb">${fate}</div><div class="sub">${stats}</div></div></div>`;
+    const fate = live ? (r.complete ? '<span class="flag surv">★ Made it</span>' : '<span class="flag ok">Alive</span>')
+      : !o ? '' : o.how === 'died' ? `<span class="flag bad" title="${o.by && A.BY_ID[o.by] ? 'killed by the ' + esc(A.BY_ID[o.by].name) : ''}">Died R${o.k + 1}</span>`
+      : o.how === 'fled' ? `<span class="flag hurt">Fled R${o.k + 1}</span>` : o.how === 'sold' ? `<span class="flag">Sold R${o.k + 1}</span>` : '';
+    const span = rs.length ? (rs.length === 1 ? `${rs[0] + 1}` : `${rs[0] + 1}–${rs[rs.length - 1] + 1}`) : '–';
+    return `<tr class="${live ? 'surv' : ''}"><td class="an">${tokHTML(a, 26)}<span><b>${esc(itemName(a))}</b>${h.mvp ? ' <span class="mvp">MVP</span>' : ''}<br>${stars(h.lv)}</span></td><td class="n">${span}</td><td class="n">${h.kills}</td><td class="n">${kfmt(h.dealt + h.protect)}</td><td>${fate}</td></tr>`;
   });
-  const nRef = hs.filter(h => rank(h) === 2).length, main = rows.slice(0, rows.length - nRef), ref = rows.slice(rows.length - nRef);
-  return `<div class="progteam">${main.join('')}</div>` + (nRef ? `<details class="xphow"><summary>${nRef} more bought for a round you lost and replayed (refunded)</summary><div class="progteam">${ref.join('')}</div></details>` : '');
+  return `<table class="runsum"><thead><tr><th>Animal</th><th class="n">Rounds</th><th class="n">Kills</th><th class="n">Damage</th><th>Fate</th></tr></thead><tbody>${rows.join('')}</tbody></table>`;
 }
 function renderProg(){
   const r = S.prog; if (!r) return;
@@ -1600,7 +1604,7 @@ function renderProg(){
   }).join('');
   const last = r.log[r.log.length - 1];
   $('progRecap').hidden = !last; $('progRecap').innerHTML = last ? recapHTML(r, last) : '';
-  $('progTeamTitle').textContent = r.over ? 'Every animal of the run' : 'Your team';
+  $('progTeamTitle').textContent = r.over ? 'Your animals' : 'Your team';
   $('progTeam').innerHTML = r.over ? runSummaryHTML(r) : progTeamHTML(r, 'view') + `<details class="xphow"><summary>How XP and levels work</summary>${xpHowHTML()}</details>`;
   const nx = $('progNext'), act = $('progActions');
   if (!r.over){
@@ -1610,11 +1614,15 @@ function renderProg(){
     act.innerHTML = `<button class="btn primary" id="progToShop">Back to the shop</button>`;
   } else {
     const fmtBest = b => `${b.complete ? 'all ' + RN : b.won + ' of ' + RN} rounds, ${fmtT(b.total)} alive`;
-    const best = r.newBest ? 'A new best run.' : r.prevBest ? `Best run: ${fmtBest(r.prevBest)}.` : '';
-    const daily = r.daily ? ` Daily run ${r.daily}: ${r.newDaily ? 'your best today.' : r.prevDaily ? `best today ${fmtBest(r.prevDaily)}.` : ''}` : '';
     const mvp = runMvp(r);
     nx.hidden = false;
-    nx.innerHTML = `<h3 style="margin-bottom:6px">${r.complete ? `All ${RN} rounds won` : `${r.won} of ${RN} rounds won`} · ${r.kills} kills · ${fmtT(r.total)} alive</h3>${mvp ? `<p class="notes" style="display:flex;gap:8px;align-items:center">${tokHTML(mvp, 30)} MVP of the run: the ${esc(mvp.name)}.</p>` : ''}<p class="notes">${best}${daily}</p><p class="notes" style="margin-top:6px">Share: “${esc(progShare(r))}”</p>`;
+    const row = (k, v) => `<tr><th>${k}</th><td>${v}</td></tr>`;
+    nx.innerHTML = `<h3 style="margin-bottom:6px">Run summary</h3><table class="kv"><tbody>`
+      + row('Rounds won', `${r.won} of ${RN}${r.complete ? ' · complete' : ''}`) + row('Kills', r.kills) + row('Time alive', fmtT(r.total))
+      + (mvp ? row('MVP', fn(mvp.id)) : '')
+      + row('Best run', r.newBest ? '<b style="color:var(--gold)">This one</b>' : r.prevBest ? fmtBest(r.prevBest) : '–')
+      + (r.daily ? row('Daily ' + esc(r.daily), r.newDaily ? '<b style="color:var(--gold)">Your best today</b>' : r.prevDaily ? 'best today ' + fmtBest(r.prevDaily) : '–') : '')
+      + `</tbody></table><p class="notes" style="margin-top:6px">Share: “${esc(progShare(r))}”</p>`;
     act.innerHTML = `<button class="btn primary" id="progAgain">New run</button><button class="btn" id="progAgainDaily">Daily run</button><button class="btn" id="progCopy">Copy result</button><span class="copyOut" id="progCopyOut"></span><button class="btn" id="progHome">Back to the arena</button>`;
   }
 }
@@ -1687,7 +1695,7 @@ function renderStats(){
   const maps = Object.keys(A.TERRAINS).map(t => { const m = st.maps[t]; return `<tr><td>${esc(A.TERRAINS[t].name)}</td><td class="n">${m ? m.g : 0}</td><td class="n">${m ? pct(m.w, m.g) : '–'}</td><td class="n">${m ? fmtT(m.best) : '–'}</td></tr>`; }).join('');
   const rows = Object.entries(st.mine).sort((a, b) => b[1].g - a[1].g).map(([id, r]) => `<tr><td><span style="display:inline-flex;gap:6px;align-items:center">${tokHTML(A.BY_ID[id] || A.HUMAN, 18)}${esc(name(id))}</span></td><td class="n">${r.g}</td><td class="n">${pct(r.w, r.g)}</td><td class="n">${r.k}</td><td class="n">${r.d >= 1000 ? (r.d / 1000).toFixed(r.d >= 1e5 ? 0 : 1) + 'k' : r.d}</td></tr>`).join('');
   const hist = st.hist.slice(0, 12).map(h => `<li><span class="mono">${esc(h.d.slice(5))}</span> ${esc(A.TERRAINS[h.m] ? A.TERRAINS[h.m].name : h.m)} · ${h.won ? '<b style="color:var(--gold)">survived</b>' : 'lasted ' + fmtT(h.sc) + (h.k && A.BY_ID[h.k] ? ' (' + esc(A.BY_ID[h.k].name) + ')' : '')} · ${esc(h.t.map(id => A.BY_ID[id] ? A.BY_ID[id].abbr : id).join('+') || 'alone')}${h.l ? ` · <a href="${esc(h.l)}">replay</a>` : ''}</li>`).join('');
-  $('statsBody').innerHTML = `<p class="notes">${[nem ? `Nemesis: the ${esc(name(nem[0]))} (killed you ${nem[1].kd}×).` : '', top && top[1].k ? `Top killer on your side: ${esc(name(top[0]))} (${top[1].k} kills).` : '', best ? `Best record: ${esc(name(best[0]))} (${pct(best[1].w, best[1].g)} of ${best[1].g}).` : '', st.you ? `You've finished off ${st.you} animal${st.you === 1 ? '' : 's'} with your own hands.` : ''].filter(Boolean).join(' ')}</p>
+  $('statsBody').innerHTML = `<p class="notes">${[nem ? `Nemesis: ${fn(nem[0])} (killed you ${nem[1].kd}×).` : '', top && top[1].k ? `Top killer on your side: ${fn(top[0])} (${top[1].k} kills).` : '', best ? `Best record: ${fn(best[0])} (${pct(best[1].w, best[1].g)} of ${best[1].g}).` : '', st.you ? `You've finished off ${st.you} animal${st.you === 1 ? '' : 's'} with your own hands.` : ''].filter(Boolean).join(' ')}</p>
     <div class="tblwrap"><table><thead><tr><th>Map</th><th class="n">Games</th><th class="n">Survived</th><th class="n">Best</th></tr></thead><tbody>${maps}</tbody></table></div>
     <div class="tblwrap" style="margin-top:10px"><table><thead><tr><th>Your animals</th><th class="n">Games</th><th class="n">Won</th><th class="n">Kills</th><th class="n">Damage</th></tr></thead><tbody>${rows}</tbody></table></div>
     <h4 style="margin:12px 0 6px">Recent games</h4><ul class="hist">${hist}</ul>`;
