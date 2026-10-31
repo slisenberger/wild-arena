@@ -97,6 +97,41 @@ all classes in one environment:
 - **Order:** single-class runs first, for classes that have no net yet (harriers, lurkers) or a known flaw (chargers),
   because they are cheaper to debug. Then joint rounds over everything, starting from those nets.
 
+### 9. What the nets may control (ladder) and feasibility
+Every control is a set of discrete options at a decision point. The engine executes the choice with its sourced
+mechanics, and an output of 0 is today's choice. So each rung uses the same interface, teacher and gates.
+1. **Whom** (target). Built for every class except the lurkers. Headroom measured: about +0.2 everywhere.
+2. **How to approach** (intents: commit / wait / flank / regroup / disengage; cat intents: creep / cover / blindside ...).
+   Shipped as movement nets for harrier, guard, cat, bulldozer and charger; built but not shipped for brawler and kicker.
+   Next: decide target and intent together (factored: target, then intent, each labelled by the teacher on its own),
+   because the cat diagnosis showed that timing plus target is the lever.
+3. **When to use the signature move**: start a charge now or reposition, pounce now or creep closer, bluff or charge for
+   real, box or kick, drag to water. The engine still decides whether the move works and how hard it hits; the net only
+   picks the moment, within sourced limits (bluff counts, cooldowns).
+4. **Group roles**: packs and herds pick lead / flank / hold / encircle, with packmates' choices as inputs (wolves, hyena
+   clans, lion coalitions, buffalo / bison / musk ox herds).
+5. **Your guards' positioning**: escort tighter or intercept, where to stand relative to you and the threats.
+
+Never given to a net (realism first, sourced engine): steering and speed, stats, damage, morale and fleeing thresholds,
+wounds, and anything about you (deployment stays the player's).
+
+**Gate per rung: measure headroom before training.** For each class, a lookahead probe on the new options (as
+arch_lookahead did for targets) says whether there is anything to learn, in about an hour, before a multi-hour run.
+
+**Feasibility.**
+- Compute: expert iteration costs about $0.6–1.3 per class run on spot VMs (5–10 h on 16 cores). A joint round over 8
+  classes with targets and intents is about a day on the 64-CPU quota, roughly $5–10. A full programme (rungs 1–3 for
+  every class, a few joint rounds) is tens of dollars and a few weeks of calendar time, dominated by evaluation and
+  realism checks, not by compute.
+- Play cost: nets are about 5k weights and decide a few times a second per animal. The ?smart=1 build already runs four
+  of them at phone speed, so more rungs are cheap in-game. No lookahead at play (owner rule).
+- Main risk is capture, not cost. Nets have kept about 1/4 to all of the teacher's gain (chargers: about all; enemy
+  cats: about 1/2; your cats and bulldozers: none found so far). Expect uneven gains by class, and keep "heuristic" as
+  the per-class fallback.
+- Second risk: engine changes. Any change to sim.js invalidates trained nets. Named inputs plus warm starts make the
+  retrain incremental; the pipeline should retrain automatically after an engine change, and the ship check catches
+  drift.
+
 ## Choices and why
 - **Per-class nets, not one universal net.** One net would share data across classes, but retraining it would change
   every class at once (a full reprice each time) and one class's bug would leak into all. Per-class nets with the same
