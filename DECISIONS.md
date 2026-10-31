@@ -19,11 +19,6 @@ Each item has a recommendation; reply with a number and "yes", or your own call.
    avoids predators the most, which is the opposite of real buffalo (they mob lions). Recommendation: keep it live for now (it is
    +0.073 ± 0.017 over the previous scorer); the training session retrains chargers species-aware (traits v2) with a check that
    buffalo and bison don't learn to shun predators, and I'll swap it in when it passes.
-10. **Terrain features (`?maps2=1`, prototype).** Kopjes, dongas, cut banks, ravines, deadfall, a moraine with gaps, and an
-   impassable border that trims the field to ~83%. Formation is worth a bit more with them (+15 vs +8 s for the best formation
-   found, a 1.3 SE difference; tundra moraine clearest) and the game didn't measurably get easier (paired −2 ± 6 s; best team
-   per board 88 → 83%, typical team 165 → 175 s). Recommendation: play a few games with `?maps2=1` first; don't turn it on by
-   default until a terrain-aware formation test shows a clear lift (stronger chokepoints next if it doesn't).
 1. **Safari (progressive mode): what a retry undoes.** Built: a lost round goes back to the shop as the round opened (team,
    wounds, XP and money as they were; only the time alive counts), then a new fight seed. The alternative (the dead stay
    dead, no refund) made 17% of bot runs die in round 1 from a crippled retry. Recommendation: keep the undo.
@@ -77,4 +72,5 @@ Each item has a recommendation; reply with a number and "yes", or your own call.
   boards. GCP for training; the launcher must fail gracefully.
 
 ## Decided
+- Oct 31: **terrain features (maps2) are the default** (owner: "I like maps2 … feels better"); the old open maps stay behind `?maps2=0`. Tree-hiding stalls fixed the same day.
 - Oct 31: **progressive mode is the main mode, named Safari** (owner: "make the progressive mode the main mode and give it a name", then "I like safari as a name"; briefly shipped as Food Chain). It opens the arena screen and owns the bottom bar's main button; the single-board game stays below as **Quick game**. **Versus is the draft screen** for both (owner: "versus the default view"); the old cards, List and Deck stay reachable with `?draftui=…`. That retires item 5 (compact cards on phones).

@@ -51,7 +51,7 @@ for (let i = 0; i < NPM * 4; i++){
   const order = board.slice(); for (let k = order.length - 1; k > 0; k--){ const j = Math.floor(R() * (k + 1)); [order[k], order[j]] = [order[j], order[k]]; }
   const team = []; let left = 1200; for (const id of order) if (A.BY_ID[id].price <= left){ team.push(id); left -= A.BY_ID[id].price; }
   const cfg = {board, team, terrain, mode: 'wild', mount: A.defaultMount(team), seed: 1 + Math.floor(R() * 1e9)};
-  for (const m2 of [false, true]) jobs.push({k: i, m2, cfg: m2 ? Object.assign({maps2: true}, cfg) : cfg});
+  for (const m2 of [false, true]) jobs.push({k: i, m2, cfg: Object.assign({maps2: m2}, cfg)});
 }
 const par = jobs => Promise.all([...Array(NW).keys()].map(wi => new Promise((res, rej) => { const w = new Worker(__filename, {workerData: {jobs: jobs.filter((_, i) => i % NW === wi)}}); w.on('message', res); w.on('error', rej); }))).then(p => p.flat());
 const mean = a => a.reduce((p, q) => p + q, 0) / Math.max(1, a.length);

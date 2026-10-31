@@ -32,7 +32,7 @@ function cfgOf(cs, f, m2, seed){
   const cfg = {board: cs.board, team: cs.team, terrain: cs.terrain, mode: 'wild', mount: A.defaultMount(cs.team), seed, mapSeed: cs.mapSeed};
   if (m2) cfg.maps2 = true;
   const fm = cs.forms[f]; if (!fm) return cfg;
-  const V = A.mapVariant(cs.terrain, cs.mapSeed, m2 ? {maps2: true} : undefined), z = A.zoneFor(cs.terrain, V);
+  const V = A.mapVariant(cs.terrain, cs.mapSeed, {maps2: !!m2}), z = A.zoneFor(cs.terrain, V);
   if (fm.shift){ cfg.human = A.clampPlace(cs.terrain, A.HUMAN, z.x0 + fm.shift[0] * (z.x1 - z.x0), z.y0 + fm.shift[1] * (z.y1 - z.y0), V); return cfg; } // default offsets around you (setup makes each legal)
   const you = A.clampPlace(cs.terrain, A.HUMAN, z.x0 + fm.you[0] * (z.x1 - z.x0), z.y0 + fm.you[1] * (z.y1 - z.y0), V);
   cfg.human = you; cfg.placements = {};
