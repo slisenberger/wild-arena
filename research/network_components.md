@@ -71,6 +71,32 @@ input names, gates, species specs, and the warm-start net. `gcp.js launch class:
 4. Next retrain of that class warm-starts from the shipped net (widened) and learns the new species' residual.
 5. Speciation report plus species-spec checks, the fresh eval, and the ship bar. Then reprice, as for any change.
 
+### 8. Joint training: every class learns in the same fights (owner idea, Oct 31)
+Today one class learns while every other class plays its frozen shipped policy. So improvements never adapt to each other:
+your guards learned against today's cats, and the next cat net learns against yesterday's guards. Joint training runs
+all classes in one environment:
+- **One collection pass labels everyone.** In a training fight every class plays its current net. At sampled decisions of
+  *any* class, the lookahead teacher branches the fight and labels that decision. Inside the branches, everyone plays the
+  current nets, so the teacher judges against the opponents the net will actually meet. One fight yields data for 6–8
+  classes, which divides the lookahead's cost across them.
+- **Per-decision labels avoid the credit problem** that sank PPO (one fight result spread over ~50k decisions from many
+  learners). Each decision gets its own label, whoever made it.
+- **Rounds:** collect with the current set, then train each class on its own data (warm start), then validate each class
+  against the previous set. A class's update is accepted only if it passes its gates and species specs; rejected classes
+  keep their net. The accepted set becomes the new current set.
+- **League against cycling.** When both sides learn, they can chase each other in circles (A beats B, B adapts, A's gain
+  disappears) or forget how to handle an old style. Keep snapshots of past sets and play a share of the training fights
+  against them. A class must hold up against the league, not only the latest set.
+- **Fixed yardsticks for shipping.** "Better" is always measured against two fixed references: today's heuristic, and the
+  live set. It is never measured only against the moving set. The ship bar stays: ≥ 2 SE on fresh fights, style 1.00, no
+  gates, species specs pass.
+- **Ships as a set, priced once.** A joint round changes both sides together, so it ships as one release with one
+  reprice, not as eight separate PRs.
+- **The underdog stays a pricing question.** If both sides improve, how hard the game feels is set by prices and the board
+  total as now (the owner decides those knobs). Training doesn't decide difficulty.
+- **Order:** single-class runs first, for classes that have no net yet (harriers, lurkers) or a known flaw (chargers),
+  because they are cheaper to debug. Then joint rounds over everything, starting from those nets.
+
 ## Choices and why
 - **Per-class nets, not one universal net.** One net would share data across classes, but retraining it would change
   every class at once (a full reprice each time) and one class's bug would leak into all. Per-class nets with the same
@@ -90,5 +116,6 @@ input names, gates, species specs, and the warm-start net. `gcp.js launch class:
 
 Then the planned retrains (harriers, species-aware chargers, kickers, lurkers, bulldozers, your cats) run as the first
 users of the pattern.
+6. Joint rounds (§8): `expert_iter` labels every class's decisions in one collection pass, plus a league of past sets.
 
 Steps 1–2 are about a day of work and change nothing in play. The rest arrives with the first retrains.
