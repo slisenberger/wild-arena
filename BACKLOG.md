@@ -70,6 +70,12 @@ the shipped policies and reprice after:
     guards range no further from you); charger m1 vs a1 +0.073 ± 0.017 pooled (you −2 pts). Repriced (`abs_r19`) and progressive
     retuned. Next: enemy cats' target choice with the guard situation (two held-out passes didn't replicate fresh so far);
     a joint target + timing decision for cats.
+  - [x] **Built Oct 31 (branch `smart-ship`): learned target choice for enemy big cats (`cat_target_e1`) and brawlers
+    (`brawler_target_e1`)**, expert iteration from `m4/guard-target` (rich inputs, targets-only). Fresh on main's engine: cat
+    +0.113 / +0.077 (± 0.025), brawler +0.104 / +0.096 (± 0.027), style 1.00, no gates (cats: humanShare drift .18 → .32).
+    `guard_target_m3` tied m2 head to head (−0.003 / −0.008 ± 0.018), so m2 stays. Repriced (`abs_r20`, 16 s/$100) and Safari
+    retuned. Still open: bulldozers (lookahead headroom +0.19, but every learned net played worse so far), kickers (fails
+    farHunt), your cats (no network-learnable target signal found so far).
   **Owner design direction (Oct 27): speciation from broad archetypes + species tuning + open control + a general
   reward.** (1) Move decisions out of engine rules into the policy (target, approach, attack, bluff, retreat, movement),
   keeping physics in the engine (speed, reach, stamina, armor, morale): bodies are what make species differ. (2) One
