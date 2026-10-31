@@ -221,3 +221,12 @@ each species develop its own realistic fighting style. This note is the plan; th
 - Old-base pilot ei10: **enemy wolves / hyenas (harrier) +0.070 ± 0.031 on 1,200 held-out fights, style 1.00, no gates**
   (round 1 of 6; you survive -3.1 pts). First class beyond 2 SE with no target net before; retraining on main (ei12).
   Kickers: none found so far (every round failed farHunt, with the realism-aware teacher too).
+- **Student capacity and horizon (Oct 31, stored ei11 charger labels: 132k decisions, 20-s teacher, 3 rolls).** Gain regression
+  with 32 hidden units: held-out gain 13.5% of the noisy-oracle gain, prediction error 0.93 vs label variance 0.92 (explains
+  ~0%); 128 hidden: 15.0%, error 0.93. **Capacity isn't the limit.** Reliability at 20 s (probes/label_reliability.js, 40
+  charger fights, index 2): r .43 fair / .44 CRN (at 8 s: .61 / .66), best option repeats 56% / 65% vs 33% chance. So a
+  20-s label is less reliable than an 8-s one but still ~40% repeatable, while the per-option inputs predict ~none of it:
+  the repeatable part depends on things the inputs don't carry. Expert iteration for chargers stays far below ES's +0.239
+  (fight-level credit, which learns the ranking it needs without predicting branch gains). Next for chargers: ES on the
+  species-aware net (traits v2) with the realism-band Lagrangian, warm from charger_target_m1; for the other classes the
+  student, not the label, is what to change (inputs, ranking loss), or ES fine-tuning after expert iteration.
