@@ -1,0 +1,8 @@
+{
+ "note": "cfg.objective prototype (owner Oct 31: every enemy animal takes part in killing the human; floor .7 + 1.1·drive on an enemy herbivore's interest in you, hears you across the field, walrus leaves its shore for you when drive ≥ .5). Off vs on, 1,200 maps2 fights per class.",
+ "runs": [
+  {"name": "obj_bulldozer", "args": "--trainer=probe --script=policy/probes/objective.js bulldozer 1200 23"},
+  {"name": "obj_kicker", "args": "--trainer=probe --script=policy/probes/objective.js kicker 1200 23"},
+  {"name": "obj_charger", "args": "--trainer=probe --script=policy/probes/objective.js charger 1200 23"}
+ ]
+}
