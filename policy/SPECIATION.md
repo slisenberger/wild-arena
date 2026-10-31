@@ -168,6 +168,20 @@ each species develop its own realistic fighting style. This note is the plan; th
   Run finished: rounds 4-5 fell back (val +0.102, +0.093); its own held-out test of round 3 (= e3) +0.135 ± 0.020, you survive
   +7.5 pts. ei9 done; nothing replaces m3.
 
+- **Speciation report (Oct 31, probes/speciation.js 600, ?smart=1 networks, decisions with 2+ options).** Where a network changes
+  today's pick, which way (share onto you / off you, log mass and distance of the new target vs today's, predator or not):
+  - Enemy cats speciated: cougar and leopard leave you (78%, 71% of their changes) for a closer (-5.5 m), bigger, often predator
+    target; the jaguar goes onto you (67%) and onto smaller targets (log mass -1.42); the lion coalition onto you (48%); the tiger
+    both ways but much closer (-9.7 m), the opportunist. (Cats change 20-35% of picks.)
+  - Brawlers speciated: grizzly onto you (46%), polar bear off you (61%) onto bigger animals and predators, black bear mixed,
+    honey badger barely changes (20%).
+  - Chargers did not: every species changes ~45-60% of picks the same way (onto you ~30-40%, onto smaller animals, away from
+    predators). One rule for the archetype; the buffalo avoids predators most (-0.56), against its realism (it mobs lions).
+  - Your guards did not: every species changes ~30% of picks, all slightly toward hurt and bigger targets.
+  Descriptive only (no SE per species; lion / buffalo / bison ~55-60 fights).
+- ei10 (Oct 31): expert iteration for the archetypes never trained with the teacher: enemy wolves / hyenas (harrier) and kickers
+  (plain, and with the realism-aware teacher real=1).
+
 ## Phases (each measured before the next)
 1. Plumbing: joint (target, intent) hook for every archetype, zero/heuristic policy byte-identical to today
    (`check_identical.js`), features + trait vector, harness tests.
