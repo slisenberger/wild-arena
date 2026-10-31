@@ -405,3 +405,4 @@ Pick for new roles. Top three for design value: **honey badger, moose, Komodo dr
   walrus is > 6 m from water 97% of the time on main (98% with guard_target_m2, so not a regression). Its `shoreGuard`
   behaviour applies on the other side; as a guard it escorts you overland as a slow armored lump. Decide: should a walrus guard
   hold the shore near you (realistic) or escort (current)? Measure value either way.
+- [ ] **Your chargers keep charging an enemy that sits in deep water** (seen Oct 31 in a playtest screenshot: a fighting bull's charge foundered 5 times in 10 s against a walrus in the lake). Idea: a non-swimming charger guard doesn't pick (or drops) a target in deep water until it comes within 2 m of the shore. Measure value shifts + reprice after.
