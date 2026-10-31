@@ -1,0 +1,8 @@
+{
+ "note": "On main's maps2 default (Oct 31). (1) Realistic chargers, more realism pressure: as es13 (ES from charger_target_m1 widened to traits v2, refZero, buffalo gates) but gatePenalty 1 and lambda0 3 (es13 got buffalo half way back at m1 strength). (2) Harrier fine-tune: ES from harrier_target_p1 (old-base expert iteration; vs live +0.092 / +0.019 on two draws), small sigma, fight-level credit.",
+ "runs": [
+  {"name": "chv3_s1", "args": "--arch=charger --goal=checkmate --spec=true --seed=4201 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --target=true --nh=8 --pairs=24 --thetaClip=1 --margin=.25 --traitsV=2 --initWeights=policy/weights/charger_target_m1.json --refZero=true --gatePenalty=1 --lambda0=3"},
+  {"name": "chv3_s2", "args": "--arch=charger --goal=checkmate --spec=true --seed=4202 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --target=true --nh=8 --pairs=24 --thetaClip=1 --margin=.25 --traitsV=2 --initWeights=policy/weights/charger_target_m1.json --refZero=true --gatePenalty=1 --lambda0=3"},
+  {"name": "harr_es1", "args": "--arch=harrier --goal=checkmate --spec=true --seed=4211 --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --target=true --nh=32 --feat=rich --pairs=32 --sigma=.03 --thetaClip=1 --margin=.001 --initWeights=policy/weights/harrier_target_p1.json --refZero=true"}
+ ]
+}

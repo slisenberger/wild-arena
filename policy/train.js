@@ -94,7 +94,8 @@ function logLine(file, line, quiet){ fs.appendFileSync(file + '.log', line + '\n
 function init(opts){
   const cfg = Object.assign({}, DEFAULTS, opts.dry ? DRY : {}, opts.cfg);
   const AR = archOf(cfg.arch), F = AR.F;
-  const TF = cfg.target ? require(cfg.arch === 'guard' ? './guard_features.js' : cfg.feat === 'plus' ? './features_plus.js' : './features.js') : null; // --feat=plus: + the guard situation around each target // --target: train the archetype's target choice (policy/policy.js 'target-lin'), not its intents
+  const FRm = cfg.target && cfg.feat === 'rich' ? require('./features_rich.js') : null; // --feat=rich: features_rich.js (e.g. fine-tuning an expert-iteration net)
+  const TF = cfg.target ? (FRm ? (cfg.arch === 'guard' ? {DIM: FRm.DIM_G, NAMES: FRm.NAMES_G} : {DIM: FRm.DIM_E, NAMES: FRm.NAMES_E}) : require(cfg.arch === 'guard' ? './guard_features.js' : cfg.feat === 'plus' ? './features_plus.js' : './features.js')) : null; // --feat=plus: + the guard situation around each target // --target: train the archetype's target choice (policy/policy.js 'target-lin'), not its intents
   if (cfg.target && cfg.initRule) throw new Error('--target does not support initRule');
   // --target --nh=K: the 'target-mlp' scorer (policy/target_model.js), K hidden units over the option's features + the unit's species traits
   let P0 = cfg.target ? (cfg.nh ? Object.assign(require('./target_model.js').mlp(TF.DIM + require('./traits.js').dimV(cfg.traitsV), cfg.nh, cfg.margin, cfg.seed * 31 + 7, true), cfg.traitsV === 2 ? {traitsV: 2} : {}) /* --traitsV=2: traits v2 (+ signature tags) */ : M.zerosTarget(TF.DIM, cfg.margin))
