@@ -10,7 +10,7 @@ const npar = P => P.kind === 'target-mlp' ? P.nin * (P.nh + 1) + 2 * P.nh : P.ni
 const thetaOf = P => P.kind === 'target-mlp' ? P.theta : P.wt;
 function withTheta(P, th){ return P.kind === 'target-mlp' ? Object.assign({}, P, {theta: th.slice()}) : Object.assign({}, P, {wt: th.slice(0, P.nin)}); }
 // the option features the scorer sees (adds the unit's traits for a 'self' MLP)
-function inputs(P, X, u){ if (P.kind !== 'target-mlp' || !P.self) return X; const t = TR.traits(u.s); return X.map(x => x.concat(t)); }
+function inputs(P, X, u){ if (P.kind !== 'target-mlp' || !P.self) return X; const t = TR.traitsV(u.s, P.traitsV); return X.map(x => x.concat(t)); }
 function hidden(th, P, x){
   const {nin, nh} = P, h = new Array(nh), o = nin + 2 * nh;
   for (let j = 0; j < nh; j++){ let a = th[nin + nh + j]; const r = o + j * nin; for (let k = 0; k < nin; k++) a += th[r + k] * x[k]; h[j] = Math.tanh(a); }

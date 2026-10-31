@@ -17,7 +17,7 @@ const ZW = {kind: 'target-lin', v: 1, nin: 200, margin: .25, wt: new Array(200).
 if (!isMainThread){
   const {jobs, arch, o, learner} = workerData, out = [];
   for (const j of jobs){
-    if (j.k === 'collect'){ const g = arch === 'guard', data = [], W = PL.makePlanner({H: o.H, max: o.max, cool: 0, rolls: o.rolls, data, learner, real: o.real, feat: o.feat === 'rich' || o.feat === 'richh' ? o.feat : null, set: o.model === 'set', arch, side: g ? 'P' : 'E', only: g ? o.only : null, wide: g && o.wide}); R.runFight(j.f, W, arch); out.push({k: j.k, i: j.i, data}); }
+    if (j.k === 'collect'){ const g = arch === 'guard', data = [], W = PL.makePlanner({H: o.H, max: o.max, cool: 0, rolls: o.rolls, data, learner, real: o.real, feat: o.feat === 'rich' || o.feat === 'richh' ? o.feat : null, set: o.model === 'set', arch, side: g ? 'P' : 'E', only: g ? o.only : null, wide: g && o.wide, traitsV: o.traitsV === 2 ? 2 : 1}); R.runFight(j.f, W, arch); out.push({k: j.k, i: j.i, data}); }
     else out.push({k: j.k, i: j.i, rec: R.runFight(j.f, j.k === 'base' ? Object.assign({}, ZW, arch === 'guard' ? {only: o.only} : {}) : j.W, arch)});
   }
   parentPort.postMessage(out); return;
@@ -47,7 +47,7 @@ if (cmd === 'init'){
   Object.assign(c, g ? {feat: rf, goal: null, spec: false} : {feat: rf || 'plus', goal: 'checkmate', spec: true, only: null, wide: false}); // --feat=rich: + features_rich.js // your guards (arch guard): guard_features, the guard goal, only / wide; enemy cats: features_plus, checkmate
   const FRm = require('./features_rich.js'), FX = c.feat === 'richh' ? {DIM: g ? FRm.DIM_GH : FRm.DIM_EH, NAMES: g ? FRm.NAMES_GH : FRm.NAMES_EH} : c.feat === 'rich' ? {DIM: g ? FRm.DIM_G : FRm.DIM_E, NAMES: g ? FRm.NAMES_G : FRm.NAMES_E} : g ? require('./guard_features.js') : require('./features_plus.js');
   if (c.model === 'set') c.loss = 'adv'; // the state encoder trains by gain regression
-  const P0 = Object.assign({}, c.model === 'set' ? require('./set_model.js').make(FX.DIM + require('./traits.js').DIM, c.K, c.nh, .25, c.seed * 31 + 7) : require('./target_model.js').mlp(FX.DIM + require('./traits.js').DIM, c.nh, .25, c.seed * 31 + 7, true), g ? {only: c.only, wide: !!c.wide} : {}, c.feat ? {feat: c.feat} : {});
+  const P0 = Object.assign({}, c.model === 'set' ? require('./set_model.js').make(FX.DIM + require('./traits.js').dimV(c.traitsV), c.K, c.nh, .25, c.seed * 31 + 7) : require('./target_model.js').mlp(FX.DIM + require('./traits.js').dimV(c.traitsV), c.nh, .25, c.seed * 31 + 7, true), g ? {only: c.only, wide: !!c.wide} : {}, c.feat ? {feat: c.feat} : {}, c.traitsV === 2 ? {traitsV: 2} : {}); // --traitsV=2: traits v2 (+ signature tags)
   s = {format: 'wild-arena/expert-iter', simHash: R.simHash(), harnessHash: R.harnessHash(), config: c, features: FX.NAMES,
     P0, theta: P0.theta.slice(), round: 0, phase: 'collect', dataN: 0, best: {theta: P0.theta.slice(), round: -1, val: 0, from: 'init (= today\'s cats)'}, history: [], test: null};
   save(s); log(`[init] ${file}: ${JSON.stringify(c)}`); process.exit(0);

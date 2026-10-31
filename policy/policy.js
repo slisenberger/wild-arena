@@ -12,7 +12,7 @@ const FP = require('./features_plus.js'); // P.feat === 'plus': + the guard situ
 const FR = require('./features_rich.js');
 const SM = require('./set_model.js'); // 'target-set': sees every animal on the field (state encoder)
 // a state-encoder pick: argmax over options (targets only unless it is the heuristic's pick, like targetsOnly)
-function pickSet(w, P, u, opts, X, teach){ const q = SM.scores(P, SM.decision(w, u, opts, X), teach); let b = teach >= 0 ? teach : 0; q.forEach((v, i) => { if ((opts[i].kind === 'target' || i === teach) && v > q[b]) b = i; }); return b; } // P.feat === 'rich': + timing, kill race, openings, who is after whom
+function pickSet(w, P, u, opts, X, teach){ const q = SM.scores(P, SM.decision(w, u, opts, X, P.traitsV), teach); let b = teach >= 0 ? teach : 0; q.forEach((v, i) => { if ((opts[i].kind === 'target' || i === teach) && v > q[b]) b = i; }); return b; } // P.feat === 'rich': + timing, kill race, openings, who is after whom
 const M = require('./model.js');
 const path = require('path');
 const A = require(process.env.SIM ? path.resolve(process.env.SIM) : path.join(__dirname, '..', 'sim.js'));

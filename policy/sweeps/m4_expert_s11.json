@@ -1,0 +1,6 @@
+{
+ "note": "Milestone 4 expert iteration round 11 (Oct 31): method pilot for the species-aware charger retrain with traits v2 (signature tags: buffalo vindictive / lionKiller, bison standsGround, ...). charger_target_m1 (live on main) didn't speciate and its buffalo shuns predators. Old base; the real run goes on main after smart-ship.",
+ "runs": [
+  {"name": "eir_chg_v2", "args": "--trainer=expert --feat=rich --loss=adv --rounds=6 --fights=900 --max=3 --rolls=3 --nh=32 --epochs=8 --lr=.002 --val=800 --test=1200 --dagger=true --arch=charger --H=20 --traitsV=2 --seed=3301"}
+ ]
+}

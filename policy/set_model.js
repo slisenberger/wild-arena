@@ -69,5 +69,5 @@ function addGrad(g, th, P, D, i, c){
     for (let r = 0; r < n; r++){ const ph = pl.phis[r][k], e = c * dp * (1 - ph * ph) / n; g[o.bp + k] += e; const b = o.Wp + k * NR, row = pl.rows[r]; for (let q = 0; q < NR; q++) g[b + q] += e * row[q]; } }
 }
 // the game hook's view of a decision: option features X (rows), plus the set; traits appended to every option's x
-function decision(w, u, opts, X){ const s = setInputs(w, u, opts), t = TR.traits(u.s); return {x: X.map(x => x.concat(t)), U: s.U, T: s.T}; }
+function decision(w, u, opts, X, tv){ const s = setInputs(w, u, opts), t = TR.traitsV(u.s, tv); return {x: X.map(x => x.concat(t)), U: s.U, T: s.T}; }
 module.exports = { UN, TN, NU, NT, NR, MAXU, unitRows, tRows, setInputs, make, scores, addGrad, decision, npar: P => P.theta.length };

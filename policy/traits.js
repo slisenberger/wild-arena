@@ -9,7 +9,14 @@ const TAGS = ['pack', 'latch', 'ambush', 'bluff', 'sweep', 'giant', 'fearless', 
 const NAMES = ['logMass', 'spd', 'stam', 'logDps', 'armor', 'reach', 'strikeH', 'mountH', 'swim', 'vision', 'aggr', 'flee', 'corner',
   'pred', 'charge', 'climb', 'pounce', 'bluffP', 'group', ...GAITS.map(g => 'gait_' + g), ...TAGS.map(t => 'tag_' + t)];
 const DIM = NAMES.length;
-const cache = {};
+// v2 (P.traitsV = 2, new nets only; shipped nets keep v1 byte for byte): + the signature tags that bear on whom an animal goes
+// for, so a species-aware scorer can tell a buffalo (vindictive, lionKiller) from a bison, or a musk ox ring from a lone charger.
+// Tags this engine doesn't have read 0.
+const SIG = ['vindictive', 'lionKiller', 'standsGround', 'territorial', 'scavenger', 'blindCharger', 'bred', 'chasesMovement',
+  'catSense', 'guardian', 'bigGame', 'tester', 'lookout', 'riderSnatcher', 'boneCrush', 'upends', 'stomp', 'placid',
+  'ring', 'facesDown', 'shoreGuard', 'snowPlough', 'usurps', 'pinDown', 'tuskStab', 'forestRunner'];
+const NAMES2 = [...NAMES, ...SIG.map(t => 'sig_' + t)], DIM2 = NAMES2.length;
+const cache = {}, cache2 = {};
 function traits(s){
   if (cache[s.id]) return cache[s.id];
   const tags = new Set(s.tags || []);
@@ -21,7 +28,15 @@ function traits(s){
   if (v.length !== DIM || v.some(x => !Number.isFinite(x))) throw new Error('traits: bad vector for ' + s.id);
   return (cache[s.id] = v);
 }
-module.exports = { NAMES, DIM, traits, GAITS, TAGS };
+// traitsV(s, v): v 2 = v1 + the SIG block; anything else = v1 (the same array traits() returns)
+function traitsV(s, v){
+  if (v !== 2) return traits(s);
+  if (cache2[s.id]) return cache2[s.id];
+  const tags = new Set(s.tags || []);
+  return (cache2[s.id] = traits(s).concat(SIG.map(t => +(tags.has(t) || !!s[t]))));
+}
+const dimV = v => v === 2 ? DIM2 : DIM;
+module.exports = { NAMES, DIM, traits, GAITS, TAGS, SIG, NAMES2, DIM2, traitsV, dimV };
 if (require.main === module){ // node policy/traits.js: print the vector per species
   for (const s of A.ANIMALS) console.log(s.id.padEnd(12), traits(s).map(x => x.toFixed(2)).join(' '));
   console.log(`${DIM} traits: ${NAMES.join(', ')}`);
