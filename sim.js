@@ -782,7 +782,8 @@ function herbivoreTarget(w, u){
     let sc = 0;
     if (u.grudge === t) sc = 5;
     if (sc === 0 && !canSee(w, u, t) && !(d < 30 + 50 * dr && (Math.hypot(t.vx, t.vy) > 2 || dr > .5))) continue; // poor-sighted grazers go by sound and smell (and by the noise of the fight, once restless)
-    if (d > R && sc === 0){
+    const kh = t.side === 'H' && u.side === 'E' && u.s.gait === 'keepaway' && w.cfg.kickerHunt; // prototype (owner via main, Oct 31): enemy kickers know the objective and join the attack on you
+    if (d > R && sc === 0 && !kh){
       if (has(u,'hatesPredators') && t.s.pred && d < 20) sc = 1.5; else continue;
     }
     if (sc === 0){
@@ -790,6 +791,7 @@ function herbivoreTarget(w, u){
       else if (t.side === 'P') sc = .6 + u.agit;           // intruders: your team
       else if (t.side === 'H') sc = .35 + u.agit * .6 + .6 * dr; // you: a nuisance more than a target, until it has been kept waiting
       else sc = 1.5;                                        // an active feud
+      if (kh) sc = Math.max(sc, .8 + 1.2 * dr);             // cfg.kickerHunt: you are its target like your animals are, more so as it is kept waiting (it still closes and kicks: keepaway gait)
       if ((has(u,'blindCharger') || has(u,'chasesMovement')) && Math.hypot(t.vx, t.vy) > 2) sc += t.side === 'E' ? .4 : 1.5;
     }
     if (u.s.rivals && u.s.rivals[sp(t.s)]) sc *= u.s.rivals[sp(t.s)];

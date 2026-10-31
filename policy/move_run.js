@@ -57,7 +57,7 @@ function fightSet(pool, index, n, opts){
   }
   return out;
 }
-function cfgOf(f){ return {team: f.team, board: f.board, terrain: f.tr, mode: 'wild', mount: f.mount, seed: f.seed, livePolicy: false}; } // livePolicy:false: the baseline is the heuristic, not the shipped policy
+function cfgOf(f){ return Object.assign({team: f.team, board: f.board, terrain: f.tr, mode: 'wild', mount: f.mount, seed: f.seed, livePolicy: false}, f.cfgX || {}); } // f.cfgX: extra engine flags for a probe (e.g. kickerHunt) // livePolicy:false: the baseline is the heuristic, not the shipped policy
 
 // ---------- one fight ----------
 // weights: null = no policy at all (engine untouched); otherwise cfg.movePolicy = {[arch]: weights}
@@ -92,10 +92,15 @@ function runFight(f, weights, arch){
   // cats: stalk-then-pounce, lion (rush) vs stalker profiles, long holds in cover, sprint distance
   const CAT = arch === 'cat';
   if (CAT) Object.assign(r, {stalkPounces: 0, pRush: 0, pStalk: 0, engRush: 0, engStalk: 0, nearRush: 0, nearStalk: 0, stillLongT: 0, sprintM: 0});
-  let hp0 = H.hp;
+  let hp0 = H.hp, hpAll = w.units.reduce((a, o) => a + Math.max(0, o.hp), 0), lastDmg = 0; r.longQuiet = 0; r.sp = {}; // longQuiet: longest stretch with no damage to anyone; sp: per species of this archetype
   while (!w.over){
     A.step(w);
     const hDrop = Math.max(0, hp0 - H.hp); hp0 = H.hp; r.dmgHumanAll += hDrop; // from anyone: the side-level goal
+    const hpNow = w.units.reduce((a, o) => a + Math.max(0, o.hp), 0); if (hpNow < hpAll - 1e-6) lastDmg = w.t; hpAll = hpNow; r.longQuiet = Math.max(r.longQuiet, w.t - lastDmg);
+    for (const u of us){ if (!I.active(u)) continue; const q = r.sp[u.s.id] = r.sp[u.s.id] || {life: 0, onHumanT: 0, nearHumanT: 0, engT: 0, distSum: 0, hits: 0, hitsHuman: 0, dealt: 0};
+      q.life += DT; if (u.target === H) q.onHumanT += DT; if (I.dist(u, H) < 6) q.nearHumanT += DT;
+      const st = stateOf(u); if ((st === 'fight' || st === 'close') && u.target){ q.engT += DT; q.distSum += I.dist(u, u.target) * DT; }
+      const dd = u.st.dealt - (q._d || 0); q._d = u.st.dealt; if (dd > 0){ q.hits++; q.dealt += dd; if (H.lastHitBy === u && hDrop > 0) q.hitsHuman++; } }
     us.forEach((u, i) => {
       const s = S[i];
       const df = u.st.foe - s.foe, dd = u.st.dealt - s.dealt; s.foe = u.st.foe; s.dealt = u.st.dealt;
