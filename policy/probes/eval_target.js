@@ -4,6 +4,7 @@
 // Reports the goal and its parts, style/gates/drift, and plain outcomes (human survival, time alive) with paired SEs.
 // Usage: node policy/probes/eval_target.js <weights.json> <arch> [N] [probeIndex] [seed] [goal|per-archetype] [spec 0|1]
 //   env BASE=<weights.json>: the base arm uses those target weights instead of zero (e.g. a new scorer vs the shipped one)
+//   env BASE=none: the base arm has no target scorer for the arch at all (today's game when the arch has none live)
 // For guards it also reports how far your guards range from you (no-leash check).
 const { Worker, isMainThread, parentPort, workerData } = require('worker_threads');
 const path = require('path'), os = require('os');
@@ -12,7 +13,7 @@ require(path.join(__dirname, '..', 'live.js'));
 if (!isMainThread){ parentPort.postMessage(workerData.jobs.map(j => ({k: j.k, i: j.i, rec: R.runFight(j.f, j.W, workerData.arch)}))); return; }
 const [file, arch, n, idx, sd, goal, spec] = process.argv.slice(2), N = +n || 1200;
 const W = require(path.resolve(file)); if (!/^target-(lin|mlp)$/.test(W.kind)) throw new Error('not a target scorer weights file');
-const B = process.env.BASE ? require(path.resolve(process.env.BASE)) : M.zerosTarget(W.nin, W.margin), G = goal === 'per-archetype' ? null : goal || 'checkmate', SP = spec === undefined ? true : spec === '1';
+const B = process.env.BASE === 'none' ? {kind: 'target-none'} : process.env.BASE ? require(path.resolve(process.env.BASE)) : M.zerosTarget(W.nin, W.margin), G = goal === 'per-archetype' ? null : goal || 'checkmate', SP = spec === undefined ? true : spec === '1';
 const fights = R.fightSet('probe', +idx || 71, N, {arch, seed: +sd || 2027, withLive: true, goal: G, spec: SP}), jobs = [];
 fights.forEach((f, i) => { jobs.push({k: 'base', i, f, W: B}, {k: 'learned', i, f, W}); });
 const T = Math.max(1, Math.min(8, os.cpus().length));
