@@ -54,6 +54,7 @@ function choose(w, u, policy){
   if (policy.commit && a !== teach && opts[a] && opts[a].kind === 'target'){ u.forceT = opts[a].t; u.forceUntil = w.t + policy.commit; } // P.commit s: a learned departure from the heuristic is held that long (follow-through, as in the lookahead's branches)
   if (stats){ stats.n = (stats.n || 0) + 1; if (a === teach) stats.agree = (stats.agree || 0) + 1; }
   if (log && opts.length > 1) log.push({X, y: teach, a, sp: u.s.id});
+  if (cfg.pickLog && opts.length > 1) cfg.pickLog.push({u, h: opts[teach] && opts[teach].t || null, a: opts[a] && opts[a].t || null, n: opts.length});
   apply(u, opts[a]);
 }
 // herbivores (bulldozer, charger, kicker): same scorer; the heuristic's pick is herbivoreTarget's, and if that isn't one
@@ -64,6 +65,7 @@ function chooseHerb(w, u, policy){
   if (u.forceT && w.t < u.forceUntil && A._internals.active(u.forceT)){ u.target = u.forceT; u.state = 'engage'; return; } // a lookahead branch holds its tried target
   const a = h.i < 0 ? -1 : P.kind === 'target-look' ? P.pick(w, u, opts, h.i) : P.kind === 'target-set' ? pickSet(w, P, u, opts, X, h.i) : pickLin(w, P, X, h.i, u, opts.map(o => o.kind === 'target'));
   if (stats){ stats.n = (stats.n || 0) + 1; if (a === h.i) stats.agree = (stats.agree || 0) + 1; }
+  if (w.cfg.pickLog && opts.length > 1 && a >= 0) w.cfg.pickLog.push({u, h: h.t || null, a: opts[a].t || null, n: opts.length});
   u.target = a < 0 ? h.t : (opts[a].kind === 'target' ? opts[a].t : null); u.state = u.target ? 'engage' : 'roam';
 }
 // guards (your side, not carrying you): the heuristic's pick (allyTarget's, or a guard intent's intercept / help target) is
@@ -75,6 +77,7 @@ function chooseGuard(w, u, policy, h){ // returns the target to take (h = the he
   const {opts, X} = P.feat === 'rich' || P.feat === 'richh' ? FR.extract(w, u, {wide: P.wide, hidden: P.feat === 'richh'}) : G.extract(w, u, P.wide), i = G.heuristic(opts, h); // P.wide: any enemy your side can see (no leash)
   const a = i < 0 ? -1 : P.kind === 'target-look' ? P.pick(w, u, opts, i) : P.kind === 'target-set' ? pickSet(w, P, u, opts, X, i) : pickLin(w, P, X, i, u, opts.map(o => o.kind === 'target')); // target-look: plan.js (training / headroom tests only)
   if (stats){ stats.n = (stats.n || 0) + 1; if (a === i) stats.agree = (stats.agree || 0) + 1; }
+  if (w.cfg.pickLog && opts.length > 1 && a >= 0) w.cfg.pickLog.push({u, h: h || null, a: opts[a].t || null, n: opts.length});
   return a < 0 ? h : opts[a].kind === 'target' ? opts[a].t : null;
 }
 A._internals.choose = choose;

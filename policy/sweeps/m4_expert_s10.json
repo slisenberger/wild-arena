@@ -1,0 +1,8 @@
+{
+ "note": "Milestone 4 expert iteration round 10 (Oct 31): the archetypes nobody has trained with the lookahead teacher yet. Enemy wolves / hyenas (harrier; target choice never learned) and enemy kickers (giraffe, ostrich, giant kangaroo; lookahead headroom +0.211 but its picks failed farHunt), the kicker once plain and once with the realism-aware teacher (real=1).",
+ "runs": [
+  {"name": "eir_harr_h20", "args": "--trainer=expert --feat=rich --loss=adv --rounds=6 --fights=900 --max=3 --rolls=3 --nh=32 --epochs=8 --lr=.002 --val=800 --test=1200 --dagger=true --arch=harrier --H=20 --seed=3201"},
+  {"name": "eir_kick_h20", "args": "--trainer=expert --feat=rich --loss=adv --rounds=6 --fights=900 --max=3 --rolls=3 --nh=32 --epochs=8 --lr=.002 --val=800 --test=1200 --dagger=true --arch=kicker --H=20 --seed=3202"},
+  {"name": "eir_kick_h20r", "args": "--trainer=expert --feat=rich --loss=adv --rounds=6 --fights=900 --max=3 --rolls=3 --nh=32 --epochs=8 --lr=.002 --val=800 --test=1200 --dagger=true --arch=kicker --H=20 --real=1 --seed=3203"}
+ ]
+}
