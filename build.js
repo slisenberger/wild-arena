@@ -14,7 +14,7 @@ const policyBundle = `;(function(){ var A = window.Arena, M = {}, C = {}, proces
 ${['live.json', ...Object.entries(JSON.parse(r('policy/weights/live.json'))).filter(([k]) => k[0] !== '_').flatMap(([, f]) => typeof f === 'string' ? [f] : Object.values(f))].map(f => `  M['${f}'] = function(module){ module.exports = ${r('policy/weights/' + f)}; };`).join('\n')}
 ${POLICY.map(f => `  M['${f}'] = function(module, exports){ var require = req, __dirname = ''; ${r('policy/' + f)}\n  };`).join('\n')}
   req('live.js'); })();`;
-t = t.replace('/*FACES*/', () => r('faces.json')).replace('/*SIM*/', () => r('sim.js') + '\n' + policyBundle + '\n' + r('progressive.js')).replace('/*UI*/', () => r('ui.js'));
+t = t.replace('/*FACES*/', () => r('faces.json')).replace('/*SIM*/', () => r('sim.js') + '\n' + policyBundle + '\n' + r('progressive.js')).replace('/*UI*/', () => 'const DAILY_SALT = ' + r('daily_salt.json').trim() + '; // research/daily_check.js: days whose first daily deal the bot found near-unwinnable\n' + r('ui.js'));
 const html = '<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">\n' + t.replace('<div class="wrap">', '</head><body>\n<div class="wrap">') + '\n</body></html>';
 // refuse to write a page whose scripts don't parse (a broken ui.js once slipped through to the playtest page)
 for (const [, code] of html.matchAll(/<script>([\s\S]*?)<\/script>/g)){ try { new Function(code); } catch (e){ console.error('build.js: a page script does not parse: ' + e.message); process.exit(1); } }
