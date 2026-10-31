@@ -279,7 +279,8 @@ round. Report ± standard errors.
   savanna waterhole ~44%, river width/ford jitter + a third ford ~36%, forest 22–38 trees, clearing ~39%,
   pool ~29%, tundra deep/light snow ~25%/27% and a half-frozen lake ~44% (cold water slows and drains
   stamina by cold tolerance). World water is `w.band` (river) + `w.ponds`; `w.wet` if any.
-- **Terrain features (prototype Oct 28, hidden unless `?maps2=1`, `MAPS2_ON` in ui.js → `cfg.maps2`; `research/map_features.md`):**
+- **Terrain features are the default since Oct 31** (owner played it: "I like maps2 … maps2 feels better"): `MAPS2_DEFAULT = true` in sim.js, so `mapVariant` and `setup` use them unless `cfg.maps2:false` / `{maps2:false}` (the old open maps; `?maps2=0` in the UI, `MAPS2=0` for board.js). Every tool now fights on them by default. Same day, a tree stall fix (owner: "hiding in a tree might produce a bit too much stalling"): the human treated a fleeing or treed animal that still had them as its target as a threat, so they stayed up a tree (up to 100 s) or cycled up and down (15 climbs); now `moveHuman`'s climb trigger (`treeTh`) and its "safe to climb down" check ignore those. Forest, maps2: tree time 3.3 → 2.1 s/fight, fights with > 60 s up 1.0% → 0%, survival 39% (unchanged); with `maps2:false` the engine matches main except fights where the human climbs or heads for a tree (18/300).
+  History: - **Terrain features (prototype Oct 28, hidden unless `?maps2=1`, `MAPS2_ON` in ui.js → `cfg.maps2`; `research/map_features.md`):**
   `mapVariant(tid, seed, {maps2:true})` draws (after every other variant draw) `v.pb` (playable box: an impassable border trims
   ~17% of the field per game) and `v.obst` (solid circles: savanna kopje / donga / termite mounds, river cut banks + side gully,
   forest ravine + deadfall, tundra moraine + erratics; the final arena core x 38–62, y 25–41 kept clear) and `v.nav` (waypoints).

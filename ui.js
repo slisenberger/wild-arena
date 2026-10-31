@@ -22,8 +22,8 @@ const fmtT = t => { t = Math.max(0, t); const m = Math.floor(t/60), s = Math.flo
 const kmh = v => Math.round(v * 3.6);
 // 5 in a Row (prototype, Oct 27): hidden unless ?five=1
 const FIVE_ON = (() => { try { return /[?&]five=1\b/.test(location.search); } catch(e){ return false; } })();
-// Terrain features (prototype, Oct 28, research/map_features.md): hidden unless ?maps2=1. Sets cfg.maps2 on every fight.
-const MAPS2_ON = (() => { try { return /[?&]maps2=1\b/.test(location.search); } catch(e){ return false; } })();
+// Terrain features (research/map_features.md; prototype Oct 28, the default since Oct 31): sets cfg.maps2 on every fight.
+const MAPS2_ON = (() => { try { return !/[?&]maps2=0\b/.test(location.search); } catch(e){ return true; } })(); // on by default since Oct 31; ?maps2=0 = the old open maps
 const canAdd = a => S.prog ? M.canBuy(S.prog, a.id) : a.price <= BUDGET - spent();
 function strengthOf(a){ return Math.sqrt(A.hpOf(a) * a.dmg / a.cd); }
 function tok(a, size){ const d = document.createElement('span'); d.className = 'tok'; d.style.cssText = tokStyle(a); d.title = a.name; if (size) { d.style.width = d.style.height = size + 'px'; } if (!faceOf(a)) d.textContent = a.abbr; return d; }
@@ -644,7 +644,7 @@ function youAt(){ return S.youPos || A.homeFor(S.terrain); }
 // this game's map variant (waterhole, fords, tree density...): it follows the terrain and the seed
 let varMemo = null;
 const mapSeed = () => S.prog ? M.mapSeedOf(S.prog) : S.seed; // a Safari retry keeps the round's map
-function curVar(){ const ms = mapSeed(); if (!varMemo || varMemo.tid !== S.terrain || varMemo.seed !== ms) varMemo = {tid: S.terrain, seed: ms, v: A.mapVariant(S.terrain, ms, MAPS2_ON ? {maps2: true} : undefined)}; return varMemo.v; }
+function curVar(){ const ms = mapSeed(); if (!varMemo || varMemo.tid !== S.terrain || varMemo.seed !== ms) varMemo = {tid: S.terrain, seed: ms, v: A.mapVariant(S.terrain, ms, {maps2: MAPS2_ON})}; return varMemo.v; }
 function absPlacements(){
   const out = {}, team = [...S.team], h = A.homeFor(S.terrain);
   team.forEach((id, i) => {
@@ -657,7 +657,7 @@ function absPlacements(){
 function currentPlacements(){ const y = youAt(), abs = absPlacements(), out = {}; for (const id in abs) out[id] = {dx: abs[id].x - y.x, dy: abs[id].y - y.y}; return out; }
 function makeCfg(){
   const c = { board:S.board.slice(), team:[...S.team], placements:currentPlacements(), human:youAt(), terrain:S.terrain, mode:S.mode, mount:(S.mount && S.team.has(S.mount)) ? S.mount : null, seed:S.seed };
-  if (MAPS2_ON) c.maps2 = true;
+  c.maps2 = MAPS2_ON;
   if (S.prog){ const m = M.cfgFor(S.prog); c.mapSeed = m.mapSeed; c.startHp = m.startHp; if (m.maxHp) c.maxHp = m.maxHp; if (m.levels) c.levels = m.levels; } // carried wounds, scars and levels (progressive mode only)
   return c;
 }
@@ -671,7 +671,7 @@ function renderDraftMap(){
   const V = curVar(), T = A.TERRAINS[S.terrain], key = S.terrain + ':' + mapSeed() + ':' + !!S.prog;
   if (mapCardKey === key && el.firstChild) return;
   mapCardKey = key;
-  const feats = (V.band ? ['river'] : []).concat(V.features || [], S.terrain === 'forest' && V.trees ? [V.trees + ' trees'] : [], [...new Set((V.feats || []).map(f => ({kopje: 'rock kopje', donga: 'gully', ravine: 'ravine', bank: 'cut banks', moraine: 'boulder ridge', log: 'fallen trunks'})[f.k]).filter(Boolean))]), w0 = A.setup(Object.assign({board: [], team: [], terrain: S.terrain, mode: S.mode, seed: S.seed, mapSeed: mapSeed()}, MAPS2_ON ? {maps2: true} : {}));
+  const feats = (V.band ? ['river'] : []).concat(V.features || [], S.terrain === 'forest' && V.trees ? [V.trees + ' trees'] : [], [...new Set((V.feats || []).map(f => ({kopje: 'rock kopje', donga: 'gully', ravine: 'ravine', bank: 'cut banks', moraine: 'boulder ridge', log: 'fallen trunks'})[f.k]).filter(Boolean))]), w0 = A.setup(Object.assign({board: [], team: [], terrain: S.terrain, mode: S.mode, seed: S.seed, mapSeed: mapSeed()}, {maps2: MAPS2_ON}));
   el.innerHTML = `<canvas width="480" height="${Math.round(480 * A.H / A.W)}" aria-label="Map preview"></canvas><div class="mc-t"><div class="mc-n"><small>${S.prog ? 'THIS ROUND\'S MAP' : 'THIS GAME\'S MAP'}</small>${esc(T.name)}</div>`
     + `<div class="mc-f">${feats.some(f => WET_FEATURES.includes(f) || f === 'river') ? '' : '<span>No water</span>'}${feats.map(f => `<span class="${WET_FEATURES.includes(f) || f === 'river' ? 'w' : ''}">${esc(f[0].toUpperCase() + f.slice(1))}</span>`).join('')}</div><p>${esc(MAP_TIP[S.terrain] || '')}</p></div>`;
   const cv = el.querySelector('canvas'), g = cv.getContext('2d'), sc = cv.width / A.W, z = A.zoneFor(S.terrain, V);

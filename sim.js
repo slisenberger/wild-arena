@@ -183,6 +183,7 @@ function mkPond(R, tid, kind, xr, yr, rxr, ryr, cold){
   }
   return null;
 }
+const MAPS2_DEFAULT = true; // terrain features + the smaller playable box are the game since Oct 31 (owner: "I like maps2"); cfg.maps2:false / {maps2:false} = the old open maps
 function mapVariant(tid, seed, opts){
   const v = baseVariant(tid);
   const R = rng(((seed || 1) ^ 0x9e3779b9) >>> 0);
@@ -208,7 +209,7 @@ function mapVariant(tid, seed, opts){
     if (v.snow > 1){ v.features.push('deep snow'); notes.push('The snow is deep today.'); } else if (v.snow < 1){ v.features.push('light snow'); notes.push('The snow is shallow and wind-packed.'); }
     if (R() < .45){ const p = mkPond(R, tid, 'lake', [42, 62], [14, 52], [6.5, 9.5], [4.5, 6.5], true); if (p){ v.ponds.push(p); v.features.push('frozen lake'); notes.push('A half-frozen lake: open water so cold it saps the strength of anything that swims in it.'); } }
   }
-  if (opts && opts.maps2) m2Features(v, R); // terrain features (prototype): drawn last, so everything above is unchanged
+  if (opts && opts.maps2 != null ? opts.maps2 : MAPS2_DEFAULT) m2Features(v, R); // terrain features (prototype): drawn last, so everything above is unchanged
   v.hasWater = !!v.band || v.ponds.length > 0;
   v.note = notes.length ? notes.join(' ') : null;
   v.key = v.terrain + ':' + (seed || 1) + ':' + JSON.stringify([v.band, v.ponds, v.clearing, v.trees, v.shade, v.snow]) + (v.obst ? ':m2:' + JSON.stringify([v.pb, v.obst]) : '');
@@ -218,7 +219,7 @@ function variantFor(cfg){
   if (cfg.variant && typeof cfg.variant === 'object') return cfg.variant;
   const tid = (TERRAINS[cfg.terrain] || TERRAINS.savanna).id;
   if (cfg.variant === false) return baseVariant(tid);
-  return mapVariant(tid, cfg.mapSeed != null ? cfg.mapSeed : (cfg.seed || 1), cfg.maps2 ? {maps2: true} : undefined);
+  return mapVariant(tid, cfg.mapSeed != null ? cfg.mapSeed : (cfg.seed || 1), {maps2: cfg.maps2 != null ? !!cfg.maps2 : MAPS2_DEFAULT});
 }
 
 // ---------- terrain features (prototype, cfg.maps2 / ?maps2=1; research/map_features.md) ----------
@@ -1853,7 +1854,7 @@ function moveHuman(w, h){
     if (h.climbT <= 0 && h.pendingTree){ h.onTree = h.pendingTree; h.pendingTree = null; log(w, 'You climb a tree', 'info', h); } damp(h); return; }
   const units = w.units;
   // threats
-  let ax = 0, ay = 0, nearest = null, nd = 1e9, danger = 0;
+  let ax = 0, ay = 0, nearest = null, nd = 1e9, danger = 0, treeTh = null, td = 1e9;
   for (const e of units){
     if (e.side !== 'E' || !active(e) || e.state === 'feed' || e.state === 'rest' || e.heatstroke) continue;
     if (!teamSees(w, e)) continue;
@@ -1861,18 +1862,19 @@ function moveHuman(w, h){
     const intent = e.target === h ? 1 : .3;
     if (d < 30){ const k = intent * strength(e) / (d * d + 4); ax += (h.x - e.x) / (d||1) * k; ay += (h.y - e.y) / (d||1) * k; danger += k; }
     if (e.target === h && d < nd){ nd = d; nearest = e; }
+    if (e.target === h && e.state !== 'flee' && !e.onTree && d < td){ td = d; treeTh = e; } // what sends you up a tree: not a fleeing or treed animal with a stale target (no up-and-down tree cycling)
   }
   // tree logic
   if (h.onTree && outsideZone(w, h)){ h.onTree = null; h.safeT = 0; log(w, `You climb down to get away from the ${HAZARD_NAME[w.zone.kind]}`, 'danger', h); }
   if (h.onTree){
-    let safe = true; for (const e of units) if (e.side === 'E' && active(e) && e.target === h && dist(e,h) < 18) safe = false;
+    let safe = true; for (const e of units) if (e.side === 'E' && active(e) && e.target === h && e.state !== 'flee' && !e.onTree && dist(e,h) < 18) safe = false; // a treed or fleeing animal isn't coming for you (a stale target kept a human up a tree 100 s)
     if (safe){ h.safeT = (h.safeT || 0) + DT; if (h.safeT > 5){ h.onTree = null; h.safeT = 0; log(w, 'You climb down', 'info', h); } }
     else h.safeT = 0;
     return;
   }
-  if (w.trees.length && nearest && nd < 14){
+  if (w.trees.length && treeTh && td < 14){
     let bt = null, bd = 1e9; for (const t of w.trees){ if (outsideZone(w, t)) continue; const d = Math.hypot(t.x-h.x, t.y-h.y); if (d < bd){ bd = d; bt = t; } }
-    let guarded = false; for (const a of units) if (a.side === 'P' && active(a) && dist(a, h) < 6 && strength(a) > strength(nearest)*.6) guarded = true;
+    let guarded = false; for (const a of units) if (a.side === 'P' && active(a) && dist(a, h) < 6 && strength(a) > strength(treeTh)*.6) guarded = true;
     if (bt && bd < 10 && !guarded){
       if (bd < bt.r + 1.6 && !h.latchedBy){ h.climbT = 1.5; h.pendingTree = bt; h.x = bt.x; h.y = bt.y + bt.r * .3; damp(h); return; }
       const dx = bt.x - h.x, dy = bt.y - h.y, m = Math.hypot(dx,dy)||1; setVel(w, h, dx/m, dy/m, 1); return;
