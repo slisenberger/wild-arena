@@ -206,6 +206,7 @@ th.n{text-align:right}
 .progtrail span.dead{border-color:var(--red);color:var(--red)}
 .progtrail span.now{border-color:var(--gold);color:var(--gold)}
 .progentry,.fiveentry{display:flex;flex-direction:column;gap:8px}
+.foodchain{border-color:var(--gold)} .howrun summary{cursor:pointer;min-height:36px;display:flex;align-items:center;gap:6px;font-weight:600;font-size:14px;list-style:none} .howrun summary::-webkit-details-marker{display:none} .howrun summary::before{content:'▸';color:var(--gold)} .howrun[open] summary::before{content:'▾'} .howrun p{margin-top:4px} .foodchain h2{margin:0} .qgh{margin-top:10px}
 .fiveentry{margin-top:14px}
 .fivemaps{display:flex;flex-wrap:wrap;gap:6px}
 .fivemaps span{font:12px/1.2 var(--mono,monospace);padding:4px 8px;border:1px solid var(--line);border-radius:8px;color:var(--muted)}
@@ -370,15 +371,17 @@ body.hasbar #toDraft, body.hasbar #toDeployD, body.hasbar #startFight{display:no
 
 <!-- ARENA -->
 <section class="screen" id="s-arena" hidden>
-  <h2>Pick the ground first</h2>
-  <p class="lede">The terrain decides who's strong. Pick it now and the draft will flag which animals thrive or wilt here.</p>
+  <div class="panel progentry foodchain"><div class="label" style="color:var(--gold)">Main mode</div><h2>Food Chain</h2><p class="lede">Seven rounds, from $100 animals up to the giants. Your survivors carry their wounds into the next round.</p>
+    <div class="btnrow"><button class="btn primary" id="progNew">Start a run</button><button class="btn" id="progDaily" title="Today's run: the same maps, boards and fights for everyone">Daily run</button><button class="btn" id="progResume" hidden>Resume</button></div><p class="notes" id="progBest"></p>
+  <details class="howrun"><summary>How a run works</summary><p class="notes">Seven rounds up the price ladder: round 1 is all $100 animals (honey badgers, boars, leopards...), each round lets pricier animals onto the board, and the giants come at the end. Your survivors carry their wounds and scars, earn XP and level up. From round 3 one premium enemy joins the other side. Every round brings fresh money; you can heal, sell or buy. Two retries for the whole run.</p></details></div>
+  <h3 class="qgh">Quick game</h3>
+  <p class="notes">One board, one fight, $1,200 to spend. Pick the ground first: the terrain decides who's strong.</p>
   <div class="label">Terrain</div>
   <div class="opts" id="terrainOpts"></div>
   <p class="notes terrainDesc" id="terrainDesc"></p>
   <div id="modeOpts" hidden></div>
   <p class="notes">The other side is one team, and the pressure builds over time. Predators hunt you and your guards; herbivores charge intruders. Break their morale and animals bolt out of the arena. After 30 seconds a fire, flood or blizzard closes in from the edges and pushes everyone together. You score by how long you stay alive, up to five minutes.</p>
-  <div class="panel progentry"><h3>Progressive run <span class="label" style="color:var(--gold)">prototype</span></h3><p class="notes">Seven rounds up the price ladder: round 1 is all $100 animals (honey badgers, boars, leopards...), each round lets pricier animals onto the board, and the giants come at the end. Your survivors carry their wounds and scars, earn XP and level up. From round 3 one premium enemy joins the other side. Every round brings fresh money; you can heal, sell or buy. Two retries for the whole run.</p>
-    <div class="btnrow"><button class="btn primary" id="progNew">Start a run</button><button class="btn" id="progDaily" title="Today's run: the same maps, boards and fights for everyone">Daily run</button><button class="btn" id="progResume" hidden>Resume</button></div><p class="notes" id="progBest"></p></div>
+
   <div class="btnrow"><button class="btn primary" id="toDraft">Draft your team</button><button class="btn" id="daily" title="Same board, map and fight seed for everyone today">Daily challenge</button><span class="streak mono" id="streak" hidden></span></div>
   <div class="panel fiveentry" id="fivePanel" hidden><h3>5 in a Row</h3><p class="notes">Today's five boards, the same for everyone. Draft a full $1,200 team for each and survive to 5:00 on every one; one retry for the whole run.</p>
     <div class="fivemaps" id="fiveMaps"></div>

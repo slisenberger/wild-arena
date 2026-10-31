@@ -118,7 +118,7 @@ document.querySelectorAll('#steps button[data-s]').forEach(b => b.addEventListen
 
 // ---------- draft ----------
 function renderBudget(){
-  if (S.prog){ const f = S.screen === 'fight'; $('spent').textContent = f ? '' : '$' + S.prog.money.toLocaleString(); $('meter').innerHTML = ''; $('budgetMax').textContent = f ? 'Progressive' : 'to spend'; return; } // no spoilers during a fight
+  if (S.prog){ const f = S.screen === 'fight'; $('spent').textContent = f ? '' : '$' + S.prog.money.toLocaleString(); $('meter').innerHTML = ''; $('budgetMax').textContent = f ? 'Food Chain' : 'to spend'; return; } // no spoilers during a fight
   const sp = spent();
   $('spent').textContent = '$' + sp.toLocaleString();
   const m = $('meter'); m.innerHTML = '';
@@ -1334,8 +1334,8 @@ $('runPrice').addEventListener('click', () => {
 });
 
 // ---------- progressive mode (a 7-round run up a price ladder; rules in progressive.js) ----------
-// prototype (Oct 27): replaces the switched-off Migration mode; hidden unless ?progressive=1 until the owner has played it
-const PROG_ON = (() => { try { return /[?&]progressive=1\b/.test(location.search); } catch(e){ return false; } })();
+// Food Chain (progressive mode): the main mode since Oct 31 (owner: "make the progressive mode the main mode and give it a name")
+const PROG_ON = true;
 { const p = document.querySelector('.progentry'); if (p && !PROG_ON){ p.hidden = true; p.style.display = 'none'; } }
 const PROG_KEY = 'wa-prog', PROG_BEST = 'wa-prog-best', progDailyKey = d => 'wa-prog-daily:' + d;
 const progDailySeed = d => dateSeed('wild-arena:progressive:' + d);
@@ -1498,7 +1498,7 @@ function renderHud(){
   const roundTxt = r.over ? (r.complete ? 'Run complete' : `Run over · ${r.won} of ${RN} rounds won`) : `Round ${r.k + 1}/${RN} · ${A.TERRAINS[r.terrain].name}`;
   const team = r.team.map(e => `<span class="hudpick" title="${esc(itemName(A.BY_ID[e.id]))}: ${e.hp.map(pctHp).join(', ')}, ${M.LEVEL_NAME[e.lv]}">${tokHTML(A.BY_ID[e.id], 24)}<i><b style="width:${Math.round(e.hp.reduce((s, x) => s + x, 0) / e.hp.length * 100)}%;background:${hpCol(Math.min(...e.hp))}"></b></i>${e.lv ? `<span class="stars">${'★'.repeat(e.lv)}</span>` : ''}</span>`).join('');
   const lives = `<span class="lives" title="Retries left: ${retriesLeft(r)}">${'♥'.repeat(retriesLeft(r))}<span class="off">${'♥'.repeat(M.PROG.RETRIES - retriesLeft(r))}</span></span>`;
-  hud.innerHTML = `<b>Progressive${r.daily ? ' · daily' : ''}</b><span>${roundTxt}</span><span class="money">$${r.money.toLocaleString()}</span>${lives}`
+  hud.innerHTML = `<b>Food Chain${r.daily ? ' · daily' : ''}</b><span>${roundTxt}</span><span class="money">$${r.money.toLocaleString()}</span>${lives}`
     + (team ? `<span class="hudteam">${team}</span>` : '')
     + `<span class="btnrow">${S.screen !== 'prog' ? '<button class="btn" data-hud="run" title="All seven rounds, your team and the last fight">Run overview</button>' : ''}<button class="btn" data-hud="abandon" title="${r.over ? 'Close the finished run' : 'End this run for good (it can\'t be resumed)'}">${r.over ? 'Close run' : 'Abandon run'}</button></span>`;
   hud.hidden = false;
@@ -1518,7 +1518,7 @@ $('progHud').addEventListener('click', e => {
 function runMvp(r){ const e = Object.entries(r.mvp || {}).sort((a, b) => b[1] - a[1])[0]; return e ? A.BY_ID[e[0]] : null; }
 function progShare(r){
   const last = r.log[r.log.length - 1], team = last ? last.team.map(id => A.BY_ID[id].abbr).join('+') || 'no animals' : 'no animals', mvp = runMvp(r);
-  return `Wild Arena ${r.daily ? 'daily progressive ' + r.daily : 'progressive'}: ${r.complete ? `all ${RN} rounds won` : `${r.won} of ${RN} rounds won`}, ${r.kills} kills, ${fmtT(r.total)} alive in all${mvp ? ', MVP ' + mvp.name : ''}, last team ${team}.`;
+  return `Wild Arena ${r.daily ? 'Food Chain daily ' + r.daily : 'Food Chain'}: ${r.complete ? `all ${RN} rounds won` : `${r.won} of ${RN} rounds won`}, ${r.kills} kills, ${fmtT(r.total)} alive in all${mvp ? ', MVP ' + mvp.name : ''}, last team ${team}.`;
 }
 const upsTxt = e => e.ups.map(u => `${itemName(A.BY_ID[u.id])} is now ${M.LEVEL_NAME[u.lv]} (${LV_FX[u.lv]})`).join('; ');
 function progBanner(e, res){
@@ -1711,12 +1711,12 @@ function actBtn(label, fn, primary, title){ const b = document.createElement('bu
 let actKey = '';
 function renderActBar(){
   const bar = $('actbar'), sc = S.screen, ended = !!(S.world && S.playT >= S.dur - 1e-6), banner = $('banner').querySelector('.btn.primary');
-  const key = [sc, ended, !!banner && banner.id, banner && banner.textContent, sc === 'draft' ? spent() + ':' + S.team.size + ':' + (S.prog ? S.prog.money + ':' + M.teamIds(S.prog).length : '') : ''].join('|');
+  const key = [sc, ended, !!banner && banner.id, banner && banner.textContent, sc === 'draft' ? spent() + ':' + S.team.size + ':' + (S.prog ? S.prog.money + ':' + M.teamIds(S.prog).length : '') : sc === 'arena' ? (r => r && !r.over ? 'run' + r.k : 'norun')(loadRun()) : ''].join('|');
   if (key === actKey) return; actKey = key;
   $('skipEnd').hidden = ended;
   const box = $('actbarIn'); box.innerHTML = '';
   const add = (...b) => b.forEach(x => box.appendChild(x));
-  if (sc === 'arena') add(actBtn('Draft your team', () => $('toDraft').click(), true), actBtn('Daily', () => startDaily(), false, 'Daily challenge: same board, map and fight seed for everyone today'));
+  if (sc === 'arena'){ const r = loadRun(), live = r && !r.over; add(actBtn(live ? `Resume run · round ${r.k + 1}` : 'Start a run', () => $(live ? 'progResume' : 'progNew').click(), true, 'Food Chain: seven rounds up the food chain'), actBtn('Quick game', () => $('toDraft').click(), false, 'One board, one fight')); }
   else if (sc === 'draft'){
     const n = S.prog ? M.teamIds(S.prog).length : S.team.size;
     const sum = document.createElement('span'); sum.className = 'sum';
@@ -1745,12 +1745,12 @@ const DUI_KEY = 'wa-draftui';
 const DUI = (() => {
   let q = null; try { q = new URLSearchParams(location.search).get('draftui'); } catch(e){}
   let stored = null; try { stored = localStorage.getItem(DUI_KEY); } catch(e){}
-  // a choice made with the switcher sticks without the flag; the progressive shop uses Versus unless you chose otherwise (owner)
-  const prog = /[?&]progressive=1\b/.test(location.search);
-  if (q == null && !(stored && DUI_NAMES[stored] && stored !== 'default') && !prog) return {on: false, ui: 'default'};
+  // Versus is the draft screen (owner, Oct 31); ?draftui=… shows the switcher (Default cards · Versus · List · Deck) and then a
+  // switcher choice sticks while the flag is on
+  const flag = q != null;
   let ui = DUI_NAMES[q] ? q : null;
-  if (!ui) ui = stored && DUI_NAMES[stored] ? stored : prog ? 'versus' : null;
-  return {on: true, ui: DUI_NAMES[ui] ? ui : 'default', sort: 'price', role: '', good: false, afford: false, open: null, flash: null, msg: '', deck: {key: null, i: 0, left: new Set()}};
+  if (!ui) ui = flag && stored && DUI_NAMES[stored] ? stored : 'versus';
+  return {on: true, switcher: flag, ui: DUI_NAMES[ui] ? ui : 'versus', sort: 'price', role: '', good: false, afford: false, open: null, flash: null, msg: '', deck: {key: null, i: 0, left: new Set()}};
 })();
 const DUI_HELP = {
   versus: 'Tap an animal to move it across; ⓘ shows its full stat line.',
@@ -1974,7 +1974,8 @@ function duiSet(ui){
 function draftAlt(){
   if (!DUI.on) return false;
   const box = duiEls(), alt = DUI.ui !== 'default';
-  $('duiSwitch').innerHTML = `<span class="label">Draft screen <span style="color:var(--gold)">prototype</span></span><div class="seg">${Object.entries(DUI_NAMES).map(([k, t]) => `<button data-ui="${k}" aria-pressed="${DUI.ui === k}">${t}</button>`).join('')}</div>`;
+  $('duiSwitch').hidden = !DUI.switcher;
+  $('duiSwitch').innerHTML = `<span class="label">Draft screen</span><div class="seg">${Object.entries(DUI_NAMES).map(([k, t]) => `<button data-ui="${k}" aria-pressed="${DUI.ui === k}">${t}</button>`).join('')}</div>`;
   box.hidden = !alt; for (const id of ['tiers', 'teamline', 'detail']) $(id).hidden = alt;
   // the explanatory text folds behind a tap on the prototype screens (owner: less to scroll past)
   let help = $('duiHelp'); if (!help){ help = document.createElement('details'); help.id = 'duiHelp'; help.className = 'duihelp'; $('boardLede').after(help); help.addEventListener('toggle', () => { DUI.helpOpen = help.open; }); }

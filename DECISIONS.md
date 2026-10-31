@@ -8,18 +8,16 @@ Each item has a recommendation; reply with a number and "yes", or your own call.
    found, a 1.3 SE difference; tundra moraine clearest) and the game didn't measurably get easier (paired −2 ± 6 s; best team
    per board 88 → 83%, typical team 165 → 175 s). Recommendation: play a few games with `?maps2=1` first; don't turn it on by
    default until a terrain-aware formation test shows a clear lift (stronger chokepoints next if it doesn't).
-1. **Progressive mode: what a retry undoes.** Built: a lost round goes back to the shop as the round opened (team,
+1. **Food Chain (progressive mode): what a retry undoes.** Built: a lost round goes back to the shop as the round opened (team,
    wounds, XP and money as they were; only the time alive counts), then a new fight seed. The alternative (the dead stay
    dead, no refund) made 17% of bot runs die in round 1 from a crippled retry. Recommendation: keep the undo.
-2. **Progressive mode: the premium herd.** In rounds 6–7 the round's top non-rare band is the $700 buffalo / bison herd
+2. **Food Chain: the premium herd.** In rounds 6–7 the round's top non-rare band is the $700 buffalo / bison herd
    (3 animals), so the premium enemy is a whole herd; that's the run's wall (round 6 first-try win 44%). Option: cap the
    premium at $400 (a rhino). Recommendation: playtest it as is first; the bot still completes 18% of runs.
-3. **Progressive mode: the honey badger story.** Round 1 is a big-cat round (tiger, lion, croc fill the best teams); the badger
+3. **Food Chain: the honey badger story.** Round 1 is a big-cat round (tiger, lion, croc fill the best teams); the badger
    barely kills. Tried overnight: dealing round 1 without the $100 big cats and croc (`PROG.R1_OUT`) made runs harder (2.6%
    complete) and the badger still didn't kill, so it's off. Real fix ideas: a badger-specific XP/kill source (it harries
    and steals kills?), or accept that its story is surviving (12% of runs still have it in round 4). Your call.
-5. **Compact draft cards on phones** (mobile UX audit, `research/ux_audit/README.md`): hide the stat bars on phone cards
-   (they stay in the detail panel) to cut the draft page roughly in half. Default if no answer: leave cards as they are.
 6. **5 in a Row:** the owner moved on to the progressive mode. Default: leave it hidden behind `?five=1`; delete later if
    unused.
 7. **New animals' open questions** (musk ox herd, gaur, walrus — now live): musk ox only on the tundra, or also the forest at a
@@ -61,3 +59,6 @@ Each item has a recommendation; reply with a number and "yes", or your own call.
   welcome as candidates.
 - Oct 26: Migration switched off until properly designed. Prices in $100 steps; the $50 tier deferred. Rares on 30% of
   boards. GCP for training; the launcher must fail gracefully.
+
+## Decided
+- Oct 31: **progressive mode is the main mode, named Food Chain** (owner: "make the progressive mode the main mode and give it a name"; the name is my pick: seven rounds climbing from $100 animals to the giants — say if you want another). It opens the arena screen and owns the bottom bar's main button; the single-board game stays below as **Quick game**. **Versus is the draft screen** for both (owner: "versus the default view"); the old cards, List and Deck stay reachable with `?draftui=…`. That retires item 5 (compact cards on phones).

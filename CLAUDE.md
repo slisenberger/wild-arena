@@ -75,7 +75,7 @@ count as 5:00). Live site: GitHub Pages serves `index.html` from `main`.
   fight each; least-squares fit of each animal's swing value (seconds gained by moving it from their side to
   yours), proposed prices ∝ swing ($100 steps, min $100). Note: the older whole-roster tools (`quick.js`,
   `camp.js`, `budget.js`, `tourney.js`) predate the board model and now fight all 22 animals.
-- `progressive.js` — **progressive mode** rules (its shop opens in the Versus draft layout unless the player picked another with the switcher; a switcher choice sticks without the `?draftui` flag) (prototype Oct 27, **hidden unless `?progressive=1`**, `PROG_ON` in ui.js; it
+- `progressive.js` — **progressive mode** rules (**the main mode since Oct 31, named "Food Chain" in the UI**: `PROG_ON = true`, the arena screen opens with its panel and the bottom bar's primary starts / resumes a run; the single-board game is "Quick game" below it; `?progressive=1` is no longer needed; the parenthetical history below is from the prototype days) (its shop opens in the Versus draft layout unless the player picked another with the switcher; a switcher choice sticks without the `?draftui` flag) (prototype Oct 27, **hidden unless `?progressive=1`**, `PROG_ON` in ui.js; it
   replaced the switched-off Migration mode, whose `migration.js`/`migration_bot.js` and `?migration=1` are gone). Pure JS,
   bundled by `build.js` after sim.js as `window.Progressive`: 7 rounds up a price ladder (`PROG.CAP/BOARD/TOTAL`), a premium
   enemy from round 3, top-ups, kill bonus, rest/heal, scars, XP/levels, two retries (`PROG` constants). Engine hooks in sim.js
@@ -592,6 +592,6 @@ round. Report ± standard errors.
      map; `fiveSeed(date, k, 'board'|'fight'|'retry')`), full-budget draft each, a board counts only if you survive to 5:00,
      one retry per run (new fight seed, redraft allowed). Run saved in `wa-five-run` (resumes after reload), best per day
      `wa-five-best:<date>` ({wins, time}), share line with 🟩🟨🟧🟥⬜ pips. Arena panel (`#fivePanel`) lists today's five maps up front and run progress. Owner to playtest before it goes on the arena screen.
-   - Prototype (Oct 27, ui.js `DRAFT_UIS` block, **hidden unless `?draftui=versus|list|deck|1`**): alternative draft screens with a
+   - **Versus is the draft screen for every mode since Oct 31** (owner); `?draftui=…` shows the switcher (a switcher choice then sticks while the flag is on). Prototype history: (Oct 27, ui.js `DRAFT_UIS` block, hidden unless `?draftui=versus|list|deck|1`): alternative draft screens with a
      Default · Versus · List · Deck switcher (`wa-draftui`); one hook in `renderDraft` (`draftAlt`). All host the progressive shop.
      `research/draft_ui/` (README, `check.js`, tap/scroll numbers). Owner to play and pick.
