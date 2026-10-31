@@ -602,7 +602,9 @@ function outsideZone(w, u){ const z = w.zb; return !!z && z.p > 0 && (u.x < z.x0
 function hazardHurt(w, u, dmg){
   u.hp -= dmg; u.st.taken += dmg;
   if (u.hp > 0) return;
-  if (u.side === 'H'){ u.hp = 0; u.state = 'dead'; u.deathT = w.t; log(w, `You were caught by the ${HAZARD_NAME[w.zone.kind]}`, 'death', u); w.over = true; w.result = {survived:false, t:w.t, score:w.t, killer:w.zone.kind}; return; }
+  if (u.side === 'H'){ // the hazard's last tick: the animal that hit you in the last 5 s gets the kill (it did the damage), else the hazard
+    const by = u.lastHitBy && u.lastHitBy.side === 'E' && w.t - (u.lastHitT ?? -99) < 5 ? u.lastHitBy : null;
+    u.hp = 0; u.state = 'dead'; u.deathT = w.t; log(w, by ? `You were killed by ${nameOf(by)} in the ${HAZARD_NAME[w.zone.kind]}` : `You were caught by the ${HAZARD_NAME[w.zone.kind]}`, 'death', u); w.over = true; w.result = {survived:false, t:w.t, score:w.t, killer: by ? by.s.id : w.zone.kind}; return; }
   kill(w, u, null);
 }
 // ---------- helpers ----------
@@ -1092,7 +1094,7 @@ function sweep(w, a, main){
   if (n){ sig(w, a, 'sweep'); log(w, `${capName(a)} sweeps ${n + 1} attackers at once`, 'sweep', a); }
 }
 function applyDamage(w, a, t, dmg){
-  t.hp -= dmg; t.lastHitBy = a;
+  t.hp -= dmg; t.lastHitBy = a; t.lastHitT = w.t;
 
   a.st.dealt += dmg; t.st.taken += dmg; if (t.side !== 'E') a.st.foe += dmg; // foe: damage to your side (stat only)
   if (a.side === 'P' && t.target === w.human) a.st.protect += dmg;
@@ -1502,7 +1504,7 @@ function step(w){
       if (a.latchOn === b || b.latchOn === a || a.rider === b || b.rider === a) continue;
       const dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy), m = (a.r + b.r) * .85;
       if (d < m && d > 1e-4){
-        const o = m - d, ta = b.s.mass / (a.s.mass + b.s.mass);
+        const o = m - d, ta = a.side === 'H' && b.side === 'P' ? 0 : b.side === 'H' && a.side === 'P' ? 1 : b.s.mass / (a.s.mass + b.s.mass); // your own animals make way for you (they used to shove you into the closing fire)
         a.x -= dx/d*o*ta; a.y -= dy/d*o*ta; b.x += dx/d*o*(1-ta); b.y += dy/d*o*(1-ta);
       }
     }
@@ -1519,6 +1521,7 @@ function step(w){
       if (d < m && d > 1e-4){ a.x = t.x + dx/d*m; a.y = t.y + dy/d*m; }
     }
   }
+  if (w.pb){ const P = w.pb; for (const u of units) if (active(u) && !u.riding && !u.onTree && !u.routing){ u.x = clamp(u.x, P.x0 + u.r * .6, P.x1 - u.r * .6); u.y = clamp(u.y, P.y0 + u.r * .6, P.y1 - u.r * .6); } } // (maps2) nobody is shoved through the border
   if (w.trees.some(t => t.fell)){
     for (const t of w.trees) if (t.fell){ (w.fallen = w.fallen || []).push({x: t.x, y: t.y, r: t.r, t: w.t}); if (w.human.onTree === t){ w.human.onTree = null; log(w, 'Your tree goes down and you scramble clear', 'danger', w.human); } for (const o of w.units) if (o !== w.human && o.onTree === t) o.onTree = null; }
     w.trees = w.trees.filter(t => !t.fell);
@@ -1902,6 +1905,10 @@ function moveHuman(w, h){
   // stay clear of the field edges and of the closing hazard (hard push once you are in it)
   const zb = w.zb && w.zb.p > 0 ? w.zb : pbOf(w), out = outsideZone(w, h), ek = out ? 4 : 1;
   if (h.x < zb.x0 + 4) dx += ek; if (h.x > zb.x1 - 4) dx -= ek; if (h.y < zb.y0 + 4) dy += ek; if (h.y > zb.y1 - 4) dy -= ek;
+  if (out && w.zone && w.obst){ // (maps2) caught in the hazard: make for the safe box's middle, round any wall (trees and the border used to keep you running along its edge until you burned)
+    let tx = w.zone.cx, ty = w.zone.cy; const r = m2Route(w, h, tx, ty); if (r){ tx = r.x; ty = r.y; }
+    const gx2 = tx - h.x, gy2 = ty - h.y, gm = Math.hypot(gx2, gy2) || 1; dx += gx2 / gm * 6; dy += gy2 / gm * 6;
+  }
   const m = Math.hypot(dx, dy);
   if (m < .05){ damp(h); return; }
   const urgent = (nearest && nd < 10) || out;
