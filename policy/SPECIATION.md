@@ -261,3 +261,9 @@ each species develop its own realistic fighting style. This note is the plan; th
   hunting you, buffalo ignoring lions to reach you), while idling, stalling, avoiding the fight or giving up is not. The
   engagement gates (idle, noContact, longIdle, stillLong, the quiet ending) are the ones that matter; species realism stays
   in the engine's physics and signature moves.
+- **Owner framing (Oct 31): "everyone should engage the way they'd realistically would conditioned on being part of a hunting
+  team against the human."** Species realism stays in training; it gives way only where it directly conflicts with going for
+  the objective. Implemented in the realism telemetry (move_run.js): closing on you never counts against longChase, farHunt or
+  farSprint, and the buffalo check counts only while the buffalo is not going for you (fighting your animals is helping).
+  Re-check, 600 fights vs the heuristic: live charger_target_m1 still fails it (with one of your lions within 15 m and not
+  going for you, a buffalo targets the lion .83 -> .26); live cat_target_e1 passes every gate (style 1.00).

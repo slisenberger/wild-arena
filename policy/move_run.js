@@ -120,17 +120,19 @@ function runFight(f, weights, arch){
           if (st === 'close' && v > XTEL.chaseSpd * u.s.spd) r.sprintM += v * DT;              // metres run down at speed
         }
         // long chase: closing in at > 60% of its top speed for > 8 s on end
-        if (st === 'close' && Math.hypot(u.vx, u.vy) > XTEL.chaseSpd * u.s.spd){ s.chase = (s.chase || 0) + DT; if (s.chase > XTEL.longChase) r.longChaseT += DT; } else s.chase = 0;
-        if (st === 'close' && I.dist(u, t) > XTEL.far) r.farHuntT += DT;   // hunting something far across the field
+        // owner rule (Oct 31): species realism holds except where it directly conflicts with going for the objective, so
+        // closing on YOU never counts against these realism gates (long chases, hunting across the field)
+        if (st === 'close' && t !== H && Math.hypot(u.vx, u.vy) > XTEL.chaseSpd * u.s.spd){ s.chase = (s.chase || 0) + DT; if (s.chase > XTEL.longChase) r.longChaseT += DT; } else s.chase = 0;
+        if (st === 'close' && t !== H && I.dist(u, t) > XTEL.far) r.farHuntT += DT;   // hunting something far across the field (you excepted)
         // realism (owner, Oct 31: "Buffalo attacking lions preferably seems ok. Enemy lions at least"): a lion-killer (Cape
         // buffalo, solo or herd) turns on the other side's lions near it: exposure = time with one of your lions (lone or
         // coalition) within 15 m; mob = of that, time spent targeting a lion
-        if (I.has(u, 'lionKiller')){ r.mobLife += DT; if (w.units.some(o => o.side === 'P' && I.sp(o.s) === 'lion' && I.active(o) && I.dist(u, o) < 15)){ r.mobExpT += DT; if (t && t.s && I.sp(t.s) === 'lion') r.mobT += DT; } }
+        if (I.has(u, 'lionKiller') && t !== H){ r.mobLife += DT; if (w.units.some(o => o.side === 'P' && I.sp(o.s) === 'lion' && I.active(o) && I.dist(u, o) < 15)){ r.mobExpT += DT; if (t && t.s && I.sp(t.s) === 'lion') r.mobT += DT; } }
         if (u.s.id === 'honeybadger'){ r.badgerLife += DT; if (eng && (u.intent === 1 || u.intent === 3 || u.intent === 4)) r.badgerBackT += DT; } // fearless: never waits, regroups or backs off
       }
       if (dd > 0) r.hits++;
       // spec telemetry: sprinting at a target > 30 m off; hits from behind a moving target; contact while it flees
-      if (st === 'close' && t){ r.closeT += DT; if (I.dist(u, t) > STEL.farRush && Math.hypot(u.vx, u.vy) > STEL.sprint * u.s.spd) r.farSprintT += DT; }
+      if (st === 'close' && t){ r.closeT += DT; if (t !== H && I.dist(u, t) > STEL.farRush && Math.hypot(u.vx, u.vy) > STEL.sprint * u.s.spd) r.farSprintT += DT; }
       if (dd > 0 && t){ const tv = Math.hypot(t.vx, t.vy); if (tv > STEL.moving){ r.hitsOnMoving++; if (t.vx * (u.x - t.x) + t.vy * (u.y - t.y) < 0) r.rearHits++; } }
       if (st === 'fight' && t && stateOf(t) === 'flee') r.fleeContactT += DT;
       if (st === 'fight' || dd > 0 || u.latchedBy) s.lastC = w.t;
