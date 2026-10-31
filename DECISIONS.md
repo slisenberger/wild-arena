@@ -3,12 +3,6 @@
 Each item has a recommendation; reply with a number and "yes", or your own call. Decided items move to the bottom.
 
 ## Open
-17. **Does the "realism can bend for the team's objective" rule lift the buffalo check?** (Your rule, relayed by the training
-   session Oct 31: "realism can be violated ONLY IF it allows for the grounding assumption of animals know their team and ultimate
-   objective"; e.g. kickers may hunt on offense, so that gate is lifted for the kicker run.) The charger nets learn to have buffalo
-   steer clear of predators because that helps them get at you. Recommendation: keep the buffalo check. Mobbing lions is the buffalo's
-   signature behaviour (like gates on physical ability, signatures stay), and the realistic charger net is already as strong as the
-   live one.
 12. **Two-sided species training: how much a sourced tendency may cost** (training session, `research/speciation_strategy.md` on
    `m4/guard-target`: animals on both sides learn per species, with realism checks shaping the reward). Recommendation: a well-sourced
    tendency (e.g. buffalo mobbing lions) may cost up to all of the gain training finds, but never make an animal weaker than today.
@@ -78,6 +72,7 @@ Each item has a recommendation; reply with a number and "yes", or your own call.
   boards. GCP for training; the launcher must fail gracefully.
 
 ## Decided
+- Oct 31: **the buffalo realism check stays, and it is about lions** (owner: "Buffalo attacking lions preferably seems ok. Enemy lions at least."): with an enemy lion (lone or coalition) within 15 m, a buffalo must target it at least as often as the hand-written rules do (0.82); the live charger net is at 0.23, so the charger retrain (es17) has to pass this before it replaces it.
 - Oct 31: **every animal on attack takes part in killing the human; it is the only assumption above realism** (owner). Kickers, lumbering herbivores and the walrus get a prototype (training session, behind a flag), then a reprice.
 - Oct 31: **terrain features (maps2) are the default** (owner: "I like maps2 … feels better"); the old open maps stay behind `?maps2=0`. Tree-hiding stalls fixed the same day.
 - Oct 31: **progressive mode is the main mode, named Safari** (owner: "make the progressive mode the main mode and give it a name", then "I like safari as a name"; briefly shipped as Food Chain). It opens the arena screen and owns the bottom bar's main button; the single-board game stays below as **Quick game**. **Versus is the draft screen** for both (owner: "versus the default view"); the old cards, List and Deck stay reachable with `?draftui=…`. That retires item 5 (compact cards on phones).
