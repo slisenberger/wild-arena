@@ -254,3 +254,10 @@ each species develop its own realistic fighting style. This note is the plan; th
   badger's fearlessness, cat stalking geometry) stay, since those aren't choices the objective can justify. Open question
   for the owner: buffalo leaving lions alone to go for the human also serves the objective; does the rule lift the buffalo
   gate too? Until answered, the buffalo gate stays (es15).
+- **Owner clarification (Oct 31): "I dont care about predatoe vs lion. I just am opining it doesnt violate game spirit the
+  way disengaging does."** The buffalo-vs-lion tendency is allowed, not required: mobsPred / mobExposure are report-only now,
+  and the realistic-charger runs (es13/es15/es17) were stopped; live charger_target_m1 is fine as it is. **The rule for
+  training is: no disengaging.** Animals know their team and the objective; any choice that serves it is in spirit (kickers
+  hunting you, buffalo ignoring lions to reach you), while idling, stalling, avoiding the fight or giving up is not. The
+  engagement gates (idle, noContact, longIdle, stillLong, the quiet ending) are the ones that matter; species realism stays
+  in the engine's physics and signature moves.

@@ -136,8 +136,10 @@ const SPEC_X = {
   // "Buffalo attacking lions preferably"): with one of your lions within 15 m, the share of that time a buffalo targets a lion
   // must not fall below the heuristic's; and the exposure itself must not fall (no meeting the rule by keeping away from
   // lions). Records before Oct 31 read 0.
-  charger: {mobsPred: {num: r => r.mobT || 0, den: r => r.mobExpT || 0, kind: 'down', tol: .05, gate: true},
-            mobExposure: {num: r => r.mobExpT || 0, den: r => r.mobLife || 0, kind: 'down', tol: .05, gate: true}},
+  // Owner, Oct 31: "I dont care about predatoe vs lion. I just am opining it doesnt violate game spirit the way disengaging
+  // does": report-only (info), never a gate. What breaks the game is disengaging (the idle / noContact / longIdle metrics).
+  charger: {mobsPred: {num: r => r.mobT || 0, den: r => r.mobExpT || 0, kind: 'info'},
+            mobExposure: {num: r => r.mobExpT || 0, den: r => r.mobLife || 0, kind: 'info'}},
 };
 const DEFS_SPEC = Object.fromEntries(Object.keys(DEFS).filter(a => a !== 'guard').map(a => [a, Object.assign({}, DEFS[a], SPEC_INFO, SPEC_X[a] || {})]));
 const defsOf = (arch, spec) => { const d = (spec ? DEFS_SPEC : DEFS)[arch || 'harrier'] || (spec && DEFS[arch || 'harrier']); if (!d) throw new Error('no reward metrics for archetype ' + arch); return d; };
