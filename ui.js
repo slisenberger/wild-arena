@@ -1345,7 +1345,7 @@ $('runPrice').addEventListener('click', () => {
 const PROG_ON = true;
 { const p = document.querySelector('.progentry'); if (p && !PROG_ON){ p.hidden = true; p.style.display = 'none'; } }
 const PROG_KEY = 'wa-prog', PROG_BEST = 'wa-prog-best', progDailyKey = d => 'wa-prog-daily:' + d;
-const progDailySeed = d => dateSeed('wild-arena:progressive:' + d);
+const progDailySeed = d => { const k = typeof DAILY_SALT !== 'undefined' && DAILY_SALT[d]; return dateSeed('wild-arena:progressive:' + d + (k ? ':' + k : '')); }; // a day the bot found near-unwinnable is re-dealt (research/daily_check.js)
 const RN = M.PROG.ROUNDS;
 function readJSON(k){ try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch(e){ return null; } }
 function writeJSON(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }

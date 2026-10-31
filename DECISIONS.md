@@ -3,6 +3,17 @@
 Each item has a recommendation; reply with a number and "yes", or your own call. Decided items move to the bottom.
 
 ## Open
+12. **Two-sided species training: how much a sourced tendency may cost** (training session, `research/speciation_strategy.md` on
+   `m4/guard-target`: animals on both sides learn per species, with realism checks shaping the reward). Recommendation: a well-sourced
+   tendency (e.g. buffalo mobbing lions) may cost up to all of the gain training finds, but never make an animal weaker than today.
+13. **Who writes the realism checks per species.** Recommendation: a zoology subagent drafts them from sources; you spot-check 8
+   species; anecdotal sources count at most half (confidence ≤ .5).
+14. **Network size:** ~8k weights per animal class instead of ~5k. Recommendation: allow it, then check the game still runs
+   smoothly on a phone (frame time).
+15. **Training compute (GCP CPU quota):** the training session asked you for a quota of 1,000. Recommendation: raise it after
+   its Stage 4, or sooner if you want results faster.
+16. **Playtest before release:** the whole jointly trained set goes behind `?smart=1` for you to play before it goes live.
+   Recommendation: yes.
 11. **Enemy chargers' learned targets: buffalo shy away from predators** (training session's speciation report, Oct 31): the live
    `charger_target_m1` uses one rule for every charger (onto you and smaller animals, away from predators), and the buffalo
    avoids predators the most, which is the opposite of real buffalo (they mob lions). Recommendation: keep it live for now (it is
@@ -17,8 +28,8 @@ Each item has a recommendation; reply with a number and "yes", or your own call.
    wounds, XP and money as they were; only the time alive counts), then a new fight seed. The alternative (the dead stay
    dead, no refund) made 17% of bot runs die in round 1 from a crippled retry. Recommendation: keep the undo.
 2. **Safari: the premium herd.** In rounds 6–7 the round's top non-rare band is the $700 buffalo / bison herd
-   (3 animals), so the premium enemy is a whole herd; that's the run's wall (round 6 first-try win 44%). Option: cap the
-   premium at $400 (a rhino). Recommendation: playtest it as is first; the bot still completes 18% of runs.
+   (3 animals), so the premium enemy is a whole herd; that's the run's wall (round 6 first-try win 34% after the Oct 31 retune). Option: cap the
+   premium at $400 (a rhino). Recommendation: playtest it as is first; the bot still completes 20% of runs.
 3. **Safari: the honey badger story.** Round 1 is a big-cat round (tiger, lion, croc fill the best teams); the badger
    barely kills. Tried overnight: dealing round 1 without the $100 big cats and croc (`PROG.R1_OUT`) made runs harder (2.6%
    complete) and the badger still didn't kill, so it's off. Real fix ideas: a badger-specific XP/kill source (it harries

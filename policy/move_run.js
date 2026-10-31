@@ -66,7 +66,8 @@ function setPolicy(cfg, f, arch, weights){
   if (f.live) for (const [k, v] of Object.entries(I.LIVE || {})) if (v && (k !== arch || (weights && /^target-/.test(weights.kind)))) mp[k] = v;
   const by = {}; // target choice: with f.live the shipped target scorers (policy/weights/live.json "target") too, except the one being trained/evaluated
   if (f.live) for (const [k, v] of Object.entries(I.LIVE_TARGET || {})) if (v && !(k === arch && weights && /^target-/.test(weights.kind))) by[k] = v;
-  if (weights && /^target-/.test(weights.kind)){ by[arch] = weights; cfg.policyStats = {}; if (weights.sample) cfg.policyTrace = []; } // target scorer: the arch keeps its shipped movement policy; sample = PPO training
+  if (weights && weights.kind === 'target-none'){ /* the arch keeps its shipped movement and the heuristic's targets (no target scorer) */ }
+  else if (weights && /^target-/.test(weights.kind)){ by[arch] = weights; cfg.policyStats = {}; if (weights.sample) cfg.policyTrace = []; } // target scorer: the arch keeps its shipped movement policy; sample = PPO training
   else if (weights) mp[arch] = weights;
   if (Object.keys(by).length) cfg.policy = {byArch: by};
   if (Object.keys(mp).length){ cfg.movePolicy = mp; cfg.moveStats = {}; }
