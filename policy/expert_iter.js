@@ -56,7 +56,11 @@ if (!s) throw new Error('no state ' + file + ' (run init first)');
 if (s.simHash !== R.simHash() && !process.env.ALLOW_ENGINE_MISMATCH) throw new Error(`${file} was made with sim ${s.simHash}; this checkout has ${R.simHash()}`);
 const c = s.config, T = +opt.threads || c.threads, HOURS = +opt.hours || 0, T0 = Date.now(), fo = {arch: c.arch, seed: c.seed, withLive: true, goal: c.goal, spec: c.spec, withCat: c.arch === 'guard' && c.only === 'cat'};
 const W = theta => Object.assign({}, s.P0, {theta: theta.slice(), targetsOnly: true}, s.margin != null ? {margin: s.margin} : {}); // --loss=adv: the learned switching threshold // the net only re-ranks targets (its labels only compare targets)
-function pool(jobs, extra){
+// WA_DIST (a store root: gs://.../runs/<run>/dist or a folder): spread big batches over helper VMs (policy/dist.js)
+const DIST = process.env.WA_DIST, Dm = DIST ? require('./dist.js') : null;
+function pool(jobs, extra){ return pool0(jobs, extra).then(r => r.sort((x, y) => x.i - y.i || (x.k < y.k ? -1 : x.k > y.k ? 1 : 0))); } // results in job order whatever the thread count or split (data order feeds training)
+function pool0(jobs, extra){
+  if (DIST && jobs.length >= +(process.env.WA_DIST_MIN || 48)){ const coll = jobs[0].k === 'collect'; return Dm.distPool(DIST, __filename, jobs, Object.assign({arch: c.arch, o: c}, extra || {}), {threads: T, chunk: +process.env.WA_DIST_CHUNK || (coll ? 24 : 200)}); } // WA_DIST_MIN / WA_DIST_CHUNK: tests
   return Promise.all([...Array(T).keys()].map(k => new Promise((res, rej) => { const w = new Worker(__filename, {workerData: Object.assign({jobs: jobs.filter((_, q) => q % T === k), arch: c.arch, o: c}, extra || {})}); w.on('message', res); w.on('error', rej); }))).then(p => p.flat());
 }
 async function evalW(theta, poolName, idx, n){
@@ -90,7 +94,8 @@ const timeUp = () => HOURS && Date.now() - T0 > HOURS * 3600e3;
     }
   }
   if (!s.test){
-    s.margin = s.best.margin != null ? s.best.margin : s.P0.margin; const t = await evalW(s.best.theta, 'test', 0, c.test); // the init (today's game) keeps its own margin s.test = t; s.phase = 'done'; save(s);
+    s.margin = s.best.margin != null ? s.best.margin : s.P0.margin; const t = await evalW(s.best.theta, 'test', 0, c.test); // the init (today's game) keeps its own margin
+    s.test = t; s.phase = 'done'; save(s); if (DIST) Dm.markDone(DIST);
     log(`[test] best (${s.best.from}) vs today's ${c.arch} on ${t.n} held-out fights: ${t.diff >= 0 ? '+' : ''}${t.diff.toFixed(3)} ± ${t.se.toFixed(3)} (${Math.abs(t.diff) > 2 * t.se ? 'beyond' : 'within'} 2 SE) | style ${t.style.toFixed(3)} gates [${t.gates}] drift [${t.drift.join('; ')}] | your survival ${(100 * t.surv).toFixed(1)} pts`);
   }
 })().catch(e => { console.error(e); process.exit(1); });

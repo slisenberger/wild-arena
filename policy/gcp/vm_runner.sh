@@ -13,12 +13,14 @@ LOCAL=${LOCAL:-0}
 if [ "$LOCAL" = 1 ]; then : "${BUCKET:?}" "${SWEEP:?}" "${RUNS:?}" "${REPO_DIR:?}"; COMMIT=${COMMIT:-}; HOURS=${HOURS:-0.05}; THREADS=${THREADS:-2}; SYNC_S=${SYNC_S:-5}
 else
   BUCKET=$(meta bucket); SWEEP=$(meta sweep); RUNS=$(meta runs); COMMIT=$(meta commit); HOURS=$(meta hours); THREADS=$(meta threads); SYNC_S=${SYNC_S:-120}
-  REPO=$(meta repo); REPO_DIR=/opt/wild-arena
+  REPO=$(meta repo); REPO_DIR=/opt/wild-arena; ROLE=$(meta role)
 fi
+ROLE=${ROLE:-leader}
 # storage: gs://... via gcloud, or a local folder in tests
 put(){ if [[ "$BUCKET" == gs://* ]]; then gcloud storage cp -q "$1" "$BUCKET/$2" >/dev/null 2>&1; else mkdir -p "$(dirname "$BUCKET/$2")" && cp "$1" "$BUCKET/$2"; fi; }
 get(){ if [[ "$BUCKET" == gs://* ]]; then gcloud storage cp -q "$BUCKET/$1" "$2" >/dev/null 2>&1; else cp "$BUCKET/$1" "$2" 2>/dev/null; fi; }
 status(){ # run state [note]
+  [ "${ROLE:-leader}" = helper ] && return 0   # helpers never write a run's status (the leader owns it)
   local f; f=$(mktemp); printf '{"run":"%s","state":"%s","host":"%s","t":%s,"note":%s}\n' "$1" "$2" "$(hostname)" "$(date +%s)" "$(printf '%s' "${3:-}" | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>console.log(JSON.stringify(s.slice(-2000))))' 2>/dev/null || echo '""')" > "$f"
   put "$f" "sweeps/$SWEEP/status/$1.json"; rm -f "$f"; }
 if [ "$LOCAL" != 1 ]; then
@@ -33,6 +35,10 @@ cd "$REPO_DIR"
 export NODE_OPTIONS="--max-old-space-size=$(( $(awk '/MemTotal/{print int($2/1024)}' /proc/meminfo) * 3 / 4 ))"   # big heaps: expert iteration keeps all its data in memory
 get "sweeps/$SWEEP/manifest.json" /tmp/manifest.json || { echo "no manifest"; exit 1; }
 pids=()
+if [ "$ROLE" = helper ]; then   # helper VM (policy/dist.js): run chunks of each assigned run's fights until it is done, then delete itself
+  for r in ${RUNS//+/ }; do node policy/dist_helper.js "$BUCKET/sweeps/$SWEEP/runs/$r/dist" --threads="$THREADS" --hours="$HOURS" > "/tmp/helper_$r.out" 2>&1 & pids+=($!); done
+  RUNS=""
+fi
 for r in ${RUNS//+/ }; do
   ( d="policy/runs/gcp/$r"; mkdir -p "$d"; f="$d/state.json"
     get "sweeps/$SWEEP/runs/$r/state.json" "$f" && get "sweeps/$SWEEP/runs/$r/state.json.log" "$f.log" || true   # resume if saved
@@ -44,6 +50,8 @@ for r in ${RUNS//+/ }; do
     TR=policy/train.js; case "$(node -p "require('./$f').config.trainer || ''" 2>/dev/null)" in ppo) TR=policy/ppo_target.js;; expert) TR=policy/expert_iter.js;; esac   # milestone-4 runs (manifest args --trainer=ppo|expert)
     get "sweeps/$SWEEP/runs/$r/state.json.data.jsonl.gz" "$f.data.jsonl.gz" 2>/dev/null || true; touch "$d/.dsync"   # expert iteration's data (resume)
     status "$r" running "$(node $TR report "$f" 2>/dev/null | head -1)"
+    nh=$(node -e "const m=require('/tmp/manifest.json'),x=m.runs.find(q=>q.name===process.argv[1])||{};console.log(+(x.helpers!=null?x.helpers:(m.helpers||0)))" "$r" 2>/dev/null || echo 0)
+    if [ "${nh:-0}" -gt 0 ] && [ "$TR" = policy/expert_iter.js ]; then export WA_DIST="$BUCKET/sweeps/$SWEEP/runs/$r/dist"; else unset WA_DIST; fi   # helpers share this run's fights
     node $TR run "$f" --threads="$THREADS" --hours="$HOURS" > "$d/run.out" 2>&1 & tp=$!
     while kill -0 $tp 2>/dev/null; do sleep "$SYNC_S"; [ -f "$f.data.jsonl.gz" ] && [ "$f.data.jsonl.gz" -nt "$d/.dsync" ] && put "$f.data.jsonl.gz" "sweeps/$SWEEP/runs/$r/state.json.data.jsonl.gz" && touch "$d/.dsync"; [ -f "$f" ] && put "$f" "sweeps/$SWEEP/runs/$r/state.json"; [ -f "$f.log" ] && put "$f.log" "sweeps/$SWEEP/runs/$r/state.json.log"; status "$r" running "$(node $TR report "$f" 2>/dev/null | head -1)"; done
     wait $tp; rc=$?

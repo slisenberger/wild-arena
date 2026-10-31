@@ -38,3 +38,12 @@ node policy/gcp/gcp.js collect ID        # states/logs/reports -> policy/runs/gc
 Tested locally (`--bucket=<folder>` runs the VM script in-process): normal run, init crash (isolated, capped retries),
 a killed runner (→ lost → resumed from checkpoint with a single init), a time-budget pause resumed across 3 attempts
 to completion, and the dry-run gcloud commands.
+
+## Helper VMs: one run over many machines (Oct 31)
+An expert-iteration run can spread its fights over helper VMs: give the run entry `"helpers": K` (or `launch --helpers=K`).
+The leader (WA_DIST = `<bucket>/sweeps/<id>/runs/<run>/dist`) cuts each batch (collect: 24 fights per chunk; evals: 200 jobs)
+into chunks in the bucket; helpers (`policy/dist_helper.js`) and the leader claim chunks atomically (`--if-generation-match=0`),
+run them and write the results. A claim older than 30 min without a result is retaken (preempted helper), and a resumed
+leader reuses the chunks it already wrote. Results are sorted by job, so a split run is byte-identical to a one-VM run
+(checked locally: 2 threads vs 1, leader alone, leader + 3 helpers). `gcp.js helpers <ID> --n=K` tops up running runs (e.g.
+after a quota increase); resume re-adds them. The CPU quota (CPUS_ALL_REGIONS, 64 today) caps leaders + helpers together.
