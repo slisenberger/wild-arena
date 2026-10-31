@@ -60,8 +60,8 @@ const team = p => p.evaluate(() => [...window.__wa.team].sort().join(','));
       const ctx = await b.newContext(dev);
       await ctx.addInitScript(() => { let a = 12345; Math.random = () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; });
       const p = await ctx.newPage(), errs = []; p.on('pageerror', e => errs.push(String(e)));
-      await p.goto(FILE + (ui === 'default' ? '' : '?draftui=' + ui));
-      const T = thumb(p); await T.tap('#actbar .primary'); // Draft your team
+      await p.goto(FILE + '?draftui=' + ui);
+      const T = thumb(p); await T.tap('#actbar button:has-text("Quick game")'); // a quick game's draft (the bar's primary starts a Food Chain run)
       const shot = n => p.screenshot({ path: path.join(OUT, `${dn}_${ui}_${n}.png`), scale: 'css' });
       if (dn !== 'small') await shot('1_open');
       const h0 = await p.evaluate(() => document.documentElement.scrollHeight);
@@ -126,7 +126,7 @@ const team = p => p.evaluate(() => [...window.__wa.team].sort().join(','));
       else console.log(ui, 'prog: no survivor to sell (lost round 1)');
     }
     // 5 in a Row
-    await p.goto(FILE + '?five=1&draftui=' + ui); await p.evaluate(() => localStorage.removeItem('wa-five-run')); await p.reload();
+    await p.goto(FILE + '?five=1&draftui=' + ui); await p.evaluate(() => { localStorage.removeItem('wa-five-run'); localStorage.removeItem('wa-prog'); }); await p.reload();
     await p.click('#five'); await p.waitForTimeout(150); ok(`${ui} five: draft opens in this design`, await p.locator('#draftAlt:not([hidden])').count());
     await draftFull(p, ui, T); await p.click('#actbar .primary'); await p.waitForTimeout(150); ok(`${ui} five: fight`, await vis('s-fight'));
     // daily
@@ -138,13 +138,13 @@ const team = p => p.evaluate(() => [...window.__wa.team].sort().join(','));
   }
   // switcher: flipping keeps the team and remembers the choice
   { const ctx = await b.newContext(DEV.phone), p = await ctx.newPage();
-    await p.goto(FILE + '?draftui=versus'); await p.click('#actbar .primary'); await draftFull(p, 'versus', thumb(p), 2); const t = await team(p);
+    await p.goto(FILE + '?draftui=versus'); await p.click('#actbar button:has-text("Quick game")'); await draftFull(p, 'versus', thumb(p), 2); const t = await team(p);
     for (const u of ['list', 'deck', 'default', 'versus']){ await p.click(`#duiSwitch [data-ui="${u}"]`); await p.waitForTimeout(80); }
     await p.click('#duiSwitch [data-ui="list"]');
     ok('switcher keeps the team across designs', await team(p) === t);
-    await p.goto(FILE + '?draftui=1'); await p.click('#actbar .primary'); ok('switcher remembers the choice (?draftui=1 opens List)', await p.locator('.lrows').count());
+    await p.goto(FILE + '?draftui=1'); await p.click('#actbar button:has-text("Quick game")'); ok('switcher remembers the choice (?draftui=1 opens List)', await p.locator('.lrows').count());
     // deck: a real touch swipe right takes the card, left leaves it
-    await p.goto(FILE + '?draftui=deck'); await p.click('#actbar .primary'); await p.evaluate(() => document.getElementById('dkCard').scrollIntoView({ block: 'center' }));
+    await p.goto(FILE + '?draftui=deck'); await p.click('#actbar button:has-text("Quick game")'); await p.evaluate(() => document.getElementById('dkCard').scrollIntoView({ block: 'center' }));
     const swipe = async dx => { const r = await p.evaluate(() => { const b = document.getElementById('dkCard').getBoundingClientRect(); return { x: b.left + b.width / 2, y: b.top + b.height / 2 }; }); const cdp = await ctx.newCDPSession(p);
       await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: r.x, y: r.y }] });
       for (let i = 1; i <= 10; i++) await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: r.x + dx * i / 10, y: r.y + 3 }] });
@@ -153,7 +153,7 @@ const team = p => p.evaluate(() => [...window.__wa.team].sort().join(','));
     await swipe(-160); const second = await p.evaluate(() => document.querySelector('#dkCard [data-info]').dataset.info);
     ok('deck: swipe left leaves the card', second !== first && !(await p.evaluate(id => window.__wa.team.has(id), first)));
     await swipe(160); ok('deck: swipe right takes the card', await p.evaluate(id => window.__wa.team.has(id), second));
-    await p.goto(FILE); await p.evaluate(() => localStorage.removeItem('wa-draftui')); await p.reload(); await p.click('#actbar .primary'); ok('no flag, nothing chosen: the default cards, no switcher', !(await p.locator('#duiSwitch').count()) && await p.locator('#tiers .card').count());
+    await p.goto(FILE); await p.evaluate(() => localStorage.removeItem('wa-draftui')); await p.reload(); await p.click('#actbar button:has-text("Quick game")'); ok('no flag: Versus, no switcher (Versus is the draft screen since Oct 31)', !(await p.locator('#duiSwitch:not([hidden])').count()) && await p.locator('#draftAlt .vcol').count());
     await ctx.close(); }
   fs.writeFileSync(path.join(OUT, 'metrics.json'), JSON.stringify(res, null, 1));
   await b.close(); process.exit(res.checks.every(x => x[1]) ? 0 : 1);

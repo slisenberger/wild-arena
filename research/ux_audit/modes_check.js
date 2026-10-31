@@ -31,7 +31,7 @@ const OUT = path.join(__dirname, 'after');
   check('progressive: run overview opens', await vis('s-prog'));
   check('progressive: bar hidden on the run overview', await p.evaluate(() => document.getElementById('actbar').hidden));
   // 5 in a row
-  await p.goto(FILE + '?five=1'); await p.evaluate(() => localStorage.removeItem('wa-five-run')); await p.reload();
+  await p.goto(FILE + '?five=1'); await p.evaluate(() => { localStorage.removeItem('wa-five-run'); localStorage.removeItem('wa-prog'); }); await p.reload();
   await p.click('#five'); await p.waitForTimeout(200);
   check('five: draft opens', await vis('s-draft'));
   for (let k = 0; k < 3; k++){ const c = p.locator('#tiers .card:not(.cant):not(.picked)').first(); if (await c.count()) await c.click(); }
@@ -44,7 +44,7 @@ const OUT = path.join(__dirname, 'after');
   await p.click('#actbar .primary'); await p.waitForTimeout(200);
   check('five: next step opens', await vis('s-draft') || await vis('s-arena'));
   // daily: play again keeps today's seed
-  await p.goto(FILE); await p.click('#daily'); await p.waitForTimeout(150);
+  await p.goto(FILE); await p.evaluate(() => localStorage.removeItem('wa-prog')); await p.reload(); await p.click('#daily'); await p.waitForTimeout(150);
   const seed = await p.evaluate(() => window.__wa.seed);
   await p.click('#actbar .primary'); await p.waitForTimeout(150); await finish(); await p.waitForTimeout(250);
   await p.click('#actbar .primary'); await p.waitForTimeout(150);
