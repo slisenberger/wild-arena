@@ -248,3 +248,9 @@ each species develop its own realistic fighting style. This note is the plan; th
   Next: more realism pressure in ES (higher λ ceiling / gate penalty for mobsPred, a per-species direction check: buffalo's
   'pred a-h' ≥ 0), or pricing realism into expert-iteration labels (research §2.2). (Fixed: speciation.js workers ignored
   --net, so its first ev14 reports showed m1.)
+- **Owner rule (Oct 31): "realism can be violated ONLY IF it allows for the grounding assumption of animals know their team
+  and ultimate objective (protect or kill the human)."** Kickers may hunt on offense: their farHunt gate is lifted for
+  training (`--ungate=farHunt`, `RW.ungate`). Gates on physical ability and species signatures (charge rate, the honey
+  badger's fearlessness, cat stalking geometry) stay, since those aren't choices the objective can justify. Open question
+  for the owner: buffalo leaving lions alone to go for the human also serves the objective; does the rule lift the buffalo
+  gate too? Until answered, the buffalo gate stays (es15).
