@@ -6,7 +6,7 @@ const { Worker, isMainThread, parentPort, workerData } = require('worker_threads
 const path = require('path'), os = require('os');
 const R = require(path.join(__dirname, '..', 'move_run.js')), fs = require('fs');
 require(path.join(__dirname, '..', 'live.js')); require(path.join(__dirname, '..', 'policy.js'));
-const OPT = Object.fromEntries(process.argv.slice(2).filter(a => a.startsWith('--')).map(a => { const [k, v] = a.slice(2).split('='); return [k, v]; }));
+const OPT = isMainThread ? Object.fromEntries(process.argv.slice(2).filter(a => a.startsWith('--')).map(a => { const [k, v] = a.slice(2).split('='); return [k, v]; })) : workerData.opt; // workers don't see the parent's argv
 const NET = OPT.net ? (({meta, ...x}) => x)(JSON.parse(fs.readFileSync(path.resolve(OPT.net), 'utf8'))) : null;
 const smart = () => { const by = {}; for (const [k, v] of Object.entries(R.A._internals.LIVE_TARGET || {})) if (v) by[k] = v; if (NET) by[OPT.arch] = NET; return {byArch: by}; };
 const A = R.A, I = A._internals;
@@ -33,7 +33,7 @@ const [n, idx] = process.argv.slice(2).filter(a => !a.startsWith('--')), N = +n 
 const fights = R.fightSet('probe', +idx || 71, N, {arch: 'guard', seed: 17});
 const T = Math.max(1, Math.min(8, os.cpus().length));
 const say = l => { console.log(l); lines.push(l); };
-Promise.all([...Array(T).keys()].map(k => new Promise(res => { const w = new Worker(__filename, {workerData: {fights: fights.filter((_, q) => q % T === k)}}); w.on('message', res); }))).then(parts => {
+Promise.all([...Array(T).keys()].map(k => new Promise(res => { const w = new Worker(__filename, {workerData: {fights: fights.filter((_, q) => q % T === k), opt: OPT}}); w.on('message', res); }))).then(parts => {
   const all = {};
   for (const p of parts) for (const [k, o] of Object.entries(p)){ const t = all[k] = all[k] || {n: 0, dev: 0, toH: 0, fromH: 0, mass: 0, hp: 0, dist: 0, pred: 0, toNone: 0, fights: new Set()};
     for (const q of ['n', 'dev', 'toH', 'fromH', 'mass', 'hp', 'dist', 'pred', 'toNone']) t[q] += o[q]; o.fights.forEach(x => t.fights.add(x)); }

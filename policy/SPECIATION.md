@@ -237,3 +237,14 @@ each species develop its own realistic fighting style. This note is the plan; th
   sent for shipping. Next: train harriers on main with ES fine-tuning from p1 (fight-level credit), then re-check.
 - **Buffalo realism check validity:** the live charger_target_m1 fails mobsPred (with one of your predators within 15 m,
   share targeting a predator 0.576 -> 0.349; 1,000 fights, eval_target BASE=none), so the check catches the known flaw.
+- **Realistic chargers, first try (Oct 31, es13 + ev14, open maps; ES from charger_target_m1 widened to traits v2, buffalo
+  gates, refZero, 2 seeds × 60 gens).** No candidate beat m1 while passing the buffalo gates (candidates that kept m1's
+  extra +0.07 to +0.105 kept failing mobsPred; clean ones were -0.03 to +0.02 vs m1). The final centres (v2a, v2b; not live),
+  2,000 fresh fights each: vs today's heuristic v2a +0.120 ± 0.031 (fails mobsPred .571 -> .489) and +0.182 ± 0.031 (clean);
+  v2b +0.134 / +0.143 but fails mobsPred on both draws (.47); vs live m1: v2a -0.011 ± 0.028, v2b +0.003 ± 0.029 (as strong
+  as m1). Speciation report (600 fights, probe 71, merged main): with a predator in the picture, buffalo's changed picks
+  shift away from predators -0.24 (m1: -0.53), buffalo herds -0.23 (m1: -0.55): half way back to today's heuristic, but the
+  buffalo still avoids predators more than the bison (-0.07), so not yet the sourced difference. Not shipped.
+  Next: more realism pressure in ES (higher λ ceiling / gate penalty for mobsPred, a per-species direction check: buffalo's
+  'pred a-h' ≥ 0), or pricing realism into expert-iteration labels (research §2.2). (Fixed: speciation.js workers ignored
+  --net, so its first ev14 reports showed m1.)
