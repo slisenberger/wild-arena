@@ -43,7 +43,15 @@ count as 5:00). Live site: GitHub Pages serves `index.html` from `main`.
   realistically would conditioned on being part of a hunting team against the human" and "species realism can stay in training just
   not when it directly conflicts with objective seeking". So realism checks never count closing on the human against an animal
   (longChase / farHunt / farSprint), and species tendencies (buffalo mobbing lions) apply only while it isn't going for you; fighting
-  your animals counts as helping. Measured then (500 fights, maps2): share of active time targeting you
+  your animals counts as helping. **In the engine since Nov 1: `cfg.objective`, on by default** (`objOn(w)`; `cfg.objective:false` =
+  the previous game, byte-identical on 300 fights; built and tuned by the training session, `probes/objective.js` on
+  `m4/speciation-2`): an enemy herbivore's interest in you is floored at .45 + 1.0·drive (after the distance discount, so you stay a
+  target from across the field), ×1.6 while it is already coming for you, and while coming for you it turns only on what hits it,
+  comes at it or blocks it within 8 m; a walrus with drive ≥ .5 leaves its shore for you; gaits and signatures untouched
+  (`objectiveOf`: {base, slope, stick, shoreDrive}). Share of life targeting you (1,200 fights per class, off → on): gorilla .8 →
+  6.1%, elephant 5.3 → 8.2, mammoth 2.4 → 5.3, walrus 1.7 → 9.1, giraffe 1.1 → 22.1, ostrich .3 → 36.2, giant kangaroo .1 → 14.9;
+  contact barely changes (your guards intercept); quiet endings and longest no-damage stretch unchanged. Paired 1,200 fights on main:
+  +0.2 ± 3.5 s; price_abs for the affected items moved no price; Safari bot round 1 82%, 18.2% complete. Before (500 fights, maps2): share of active time targeting you
   — gorilla 1.0%, elephant 1.3%, mammoth 1.4%, ostrich 2.2%, giraffe 2.9%, walrus 5.2%, chargers 11–20%, predators 24–76%.
 - **Pricing rules:** $100 steps, the elephant stays affordable ($700 cap), budget $1,200. Re-measure after any roster or
   behaviour change.
