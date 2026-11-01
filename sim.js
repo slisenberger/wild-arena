@@ -772,7 +772,7 @@ function herbivoreTarget(w, u){
     return reachable(u, w.human) ? w.human : (blocker || nearestPlayer(w,u));
   }
   let best = null, bs = 0;
-  const dr = drive(u), onH = !!w.cfg.objective && u.side === 'E' && u.target === w.human && active(w.human);
+  const dr = drive(u), onH = objOn(w) && u.side === 'E' && u.target === w.human && active(w.human);
   let R = 20 + 16 * u.agit + 30 * pressure(w) + 60 * dr; // a crowd of intruders in its space: it notices and closes sooner
   if (has(u,'territorial') && inWater(w,u)) R += 8;
   if (has(u,'blindCharger')) R = Math.max(R, 18);
@@ -782,7 +782,7 @@ function herbivoreTarget(w, u){
     // cfg.objective (prototype, owner Oct 31: "all animals on attack should at least participate in the objective of killing the
     // human"): an enemy herbivore's interest in you never drops below OBJ.base + OBJ.slope x drive, it hears you across the field,
     // and a walrus leaves its shore for you once restless; each keeps its gait and signature moves
-    const ob = w.cfg.objective && u.side === 'E' && t.side === 'H', OB = ob ? objectiveOf(w) : null;
+    const ob = objOn(w) && u.side === 'E' && t.side === 'H', OB = ob ? objectiveOf(w) : null;
     if (has(u,'shoreGuard') && w.wet && !(w.lastStand && u.side === 'E') && distWater(w, t) > 6 && u.grudge !== t && !(ob && drive(u) >= OB.shoreDrive)) continue; // a walrus defends its water, not the open snow (left alone in its lake, the fight can end 'quiet')
     const d = dist(u, t);
     if (onH && t.side !== 'H' && u.grudge !== t && t.target !== u && d >= 8) continue; // cfg.objective: going for you, it turns only on what hits it, comes at it or blocks it (within 8 m)
@@ -816,12 +816,13 @@ function herbivoreTarget(w, u){
 // the targets herbivoreTarget can consider (hostile, not musk-repelled, the walrus's shore rule, seen or heard, reachable):
 // the learned herbivore chooser's candidates (milestone 4, policy/policy.js chooseHerb). Keep its filters in sync with herbivoreTarget's
 // cfg.objective: true (defaults) or {base, slope, stick (x while already going for you), shoreDrive}
+const objOn = w => w.cfg.objective !== false; // on by default since Nov 1 (owner: every animal on attack takes part in killing the human); cfg.objective:false = off
 function objectiveOf(w){ const o = w.cfg.objective; return Object.assign({base: .45, slope: 1, stick: 1.6, shoreDrive: .5}, typeof o === 'object' ? o : {}); }
 function herbCandidates(w, u){
   const dr = drive(u), out = [];
   for (const t of w.units){
     if (!hostile(w, u, t) || (u.repelBy === t && u.repelUntil > w.t) || !reachable(u, t)) continue;
-    if (has(u,'shoreGuard') && w.wet && !(w.lastStand && u.side === 'E') && distWater(w, t) > 6 && u.grudge !== t && !(w.cfg.objective && u.side === 'E' && t.side === 'H' && drive(u) >= objectiveOf(w).shoreDrive)) continue; // (cfg.objective: as herbivoreTarget)
+    if (has(u,'shoreGuard') && w.wet && !(w.lastStand && u.side === 'E') && distWater(w, t) > 6 && u.grudge !== t && !(objOn(w) && u.side === 'E' && t.side === 'H' && drive(u) >= objectiveOf(w).shoreDrive)) continue; // (cfg.objective: as herbivoreTarget)
     const d = dist(u, t);
     if (u.grudge !== t && !canSee(w, u, t) && !(d < 30 + 50 * dr && (Math.hypot(t.vx, t.vy) > 2 || dr > .5))) continue;
     out.push(t);
@@ -1429,7 +1430,7 @@ function step(w){
     } else if (u.state === 'engage' && u.target){
       const t = u.target, d = dist(u, t), touch = u.r + t.r + u.s.reach * .6;
       if (has(u,'waterbound') && w.wet && !w.lastStand && distWater(w, t) > 5){ const p = waterPoint(w, u, t); tx = p.x; ty = p.band ? t.y : p.y; frac = .3; }
-      else if (has(u,'shoreGuard') && w.wet && !(w.lastStand && u.side === 'E') && distWater(w, t) > 3 && d > touch + 1 && !(w.cfg.objective && u.side === 'E' && t.side === 'H' && drive(u) >= objectiveOf(w).shoreDrive)){ const p = waterPoint(w, u, t); tx = p.x; ty = p.band ? t.y : p.y; frac = .6; } // a walrus waits in the water by the shore nearest it
+      else if (has(u,'shoreGuard') && w.wet && !(w.lastStand && u.side === 'E') && distWater(w, t) > 3 && d > touch + 1 && !(objOn(w) && u.side === 'E' && t.side === 'H' && drive(u) >= objectiveOf(w).shoreDrive)){ const p = waterPoint(w, u, t); tx = p.x; ty = p.band ? t.y : p.y; frac = .6; } // a walrus waits in the water by the shore nearest it
       else if (perchAmbush(w, u, t, d)){ continue; } // up a tree, waiting to drop on it
       else if (u.backT > 0 && t === u.stabbed){ // stabbed and let go: circle out of reach while it bleeds
         const rx = (u.x - t.x) / (d || 1), ry = (u.y - t.y) / (d || 1), vx = -ry * u.orbitDir + rx * (8 - d) * .4, vy = rx * u.orbitDir + ry * (8 - d) * .4, m = Math.hypot(vx, vy) || 1;

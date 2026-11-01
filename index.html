@@ -1276,7 +1276,7 @@ function herbivoreTarget(w, u){
     return reachable(u, w.human) ? w.human : (blocker || nearestPlayer(w,u));
   }
   let best = null, bs = 0;
-  const dr = drive(u), onH = !!w.cfg.objective && u.side === 'E' && u.target === w.human && active(w.human);
+  const dr = drive(u), onH = objOn(w) && u.side === 'E' && u.target === w.human && active(w.human);
   let R = 20 + 16 * u.agit + 30 * pressure(w) + 60 * dr; // a crowd of intruders in its space: it notices and closes sooner
   if (has(u,'territorial') && inWater(w,u)) R += 8;
   if (has(u,'blindCharger')) R = Math.max(R, 18);
@@ -1286,7 +1286,7 @@ function herbivoreTarget(w, u){
     // cfg.objective (prototype, owner Oct 31: "all animals on attack should at least participate in the objective of killing the
     // human"): an enemy herbivore's interest in you never drops below OBJ.base + OBJ.slope x drive, it hears you across the field,
     // and a walrus leaves its shore for you once restless; each keeps its gait and signature moves
-    const ob = w.cfg.objective && u.side === 'E' && t.side === 'H', OB = ob ? objectiveOf(w) : null;
+    const ob = objOn(w) && u.side === 'E' && t.side === 'H', OB = ob ? objectiveOf(w) : null;
     if (has(u,'shoreGuard') && w.wet && !(w.lastStand && u.side === 'E') && distWater(w, t) > 6 && u.grudge !== t && !(ob && drive(u) >= OB.shoreDrive)) continue; // a walrus defends its water, not the open snow (left alone in its lake, the fight can end 'quiet')
     const d = dist(u, t);
     if (onH && t.side !== 'H' && u.grudge !== t && t.target !== u && d >= 8) continue; // cfg.objective: going for you, it turns only on what hits it, comes at it or blocks it (within 8 m)
@@ -1320,12 +1320,13 @@ function herbivoreTarget(w, u){
 // the targets herbivoreTarget can consider (hostile, not musk-repelled, the walrus's shore rule, seen or heard, reachable):
 // the learned herbivore chooser's candidates (milestone 4, policy/policy.js chooseHerb). Keep its filters in sync with herbivoreTarget's
 // cfg.objective: true (defaults) or {base, slope, stick (x while already going for you), shoreDrive}
+const objOn = w => w.cfg.objective !== false; // on by default since Nov 1 (owner: every animal on attack takes part in killing the human); cfg.objective:false = off
 function objectiveOf(w){ const o = w.cfg.objective; return Object.assign({base: .45, slope: 1, stick: 1.6, shoreDrive: .5}, typeof o === 'object' ? o : {}); }
 function herbCandidates(w, u){
   const dr = drive(u), out = [];
   for (const t of w.units){
     if (!hostile(w, u, t) || (u.repelBy === t && u.repelUntil > w.t) || !reachable(u, t)) continue;
-    if (has(u,'shoreGuard') && w.wet && !(w.lastStand && u.side === 'E') && distWater(w, t) > 6 && u.grudge !== t && !(w.cfg.objective && u.side === 'E' && t.side === 'H' && drive(u) >= objectiveOf(w).shoreDrive)) continue; // (cfg.objective: as herbivoreTarget)
+    if (has(u,'shoreGuard') && w.wet && !(w.lastStand && u.side === 'E') && distWater(w, t) > 6 && u.grudge !== t && !(objOn(w) && u.side === 'E' && t.side === 'H' && drive(u) >= objectiveOf(w).shoreDrive)) continue; // (cfg.objective: as herbivoreTarget)
     const d = dist(u, t);
     if (u.grudge !== t && !canSee(w, u, t) && !(d < 30 + 50 * dr && (Math.hypot(t.vx, t.vy) > 2 || dr > .5))) continue;
     out.push(t);
@@ -1933,7 +1934,7 @@ function step(w){
     } else if (u.state === 'engage' && u.target){
       const t = u.target, d = dist(u, t), touch = u.r + t.r + u.s.reach * .6;
       if (has(u,'waterbound') && w.wet && !w.lastStand && distWater(w, t) > 5){ const p = waterPoint(w, u, t); tx = p.x; ty = p.band ? t.y : p.y; frac = .3; }
-      else if (has(u,'shoreGuard') && w.wet && !(w.lastStand && u.side === 'E') && distWater(w, t) > 3 && d > touch + 1 && !(w.cfg.objective && u.side === 'E' && t.side === 'H' && drive(u) >= objectiveOf(w).shoreDrive)){ const p = waterPoint(w, u, t); tx = p.x; ty = p.band ? t.y : p.y; frac = .6; } // a walrus waits in the water by the shore nearest it
+      else if (has(u,'shoreGuard') && w.wet && !(w.lastStand && u.side === 'E') && distWater(w, t) > 3 && d > touch + 1 && !(objOn(w) && u.side === 'E' && t.side === 'H' && drive(u) >= objectiveOf(w).shoreDrive)){ const p = waterPoint(w, u, t); tx = p.x; ty = p.band ? t.y : p.y; frac = .6; } // a walrus waits in the water by the shore nearest it
       else if (perchAmbush(w, u, t, d)){ continue; } // up a tree, waiting to drop on it
       else if (u.backT > 0 && t === u.stabbed){ // stabbed and let go: circle out of reach while it bleeds
         const rx = (u.x - t.x) / (d || 1), ry = (u.y - t.y) / (d || 1), vx = -ry * u.orbitDir + rx * (8 - d) * .4, vy = rx * u.orbitDir + ry * (8 - d) * .4, m = Math.hypot(vx, vy) || 1;
@@ -3034,14 +3035,7 @@ const TAGS = ['pack', 'latch', 'ambush', 'bluff', 'sweep', 'giant', 'fearless', 
 const NAMES = ['logMass', 'spd', 'stam', 'logDps', 'armor', 'reach', 'strikeH', 'mountH', 'swim', 'vision', 'aggr', 'flee', 'corner',
   'pred', 'charge', 'climb', 'pounce', 'bluffP', 'group', ...GAITS.map(g => 'gait_' + g), ...TAGS.map(t => 'tag_' + t)];
 const DIM = NAMES.length;
-// v2 (P.traitsV = 2, new nets only; shipped nets keep v1 byte for byte): + the signature tags that bear on whom an animal goes
-// for, so a species-aware scorer can tell a buffalo (vindictive, lionKiller) from a bison, or a musk ox ring from a lone charger.
-// Tags this engine doesn't have read 0.
-const SIG = ['vindictive', 'lionKiller', 'standsGround', 'territorial', 'scavenger', 'blindCharger', 'bred', 'chasesMovement',
-  'catSense', 'guardian', 'bigGame', 'tester', 'lookout', 'riderSnatcher', 'boneCrush', 'upends', 'stomp', 'placid',
-  'ring', 'facesDown', 'shoreGuard', 'snowPlough', 'usurps', 'pinDown', 'tuskStab', 'forestRunner'];
-const NAMES2 = [...NAMES, ...SIG.map(t => 'sig_' + t)], DIM2 = NAMES2.length;
-const cache = {}, cache2 = {};
+const cache = {};
 function traits(s){
   if (cache[s.id]) return cache[s.id];
   const tags = new Set(s.tags || []);
@@ -3053,15 +3047,7 @@ function traits(s){
   if (v.length !== DIM || v.some(x => !Number.isFinite(x))) throw new Error('traits: bad vector for ' + s.id);
   return (cache[s.id] = v);
 }
-// traitsV(s, v): v 2 = v1 + the SIG block; anything else = v1 (the same array traits() returns)
-function traitsV(s, v){
-  if (v !== 2) return traits(s);
-  if (cache2[s.id]) return cache2[s.id];
-  const tags = new Set(s.tags || []);
-  return (cache2[s.id] = traits(s).concat(SIG.map(t => +(tags.has(t) || !!s[t]))));
-}
-const dimV = v => v === 2 ? DIM2 : DIM;
-module.exports = { NAMES, DIM, traits, GAITS, TAGS, SIG, NAMES2, DIM2, traitsV, dimV };
+module.exports = { NAMES, DIM, traits, GAITS, TAGS };
 if (require.main === module){ // node policy/traits.js: print the vector per species
   const A = require(process.env.SIM ? path.resolve(process.env.SIM) : path.join(__dirname, '..', 'sim.js'));
   for (const s of A.ANIMALS) console.log(s.id.padEnd(12), traits(s).map(x => x.toFixed(2)).join(' '));
@@ -3081,7 +3067,7 @@ const npar = P => P.kind === 'target-mlp' ? P.nin * (P.nh + 1) + 2 * P.nh : P.ni
 const thetaOf = P => P.kind === 'target-mlp' ? P.theta : P.wt;
 function withTheta(P, th){ return P.kind === 'target-mlp' ? Object.assign({}, P, {theta: th.slice()}) : Object.assign({}, P, {wt: th.slice(0, P.nin)}); }
 // the option features the scorer sees (adds the unit's traits for a 'self' MLP)
-function inputs(P, X, u){ if (P.kind !== 'target-mlp' || !P.self) return X; const t = TR.traitsV(u.s, P.traitsV); return X.map(x => x.concat(t)); }
+function inputs(P, X, u){ if (P.kind !== 'target-mlp' || !P.self) return X; const t = TR.traits(u.s); return X.map(x => x.concat(t)); }
 function hidden(th, P, x){
   const {nin, nh} = P, h = new Array(nh), o = nin + 2 * nh;
   for (let j = 0; j < nh; j++){ let a = th[nin + nh + j]; const r = o + j * nin; for (let k = 0; k < nin; k++) a += th[r + k] * x[k]; h[j] = Math.tanh(a); }
@@ -3112,15 +3098,7 @@ function mlp(nin, nh, margin, seed, self){
   for (let i = nin + 2 * nh; i < th.length; i++) th[i] = (r() * 2 - 1) * sc;
   return {kind: 'target-mlp', v: 1, nin, nh, margin, self: !!self, theta: th};
 }
-// widen a target-mlp by `add` inputs appended at the end (e.g. traits v1 -> v2): their weights start at 0, so the widened net
-// scores exactly as before; training then learns what the new inputs add
-function widen(P, add){
-  if (P.kind !== 'target-mlp' || !add) return P;
-  const {nin, nh} = P, th = P.theta, z = new Array(add).fill(0), o = nin + 2 * nh;
-  const out = th.slice(0, nin).concat(z, th.slice(nin, o)); for (let j = 0; j < nh; j++) out.push(...th.slice(o + j * nin, o + (j + 1) * nin), ...z);
-  return Object.assign({}, P, {nin: nin + add, theta: out});
-}
-module.exports = { npar, thetaOf, withTheta, inputs, scores, addGrad, mlp, widen, TRAITS: TR.DIM };
+module.exports = { npar, thetaOf, withTheta, inputs, scores, addGrad, mlp, TRAITS: TR.DIM };
 
   };
   M['guard_features.js'] = function(module, exports){ var require = req, __dirname = ''; // Milestone 4: options and features for a GUARD's learned target choice (your side's animals; sim.js guardCandidates).
@@ -3271,9 +3249,7 @@ const G = require('./guard_features.js'); // your guards' target features (miles
 const TM = require('./target_model.js'); // 'target-lin' and 'target-mlp' scorers
 // P.feat === 'plus' (features_plus.js: + the guard situation around each target) and 'rich' (features_rich.js: + timing, kill race,
 // openings, who is after whom; milestone 4 round 3), required on first use: they require sim.js, which may still be loading us
-let FP_ = null, FR_ = null, SM_ = null; const FP = () => FP_ || (FP_ = require('./features_plus.js')), FR = () => FR_ || (FR_ = require('./features_rich.js')), SM = () => SM_ || (SM_ = require('./set_model.js'));
-// 'target-set' (set_model.js, training experiments): sees every animal on the field; argmax over targets (or the heuristic's pick)
-function pickSet(w, P, u, opts, X, teach){ const q = SM().scores(P, SM().decision(w, u, opts, X, P.traitsV), teach); let b = teach >= 0 ? teach : 0; q.forEach((v, i) => { if ((opts[i].kind === 'target' || i === teach) && v > q[b]) b = i; }); return b; }
+let FP_ = null, FR_ = null; const FP = () => FP_ || (FP_ = require('./features_plus.js')), FR = () => FR_ || (FR_ = require('./features_rich.js'));
 const M = require('./model.js');
 const path = require('path');
 const A = require(process.env.SIM ? path.resolve(process.env.SIM) : path.join(__dirname, '..', 'sim.js'));
@@ -3293,8 +3269,7 @@ function apply(u, o){
 function scoresLin(P, X, teach, mask){ const s = TM.scores(P, X, teach); if (P.targetsOnly && mask) for (let i = 0; i < s.length; i++) if (!mask[i] && i !== teach) s[i] = -Infinity; return s; }
 function scoreLin(P, X, teach, mask){ const s = scoresLin(P, X, teach, mask); let b = 0; for (let i = 1; i < s.length; i++) if (s[i] > s[b]) b = i; return b; }
 // a scorer's option rows: P.feat 'rich' (features_rich.js), 'plus' (features_plus.js), else features.js / guard_features.js
-// 'richh': rich + the engine's hidden state (training experiments)
-function extractE(w, u, P, herb){ return P.feat === 'rich' || P.feat === 'richh' ? FR().extract(w, u, {herb, hidden: P.feat === 'richh'}) : P.feat === 'plus' ? FP().extract(w, u, herb) : F.extract(w, u, herb); }
+function extractE(w, u, P, herb){ return P.feat === 'rich' ? FR().extract(w, u, {herb}) : P.feat === 'plus' ? FP().extract(w, u, herb) : F.extract(w, u, herb); }
 const targetMask = opts => opts.map(o => o.kind === 'target');
 // training only (P.sample, policy/ppo_target.js): sample from softmax(score / tau) with a private generator seeded by the fight
 // and the decision count (the engine's own RNG is untouched), and log {X, teach, a, p} into cfg.policyTrace
@@ -3310,27 +3285,21 @@ function pickLin(w, P, X, teach, u, mask){
 function choose(w, u, policy){
   const cfg = w.cfg, log = cfg.policyLog, stats = cfg.policyStats;
   if (policy.byArch) policy = policy.byArch[A._internals.archetypeOf(u)];
-  const lin = policy.kind === 'target-lin' || policy.kind === 'target-mlp' || policy.kind === 'target-set';
-  const look = policy.kind === 'target-look'; // training only: the lookahead teacher (policy/plan.js) picks via policy.pick(w, u, opts, teach)
-  const {opts, X} = lin || look ? extractE(w, u, policy) : F.extract(w, u);
-  if (u.forceT && w.t < u.forceUntil){ const k = opts.findIndex(o => o.kind === 'target' && o.t === u.forceT); if (k >= 0){ apply(u, opts[k]); return; } } // a lookahead branch (or P.commit) holds its target
-  const teach = policy.teacher || log || stats || lin || look ? F.heuristicIndex(w, u, opts) : -1;
-  const a = policy.teacher ? teach : look ? policy.pick(w, u, opts, teach) : policy.kind === 'target-set' ? pickSet(w, policy, u, opts, X, teach) : lin ? pickLin(w, policy, X, teach, u, targetMask(opts)) : M.argmax(policy, X);
-  if (policy.commit && a !== teach && opts[a] && opts[a].kind === 'target'){ u.forceT = opts[a].t; u.forceUntil = w.t + policy.commit; } // P.commit s: hold a learned departure that long
+  const {opts, X} = policy.kind === 'target-lin' || policy.kind === 'target-mlp' ? extractE(w, u, policy) : F.extract(w, u);
+  const lin = policy.kind === 'target-lin' || policy.kind === 'target-mlp';
+  const teach = policy.teacher || log || stats || lin ? F.heuristicIndex(w, u, opts) : -1;
+  const a = policy.teacher ? teach : lin ? pickLin(w, policy, X, teach, u, targetMask(opts)) : M.argmax(policy, X);
   if (stats){ stats.n = (stats.n || 0) + 1; if (a === teach) stats.agree = (stats.agree || 0) + 1; }
   if (log && opts.length > 1) log.push({X, y: teach, a, sp: u.s.id});
-  if (cfg.pickLog && opts.length > 1) cfg.pickLog.push({u, h: opts[teach] && opts[teach].t || null, a: opts[a] && opts[a].t || null, n: opts.length}); // stat only (probes/speciation.js)
   apply(u, opts[a]);
 }
 // herbivores (bulldozer, charger, kicker): same scorer; the heuristic's pick is herbivoreTarget's, and if that isn't one
 // of the candidates the heuristic stands (so zero weights = the engine exactly)
 function chooseHerb(w, u, policy){
   const P = policy.byArch[A._internals.archetypeOf(u)], stats = w.cfg.policyStats;
-  if (u.forceT && w.t < u.forceUntil && A._internals.active(u.forceT)){ u.target = u.forceT; u.state = 'engage'; return; } // a lookahead branch holds its target
   const {opts, X} = extractE(w, u, P, true), h = F.herbHeuristic(w, u, opts);
-  const a = h.i < 0 ? -1 : P.kind === 'target-look' ? P.pick(w, u, opts, h.i) : P.kind === 'target-set' ? pickSet(w, P, u, opts, X, h.i) : pickLin(w, P, X, h.i, u, targetMask(opts));
+  const a = h.i < 0 ? -1 : pickLin(w, P, X, h.i, u, targetMask(opts));
   if (stats){ stats.n = (stats.n || 0) + 1; if (a === h.i) stats.agree = (stats.agree || 0) + 1; }
-  if (w.cfg.pickLog && opts.length > 1 && a >= 0) w.cfg.pickLog.push({u, h: h.t || null, a: opts[a].t || null, n: opts.length});
   u.target = a < 0 ? h.t : (opts[a].kind === 'target' ? opts[a].t : null); u.state = u.target ? 'engage' : 'roam';
 }
 // guards (your side, not carrying you): the heuristic's pick (allyTarget's, or a guard intent's intercept / help target) is
@@ -3338,11 +3307,9 @@ function chooseHerb(w, u, policy){
 function chooseGuard(w, u, policy, h){ // returns the target to take (h = the heuristic's, or the guard intent's: unchanged)
   const P = policy.byArch.guard, stats = w.cfg.policyStats;
   if (u.rider || (P.only === 'cat' && !(u.s.pred && u.s.latch))) return h; // P.only 'cat': only your big cats learn; the rest keep the heuristic
-  if (u.forceT && w.t < u.forceUntil) return A._internals.active(u.forceT) ? u.forceT : h; // a lookahead branch holds its target
-  const {opts, X} = P.feat === 'rich' || P.feat === 'richh' ? FR().extract(w, u, {wide: P.wide, hidden: P.feat === 'richh'}) : G.extract(w, u, P.wide), i = G.heuristic(opts, h); // P.wide: any enemy your side can see (no leash)
-  const a = i < 0 ? -1 : P.kind === 'target-look' ? P.pick(w, u, opts, i) : P.kind === 'target-set' ? pickSet(w, P, u, opts, X, i) : pickLin(w, P, X, i, u, targetMask(opts));
+  const {opts, X} = P.feat === 'rich' ? FR().extract(w, u, {wide: P.wide}) : G.extract(w, u, P.wide), i = G.heuristic(opts, h); // P.wide: any enemy your side can see (no leash)
+  const a = i < 0 ? -1 : pickLin(w, P, X, i, u, targetMask(opts));
   if (stats){ stats.n = (stats.n || 0) + 1; if (a === i) stats.agree = (stats.agree || 0) + 1; }
-  if (w.cfg.pickLog && opts.length > 1 && a >= 0) w.cfg.pickLog.push({u, h: h || null, a: opts[a].t || null, n: opts.length});
   return a < 0 ? h : opts[a].kind === 'target' ? opts[a].t : null;
 }
 A._internals.choose = choose;
@@ -3390,10 +3357,9 @@ function act(P, x){
 // the trainable vector: mode 'linear' = [bl, Wl]; mode 'full' = [bl, Wl, W2] (W1/b1 stay fixed random features);
 // mode 'deep' = [bl, Wl, W2, W1, b1] (the hidden layer trains too). [bl, Wl] always lead, so warm-start rules index the same.
 function zerosTarget(nin, margin){ return {kind: 'target-lin', v: 1, nin, margin: margin === undefined ? 1 : margin, wt: new Array(nin).fill(0)}; } // milestone-4 target scorer (policy/policy.js)
-function flat(P, mode){ if (P.kind === 'target-lin') return P.wt.slice(); if (P.kind === 'target-mlp') return P.theta.slice(); return mode === 'deep' ? [...P.bl, ...P.Wl, ...P.W2, ...P.W1, ...P.b1] : mode === 'full' ? [...P.bl, ...P.Wl, ...P.W2] : [...P.bl, ...P.Wl]; }
+function flat(P, mode){ if (P.kind === 'target-lin') return P.wt.slice(); return mode === 'deep' ? [...P.bl, ...P.Wl, ...P.W2, ...P.W1, ...P.b1] : mode === 'full' ? [...P.bl, ...P.Wl, ...P.W2] : [...P.bl, ...P.Wl]; }
 function unflat(P, v, mode){
   if (P.kind === 'target-lin') return Object.assign({}, P, {wt: v.slice(0, P.nin)});
-  if (P.kind === 'target-mlp') return Object.assign({}, P, {theta: v.slice()});
   const Q = JSON.parse(JSON.stringify(P)), a = P.nout, b = a + P.nout * P.nin, c = b + P.nout * P.nh, d = c + P.nh * P.nin;
   Q.bl = v.slice(0, a); Q.Wl = v.slice(a, b); if (mode === 'full' || mode === 'deep') Q.W2 = v.slice(b, c);
   if (mode === 'deep'){ Q.W1 = v.slice(c, d); Q.b1 = v.slice(d, d + P.nh); }
@@ -3858,7 +3824,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = API; else 
 
 </script>
 <script>
-const DAILY_SALT = {"2026-11-02":1,"2026-11-08":1,"2026-11-09":1,"2026-11-18":1,"2026-11-22":1,"2026-11-26":1,"2026-11-29":1,"2026-12-07":1,"2026-12-01":2}; // research/daily_check.js: days whose first daily deal the bot found near-unwinnable
+const DAILY_SALT = {"2026-11-02":1,"2026-11-08":1,"2026-11-09":1,"2026-11-14":1,"2026-11-15":1,"2026-11-19":1,"2026-11-22":1,"2026-11-25":1,"2026-11-28":1,"2026-11-29":1,"2026-11-30":1,"2026-12-04":1,"2026-12-06":1,"2026-12-12":1,"2026-11-18":2}; // research/daily_check.js: days whose first daily deal the bot found near-unwinnable
 (function(){
 'use strict';
 const A = window.Arena;
