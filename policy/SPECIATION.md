@@ -276,3 +276,11 @@ each species develop its own realistic fighting style. This note is the plan; th
   animals (realistic: the team's blockers get fought). Per-class measurement on maps2: sweep obj19.
 - Kickers by ES (kick16, farHunt lifted, species-aware, from zero): none found so far (best stayed at today's targets).
   Harrier ES fine-tune from p1 (es15 harr_es1): best stayed at p1 through gen 56.
+- **cfg.objective, per-class measurement (obj19, Nov 1 UTC, 1,200 maps2 fights per class, main #53, off -> on).** Share of an
+  animal's life spent targeting you: gorilla .8 -> 6.1%, elephant 5.3 -> 8.2, mammoth 2.4 -> 5.3, walrus 1.7 -> 9.1; giraffe
+  1.1 -> 22.1, ostrich .3 -> 36.2, giant kangaroo .1 -> 14.9; chargers already 11-27%, barely changed. Within 6 m of you and hits
+  on you hardly move (kickers .3% -> .3%; your guards intercept them, the traced switches away are 41/46 interceptions);
+  distance kept while engaged rises for kickers (ostrich 21 -> 28 m). Outcomes within noise: your survival -0.9 / -1.7 / -0.8
+  pts (± 1.3-1.6), class goal +0.024 / +0.040 / +0.020 (± .03), quiet endings 1.4 -> 1.2% / 1.1 -> .9% / .9 -> .5%, longest
+  no-damage stretch unchanged (median 6-7 s, p90 22-29 s). So every class now takes part in the attack by intent, with no
+  measurable shift in balance and no more stalling. Harrier ES fine-tune (es15 harr_es1): nothing beat p1.
