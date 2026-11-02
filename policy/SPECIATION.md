@@ -305,3 +305,6 @@ each species develop its own realistic fighting style. This note is the plan; th
   (per-species residual, zero at start; new species act on traits alone); a student replaces its incumbent only at >= 2 SE vs
   that incumbent with every other class on its own, style >= .9, no gate failures. Guards are sampled 4x less (they decide
   far more often). Smoke runs OK; pilot sweep m4_joint1 (5 classes, 4 rounds × 1,500 fights) launches when CPUs free up.
+- ei22 ei_cat_new (enemy cats, target-only expert iteration on the objective default, 20 s CRN teacher, helpers): held-out
+  +0.028 ± 0.030, none found so far; cat_target_e1 stays live (+0.020 / +0.043 vs the heuristic). The whom + how runs (ei24)
+  and the joint pilot (jn25, launched 18:50 UTC) are the next tries for cats.
