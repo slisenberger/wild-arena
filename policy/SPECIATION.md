@@ -315,3 +315,8 @@ each species develop its own realistic fighting style. This note is the plan; th
 - **Joint pilot jn25, rounds 0-1:** no student accepted yet. Harrier r0 +0.107 ± 0.043 vs today's targets but style .645
   (wolves stopped darting, held ~40 m off, noContact up: disengaging, rightly rejected); cat +0.025 / -0.052, brawler -0.077 /
   -0.023, charger -0.027 / +0.041, guard -0.096 / ... vs their live nets.
+- **Wolves / hyenas on main's default (ei22 ei_harr_new, Nov 2):** held-out **+0.080 ± 0.034** (round 3; style 0.998, no
+  gates; you -2.8 pts) -> harrier_target_e2, ship checks sc28 (2 × 2,000 vs live + speciation). Joint pilot after round 2:
+  still no student accepted (guard students drop guards' idle time sharply and lose, -0.144). Your-cat whom + how (ei24) had a
+  bug: the intent correction applied to every guard (validation -0.409, dogs and chargers drifting); fixed (only: 'cat'),
+  rerun ei27.
