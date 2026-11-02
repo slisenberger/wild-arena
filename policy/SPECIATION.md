@@ -293,3 +293,8 @@ each species develop its own realistic fighting style. This note is the plan; th
 - **Joint target + intent headroom, enemy cats (jt21, 300 fights, H 8 s, 2 CRN rolls):** target+intent lookahead vs live
   +0.183 ± 0.068 (2.7 SE); target-only vs live +0.106 ± 0.073; joint vs target-only +0.078 ± 0.064 (directional). The
   lookahead overrode the cat's intent on 75% of the decisions it branched. More fights: jt23.
+- **Rung 2 headroom confirmed (Nov 2, jt21 + jt23, H 8 s, 2 CRN rolls).** Enemy cats, 4 draws × 300 fights: target+intent
+  lookahead vs live +0.183 / +0.165 / +0.238 / +0.156 (each ≥ 2 SE); joint vs target-only +0.078 / +0.098 / +0.080 / +0.053
+  (pooled about +0.077 ± 0.032, 2.4 SE). Your cats (300): target-only vs live -0.081 ± 0.043, joint vs target-only +0.099 ±
+  0.039 (2.5 SE): for your cats the move is the lever, not the target. Tooling: 'move-adv' movement correction (zero = live,
+  24/24 fights identical), per-intent labels in plan.js, trainIntentAdv, expert_iter --intents. Training: ei24.

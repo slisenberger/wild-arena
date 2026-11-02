@@ -1,0 +1,8 @@
+{
+ "note": "Rung 2 (Nov 2): whom + how. Joint headroom over target-only: enemy cats +0.077 ± 0.032 (1,200 fights, 4 draws), your cats +0.099 ± 0.039 (300; target-only alone was -0.081 vs live). Expert iteration with --intents: the lookahead labels each decision's targets and the best target's movement intents; the student = target net + a 'move-adv' correction over the live movement net (zero = live). 20 s CRN teacher, rich inputs, gain regression, 3 helper VMs each.",
+ "helpers": 3,
+ "runs": [
+  {"name": "eiI_cat", "args": "--trainer=expert --feat=rich --loss=adv --rounds=6 --fights=900 --max=3 --rolls=3 --nh=32 --epochs=8 --lr=.002 --val=800 --test=1200 --dagger=true --arch=cat --H=20 --crn=true --intents=true --seed=5201"},
+  {"name": "eiI_yourcat", "args": "--trainer=expert --feat=rich --loss=adv --rounds=6 --fights=900 --max=3 --rolls=3 --nh=32 --epochs=8 --lr=.002 --val=800 --test=1200 --dagger=true --arch=guard --only=cat --wide=true --H=20 --crn=true --intents=true --seed=5202"}
+ ]
+}
