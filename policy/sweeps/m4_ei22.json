@@ -1,0 +1,8 @@
+{
+ "note": "Nov 2, main's default (maps2 + objective on). Retrain enemy cats (cat_target_e1 fell to +0.020 / +0.043 under the new default) and enemy wolves/hyenas (p1: +0.069 / +0.047, just under 2 SE on draw 2) with expert iteration, 20 s CRN teacher, rich inputs, gain regression, 3 helper VMs each (quota now 256).",
+ "helpers": 3,
+ "runs": [
+  {"name": "ei_cat_new", "args": "--trainer=expert --feat=rich --loss=adv --rounds=6 --fights=900 --max=3 --rolls=3 --nh=32 --epochs=8 --lr=.002 --val=800 --test=1200 --dagger=true --arch=cat --H=20 --crn=true --seed=5101"},
+  {"name": "ei_harr_new", "args": "--trainer=expert --feat=rich --loss=adv --rounds=6 --fights=900 --max=3 --rolls=3 --nh=32 --epochs=8 --lr=.002 --val=800 --test=1200 --dagger=true --arch=harrier --H=20 --crn=true --seed=5102"}
+ ]
+}

@@ -284,3 +284,12 @@ each species develop its own realistic fighting style. This note is the plan; th
   pts (± 1.3-1.6), class goal +0.024 / +0.040 / +0.020 (± .03), quiet endings 1.4 -> 1.2% / 1.1 -> .9% / .9 -> .5%, longest
   no-damage stretch unchanged (median 6-7 s, p90 22-29 s). So every class now takes part in the attack by intent, with no
   measurable shift in balance and no more stalling. Harrier ES fine-tune (es15 harr_es1): nothing beat p1.
+- **Live nets re-validated on main's new default (Nov 2, rv20: maps2 + objective on, vs the heuristic, 2 × 2,000 fights):**
+  guard_target_m2 +0.121 ± 0.018 / +0.085 ± 0.018 (you survive +7.0 / +4.5 pts); brawler_target_e1 +0.059 ± 0.027 / +0.070 ±
+  0.027; charger_target_m1 +0.130 / +0.190 ± 0.030 (buffalo check fails; owner Nov 2: lion realism "a good thing but not a hard
+  requirement", so report-only); **cat_target_e1 +0.020 / +0.043 ± 0.024: most of its edge is gone** (was +0.090) -> retrain
+  (ei22). Harrier candidate p1: +0.069 ± 0.025 / +0.047 ± 0.024 (2.8 SE and 1.96 SE: just under the bar on draw 2) -> retrain
+  on the new default (ei22). Quota raised to 256 CPUs (owner, Nov 2).
+- **Joint target + intent headroom, enemy cats (jt21, 300 fights, H 8 s, 2 CRN rolls):** target+intent lookahead vs live
+  +0.183 ± 0.068 (2.7 SE); target-only vs live +0.106 ± 0.073; joint vs target-only +0.078 ± 0.064 (directional). The
+  lookahead overrode the cat's intent on 75% of the decisions it branched. More fights: jt23.

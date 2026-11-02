@@ -138,8 +138,9 @@ const SPEC_X = {
   // lions). Records before Oct 31 read 0.
   // Owner, Oct 31: species realism stays in training except where it directly conflicts with going for the objective; so this
   // counts only while the buffalo is not going for you (move_run.js), and fighting your animals is helping, not shirking
-  charger: {mobsPred: {num: r => r.mobT || 0, den: r => r.mobExpT || 0, kind: 'down', tol: .05, gate: true},
-            mobExposure: {num: r => r.mobExpT || 0, den: r => r.mobLife || 0, kind: 'down', tol: .05, gate: true}},
+  // Owner, Nov 2: "realism towards attacking a team via lions seems a good thing but not a hard requirement": report-only
+  charger: {mobsPred: {num: r => r.mobT || 0, den: r => r.mobExpT || 0, kind: 'info'},
+            mobExposure: {num: r => r.mobExpT || 0, den: r => r.mobLife || 0, kind: 'info'}},
 };
 const DEFS_SPEC = Object.fromEntries(Object.keys(DEFS).filter(a => a !== 'guard').map(a => [a, Object.assign({}, DEFS[a], SPEC_INFO, SPEC_X[a] || {})]));
 const defsOf = (arch, spec) => { const d = (spec ? DEFS_SPEC : DEFS)[arch || 'harrier'] || (spec && DEFS[arch || 'harrier']); if (!d) throw new Error('no reward metrics for archetype ' + arch); return d; };
