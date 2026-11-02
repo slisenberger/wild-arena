@@ -1,0 +1,8 @@
+{
+ "note": "Ship checks for harrier_target_e2 (ei22, held-out +0.080 ± 0.034): vs the live set (harriers have no live target net: base = today's targets), 2 × 2,000 fresh fights, plus the speciation report.",
+ "runs": [
+  {"name": "e2_23", "args": "--trainer=probe --script=policy/probes/eval_target_cli.js policy/weights/harrier_target_e2.json harrier 2000 23 91 checkmate 1"},
+  {"name": "e2_41", "args": "--trainer=probe --script=policy/probes/eval_target_cli.js policy/weights/harrier_target_e2.json harrier 2000 41 91 checkmate 1"},
+  {"name": "e2_spec", "args": "--trainer=probe --script=policy/probes/speciation.js 600 71 --net=policy/weights/harrier_target_e2.json --arch=harrier"}
+ ]
+}

@@ -58,7 +58,7 @@ if (cmd === 'init'){
 if (!s) throw new Error('no state ' + file + ' (run init first)');
 if (s.simHash !== R.simHash() && !process.env.ALLOW_ENGINE_MISMATCH) throw new Error(`${file} was made with sim ${s.simHash}; this checkout has ${R.simHash()}`);
 const c = s.config, T = +opt.threads || c.threads, HOURS = +opt.hours || 0, T0 = Date.now(), fo = {arch: c.arch, seed: c.seed, withLive: true, goal: c.goal, spec: c.spec, withCat: c.arch === 'guard' && c.only === 'cat'};
-const WI = (D, kappa) => D ? {kind: 'move-adv', v: 1, set: BASE_I(c.arch).set, base: BASE_I(c.arch), nin: BASE_I(c.arch).nin, nout: BASE_I(c.arch).nout, kappa, D} : null;
+const WI = (D, kappa) => D ? {kind: 'move-adv', v: 1, only: c.arch === 'guard' ? c.only || null : null, set: BASE_I(c.arch).set, base: BASE_I(c.arch), nin: BASE_I(c.arch).nin, nout: BASE_I(c.arch).nout, kappa, D} : null;
 const W = (theta, D, kappa) => Object.assign({}, s.P0, {theta: theta.slice(), targetsOnly: true}, s.margin != null ? {margin: s.margin} : {}, c.intents && D ? {moveOverride: WI(D, kappa)} : {}); // --loss=adv: the learned switching threshold // the net only re-ranks targets (its labels only compare targets)
 // WA_DIST (a store root: gs://.../runs/<run>/dist or a folder): spread big batches over helper VMs (policy/dist.js)
 const DIST = process.env.WA_DIST, Dm = DIST ? require('./dist.js') : null;

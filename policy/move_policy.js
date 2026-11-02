@@ -6,6 +6,7 @@ const A = require(process.env.SIM ? path.resolve(process.env.SIM) : path.join(__
 const M = require('./move_model.js');
 const archOf = n => require('./move_arch.js').arch(n); // lazy: move_arch -> sim.js -> live.js -> here is a require cycle
 function moveChoose(w, u, t, d, P, arch){
+  if (P.kind === 'move-adv' && P.only === 'cat' && !(u.s.pred && u.s.latch)) P = P.base; // a correction learned only for your cats leaves your other guards on the base net
   const a = P.fixed !== undefined ? P.fixed : P.rule ? RULES[P.rule](w, u, t, d) : M.act(P, archOf(arch).F.extract(w, u, t, d));
   const st = w.cfg.moveStats; if (st){ const c = st[arch] || (st[arch] = new Array(archOf(arch).nout).fill(0)); c[a]++; }
   return a;

@@ -11,7 +11,7 @@ const a = process.argv.slice(2), pos = a.filter(x => !x.startsWith('--')), opt =
 const s = JSON.parse(fs.readFileSync(path.resolve(pos[0]), 'utf8')), c = s.config, arch = c.arch, N = +pos[1] || 2000, idx = +pos[2] || 23, T = +opt.threads || Math.max(1, Math.min(16, os.cpus().length));
 const b = s.best, base = LIVE[arch];
 const W = Object.assign({}, s.P0, {theta: b.theta, targetsOnly: true, margin: Math.max(b.margin != null ? b.margin : s.P0.margin, .001)},
-  b.thetaI && base ? {moveOverride: {kind: 'move-adv', v: 1, set: base.set, base, nin: base.nin, nout: base.nout, kappa: b.kappaI, D: b.thetaI}} : {});
+  b.thetaI && base ? {moveOverride: {kind: 'move-adv', v: 1, only: arch === 'guard' ? c.only || null : null, set: base.set, base, nin: base.nin, nout: base.nout, kappa: b.kappaI, D: b.thetaI}} : {});
 const LT = R.A._internals.LIVE_TARGET[arch] || null; // base arm: the live target net for this class (if any) and live movement
 const fights = R.fightSet('probe', idx, N, {arch, seed: 91, withLive: true, goal: c.goal, spec: c.spec, withCat: arch === 'guard' && c.only === 'cat'}), jobs = [];
 fights.forEach((f, i) => { jobs.push({k: 'live', i, f, W: LT}, {k: 'student', i, f, W}); });

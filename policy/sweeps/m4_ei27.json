@@ -1,0 +1,7 @@
+{
+ "note": "Your cats, whom + how, rerun (Nov 2): ei24 eiI_yourcat's intent correction applied to every guard, not only the cats (validation collapsed to -0.409 with dogs/chargers drifting); now a 'move-adv' with only: 'cat' leaves other guards on guard_v1.",
+ "helpers": 3,
+ "runs": [
+  {"name": "eiI_yourcat2", "args": "--trainer=expert --feat=rich --loss=adv --rounds=6 --fights=900 --max=3 --rolls=3 --nh=32 --epochs=8 --lr=.002 --val=800 --test=1200 --dagger=true --arch=guard --only=cat --wide=true --H=20 --crn=true --intents=true --seed=5401"}
+ ]
+}
