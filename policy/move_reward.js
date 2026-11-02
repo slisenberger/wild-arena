@@ -102,6 +102,8 @@ const nogate = d => Object.assign({}, d, {gate: false});
 const METRICS_X = {
   cat: Object.assign({}, BASE_X, {
     pounceRate: {num: r => r.pounces * 60, den: r => r.engT, kind: 'two', rel: .3},
+    // owner rule (Nov 2): species signatures hold; a cat that stops pouncing has lost its signature move (gate on a fall only)
+    pounceKept: {num: r => r.pounces * 60, den: r => r.engT, kind: 'down', rel: .3, gate: true},
     longChase:  {num: r => r.longChaseT, den: r => r.life, kind: 'up', tol: .02, gate: true},
     // cat-intent style (records from move_run.js; 0 for older records): stalk-then-pounce share, lion vs stalker
     // profiles, no endless holds in cover, no extra sprinting (metres run at > 60% of top speed per engaged minute)

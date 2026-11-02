@@ -1,0 +1,7 @@
+{
+ "note": "Enemy cats whom + how, 3rd try (Nov 2): ei26's best (held-out +0.087 ± 0.038 vs today's cat targets) halved the pounce rate (style .968). Species signatures hold (owner rule), so the pounce rate may not fall more than 30% (new gate pounceKept).",
+ "helpers": 3,
+ "runs": [
+  {"name": "eiI_cat3", "args": "--trainer=expert --feat=rich --loss=adv --rounds=6 --fights=900 --max=3 --rolls=3 --nh=32 --epochs=8 --lr=.002 --val=800 --test=1200 --dagger=true --arch=cat --H=20 --crn=true --intents=true --seed=5501"}
+ ]
+}

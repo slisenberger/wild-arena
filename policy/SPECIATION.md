@@ -332,3 +332,7 @@ each species develop its own realistic fighting style. This note is the plan; th
   0.026 (1.4 SE; style 0.997, no gates, fruitless .54 -> .65, you -0.8 pts). Three draws: +0.088, +0.056, +0.036: a real but
   small effect (~+0.06). The bar stays >= 2 SE on a fresh draw the main session runs. Next: the joint v2 run (jn29) trains the
   harrier warm from e2 with a 20-s teacher; also cut fruitless approaches (approaches that never land), the drift that grows.
+- **Enemy cats whom + how (ei26 eiI_cat2, Nov 2):** held-out **+0.087 ± 0.038** vs today's cat targets (round 3), style .968:
+  cats went for you more (humanShare .17 -> .45) and pounced about half as often (pounceRate 2.07 -> 1.24, stalk pounces
+  halved). Live-set checks running (sc30). Species signatures hold (owner rule), so cats now keep a hard check on the pounce
+  rate (pounceKept: no fall over 30%); rerun ei31.
