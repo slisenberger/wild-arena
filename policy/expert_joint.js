@@ -7,7 +7,8 @@
 // replaces the incumbent only at >= 2 SE with no gate failures (no disengaging; species realism, bent only for the objective).
 // Labelling only observes: the real fight's choices are the incumbents', so labels come from the game as played.
 //   node policy/expert_joint.js init <state.json> [--classes=cat,harrier,brawler,charger,guard --rounds=4 --fights=600 --H=12
-//        --rolls=2 --max=3 --every=3 --nh=32 --epochs=8 --lr=.002 --val=800 --seed=1]
+//        --rolls=2 --max=3 --every=3 --nh=32 --epochs=8 --lr=.002 --val=800 --seed=1 --Hg=20 (guards' horizon) --warm=true
+//        (students start from rich-feature incumbents, widened) --inc=cls:weights.json,...]
 //   node policy/expert_joint.js run <state.json> [--threads=N --hours=H]      (WA_DIST: spread batches over helper VMs)
 //   node policy/expert_joint.js report <state.json>
 const { Worker, isMainThread, parentPort, workerData } = require('worker_threads');
@@ -35,8 +36,9 @@ if (!isMainThread){
       for (let k = 0; k < o.rolls; k++){
         const c = L.cloneWorld(w, {noLabel: true}), cu = c.units[ui];
         c.R.seek((w.R.state() ^ Math.imul(n * 97 + 1 + 7919 * k, 0x9e3779b9)) >>> 0); // common random numbers across options
-        cu.forceT = c.units[w.units.indexOf(opts[i].t)]; cu.forceUntil = c.t + o.H; cu.target = cu.forceT; cu.state = 'engage'; cu.carcass = null;
-        const t1 = c.t + o.H; while (!c.over && c.t < t1) A.step(c);
+        const H = g && o.Hg ? o.Hg : o.H; // guards: a longer horizon (a 12-s look rewards leaving you for a fight you pay for later)
+        cu.forceT = c.units[w.units.indexOf(opts[i].t)]; cu.forceUntil = c.t + H; cu.target = cu.forceT; cu.state = 'engage'; cu.carcass = null;
+        const t1 = c.t + H; while (!c.over && c.t < t1) A.step(c);
         v += (g ? -PL.score(c) : PL.score(c)) / o.rolls; }
       sc.push(v); }
     const r4 = x => Math.round(x * 1e4) / 1e4;
@@ -68,6 +70,7 @@ if (cmd === 'init'){
   if (s) throw new Error(file + ' exists');
   const c = Object.assign({}, DEF, opt, {trainer: 'joint'}); c.classes = String(c.classes).split(',');
   const inc = {}, incFrom = {}; for (const k of c.classes){ const live = I.LIVE_TARGET[k]; inc[k] = live || ZERO; incFrom[k] = live ? 'live' : 'heuristic'; }
+  if (c.inc) for (const e of String(c.inc).split(',')){ const [k, f] = e.split(':'); const W = JSON.parse(fs.readFileSync(path.join(__dirname, 'weights', f), 'utf8')); delete W.meta; inc[k] = W; incFrom[k] = f; } // --inc=harrier:harrier_target_e2.json: start a class from a candidate
   s = {format: 'wild-arena/expert-joint', simHash: R.simHash(), harnessHash: R.harnessHash(), config: c, inc, incFrom, stu: {}, spIds: {}, round: 0, phase: 'collect', dataN: 0, history: []};
   save(s); log(`[init] ${file}: ${JSON.stringify(c)} | incumbents ${JSON.stringify(incFrom)}`); process.exit(0);
 }
@@ -107,6 +110,9 @@ async function validate(k, W, r){ // the student for class k vs its incumbent, e
         // species code: traits v2 + a one-hot over the class's species (fixed list, so warm starts keep their shape)
         const spIds = s.spIds[k] || (s.spIds[k] = A.ANIMALS.filter(a => k === 'guard' || I.archetypeOf({side: 'E', s: a}) === k).map(a => a.id)), TM = require('./target_model.js');
         const Dx = Dk.map(d => Object.assign({}, d, {tr: d.tr.concat(TM.spCode({spIds}, d.sp))}));
+        // warm start: a rich-feature incumbent (an earlier winner) widened to traits v2 + the species one-hot (new inputs at 0)
+        if (!s.stu[k] && s.inc[k] && s.inc[k].kind === 'target-mlp' && s.inc[k].feat === 'rich' && !s.inc[k].spIds && c.warm){ const TRm = require('./traits.js'), Wd = TM.widen(s.inc[k], (TRm.DIM2 - TRm.DIM) + spIds.length);
+          s.stu[k] = Object.assign({}, Wd, {traitsV: 2, spIds}); log(`[round ${r} train ${k}] warm start from the incumbent (${s.incFrom[k]}), widened to ${Wd.nin} inputs`); }
         const st = s.stu[k], res = BC.trainAdv(Dx, {nh: c.nh, epochs: c.epochs, lr: c.lr, seed: c.seed + r, feat: 'rich', wide: k === 'guard'}, () => {}, st ? {theta: st.theta} : null);
         const P = Object.assign({}, res.P, {traitsV: 2, spIds, targetsOnly: true, feat: 'rich'}, k === 'guard' ? {wide: true} : {});
         s.stu[k] = P; log(`[round ${r} train ${k}] ${Dk.length} decisions: held-out gain ${res.best.gain.toFixed(4)} of ${res.oracle.toFixed(4)}, threshold ${res.P.margin}`);

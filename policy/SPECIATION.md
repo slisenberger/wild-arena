@@ -320,3 +320,11 @@ each species develop its own realistic fighting style. This note is the plan; th
   still no student accepted (guard students drop guards' idle time sharply and lose, -0.144). Your-cat whom + how (ei24) had a
   bug: the intent correction applied to every guard (validation -0.409, dogs and chargers drifting); fixed (only: 'cat'),
   rerun ei27.
+- **Wolves / hyenas ship candidate (Nov 2): harrier_target_e2 passes** vs the live set, 2 × 2,000 fresh fights: +0.088 ± 0.026
+  (style 1.000, you -3.1 pts) and +0.056 ± 0.025 (style 0.999, you -1.8 pts), no gates. Speciation (600 fights): lone hyena /
+  lone wolf move off you (62% / 46% of changed picks) onto closer, bigger targets; hyena clans and wolf packs onto you (39-40%)
+  and smaller targets: packs commit, lone canids don't take on big prey. Sent to the main session.
+- **Joint pilot jn25 finished (4 rounds):** no student accepted. Harrier students gained up to +0.144 vs today's targets but by
+  disengaging (darting less, ~35-40 m off; style .63-.78); guard students lost every round (-0.10 to -0.14: 12-s labels pay
+  guards to leave you for a nearby fight); cat / brawler / charger students at or below their live nets. v2 (jn29): warm starts
+  from the rich-feature winners (widened to the species code), H 20 s, guards 30 s.

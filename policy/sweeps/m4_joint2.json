@@ -1,8 +1,7 @@
 {
- "note": "More fights for the joint target+intent headroom on enemy cats (jt21: joint vs live +0.183 ± 0.068, joint vs target-only +0.078 ± 0.064 on 300). 3 × 300 fresh fights on other probe draws.",
+ "note": "Joint pilot v2 (Nov 2). jn25 accepted nothing: students started from today's targets while incumbents were strong; guards' 12-s labels rewarded leaving you (-0.14 every round); harrier gains came from disengaging (style .78). Now: students warm-start from rich-feature winners (cat_target_e1, harrier_target_e2 as the harrier incumbent, brawler_target_e1) widened to traits v2 + species one-hot; H 20 s, guards 30 s; chargers stay on charger_target_m1 (present in every fight, not trained).",
+ "helpers": 3,
  "runs": [
-  {"name": "joint_cat_b", "args": "--trainer=probe --script=policy/probes/joint_lookahead.js cat 300 62 --H=8 --rolls=2"},
-  {"name": "joint_cat_c", "args": "--trainer=probe --script=policy/probes/joint_lookahead.js cat 300 63 --H=8 --rolls=2"},
-  {"name": "joint_cat_d", "args": "--trainer=probe --script=policy/probes/joint_lookahead.js cat 300 64 --H=8 --rolls=2"}
+  {"name": "joint2", "args": "--trainer=joint --classes=cat,harrier,brawler,guard --inc=harrier:harrier_target_e2.json --warm=true --rounds=4 --fights=1500 --H=20 --Hg=30 --rolls=3 --max=3 --every=3 --nh=32 --epochs=8 --lr=.002 --val=1000 --seed=6201"}
  ]
 }
