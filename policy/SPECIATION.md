@@ -298,3 +298,10 @@ each species develop its own realistic fighting style. This note is the plan; th
   (pooled about +0.077 ± 0.032, 2.4 SE). Your cats (300): target-only vs live -0.081 ± 0.043, joint vs target-only +0.099 ±
   0.039 (2.5 SE): for your cats the move is the lever, not the target. Tooling: 'move-adv' movement correction (zero = live,
   24/24 fights identical), per-intent labels in plan.js, trainIntentAdv, expert_iter --intents. Training: ei24.
+- **Joint training loop (Nov 2, policy/expert_joint.js).** Every class learns in the same fights: real fights are played by
+  each class's incumbent target net (live net, accepted student, or today's targets through the hook); the lookahead labels a
+  sample of every class's decisions (copies also played by the incumbents, labelling off inside them; checked: stepping copies
+  leaves the real fight unchanged, 30/30); students are target-mlp over rich inputs + traits v2 + a per-species one-hot
+  (per-species residual, zero at start; new species act on traits alone); a student replaces its incumbent only at >= 2 SE vs
+  that incumbent with every other class on its own, style >= .9, no gate failures. Guards are sampled 4x less (they decide
+  far more often). Smoke runs OK; pilot sweep m4_joint1 (5 classes, 4 rounds × 1,500 fights) launches when CPUs free up.

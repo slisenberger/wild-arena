@@ -53,14 +53,14 @@ for r in ${RUNS//+/ }; do
     get "sweeps/$SWEEP/runs/$r/state.json" "$f" && get "sweeps/$SWEEP/runs/$r/state.json.log" "$f.log" || true   # resume if saved
     if [ ! -f "$f" ]; then
       args=$(node -e "const m=require('/tmp/manifest.json');const x=m.runs.find(q=>q.name===process.argv[1]);if(!x)process.exit(3);console.log(x.args)" "$r") || { status "$r" failed "not in manifest"; exit 0; }
-      TR=policy/train.js; [[ " $args " == *" --trainer=ppo "* ]] && TR=policy/ppo_target.js; [[ " $args " == *" --trainer=expert "* ]] && TR=policy/expert_iter.js   # milestone-4 PPO / expert-iteration runs
+      TR=policy/train.js; [[ " $args " == *" --trainer=ppo "* ]] && TR=policy/ppo_target.js; [[ " $args " == *" --trainer=expert "* ]] && TR=policy/expert_iter.js; [[ " $args " == *" --trainer=joint "* ]] && TR=policy/expert_joint.js   # milestone-4 PPO / expert-iteration runs
       node $TR init "$f" $args > "$d/init.out" 2>&1 || { status "$r" failed "init: $(tail -c 1500 "$d/init.out")"; exit 0; }
     fi
-    TR=policy/train.js; case "$(node -p "require('./$f').config.trainer || ''" 2>/dev/null)" in ppo) TR=policy/ppo_target.js;; expert) TR=policy/expert_iter.js;; esac   # milestone-4 runs (manifest args --trainer=ppo|expert)
+    TR=policy/train.js; case "$(node -p "require('./$f').config.trainer || ''" 2>/dev/null)" in ppo) TR=policy/ppo_target.js;; expert) TR=policy/expert_iter.js;; joint) TR=policy/expert_joint.js;; esac   # milestone-4 runs (manifest args --trainer=ppo|expert)
     get "sweeps/$SWEEP/runs/$r/state.json.data.jsonl.gz" "$f.data.jsonl.gz" 2>/dev/null || true; touch "$d/.dsync"   # expert iteration's data (resume)
     status "$r" running "$(node $TR report "$f" 2>/dev/null | head -1)"
     nh=$(node -e "const m=require('/tmp/manifest.json'),x=m.runs.find(q=>q.name===process.argv[1])||{};console.log(+(x.helpers!=null?x.helpers:(m.helpers||0)))" "$r" 2>/dev/null || echo 0)
-    if [ "${nh:-0}" -gt 0 ] && [ "$TR" = policy/expert_iter.js ]; then export WA_DIST="$BUCKET/sweeps/$SWEEP/runs/$r/dist"; else unset WA_DIST; fi   # helpers share this run's fights
+    if [ "${nh:-0}" -gt 0 ] && { [ "$TR" = policy/expert_iter.js ] || [ "$TR" = policy/expert_joint.js ]; }; then export WA_DIST="$BUCKET/sweeps/$SWEEP/runs/$r/dist"; else unset WA_DIST; fi   # helpers share this run's fights
     node $TR run "$f" --threads="$THREADS" --hours="$HOURS" > "$d/run.out" 2>&1 & tp=$!
     while kill -0 $tp 2>/dev/null; do sleep "$SYNC_S"; [ -f "$f.data.jsonl.gz" ] && [ "$f.data.jsonl.gz" -nt "$d/.dsync" ] && put "$f.data.jsonl.gz" "sweeps/$SWEEP/runs/$r/state.json.data.jsonl.gz" && touch "$d/.dsync"; [ -f "$f" ] && put "$f" "sweeps/$SWEEP/runs/$r/state.json"; [ -f "$f.log" ] && put "$f.log" "sweeps/$SWEEP/runs/$r/state.json.log"; status "$r" running "$(node $TR report "$f" 2>/dev/null | head -1)"; done
     wait $tp; rc=$?

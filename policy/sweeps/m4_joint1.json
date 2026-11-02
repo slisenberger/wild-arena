@@ -1,0 +1,7 @@
+{
+ "note": "First joint training round (Nov 2): five classes learn in the same fights (enemy cats, wolves/hyenas, bears, chargers, your guards), each labelled by the fair lookahead with the copies played by every class's incumbent; students = target-mlp over rich inputs + species traits v2 + a per-species one-hot (residual, starts at 0); a student replaces its class's incumbent only at >= 2 SE with no gate failures. 4 rounds × 1,500 fights, H 12 s, 3 CRN rolls, 3 helper VMs.",
+ "helpers": 3,
+ "runs": [
+  {"name": "joint1", "args": "--trainer=joint --classes=cat,harrier,brawler,charger,guard --rounds=4 --fights=1500 --H=12 --rolls=3 --max=3 --every=3 --nh=32 --epochs=8 --lr=.002 --val=1000 --seed=6101"}
+ ]
+}

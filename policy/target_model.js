@@ -10,7 +10,10 @@ const npar = P => P.kind === 'target-mlp' ? P.nin * (P.nh + 1) + 2 * P.nh : P.ni
 const thetaOf = P => P.kind === 'target-mlp' ? P.theta : P.wt;
 function withTheta(P, th){ return P.kind === 'target-mlp' ? Object.assign({}, P, {theta: th.slice()}) : Object.assign({}, P, {wt: th.slice(0, P.nin)}); }
 // the option features the scorer sees (adds the unit's traits for a 'self' MLP)
-function inputs(P, X, u){ if (P.kind !== 'target-mlp' || !P.self) return X; const t = TR.traitsV(u.s, P.traitsV); return X.map(x => x.concat(t)); }
+// P.spIds (joint training): + a one-hot of the unit's species over that list (all zeros for a species not in it), so a net can
+// learn what a species' traits don't say (a per-species residual; its weights start at 0)
+const spCode = (P, id) => { if (!P.spIds) return []; const v = new Array(P.spIds.length).fill(0), i = P.spIds.indexOf(id); if (i >= 0) v[i] = 1; return v; };
+function inputs(P, X, u){ if (P.kind !== 'target-mlp' || !P.self) return X; const t = P.spIds ? TR.traitsV(u.s, P.traitsV).concat(spCode(P, u.s.id)) : TR.traitsV(u.s, P.traitsV); return X.map(x => x.concat(t)); }
 function hidden(th, P, x){
   const {nin, nh} = P, h = new Array(nh), o = nin + 2 * nh;
   for (let j = 0; j < nh; j++){ let a = th[nin + nh + j]; const r = o + j * nin; for (let k = 0; k < nin; k++) a += th[r + k] * x[k]; h[j] = Math.tanh(a); }
@@ -49,4 +52,4 @@ function widen(P, add){
   const out = th.slice(0, nin).concat(z, th.slice(nin, o)); for (let j = 0; j < nh; j++) out.push(...th.slice(o + j * nin, o + (j + 1) * nin), ...z);
   return Object.assign({}, P, {nin: nin + add, theta: out});
 }
-module.exports = { npar, thetaOf, withTheta, inputs, scores, addGrad, mlp, widen, TRAITS: TR.DIM };
+module.exports = { spCode, npar, thetaOf, withTheta, inputs, scores, addGrad, mlp, widen, TRAITS: TR.DIM };
