@@ -1,0 +1,7 @@
+{
+ "note": "Checks for the enemy-cat whom + how student (ei26 eiI_cat2 round 3; held-out +0.087 ± 0.038 vs today's cat targets, style .968: pounce rates halved). Vs the live set (cat_target_e1 + cat_v1), 2 × 2,000 fights.",
+ "runs": [
+  {"name": "i1_23", "args": "--trainer=probe --script=policy/probes/eval_student.js policy/weights/cat_student_i1.state.json 2000 23"},
+  {"name": "i1_41", "args": "--trainer=probe --script=policy/probes/eval_student.js policy/weights/cat_student_i1.state.json 2000 41"}
+ ]
+}
