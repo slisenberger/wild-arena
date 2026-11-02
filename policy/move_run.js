@@ -118,7 +118,7 @@ function runFight(f, weights, arch){
           if (st === 'close' && v > .5 && v < CTEL.stalkSpd * u.s.spd) s.slowAt = w.t;            // creeping in (cover holds)
           if (eng){ r[rush ? 'engRush' : 'engStalk'] += DT; if (I.dist(u, t) <= TEL.near) r[rush ? 'nearRush' : 'nearStalk'] += DT; }
           if (eng && st === 'close' && v < CTEL.stillV){ s.still = (s.still || 0) + DT; if (s.still > CTEL.stillT) r.stillLongT += DT; } else s.still = 0; // lying still on a target
-          if (st === 'close' && v > XTEL.chaseSpd * u.s.spd) r.sprintM += v * DT;              // metres run down at speed
+          if (st === 'close' && t !== H && v > XTEL.chaseSpd * u.s.spd) r.sprintM += v * DT; // (sprinting at you is going for the objective: exempt, owner rule)              // metres run down at speed
         }
         // long chase: closing in at > 60% of its top speed for > 8 s on end
         // owner rule (Oct 31): species realism holds except where it directly conflicts with going for the objective, so

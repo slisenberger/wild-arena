@@ -308,3 +308,10 @@ each species develop its own realistic fighting style. This note is the plan; th
 - ei22 ei_cat_new (enemy cats, target-only expert iteration on the objective default, 20 s CRN teacher, helpers): held-out
   +0.028 ± 0.030, none found so far; cat_target_e1 stays live (+0.020 / +0.043 vs the heuristic). The whom + how runs (ei24)
   and the joint pilot (jn25, launched 18:50 UTC) are the next tries for cats.
+- **Whom + how, enemy cats (ei24 eiI_cat, Nov 2):** validation vs today's cat targets +0.149 ± 0.043, +0.096, +0.073, +0.090 in
+  rounds 0-3, all rejected on sprintRate (cats ran more at speed, much of it at you: humanShare .15 -> .37-.49); rounds 4-5 also
+  failed longIdle / stillLong (real disengaging, rightly rejected). Under the owner rule sprinting at the human is now exempt
+  from sprintRate (as from longChase / farHunt / farSprint); every round's student is now kept in history. Rerun: ei26.
+- **Joint pilot jn25, rounds 0-1:** no student accepted yet. Harrier r0 +0.107 ± 0.043 vs today's targets but style .645
+  (wolves stopped darting, held ~40 m off, noContact up: disengaging, rightly rejected); cat +0.025 / -0.052, brawler -0.077 /
+  -0.023, charger -0.027 / +0.041, guard -0.096 / ... vs their live nets.

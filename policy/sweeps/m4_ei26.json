@@ -1,0 +1,7 @@
+{
+ "note": "Enemy cats, whom + how, again (Nov 2): eiI_cat's students reached +0.149 / +0.096 / +0.090 vs today's cat targets in validation but failed sprintRate, which counted sprints at the human; under the owner rule (realism bends only for the objective) sprinting at the human is now exempt. Every round's student is kept in history for re-scoring.",
+ "helpers": 3,
+ "runs": [
+  {"name": "eiI_cat2", "args": "--trainer=expert --feat=rich --loss=adv --rounds=6 --fights=900 --max=3 --rolls=3 --nh=32 --epochs=8 --lr=.002 --val=800 --test=1200 --dagger=true --arch=cat --H=20 --crn=true --intents=true --seed=5301"}
+ ]
+}

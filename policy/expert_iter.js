@@ -94,7 +94,7 @@ const timeUp = () => HOURS && Date.now() - T0 > HOURS * 3600e3;
     }
     if (s.phase === 'val'){
       const v = await evalW(s.theta, 'val', r, c.val, s.thetaI, s.kappaI), ok = !v.gates.length && v.style >= c.styleThr, better = ok && v.diff > (s.best.val || 0); // must beat today's cats (val 0) and every earlier clean round
-      s.history.push(Object.assign({round: r, dataN: s.dataN}, v));
+      s.history.push(Object.assign({round: r, dataN: s.dataN, theta: s.theta.slice(), margin: s.margin, thetaI: s.thetaI ? s.thetaI.slice() : null, kappaI: s.kappaI}, v)); // every round's student, so it can be re-scored later
       if (better) s.best = {theta: s.theta.slice(), round: r, val: v.diff, from: `round ${r}`, margin: s.margin, thetaI: s.thetaI ? s.thetaI.slice() : null, kappaI: s.kappaI};
       log(`[round ${r} val] network vs today's ${c.arch} on ${v.n} fresh fights: ${v.diff >= 0 ? '+' : ''}${v.diff.toFixed(3)} ± ${v.se.toFixed(3)} | style ${v.style.toFixed(3)} gates [${v.gates}] drift [${v.drift.join('; ')}] | your survival ${(100 * v.surv).toFixed(1)} pts${better ? '  -> new best' : ok ? '' : '  (not clean)'}`);
       s.round++; s.phase = 'collect'; save(s);
