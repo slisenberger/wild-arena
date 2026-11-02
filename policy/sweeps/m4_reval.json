@@ -1,0 +1,45 @@
+{
+ "note": "Re-validate the live target nets (and harrier candidate p1) on main's new default (maps2 + cfg.objective on, Nov 1): each vs today's heuristic targets, 2 draws \u00d7 2,000 fresh fights.",
+ "runs": [
+  {
+   "name": "rv_chg_23",
+   "args": "--trainer=probe --script=policy/probes/eval_target_cli.js policy/weights/charger_target_m1.json charger 2000 23 91 checkmate 1 --base=none"
+  },
+  {
+   "name": "rv_chg_41",
+   "args": "--trainer=probe --script=policy/probes/eval_target_cli.js policy/weights/charger_target_m1.json charger 2000 41 91 checkmate 1 --base=none"
+  },
+  {
+   "name": "rv_cat_23",
+   "args": "--trainer=probe --script=policy/probes/eval_target_cli.js policy/weights/cat_target_e1.json cat 2000 23 91 checkmate 1 --base=none"
+  },
+  {
+   "name": "rv_cat_41",
+   "args": "--trainer=probe --script=policy/probes/eval_target_cli.js policy/weights/cat_target_e1.json cat 2000 41 91 checkmate 1 --base=none"
+  },
+  {
+   "name": "rv_brw_23",
+   "args": "--trainer=probe --script=policy/probes/eval_target_cli.js policy/weights/brawler_target_e1.json brawler 2000 23 91 checkmate 1 --base=none"
+  },
+  {
+   "name": "rv_brw_41",
+   "args": "--trainer=probe --script=policy/probes/eval_target_cli.js policy/weights/brawler_target_e1.json brawler 2000 41 91 checkmate 1 --base=none"
+  },
+  {
+   "name": "rv_grd_23",
+   "args": "--trainer=probe --script=policy/probes/eval_target_cli.js policy/weights/guard_target_m2.json guard 2000 23 91 per-archetype 0 --base=none"
+  },
+  {
+   "name": "rv_grd_41",
+   "args": "--trainer=probe --script=policy/probes/eval_target_cli.js policy/weights/guard_target_m2.json guard 2000 41 91 per-archetype 0 --base=none"
+  },
+  {
+   "name": "rv_harr_23",
+   "args": "--trainer=probe --script=policy/probes/eval_target_cli.js policy/weights/harrier_target_p1.json harrier 2000 23 91 checkmate 1"
+  },
+  {
+   "name": "rv_harr_41",
+   "args": "--trainer=probe --script=policy/probes/eval_target_cli.js policy/weights/harrier_target_p1.json harrier 2000 41 91 checkmate 1"
+  }
+ ]
+}
