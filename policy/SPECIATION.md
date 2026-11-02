@@ -328,3 +328,7 @@ each species develop its own realistic fighting style. This note is the plan; th
   disengaging (darting less, ~35-40 m off; style .63-.78); guard students lost every round (-0.10 to -0.14: 12-s labels pay
   guards to leave you for a nearby fight); cat / brawler / charger students at or below their live nets. v2 (jn29): warm starts
   from the rich-feature winners (widened to the species code), H 20 s, guards 30 s.
+- **harrier_target_e2 did not ship (Nov 2):** the main session's own confirmation draw (2,000 fights, probe 111) gave +0.036 ±
+  0.026 (1.4 SE; style 0.997, no gates, fruitless .54 -> .65, you -0.8 pts). Three draws: +0.088, +0.056, +0.036: a real but
+  small effect (~+0.06). The bar stays >= 2 SE on a fresh draw the main session runs. Next: the joint v2 run (jn29) trains the
+  harrier warm from e2 with a 20-s teacher; also cut fruitless approaches (approaches that never land), the drift that grows.
