@@ -16,7 +16,10 @@ function score(w){
   const H = w.human; return 2 * (H.maxhp - Math.max(0, H.state === 'dead' ? 0 : H.hp)) / H.maxhp + pl / pm - el / em + (H.state === 'dead' ? 2 : 0);
 }
 function makePlanner(o){
-  o = Object.assign({H: 8, max: 3, cool: 2, rolls: 1, data: null, learner: null, real: 0, feat: null, set: false, arch: 'cat', side: 'E', only: null, wide: false, traitsV: 1, crn: false, keepRolls: false}, o || {});
+  o = Object.assign({H: 8, max: 3, cool: 2, rolls: 1, data: null, learner: null, real: 0, feat: null, set: false, arch: 'cat', side: 'E', only: null, wide: false, traitsV: 1, crn: false, keepRolls: false, intents: 0}, o || {});
+  // intents (probes/joint_lookahead.js): also branch each movement intent 0..intents-1 for the best target, held for H s
+  // (policy/force_intent.js); if one beats the target-only best, the unit holds that intent for `cool` s in the real fight
+  if (o.intents) require('./force_intent.js');
   // crn (probes/label_reliability.js): roll k uses the same dice for every option (common random numbers: unbiased per option,
   // lower variance of gain differences); keepRolls: data records also hold each roll's score per option (rec.r[option][roll])
   // arch / side: whose choice is planned. 'guard' / 'P' = your guards (policy.js chooseGuard; scored for your side; only 'cat' =
@@ -56,6 +59,18 @@ function makePlanner(o){
     if (o.data){ const X = feats(), r4 = x => Math.round(x * 1e4) / 1e4; const rec = {sp: u.s.id, tr: TR.traitsV(u.s, o.traitsV), X: tries.map(i => X[i].map(r4)), s: sc.map(r4), teach: tries.indexOf(teach)}; if (o.keepRolls) rec.r = rs.map(x => x.map(r4));
       if (o.set){ const si = SM.setInputs(w, u, opts); rec.U = si.U.map(r => r.map(r4)); rec.T = tries.map(i => si.T[i] ? si.T[i].map(r => r.map(r4)) : null); } // state encoder data
       o.data.push(rec); }
+    if (o.intents && opts[best] && opts[best].kind === 'target'){ let bi = -1, bv = bs;
+      for (let k = 0; k < o.intents; k++){ let v = 0;
+        for (let r = 0; r < o.rolls; r++){
+          const c = L.cloneWorld(w, inner), cu = c.units[ui];
+          c.R.seek((w.R.state() ^ Math.imul(P.n * 97 + 50 + k + 7919 * r, 0x9e3779b9)) >>> 0);
+          cu.forceT = c.units[w.units.indexOf(opts[best].t)]; cu.forceUntil = c.t + o.H; cu.target = cu.forceT; cu.state = 'engage'; cu.carcass = null;
+          cu.forceIntent = k; cu.forceIntentUntil = c.t + o.H;
+          const t1 = c.t + o.H; while (!c.over && c.t < t1) A.step(c);
+          v += (o.side === 'P' ? -score(c) : score(c)) / o.rolls; }
+        if (v > bv + 1e-9){ bv = v; bi = k; } }
+      P.intentBranched = (P.intentBranched || 0) + 1;
+      if (bi >= 0){ u.forceIntent = bi; u.forceIntentUntil = w.t + (o.cool || 2); P.intentChanged = (P.intentChanged || 0) + 1; } else { u.forceIntent = undefined; } }
     if (best !== teach) P.changed++;
     u.planT = w.t; u.planTo = opts[best] && opts[best].t;
     if (o.learner && o.learner.kind === 'target-set'){ const q = SM.scores(o.learner, SM.decision(w, u, opts, feats()), teach); let k = teach; q.forEach((x, j) => { if (opts[j].kind === 'target' && x > q[k]) k = j; }); return k; }

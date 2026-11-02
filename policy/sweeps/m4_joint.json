@@ -1,0 +1,7 @@
+{
+ "note": "Research Stage 3: headroom of choosing the movement intent together with the target (lookahead over the best target's intents, held 2 s) vs target-only lookahead vs live, on main's default (maps2 + objective). Enemy cats (7 cat intents) and your cats (6 guard intents).",
+ "runs": [
+  {"name": "joint_cat", "args": "--trainer=probe --script=policy/probes/joint_lookahead.js cat 300 61 --H=8 --rolls=2"},
+  {"name": "joint_yourcat", "args": "--trainer=probe --script=policy/probes/joint_lookahead.js guard 300 61 --H=8 --rolls=2 --only=cat"}
+ ]
+}
