@@ -29,8 +29,13 @@ function logits(P, x){
   }
   return out;
 }
+// 'move-adv' (milestone 4, lookahead-trained intents): {kind: 'move-adv', set: base.set (the engine reads the intent set from it), base: <move-mlp weights>, nin, nout, kappa, D: [nout*(nin+1)]}:
+// the base network picks a0; a linear gain predictor g_k = D_k . [x, 1] switches to the best k only when g_k - g_a0 > kappa.
+// D = 0 plays exactly as the base. Trained by bc_target.js trainIntentAdv on the lookahead's per-intent branch scores.
+function gainsAdv(P, x){ const n = P.nin + 1, g = new Array(P.nout); for (let k = 0; k < P.nout; k++){ let s = P.D[k * n + P.nin]; for (let i = 0; i < P.nin; i++) s += P.D[k * n + i] * x[i]; g[k] = s; } return g; }
 function act(P, x){
   if (P.fixed !== undefined) return P.fixed;
+  if (P.kind === 'move-adv'){ const a0 = act(P.base, x), g = gainsAdv(P, x); let b = a0, bv = P.kappa || 0; for (let k = 0; k < P.nout; k++) if (k !== a0 && g[k] - g[a0] > bv){ bv = g[k] - g[a0]; b = k; } return b; }
   const l = logits(P, x); let b = 0; for (let k = 1; k < l.length; k++) if (l[k] > l[b]) b = k; return b;
 }
 // the trainable vector: mode 'linear' = [bl, Wl]; mode 'full' = [bl, Wl, W2] (W1/b1 stay fixed random features);
@@ -46,4 +51,4 @@ function unflat(P, v, mode){
   return Q;
 }
 function isZero(P){ if (P.kind === 'target-lin') return P.wt.every(v => v === 0); return P.fixed === undefined && [...P.bl, ...P.Wl, ...P.W2].every(v => v === 0); }
-module.exports = { NOUT, zeros, zerosTarget, withHidden, logits, act, flat, unflat, isZero };
+module.exports = { gainsAdv, NOUT, zeros, zerosTarget, withHidden, logits, act, flat, unflat, isZero };

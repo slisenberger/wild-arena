@@ -126,7 +126,41 @@ function trainAdvSet(D, o, log, init){
   for (const d of D) delete d._D;
   return {P: Object.assign({}, P, {theta: best.th, margin: best.k === 1e9 ? 1e3 : best.k}), th0, best, oracle};
 }
-module.exports = { train, trainAdv, trainAdvSet, DEF };
+// movement intents (expert_iter --intents): D = records with rec.iv = {x, s: score per intent, teach: the live policy's pick}.
+// A linear gain predictor g = Dw . [x, 1] per intent, fitted so g_k - g_teach ~ s_k - s_teach (Huber); the switching threshold
+// kappa is picked on held-out decisions (realized gain). Returns {P: a 'move-adv' net over `base`, best, oracle}.
+function trainIntentAdv(D, base, o, log, init){
+  o = Object.assign({}, DEF, {huber: .5, kappas: [0, .02, .05, .1, .15, .2, .3, .5]}, o); log = log || (() => {});
+  D = D.filter(d => d.iv && d.iv.s && d.iv.s.length === base.nout).map(d => d.iv);
+  let s = (o.seed >>> 0) || 1; const rnd = () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; };
+  for (let i = D.length - 1; i > 0; i--){ const j = Math.floor(rnd() * (i + 1)); [D[i], D[j]] = [D[j], D[i]]; }
+  const nv = Math.floor(D.length * o.holdout), V = D.slice(0, nv), Tn = D.slice(nv), nin = base.nin, no = base.nout, n1 = nin + 1;
+  const th = init && init.length === no * n1 ? init.slice() : new Array(no * n1).fill(0), m = new Array(th.length).fill(0), v = new Array(th.length).fill(0); let t = 0;
+  const g = d => { const out = new Array(no); for (let k = 0; k < no; k++){ let a = th[k * n1 + nin]; for (let i = 0; i < nin; i++) a += th[k * n1 + i] * d.x[i]; out[k] = a; } return out; };
+  const pick = (d, q, kap) => { let b = d.teach, bv = kap; for (let k = 0; k < no; k++) if (k !== d.teach && q[k] - q[d.teach] > bv){ bv = q[k] - q[d.teach]; b = k; } return b; };
+  const evalSet = S => { const r = o.kappas.map(k => ({k, gain: 0, dev: 0})); let mse = 0, nn = 0;
+    for (const d of S){ const q = g(d); for (let k = 0; k < no; k++) if (k !== d.teach){ const e = (q[k] - q[d.teach]) - (d.s[k] - d.s[d.teach]); mse += e * e; nn++; }
+      r.forEach(x => { const b = pick(d, q, x.k); x.gain += d.s[b] - d.s[d.teach]; x.dev += b !== d.teach; }); }
+    r.forEach(x => { x.gain /= S.length || 1; x.dev /= S.length || 1; }); return {mse: mse / (nn || 1), r}; };
+  const oracle = V.reduce((a, d) => a + Math.max(...d.s) - d.s[d.teach], 0) / (V.length || 1);
+  log(`${D.length} intent decisions (${Tn.length} train, ${V.length} held out), ${th.length} weights; held-out gain if every best intent were taken: ${oracle.toFixed(4)}`);
+  let best = {gain: 0, k: 1e9, th: th.slice(), ep: -1};
+  for (let ep = 0; ep < o.epochs; ep++){
+    for (let b0 = 0; b0 < Tn.length; b0 += o.batch){
+      const gr = new Array(th.length).fill(0), B = Tn.slice(b0, b0 + o.batch);
+      for (const d of B){ const q = g(d), xs = d.x;
+        for (let k = 0; k < no; k++){ if (k === d.teach) continue; const e = (q[k] - q[d.teach]) - (d.s[k] - d.s[d.teach]), c = (Math.abs(e) <= o.huber ? e : o.huber * Math.sign(e)) / B.length;
+          for (const [kk, sg] of [[k, c], [d.teach, -c]]){ const o0 = kk * n1; for (let i = 0; i < nin; i++) gr[o0 + i] += sg * xs[i]; gr[o0 + nin] += sg; } } }
+      t++; for (let i = 0; i < th.length; i++){ const gi = gr[i] + o.l2 * th[i]; m[i] = .9 * m[i] + .1 * gi; v[i] = .999 * v[i] + .001 * gi * gi;
+        th[i] -= o.lr * (m[i] / (1 - Math.pow(.9, t))) / (Math.sqrt(v[i] / (1 - Math.pow(.999, t))) + 1e-8); } }
+    const ev = evalSet(V), top = ev.r.reduce((a, b) => b.gain > a.gain ? b : a);
+    log(`[ep ${ep}] held out: intent gain-prediction mse ${ev.mse.toFixed(4)} | realized gain by kappa ${ev.r.map(x => `${x.k}: ${x.gain >= 0 ? '+' : ''}${x.gain.toFixed(4)} (${(100 * x.dev).toFixed(0)}%)`).join(', ')}`);
+    if (top.gain > best.gain){ best = {gain: top.gain, k: top.k, th: th.slice(), ep}; }
+  }
+  const P = {kind: 'move-adv', v: 1, set: base.set, base, nin, nout: no, kappa: best.ep < 0 ? 1e9 : best.k, D: best.th};
+  return {P, best, oracle};
+}
+module.exports = { train, trainAdv, trainAdvSet, trainIntentAdv, DEF };
 
 if (require.main === module){
   const R = require('./move_run.js');

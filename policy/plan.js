@@ -20,6 +20,10 @@ function makePlanner(o){
   // intents (probes/joint_lookahead.js): also branch each movement intent 0..intents-1 for the best target, held for H s
   // (policy/force_intent.js); if one beats the target-only best, the unit holds that intent for `cool` s in the real fight
   if (o.intents) require('./force_intent.js');
+  // with o.data, each intent decision is recorded on the target record as rec.iv = {x: the arch's movement features, s: branch
+  // score per intent, teach: the live movement policy's pick}; o.learnerI (a 'move-adv' net, DAgger rounds) means the fight's own
+  // movement policy plays and the plan only labels (no intent forced in the real fight)
+  const MM = o.intents ? require('./move_model.js') : null, MA = o.intents ? require('./move_arch.js').arch(o.arch) : null;
   // crn (probes/label_reliability.js): roll k uses the same dice for every option (common random numbers: unbiased per option,
   // lower variance of gain differences); keepRolls: data records also hold each roll's score per option (rec.r[option][roll])
   // arch / side: whose choice is planned. 'guard' / 'P' = your guards (policy.js chooseGuard; scored for your side; only 'cat' =
@@ -60,6 +64,7 @@ function makePlanner(o){
       if (o.set){ const si = SM.setInputs(w, u, opts); rec.U = si.U.map(r => r.map(r4)); rec.T = tries.map(i => si.T[i] ? si.T[i].map(r => r.map(r4)) : null); } // state encoder data
       o.data.push(rec); }
     if (o.intents && opts[best] && opts[best].kind === 'target'){ let bi = -1, bv = bs;
+      const ivs = [];
       for (let k = 0; k < o.intents; k++){ let v = 0;
         for (let r = 0; r < o.rolls; r++){
           const c = L.cloneWorld(w, inner), cu = c.units[ui];
@@ -68,9 +73,12 @@ function makePlanner(o){
           cu.forceIntent = k; cu.forceIntentUntil = c.t + o.H;
           const t1 = c.t + o.H; while (!c.over && c.t < t1) A.step(c);
           v += (o.side === 'P' ? -score(c) : score(c)) / o.rolls; }
-        if (v > bv + 1e-9){ bv = v; bi = k; } }
+        ivs.push(v); if (v > bv + 1e-9){ bv = v; bi = k; } }
       P.intentBranched = (P.intentBranched || 0) + 1;
-      if (bi >= 0){ u.forceIntent = bi; u.forceIntentUntil = w.t + (o.cool || 2); P.intentChanged = (P.intentChanged || 0) + 1; } else { u.forceIntent = undefined; } }
+      if (o.data && o.data.length){ const tt = opts[best].t, x = MA.F.extract(w, u, tt, A._internals.dist(u, tt)), mp = w.cfg.movePolicy && w.cfg.movePolicy[o.arch], base = mp && (mp.kind === 'move-adv' ? mp.base : mp), r4 = q => Math.round(q * 1e4) / 1e4;
+        o.data[o.data.length - 1].iv = {x: x.map(r4), s: ivs.map(r4), teach: base ? MM.act(base, x) : 0}; }
+      if (o.learnerI){ u.forceIntent = undefined; }
+      else if (bi >= 0){ u.forceIntent = bi; u.forceIntentUntil = w.t + (o.cool || 2); P.intentChanged = (P.intentChanged || 0) + 1; } else { u.forceIntent = undefined; } }
     if (best !== teach) P.changed++;
     u.planT = w.t; u.planTo = opts[best] && opts[best].t;
     if (o.learner && o.learner.kind === 'target-set'){ const q = SM.scores(o.learner, SM.decision(w, u, opts, feats()), teach); let k = teach; q.forEach((x, j) => { if (opts[j].kind === 'target' && x > q[k]) k = j; }); return k; }

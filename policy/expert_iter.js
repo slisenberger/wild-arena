@@ -13,11 +13,14 @@ const { Worker, isMainThread, parentPort, workerData } = require('worker_threads
 const fs = require('fs'), path = require('path'), os = require('os'), zlib = require('zlib');
 const R = require('./move_run.js'), RW = require('./move_reward.js'), PL = require('./plan.js'), BC = require('./bc_target.js');
 require('./live.js'); require('./policy.js');
+// --intents (milestone 4, rung 2): also label each decision's movement intents and train a 'move-adv' correction over the live
+// movement net (bc_target.js trainIntentAdv); the student = target net + intent correction, judged together
+const NOUT_I = arch => require('./move_arch.js').arch(arch).nout, BASE_I = arch => require('./live.js')[arch];
 const ZW = {kind: 'target-lin', v: 1, nin: 200, margin: .25, wt: new Array(200).fill(0)}; // zero scorer: today's targets
 if (!isMainThread){
-  const {jobs, arch, o, learner} = workerData, out = [];
+  const {jobs, arch, o, learner, learnerI} = workerData, out = [];
   for (const j of jobs){
-    if (j.k === 'collect'){ const g = arch === 'guard', data = [], W = PL.makePlanner({H: o.H, max: o.max, cool: 0, rolls: o.rolls, data, learner, real: o.real, feat: o.feat === 'rich' || o.feat === 'richh' ? o.feat : null, set: o.model === 'set', arch, side: g ? 'P' : 'E', only: g ? o.only : null, wide: g && o.wide, traitsV: o.traitsV === 2 ? 2 : 1, crn: !!o.crn}); R.runFight(j.f, W, arch); out.push({k: j.k, i: j.i, data}); }
+    if (j.k === 'collect'){ const g = arch === 'guard', data = [], W = PL.makePlanner({H: o.H, max: o.max, cool: 0, rolls: o.rolls, data, learner, real: o.real, feat: o.feat === 'rich' || o.feat === 'richh' ? o.feat : null, set: o.model === 'set', arch, side: g ? 'P' : 'E', only: g ? o.only : null, wide: g && o.wide, traitsV: o.traitsV === 2 ? 2 : 1, crn: !!o.crn, intents: o.intents ? NOUT_I(arch) : 0, learnerI}); if (learnerI) W.moveOverride = learnerI; R.runFight(j.f, W, arch); out.push({k: j.k, i: j.i, data}); }
     else out.push({k: j.k, i: j.i, rec: R.runFight(j.f, j.k === 'base' ? Object.assign({}, ZW, arch === 'guard' ? {only: o.only} : {}) : j.W, arch)});
   }
   parentPort.postMessage(out); return;
@@ -55,7 +58,8 @@ if (cmd === 'init'){
 if (!s) throw new Error('no state ' + file + ' (run init first)');
 if (s.simHash !== R.simHash() && !process.env.ALLOW_ENGINE_MISMATCH) throw new Error(`${file} was made with sim ${s.simHash}; this checkout has ${R.simHash()}`);
 const c = s.config, T = +opt.threads || c.threads, HOURS = +opt.hours || 0, T0 = Date.now(), fo = {arch: c.arch, seed: c.seed, withLive: true, goal: c.goal, spec: c.spec, withCat: c.arch === 'guard' && c.only === 'cat'};
-const W = theta => Object.assign({}, s.P0, {theta: theta.slice(), targetsOnly: true}, s.margin != null ? {margin: s.margin} : {}); // --loss=adv: the learned switching threshold // the net only re-ranks targets (its labels only compare targets)
+const WI = (D, kappa) => D ? {kind: 'move-adv', v: 1, set: BASE_I(c.arch).set, base: BASE_I(c.arch), nin: BASE_I(c.arch).nin, nout: BASE_I(c.arch).nout, kappa, D} : null;
+const W = (theta, D, kappa) => Object.assign({}, s.P0, {theta: theta.slice(), targetsOnly: true}, s.margin != null ? {margin: s.margin} : {}, c.intents && D ? {moveOverride: WI(D, kappa)} : {}); // --loss=adv: the learned switching threshold // the net only re-ranks targets (its labels only compare targets)
 // WA_DIST (a store root: gs://.../runs/<run>/dist or a folder): spread big batches over helper VMs (policy/dist.js)
 const DIST = process.env.WA_DIST, Dm = DIST ? require('./dist.js') : null;
 function pool(jobs, extra){ return pool0(jobs, extra).then(r => r.sort((x, y) => x.i - y.i || (x.k < y.k ? -1 : x.k > y.k ? 1 : 0))); } // results in job order whatever the thread count or split (data order feeds training)
@@ -63,8 +67,8 @@ function pool0(jobs, extra){
   if (DIST && jobs.length >= +(process.env.WA_DIST_MIN || 48)){ const coll = jobs[0].k === 'collect'; return Dm.distPool(DIST, __filename, jobs, Object.assign({arch: c.arch, o: c}, extra || {}), {threads: T, chunk: +process.env.WA_DIST_CHUNK || (coll ? 24 : 200)}); } // WA_DIST_MIN / WA_DIST_CHUNK: tests
   return Promise.all([...Array(T).keys()].map(k => new Promise((res, rej) => { const w = new Worker(__filename, {workerData: Object.assign({jobs: jobs.filter((_, q) => q % T === k), arch: c.arch, o: c}, extra || {})}); w.on('message', res); w.on('error', rej); }))).then(p => p.flat());
 }
-async function evalW(theta, poolName, idx, n){
-  const fights = R.fightSet(poolName, idx, n, fo), jobs = []; fights.forEach((f, i) => { jobs.push({k: 'base', i, f}, {k: 'net', i, f, W: W(theta)}); });
+async function evalW(theta, poolName, idx, n, thI, kI){
+  const fights = R.fightSet(poolName, idx, n, fo), jobs = []; fights.forEach((f, i) => { jobs.push({k: 'base', i, f}, {k: 'net', i, f, W: W(theta, thI, kI)}); });
   const A = {}; (await pool(jobs)).forEach(x => { (A[x.k] = A[x.k] || [])[x.i] = x.rec; });
   const q = RW.paired(A.base, A.net, RW.reference(A.base)), m = RW.mean;
   return {diff: q.diff, se: q.se, style: q.styleB.style, gates: q.styleB.failed, drift: q.driftB, surv: m(A.net.map(r => r.survived)) - m(A.base.map(r => r.survived)), n};
@@ -75,26 +79,29 @@ const timeUp = () => HOURS && Date.now() - T0 > HOURS * 3600e3;
     if (timeUp()){ log(`[time] ${HOURS} h used in round ${s.round} (${s.phase}); resume to continue`); return; }
     const r = s.round;
     if (s.phase === 'collect'){
-      const t0 = Date.now(), fights = R.fightSet('train', r, c.fights, fo), learner = r > 0 && c.dagger ? W(s.theta) : null;
-      const recs = (await pool(fights.map((f, i) => ({k: 'collect', i, f})), {learner})).flatMap(x => x.data);
+      const t0 = Date.now(), fights = R.fightSet('train', r, c.fights, fo), learner = r > 0 && c.dagger ? W(s.theta) : null, learnerI = r > 0 && c.dagger && c.intents && s.thetaI ? WI(s.thetaI, s.kappaI) : null;
+      const recs = (await pool(fights.map((f, i) => ({k: 'collect', i, f})), {learner, learnerI})).flatMap(x => x.data);
       const D = readData().concat(recs); writeData(D); s.dataN = D.length; s.phase = 'train'; save(s);
       log(`[round ${r} collect] ${recs.length} decisions from ${fights.length} fights (${learner ? 'the network plays' : 'the lookahead plays'}), ${D.length} total, ${((Date.now() - t0) / 1000).toFixed(0)} s`);
     }
     if (s.phase === 'train'){
       const t0 = Date.now(), res = (c.model === 'set' ? BC.trainAdvSet : c.loss === 'adv' ? BC.trainAdv : BC.train)(readData(), {K: c.K, nh: c.nh, epochs: c.epochs, lr: c.lr, seed: c.seed + r, feat: c.feat, only: c.arch === 'guard' ? c.only : null, wide: c.arch === 'guard' && c.wide}, m => { if (/decisions|\[ep (0|9|19|29)\]/.test(m)) log('  ' + m); }, r > 0 ? {theta: s.theta} : null);
-      s.theta = res.P.theta; if (c.loss === 'adv') s.margin = res.P.margin; s.phase = 'val'; save(s);
+      s.theta = res.P.theta; if (c.loss === 'adv') s.margin = res.P.margin;
+      if (c.intents){ const ri = BC.trainIntentAdv(readData(), BASE_I(c.arch), {epochs: c.epochs, lr: c.lr, seed: c.seed + r}, m => { if (/decisions|\[ep (0|7|19)\]/.test(m)) log('  ' + m); }, s.thetaI);
+        s.thetaI = ri.P.D; s.kappaI = ri.P.kappa; log(`[round ${r} train intents] held-out gain ${ri.best.gain.toFixed(4)} of ${ri.oracle.toFixed(4)}, threshold ${ri.P.kappa}`); }
+      s.phase = 'val'; save(s);
       log(c.loss === 'adv' ? `[round ${r} train] held-out gain ${res.best.gain.toFixed(4)} of ${res.oracle.toFixed(4)}, threshold ${res.P.margin}, ${((Date.now() - t0) / 1000).toFixed(0)} s` : `[round ${r} train] held-out regret ${res.best.regret.toFixed(4)} (heuristic ${res.base.regret.toFixed(4)}), ${((Date.now() - t0) / 1000).toFixed(0)} s`);
     }
     if (s.phase === 'val'){
-      const v = await evalW(s.theta, 'val', r, c.val), ok = !v.gates.length && v.style >= c.styleThr, better = ok && v.diff > (s.best.val || 0); // must beat today's cats (val 0) and every earlier clean round
+      const v = await evalW(s.theta, 'val', r, c.val, s.thetaI, s.kappaI), ok = !v.gates.length && v.style >= c.styleThr, better = ok && v.diff > (s.best.val || 0); // must beat today's cats (val 0) and every earlier clean round
       s.history.push(Object.assign({round: r, dataN: s.dataN}, v));
-      if (better) s.best = {theta: s.theta.slice(), round: r, val: v.diff, from: `round ${r}`, margin: s.margin};
+      if (better) s.best = {theta: s.theta.slice(), round: r, val: v.diff, from: `round ${r}`, margin: s.margin, thetaI: s.thetaI ? s.thetaI.slice() : null, kappaI: s.kappaI};
       log(`[round ${r} val] network vs today's ${c.arch} on ${v.n} fresh fights: ${v.diff >= 0 ? '+' : ''}${v.diff.toFixed(3)} ± ${v.se.toFixed(3)} | style ${v.style.toFixed(3)} gates [${v.gates}] drift [${v.drift.join('; ')}] | your survival ${(100 * v.surv).toFixed(1)} pts${better ? '  -> new best' : ok ? '' : '  (not clean)'}`);
       s.round++; s.phase = 'collect'; save(s);
     }
   }
   if (!s.test){
-    s.margin = s.best.margin != null ? s.best.margin : s.P0.margin; const t = await evalW(s.best.theta, 'test', 0, c.test); // the init (today's game) keeps its own margin
+    s.margin = s.best.margin != null ? s.best.margin : s.P0.margin; const t = await evalW(s.best.theta, 'test', 0, c.test, s.best.thetaI, s.best.kappaI); // the init (today's game) keeps its own margin
     s.test = t; s.phase = 'done'; save(s); if (DIST) Dm.markDone(DIST);
     log(`[test] best (${s.best.from}) vs today's ${c.arch} on ${t.n} held-out fights: ${t.diff >= 0 ? '+' : ''}${t.diff.toFixed(3)} ± ${t.se.toFixed(3)} (${Math.abs(t.diff) > 2 * t.se ? 'beyond' : 'within'} 2 SE) | style ${t.style.toFixed(3)} gates [${t.gates}] drift [${t.drift.join('; ')}] | your survival ${(100 * t.surv).toFixed(1)} pts`);
   }

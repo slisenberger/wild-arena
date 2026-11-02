@@ -70,6 +70,7 @@ function setPolicy(cfg, f, arch, weights){
   if (weights && weights.kind === 'target-none'){ /* the arch keeps its shipped movement and the heuristic's targets (no target scorer) */ }
   else if (weights && /^target-/.test(weights.kind)){ by[arch] = weights; cfg.policyStats = {}; if (weights.sample) cfg.policyTrace = []; } // target scorer: the arch keeps its shipped movement policy; sample = PPO training
   else if (weights) mp[arch] = weights;
+  if (weights && weights.moveOverride) mp[arch] = weights.moveOverride; // a joint student: its target scorer + its own movement intents (expert_iter --intents)
   if (Object.keys(by).length) cfg.policy = {byArch: by};
   if (Object.keys(mp).length){ cfg.movePolicy = mp; cfg.moveStats = {}; }
 }
