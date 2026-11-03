@@ -44,7 +44,7 @@ if (!isMainThread){
         cu.forceT = c.units[w.units.indexOf(opts[i].t)]; cu.forceUntil = c.t + H; cu.target = cu.forceT; cu.state = 'engage'; cu.carcass = null;
         // o.real (realism inside the label, research §2.2): the branch loses real x the share of its H s this animal spent
         // disengaged (slow and > 10 m from its target, or no target), so a teacher can't pay for holding off
-        const t1 = c.t + H; let bad = 0; while (!c.over && c.t < t1){ A.step(c); if (o.real && I.active(cu)){ const tt = cu.target && I.active(cu.target) ? cu.target : null; if (!tt || (Math.hypot(cu.vx, cu.vy) < 1 && I.dist(cu, tt) > 10)) bad += .1; } }
+        const t1 = c.t + H; let bad = 0; while (!c.over && c.t < t1){ A.step(c); if (o.real && I.active(cu)){ const tt = cu.target && I.active(cu.target) ? cu.target : null; if (!tt || (o.realFar ? I.dist(cu, tt) > 8 : Math.hypot(cu.vx, cu.vy) < 1 && I.dist(cu, tt) > 10)) bad += .1; // --realFar: any time > 8 m off its target counts (wolves circled at range while moving) } }
         v += ((g ? -PL.score(c) : PL.score(c)) - (o.real || 0) * bad / H) / o.rolls; }
       sc.push(v); }
     const r4 = x => Math.round(x * 1e4) / 1e4;
