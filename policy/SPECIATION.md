@@ -348,3 +348,12 @@ each species develop its own realistic fighting style. This note is the plan; th
 - **Joint v2 (jn29) finished, Nov 3:** no student accepted in 4 rounds. Rounds 2-3: cat +0.036 / +0.035 ± 0.039, brawler
   +0.021 / +0.029 (style .99), harrier +0.078 / +0.056 ± 0.043 vs e2 (style .91 / .70: holding off), guard -0.22 / -0.16.
   v3 (jn32): cats, wolves, bears only, --real 0.5, 1,500 validation fights.
+- **First joint-trained acceptance (jn32, Nov 3, joint v3: cats + wolves + bears in the same fights, --real 0.5, warm from
+  the winners, 1,500 validation fights).** Round 0: the harrier student beat its incumbent (harrier_target_e2) by **+0.158 ±
+  0.033** (4.8 SE), style 1.000, no gate, no disengaging drift (death rate .69 -> .53, damage per fight 156 -> 271) ->
+  harrier_target_j1 (target-mlp, rich, traits v2 + species one-hot over the 5 harrier items). The disengagement cost inside the
+  labels is what changed: jn25/jn29's harrier students gained by holding off (style .63-.84). Later harrier rounds drifted
+  back toward holding off (style .91 / .77 / .61) and were rejected. Cat students +0.012 / -0.033 / +0.056 / +0.001 and bear
+  students +0.006 / -0.001 / +0.005 / +0.047 (± .03) vs live: none accepted. Ship checks for j1: sc34.
+- Cats whom + how with the pounce gate (ei31): held-out test -0.035 ± 0.035 (round 5's +0.120 validation didn't hold). Your
+  cats whom + how (ei27): best +0.030 (round 0) through round 4; finishing.
