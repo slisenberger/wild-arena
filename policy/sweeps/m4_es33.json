@@ -1,0 +1,7 @@
+{
+ "note": "Guards need team-level credit (joint labels made every guard leave you): ES fine-tune of the live guard_target_m2 on main's default (maps2 + objective on), fight-level credit, same shape (8 hidden, wide). 2 seeds.",
+ "runs": [
+  {"name": "gm2_es1", "args": "--arch=guard --target=true --wide=true --nh=8 --initWeights=policy/weights/guard_target_m2.json --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --margin=.25 --thetaClip=1 --pairs=32 --sigma=.05 --seed=6401"},
+  {"name": "gm2_es2", "args": "--arch=guard --target=true --wide=true --nh=8 --initWeights=policy/weights/guard_target_m2.json --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --margin=.25 --thetaClip=1 --pairs=32 --sigma=.05 --seed=6402"}
+ ]
+}
