@@ -366,3 +366,8 @@ each species develop its own realistic fighting style. This note is the plan; th
   setInc, which replaced the whole live target set with only the trained classes, so every joint fight (labels and validations,
   jn25 / jn29 / jn32 / jn37) ran without the live guard and charger nets.** Fixed (the live set plus the trained classes on
   top); joint results so far are void; rerun jn38.
+- **Joint v4 with the live set fixed (jn38, Nov 3):** no acceptance in 4 rounds. Cat students -0.040 / -0.005 / +0.062 / +0.035
+  (± .031, style 1.00; r2 right at 2 SE); bear students +0.022 / +0.034 / -0.009 / -0.014; harrier students vs j1 -0.051 / -0.047 /
+  +0.013 / -0.015 with style .59-.72: still circling at range while moving (dartRate 11 -> 4-6), which the slow-and-far cost
+  misses. Guard ES fine-tune of m2 (es33 seed 1): best stayed at m2 (final centre +0.047 ± 0.027, style .973). v5 (jn39):
+  --realFar (any time > 8 m off the target costs).

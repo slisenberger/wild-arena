@@ -1,0 +1,10 @@
+{
+ "note": "Joint v5 (Nov 3, fixed live set): jn38 accepted nothing; harrier students still circle at range while moving (dartRate halved, nearShare down), which the slow-and-far cost missed. --realFar: any time > 8 m off the target costs. Cats closest (r2 +0.062 \u00b1 0.031).",
+ "helpers": 3,
+ "runs": [
+  {
+   "name": "joint5",
+   "args": "--trainer=joint --classes=cat,harrier,brawler --inc=harrier:harrier_target_j1.json --warm=true --real=1 --realFar=true --rounds=4 --fights=1500 --H=20 --rolls=3 --max=3 --every=3 --nh=32 --epochs=8 --lr=.002 --val=1500 --seed=6601"
+  }
+ ]
+}
