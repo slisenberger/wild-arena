@@ -371,3 +371,8 @@ each species develop its own realistic fighting style. This note is the plan; th
   +0.013 / -0.015 with style .59-.72: still circling at range while moving (dartRate 11 -> 4-6), which the slow-and-far cost
   misses. Guard ES fine-tune of m2 (es33 seed 1): best stayed at m2 (final centre +0.047 ± 0.027, style .973). v5 (jn39):
   --realFar (any time > 8 m off the target costs).
+- **Joint v5 (jn39, --realFar):** no acceptance; harrier students still hold off (style .65-.83, dartRate 11 -> 5-7); cats -0.04 to
+  +0.01, bears -0.05 to +0.04.
+- **Enemy cats with the realism cost in the labels (ei40, single class, --real 0.5): held-out +0.113 ± 0.031 vs today's cat
+  targets, style 1.000, no drift** (validation rounds +0.009 / +0.037 / +0.001 / +0.067 / +0.000 / +0.064) -> cat_target_r1;
+  ship checks sc41 (vs live cat_target_e1 × 2, vs today's targets × 1, speciation).

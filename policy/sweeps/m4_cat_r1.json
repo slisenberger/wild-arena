@@ -1,0 +1,9 @@
+{
+ "note": "Ship checks for cat_target_r1 (ei40, held-out +0.113 ± 0.031 vs today's cat targets, style 1.000): vs the live cat_target_e1 on 2 fresh draws, vs today's targets on one, + speciation.",
+ "runs": [
+  {"name": "r1_live_161", "args": "--trainer=probe --script=policy/probes/eval_target_cli.js policy/weights/cat_target_r1.json cat 2000 161 91 checkmate 1 --base=policy/weights/cat_target_e1.json"},
+  {"name": "r1_live_171", "args": "--trainer=probe --script=policy/probes/eval_target_cli.js policy/weights/cat_target_r1.json cat 2000 171 91 checkmate 1 --base=policy/weights/cat_target_e1.json"},
+  {"name": "r1_heur_181", "args": "--trainer=probe --script=policy/probes/eval_target_cli.js policy/weights/cat_target_r1.json cat 2000 181 91 checkmate 1 --base=none"},
+  {"name": "r1_spec", "args": "--trainer=probe --script=policy/probes/speciation.js 600 71 --net=policy/weights/cat_target_r1.json --arch=cat"}
+ ]
+}
