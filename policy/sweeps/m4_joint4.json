@@ -1,0 +1,10 @@
+{
+ "note": "Joint v4 (Nov 3): jn32 accepted the harrier student in round 0 (+0.158 vs e2) but later harrier rounds drifted back to holding off; start from j1 and double the disengagement cost (--real 1).",
+ "helpers": 3,
+ "runs": [
+  {
+   "name": "joint4",
+   "args": "--trainer=joint --classes=cat,harrier,brawler --inc=harrier:harrier_target_j1.json --warm=true --real=1 --rounds=4 --fights=1500 --H=20 --rolls=3 --max=3 --every=3 --nh=32 --epochs=8 --lr=.002 --val=1500 --seed=6501"
+  }
+ ]
+}
