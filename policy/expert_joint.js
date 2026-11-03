@@ -18,7 +18,11 @@ const LIVE = require('./live.js'); require('./policy.js');
 const A = R.A, I = A._internals, F = require('./features.js'), FR = require('./features_rich.js'), G = require('./guard_features.js'), TR = require('./traits.js');
 const ZERO = {kind: 'target-lin', v: 1, nin: 200, margin: .25, wt: new Array(200).fill(0)}; // today's targets, through the hook
 const clsOf = u => u.side === 'P' ? (u.rider ? null : 'guard') : I.archetypeOf(u);
-function setInc(inc){ for (const k of Object.keys(I.LIVE_TARGET)) delete I.LIVE_TARGET[k]; Object.assign(I.LIVE_TARGET, inc); }
+// the fight's target nets: the live set (policy/weights/live.json "target") with the trained classes' incumbents on top. (Bug until
+// Nov 3: this replaced the whole live set, so classes not being trained, e.g. your guards' and the chargers' live nets, were
+// missing from every joint fight; labels and validations came from a weaker game than the live one.)
+const LIVE_SNAP = Object.assign({}, I.LIVE_TARGET);
+function setInc(inc){ for (const k of Object.keys(I.LIVE_TARGET)) delete I.LIVE_TARGET[k]; Object.assign(I.LIVE_TARGET, LIVE_SNAP, inc); }
 
 // ---------- worker ----------
 if (!isMainThread){

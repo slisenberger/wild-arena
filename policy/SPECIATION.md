@@ -360,3 +360,9 @@ each species develop its own realistic fighting style. This note is the plan; th
 - sc34 (j1 ship checks) INVALID: eval_target.js's default base is zero target weights with the candidate's margin; j1's margin
   is 0, so the base arm picked 'none' and the wolves idled 96% (style .545, goal +0.24 meaningless). Always pass BASE=none for
   a class with no live target net. Rerun: sc35.
+- **Joint harrier j1 does not hold up (Nov 3):** vs today's targets on fresh fights +0.042 ± 0.026 / +0.035 ± 0.025 (sc35, BASE=none;
+  wolves die less, -0.11/fight, and deal +35% damage, but your survival barely moves); vs e2 directly +0.025 ± 0.054 (400 fights).
+  Replaying jn32's own validation fights with the full live set: -0.023 ± 0.072, not +0.158. **Cause: a bug in expert_joint's
+  setInc, which replaced the whole live target set with only the trained classes, so every joint fight (labels and validations,
+  jn25 / jn29 / jn32 / jn37) ran without the live guard and charger nets.** Fixed (the live set plus the trained classes on
+  top); joint results so far are void; rerun jn38.
