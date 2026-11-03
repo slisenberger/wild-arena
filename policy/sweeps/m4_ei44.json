@@ -1,0 +1,9 @@
+{
+ "note": "Speciation inside training (Nov 3): goal-only training made species more alike (harrier e2 speciation 0.364 vs live 0.640). Single-class expert iteration with: the realism cost in labels (--real 0.5), traits v2 + a per-species one-hot (--speciesCode), species-balanced data (--balance), and a validation check that the speciation score may not fall more than 0.05 below the live arm (--specTol). Wolves/hyenas, enemy cats, bears; 3 helpers each.",
+ "helpers": 3,
+ "runs": [
+  {"name": "sp_harr", "args": "--trainer=expert --feat=rich --loss=adv --rounds=6 --fights=900 --max=3 --rolls=3 --nh=32 --epochs=8 --lr=.002 --val=1000 --test=1200 --dagger=true --arch=harrier --H=20 --crn=true --real=0.5 --traitsV=2 --speciesCode=true --balance=true --specTol=0.05 --seed=5801"},
+  {"name": "sp_cat", "args": "--trainer=expert --feat=rich --loss=adv --rounds=6 --fights=900 --max=3 --rolls=3 --nh=32 --epochs=8 --lr=.002 --val=1000 --test=1200 --dagger=true --arch=cat --H=20 --crn=true --real=0.5 --traitsV=2 --speciesCode=true --balance=true --specTol=0.05 --seed=5802"},
+  {"name": "sp_brw", "args": "--trainer=expert --feat=rich --loss=adv --rounds=6 --fights=900 --max=3 --rolls=3 --nh=32 --epochs=8 --lr=.002 --val=1000 --test=1200 --dagger=true --arch=brawler --H=20 --crn=true --real=0.5 --traitsV=2 --speciesCode=true --balance=true --specTol=0.05 --seed=5803"}
+ ]
+}

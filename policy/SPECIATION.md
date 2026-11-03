@@ -397,3 +397,7 @@ each species develop its own realistic fighting style. This note is the plan; th
   e2 makes the species more alike** (live: lone hyena onto you 82%, packs 43-47%; e2: every item 47-61%). j1 0.215. cat_target_r1
   vs live cat_e1 0.928 vs 0.901 (+0.027 ± 0.055). **Training on the goal alone erases species differences** (as
   research/speciation_strategy.md §0 predicted). Next: speciation inside training.
+- **Speciation inside training (Nov 3):** fight records now carry per-species target profiles (move_run r.prof) and
+  move_reward.specScore matches probes/speciation_score.js; expert_iter gains --specTol (a round is rejected if its speciation
+  score falls more than tol below the base arm's on the validation fights), --speciesCode (traits + per-species one-hot) and
+  --balance (species-balanced data, capped 4x). Recipe sweep ei44: wolves, cats, bears.

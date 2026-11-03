@@ -16,6 +16,14 @@ require('./live.js'); require('./policy.js');
 // --intents (milestone 4, rung 2): also label each decision's movement intents and train a 'move-adv' correction over the live
 // movement net (bc_target.js trainIntentAdv); the student = target net + intent correction, judged together
 const NOUT_I = arch => require('./move_arch.js').arch(arch).nout, BASE_I = arch => require('./live.js')[arch];
+// --speciesCode: the class's species (fixed list, so shapes stay stable); --balance: each species' decisions weighted to an
+// equal effective count (by repetition, capped 4x) so rare species shape the net too (speciation: research §4.2)
+const SPIDS = arch => { const A_ = require('./move_run.js').A; return A_.ANIMALS.filter(a => arch === 'guard' || A_._internals.archetypeOf({side: 'E', s: a}) === arch).map(a => a.id); };
+function prepData(D){ const TMm = require('./target_model.js');
+  if (c.speciesCode) D = D.map(d => Object.assign({}, d, {tr: d.tr.concat(TMm.spCode({spIds: SPIDS(c.arch)}, d.sp))}));
+  if (c.balance){ const n = {}; D.forEach(d => n[d.sp] = (n[d.sp] || 0) + 1); const vals = Object.values(n).sort((a, b) => a - b), med = vals[vals.length >> 1] || 1, out = [];
+    for (const d of D){ const k = Math.min(4, Math.max(1, Math.round(med / n[d.sp]))); for (let i = 0; i < k; i++) out.push(d); } D = out; }
+  return D; }
 const ZW = {kind: 'target-lin', v: 1, nin: 200, margin: .25, wt: new Array(200).fill(0)}; // zero scorer: today's targets
 if (!isMainThread){
   const {jobs, arch, o, learner, learnerI} = workerData, out = [];
@@ -50,7 +58,7 @@ if (cmd === 'init'){
   Object.assign(c, g ? {feat: rf, goal: null, spec: false} : {feat: rf || 'plus', goal: 'checkmate', spec: true, only: null, wide: false}); // --feat=rich: + features_rich.js // your guards (arch guard): guard_features, the guard goal, only / wide; enemy cats: features_plus, checkmate
   const FRm = require('./features_rich.js'), FX = c.feat === 'richh' ? {DIM: g ? FRm.DIM_GH : FRm.DIM_EH, NAMES: g ? FRm.NAMES_GH : FRm.NAMES_EH} : c.feat === 'rich' ? {DIM: g ? FRm.DIM_G : FRm.DIM_E, NAMES: g ? FRm.NAMES_G : FRm.NAMES_E} : g ? require('./guard_features.js') : require('./features_plus.js');
   if (c.model === 'set') c.loss = 'adv'; // the state encoder trains by gain regression
-  const P0 = Object.assign({}, c.model === 'set' ? require('./set_model.js').make(FX.DIM + require('./traits.js').dimV(c.traitsV), c.K, c.nh, .25, c.seed * 31 + 7) : require('./target_model.js').mlp(FX.DIM + require('./traits.js').dimV(c.traitsV), c.nh, .25, c.seed * 31 + 7, true), g ? {only: c.only, wide: !!c.wide} : {}, c.feat ? {feat: c.feat} : {}, c.traitsV === 2 ? {traitsV: 2} : {}); // --traitsV=2: traits v2 (+ signature tags)
+  const P0 = Object.assign({}, c.model === 'set' ? require('./set_model.js').make(FX.DIM + require('./traits.js').dimV(c.traitsV), c.K, c.nh, .25, c.seed * 31 + 7) : require('./target_model.js').mlp(FX.DIM + require('./traits.js').dimV(c.traitsV) + (c.speciesCode ? SPIDS(c.arch).length : 0), c.nh, .25, c.seed * 31 + 7, true), g ? {only: c.only, wide: !!c.wide} : {}, c.feat ? {feat: c.feat} : {}, c.traitsV === 2 ? {traitsV: 2} : {}, c.speciesCode ? {spIds: SPIDS(c.arch)} : {}); // --traitsV=2: traits v2 (+ signature tags); --speciesCode: + a per-species one-hot (residual)
   s = {format: 'wild-arena/expert-iter', simHash: R.simHash(), harnessHash: R.harnessHash(), config: c, features: FX.NAMES,
     P0, theta: P0.theta.slice(), round: 0, phase: 'collect', dataN: 0, best: {theta: P0.theta.slice(), round: -1, val: 0, from: 'init (= today\'s cats)'}, history: [], test: null};
   save(s); log(`[init] ${file}: ${JSON.stringify(c)}`); process.exit(0);
@@ -71,7 +79,8 @@ async function evalW(theta, poolName, idx, n, thI, kI){
   const fights = R.fightSet(poolName, idx, n, fo), jobs = []; fights.forEach((f, i) => { jobs.push({k: 'base', i, f}, {k: 'net', i, f, W: W(theta, thI, kI)}); });
   const A = {}; (await pool(jobs)).forEach(x => { (A[x.k] = A[x.k] || [])[x.i] = x.rec; });
   const q = RW.paired(A.base, A.net, RW.reference(A.base)), m = RW.mean;
-  return {diff: q.diff, se: q.se, style: q.styleB.style, gates: q.styleB.failed, drift: q.driftB, surv: m(A.net.map(r => r.survived)) - m(A.base.map(r => r.survived)), n};
+  return {diff: q.diff, se: q.se, style: q.styleB.style, gates: q.styleB.failed, drift: q.driftB, surv: m(A.net.map(r => r.survived)) - m(A.base.map(r => r.survived)), n,
+    specB: RW.specScore(A.base, c.specMin || 100), specN: RW.specScore(A.net, c.specMin || 100)}; // speciation scores (owner: strong with speciation)
 }
 const timeUp = () => HOURS && Date.now() - T0 > HOURS * 3600e3;
 (async () => {
@@ -85,7 +94,7 @@ const timeUp = () => HOURS && Date.now() - T0 > HOURS * 3600e3;
       log(`[round ${r} collect] ${recs.length} decisions from ${fights.length} fights (${learner ? 'the network plays' : 'the lookahead plays'}), ${D.length} total, ${((Date.now() - t0) / 1000).toFixed(0)} s`);
     }
     if (s.phase === 'train'){
-      const t0 = Date.now(), res = (c.model === 'set' ? BC.trainAdvSet : c.loss === 'adv' ? BC.trainAdv : BC.train)(readData(), {K: c.K, nh: c.nh, epochs: c.epochs, lr: c.lr, seed: c.seed + r, feat: c.feat, only: c.arch === 'guard' ? c.only : null, wide: c.arch === 'guard' && c.wide}, m => { if (/decisions|\[ep (0|9|19|29)\]/.test(m)) log('  ' + m); }, r > 0 ? {theta: s.theta} : null);
+      const t0 = Date.now(), res = (c.model === 'set' ? BC.trainAdvSet : c.loss === 'adv' ? BC.trainAdv : BC.train)(prepData(readData()), {K: c.K, nh: c.nh, epochs: c.epochs, lr: c.lr, seed: c.seed + r, feat: c.feat, only: c.arch === 'guard' ? c.only : null, wide: c.arch === 'guard' && c.wide}, m => { if (/decisions|\[ep (0|9|19|29)\]/.test(m)) log('  ' + m); }, r > 0 ? {theta: s.theta} : null);
       s.theta = res.P.theta; if (c.loss === 'adv') s.margin = res.P.margin;
       if (c.intents){ const ri = BC.trainIntentAdv(readData(), BASE_I(c.arch), {epochs: c.epochs, lr: c.lr, seed: c.seed + r}, m => { if (/decisions|\[ep (0|7|19)\]/.test(m)) log('  ' + m); }, s.thetaI);
         s.thetaI = ri.P.D; s.kappaI = ri.P.kappa; log(`[round ${r} train intents] held-out gain ${ri.best.gain.toFixed(4)} of ${ri.oracle.toFixed(4)}, threshold ${ri.P.kappa}`); }
@@ -93,10 +102,10 @@ const timeUp = () => HOURS && Date.now() - T0 > HOURS * 3600e3;
       log(c.loss === 'adv' ? `[round ${r} train] held-out gain ${res.best.gain.toFixed(4)} of ${res.oracle.toFixed(4)}, threshold ${res.P.margin}, ${((Date.now() - t0) / 1000).toFixed(0)} s` : `[round ${r} train] held-out regret ${res.best.regret.toFixed(4)} (heuristic ${res.base.regret.toFixed(4)}), ${((Date.now() - t0) / 1000).toFixed(0)} s`);
     }
     if (s.phase === 'val'){
-      const v = await evalW(s.theta, 'val', r, c.val, s.thetaI, s.kappaI), ok = !v.gates.length && v.style >= c.styleThr, better = ok && v.diff > (s.best.val || 0); // must beat today's cats (val 0) and every earlier clean round
+      const v = await evalW(s.theta, 'val', r, c.val, s.thetaI, s.kappaI), specOk = c.specTol == null || !Number.isFinite(v.specB) || !(v.specN < v.specB - c.specTol), ok = !v.gates.length && v.style >= c.styleThr && specOk, better = ok && v.diff > (s.best.val || 0); // must beat today's cats (val 0) and every earlier clean round
       s.history.push(Object.assign({round: r, dataN: s.dataN, theta: s.theta.slice(), margin: s.margin, thetaI: s.thetaI ? s.thetaI.slice() : null, kappaI: s.kappaI}, v)); // every round's student, so it can be re-scored later
       if (better) s.best = {theta: s.theta.slice(), round: r, val: v.diff, from: `round ${r}`, margin: s.margin, thetaI: s.thetaI ? s.thetaI.slice() : null, kappaI: s.kappaI};
-      log(`[round ${r} val] network vs today's ${c.arch} on ${v.n} fresh fights: ${v.diff >= 0 ? '+' : ''}${v.diff.toFixed(3)} ± ${v.se.toFixed(3)} | style ${v.style.toFixed(3)} gates [${v.gates}] drift [${v.drift.join('; ')}] | your survival ${(100 * v.surv).toFixed(1)} pts${better ? '  -> new best' : ok ? '' : '  (not clean)'}`);
+      log(`[round ${r} val] network vs today's ${c.arch} on ${v.n} fresh fights: ${v.diff >= 0 ? '+' : ''}${v.diff.toFixed(3)} ± ${v.se.toFixed(3)} | style ${v.style.toFixed(3)} gates [${v.gates}] drift [${v.drift.join('; ')}] | your survival ${(100 * v.surv).toFixed(1)} pts | speciation ${Number.isFinite(v.specB) ? v.specB.toFixed(2) : '-'} -> ${Number.isFinite(v.specN) ? v.specN.toFixed(2) : '-'}${specOk ? '' : ' (lost)'}${better ? '  -> new best' : ok ? '' : '  (not clean)'}`);
       s.round++; s.phase = 'collect'; save(s);
     }
   }

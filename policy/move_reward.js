@@ -199,4 +199,12 @@ function paired(recsA, recsB, ref){
 // unrealistic choice serves that objective (e.g. kickers hunting on offense). ungate(arch, names): those metrics stay in style
 // and drift but no longer gate (both the plain and the --spec definitions)
 function ungate(arch, names){ for (const D of [DEFS, DEFS_SPEC]) if (D[arch]) for (const k of names) if (D[arch][k]) D[arch][k] = Object.assign({}, D[arch][k], {gate: false}); }
-module.exports = { ungate, GOAL, GOAL_G, GOAL_C, ANIMAL_SCALE, METRICS, METRICS_G, METRICS_X, defsOf, goal, goalParts, metrics, metricSE, grade, drift, reference, paired, mean, sd, se };
+// speciation score over fight records carrying r.prof (move_run.js): mean pairwise distance between species' mean target profiles
+// (onto you, log mass ratio, distance, predator), each feature scaled by its pooled SD; species with >= min decisions
+function specScore(recs, min){ min = min || 150; const acc = {};
+  for (const r of recs) for (const [id, p] of Object.entries(r.prof || {})){ const a = acc[id] = acc[id] || new Array(9).fill(0); for (let k = 0; k < 9; k++) a[k] += p[k] || 0; }
+  const sp = Object.values(acc).filter(a => a[0] >= min); if (sp.length < 2) return NaN;
+  let n = 0; const S = [0, 0, 0, 0], Q = [0, 0, 0, 0]; for (const a of sp){ n += a[0]; for (let k = 0; k < 4; k++){ S[k] += a[1 + k]; Q[k] += a[5 + k]; } }
+  const sd = S.map((x, k) => Math.sqrt(Math.max(1e-9, Q[k] / n - (x / n) ** 2))), mean = sp.map(a => [0, 1, 2, 3].map(k => a[1 + k] / a[0] / sd[k])); // pooled over decisions, as probes/speciation_score.js
+  let d = 0, m = 0; for (let x = 0; x < mean.length; x++) for (let y = x + 1; y < mean.length; y++){ d += Math.hypot(...mean[x].map((v, k) => v - mean[y][k])); m++; } return d / m; }
+module.exports = { specScore, ungate, GOAL, GOAL_G, GOAL_C, ANIMAL_SCALE, METRICS, METRICS_G, METRICS_X, defsOf, goal, goalParts, metrics, metricSE, grade, drift, reference, paired, mean, sd, se };

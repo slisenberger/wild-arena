@@ -79,6 +79,7 @@ function runFight(f, weights, arch){
   if (arch === 'guard') return runGuardFight(f, weights);
   const cfg = cfgOf(f);
   setPolicy(cfg, f, arch, weights);
+  if (cfg.policy && cfg.policy.byArch && cfg.policy.byArch[arch]) cfg.pickLog = []; // per-species target profiles for the speciation score (stat only)
   const w = A.setup(cfg), H = w.human;
   const us = w.units.filter(u => I.archetypeOf(u) === arch);
   const S = us.map(u => ({foe: 0, dealt: 0, st: null, dart: false, lastC: 0, nc: 0, face: 0, appr: null}));
@@ -150,6 +151,8 @@ function runFight(f, weights, arch){
   r.deaths = us.filter(u => u.state === 'dead').length; r.escaped = us.filter(u => u.escaped).length;
   r.hmax = H.maxhp; r.killedYou = !w.result.survived && H.state === 'dead' && us.includes(H.lastHitBy) ? 1 : 0;
   r.t = +w.result.t.toFixed(1); r.survived = w.result.survived ? 1 : 0; r.why = w.result.why || null; r.killer = w.result.killer || null;
+  if (cfg.pickLog){ r.prof = {}; for (const d of cfg.pickLog){ const u = d.u, t = d.a; if (!t || u.side !== 'E' || I.archetypeOf(u) !== arch) continue; // [n, onto you, log mass ratio, dist / 10, predator]
+    const p = r.prof[u.s.id] = r.prof[u.s.id] || new Array(9).fill(0), v = [+(t === H), Math.log(t.s.mass / u.s.mass), I.dist(u, t) / 10, +!!t.s.pred]; p[0]++; for (let k = 0; k < 4; k++){ p[1 + k] += v[k]; p[5 + k] += v[k] * v[k]; } } } // [n, sums x4, sums of squares x4]
   r.intents = weights && /^target-/.test(weights.kind) ? (s => [s.agree || 0, (s.n || 0) - (s.agree || 0), 0, 0, 0])(cfg.policyStats || {}) : weights && cfg.moveStats && cfg.moveStats[arch] ? cfg.moveStats[arch] : null; // target scorer: [kept the heuristic's pick, deviated]
   r.fp = fingerprint(w);
   if (cfg.policyTrace) r.trace = cfg.policyTrace; // PPO training: each sampled target decision
