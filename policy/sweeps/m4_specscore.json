@@ -1,0 +1,8 @@
+{
+ "note": "Speciation score (owner Nov 3: strong with speciation is a reason to ship): live vs candidate, 600 fresh fights each.",
+ "runs": [
+  {"name": "ss_harr_e2", "args": "--trainer=probe --script=policy/probes/speciation_score.js --arch=harrier --net=policy/weights/harrier_target_e2.json --N=600"},
+  {"name": "ss_harr_j1", "args": "--trainer=probe --script=policy/probes/speciation_score.js --arch=harrier --net=policy/weights/harrier_target_j1.json --N=600"},
+  {"name": "ss_cat_r1", "args": "--trainer=probe --script=policy/probes/speciation_score.js --arch=cat --net=policy/weights/cat_target_r1.json --N=600"}
+ ]
+}
