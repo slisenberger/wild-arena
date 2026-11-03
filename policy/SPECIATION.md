@@ -376,3 +376,11 @@ each species develop its own realistic fighting style. This note is the plan; th
 - **Enemy cats with the realism cost in the labels (ei40, single class, --real 0.5): held-out +0.113 ± 0.031 vs today's cat
   targets, style 1.000, no drift** (validation rounds +0.009 / +0.037 / +0.001 / +0.067 / +0.000 / +0.064) -> cat_target_r1;
   ship checks sc41 (vs live cat_target_e1 × 2, vs today's targets × 1, speciation).
+- **cat_target_r1 does not hold up (Nov 3, sc41):** vs the live cat_target_e1 -0.046 ± 0.025 / -0.014 ± 0.025, vs today's targets
+  +0.022 ± 0.025 (2,000 fights each, style 1.00). Its held-out +0.113 ± 0.031 was optimistic by ~0.09. Pattern: held-out tests in
+  expert_iter came out above fresh draws three times (harrier p1 +0.070 -> +0.092/+0.019/+0.069/+0.047; e2 +0.080 -> +0.088/+0.056/
+  +0.036; cat r1 +0.113 -> +0.022). Fresh multi-draw checks are the only test that counts (the main session's rule); the held-out
+  test is a screen. Worth finding why (the 'test' pool's single fixed draw is one possibility: every run's test uses the same
+  1,200 fights, so a draw that happens to favour this kind of change favours every run).
+  Speciation under r1 (600 fights): tiger / lion / lion coalition / jaguar switch onto you (82 / 65 / 73 / 77% of changed picks);
+  cougar and leopard split (onto you 39 / 38%, off you 53 / 43%).
