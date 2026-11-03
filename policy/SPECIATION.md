@@ -388,3 +388,12 @@ each species develop its own realistic fighting style. This note is the plan; th
   today's targets (validation rounds 2-5 at +0.10 to +0.13), about what the live brawler_target_e1 already does (+0.059 / +0.070),
   so no fresh-draw checks. Overnight summary: no new candidate survived fresh draws; target choice on its own looks close to its
   ceiling with these inputs (fresh-draw gains over the live nets ≤ ~0.04, below what a 2,000-fight draw can confirm).
+- **Owner (Nov 3): "Strong with speciation good yes. Improvements of all kind good."** Bar (main session, DECISIONS.md): (a) small
+  gains ship on one pre-registered fresh 6,000-fight draw at 2 SE; (b) "as strong, more speciated" ships if goal ≥ -0.02 at 2 SE,
+  style ≥ .99, no gates, and the speciation score (probes/speciation_score.js: mean distance between species' target-choice
+  profiles: onto you, log mass ratio, distance, predator; bootstrap SE) is higher than live at 2 SE.
+- harrier_target_e2 on the main session's pre-registered draw (probe 130, 6,000): +0.030 ± 0.015 (2.0 SE at rounding, too close
+  for (a)); non-inferior for (b). **Speciation score (600 fresh fights): live 0.640 ± 0.046, e2 0.364 ± 0.048 (-0.276 ± 0.062):
+  e2 makes the species more alike** (live: lone hyena onto you 82%, packs 43-47%; e2: every item 47-61%). j1 0.215. cat_target_r1
+  vs live cat_e1 0.928 vs 0.901 (+0.027 ± 0.055). **Training on the goal alone erases species differences** (as
+  research/speciation_strategy.md §0 predicted). Next: speciation inside training.
