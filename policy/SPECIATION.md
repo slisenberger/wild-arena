@@ -384,3 +384,7 @@ each species develop its own realistic fighting style. This note is the plan; th
   1,200 fights, so a draw that happens to favour this kind of change favours every run).
   Speciation under r1 (600 fights): tiger / lion / lion coalition / jaguar switch onto you (82 / 65 / 73 / 77% of changed picks);
   cougar and leopard split (onto you 39 / 38%, off you 53 / 43%).
+- **Realism cost for wolves and bears (ei42, Nov 3):** wolves held-out -0.010 ± 0.029 (none found so far); bears +0.071 ± 0.035 vs
+  today's targets (validation rounds 2-5 at +0.10 to +0.13), about what the live brawler_target_e1 already does (+0.059 / +0.070),
+  so no fresh-draw checks. Overnight summary: no new candidate survived fresh draws; target choice on its own looks close to its
+  ceiling with these inputs (fresh-draw gains over the live nets ≤ ~0.04, below what a 2,000-fight draw can confirm).
