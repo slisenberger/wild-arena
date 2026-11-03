@@ -7,7 +7,7 @@
 // replaces the incumbent only at >= 2 SE with no gate failures (no disengaging; species realism, bent only for the objective).
 // Labelling only observes: the real fight's choices are the incumbents', so labels come from the game as played.
 //   node policy/expert_joint.js init <state.json> [--classes=cat,harrier,brawler,charger,guard --rounds=4 --fights=600 --H=12
-//        --rolls=2 --max=3 --every=3 --nh=32 --epochs=8 --lr=.002 --val=800 --seed=1 --Hg=20 (guards' horizon) --warm=true
+//        --rolls=2 --max=3 --every=3 --nh=32 --epochs=8 --lr=.002 --val=800 --seed=1 --Hg=20 (guards' horizon) --warm=true --real=0.5 (disengagement cost in labels)
 //        (students start from rich-feature incumbents, widened) --inc=cls:weights.json,...]
 //   node policy/expert_joint.js run <state.json> [--threads=N --hours=H]      (WA_DIST: spread batches over helper VMs)
 //   node policy/expert_joint.js report <state.json>
@@ -38,8 +38,10 @@ if (!isMainThread){
         c.R.seek((w.R.state() ^ Math.imul(n * 97 + 1 + 7919 * k, 0x9e3779b9)) >>> 0); // common random numbers across options
         const H = g && o.Hg ? o.Hg : o.H; // guards: a longer horizon (a 12-s look rewards leaving you for a fight you pay for later)
         cu.forceT = c.units[w.units.indexOf(opts[i].t)]; cu.forceUntil = c.t + H; cu.target = cu.forceT; cu.state = 'engage'; cu.carcass = null;
-        const t1 = c.t + H; while (!c.over && c.t < t1) A.step(c);
-        v += (g ? -PL.score(c) : PL.score(c)) / o.rolls; }
+        // o.real (realism inside the label, research §2.2): the branch loses real x the share of its H s this animal spent
+        // disengaged (slow and > 10 m from its target, or no target), so a teacher can't pay for holding off
+        const t1 = c.t + H; let bad = 0; while (!c.over && c.t < t1){ A.step(c); if (o.real && I.active(cu)){ const tt = cu.target && I.active(cu.target) ? cu.target : null; if (!tt || (Math.hypot(cu.vx, cu.vy) < 1 && I.dist(cu, tt) > 10)) bad += .1; } }
+        v += ((g ? -PL.score(c) : PL.score(c)) - (o.real || 0) * bad / H) / o.rolls; }
       sc.push(v); }
     const r4 = x => Math.round(x * 1e4) / 1e4;
     CTX.data.push({cls, sp: u.s.id, tr: TR.traitsV(u.s, 2), X: tries.map(i => ex.X[i].map(r4)), s: sc.map(r4), teach: tries.indexOf(teach)});

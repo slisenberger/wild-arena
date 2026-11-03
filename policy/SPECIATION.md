@@ -336,3 +336,12 @@ each species develop its own realistic fighting style. This note is the plan; th
   cats went for you more (humanShare .17 -> .45) and pounced about half as often (pounceRate 2.07 -> 1.24, stalk pounces
   halved). Live-set checks running (sc30). Species signatures hold (owner rule), so cats now keep a hard check on the pounce
   rate (pounceKept: no fall over 30%); rerun ei31.
+- **Evening, Nov 2.** Enemy-cat whom + how student (ei26) vs the live set (cat_target_e1 + cat_v1), 2 × 2,000: -0.038 ± 0.028 and
+  +0.006 ± 0.029: its gain over today's targets is what cat_e1 already has, at the cost of half the pounces. Not a candidate.
+  Joint v2 (jn29) rounds 0-1: nothing accepted again. **Guards lose every round (-0.13 to -0.18) even with a 30-s horizon:
+  each guard's label is a unilateral counterfactual (one guard deviates, the rest fixed), and "engage" is right for one guard
+  but wrong when every guard learns it (they all leave you; idle .19-.35 -> .05-.09).** Team-level effects need team-level
+  credit: guard target nets stay ES-trained (m2/m3 were) or get a constraint on how many guards stay near you. Harrier students
+  gain +0.03 to +0.11 over e2 but by darting less and holding off (style .63-.84): the lookahead pays for waiting. New:
+  expert_joint --real (a disengagement cost inside each branch's score). Cats whom + how with the pounce gate (ei31) round 0:
+  style .647 (longIdle, stillLong, pounceKept): the 20-s teacher's intent picks idle the cats.
