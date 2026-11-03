@@ -1,8 +1,13 @@
 {
- "note": "Ship checks for harrier_target_j1, the first joint-trained acceptance (jn32 round 0, +0.158 ± 0.033 vs e2): vs the live set (harriers have no live target net), 2 × 2,000 fresh fights on new probe draws, plus the speciation report.",
+ "note": "Ship checks for harrier_target_j1, the first joint-trained acceptance (jn32 round 0, +0.158 \u00b1 0.033 vs e2): vs the live set (harriers have no live target net), 2 \u00d7 2,000 fresh fights on new probe draws, plus the speciation report. Rerun with BASE=none: the default base (zero target weights with the candidate margin, 0 here) picks none and idles the wolves.",
  "runs": [
-  {"name": "j1_131", "args": "--trainer=probe --script=policy/probes/eval_target_cli.js policy/weights/harrier_target_j1.json harrier 2000 131 91 checkmate 1"},
-  {"name": "j1_141", "args": "--trainer=probe --script=policy/probes/eval_target_cli.js policy/weights/harrier_target_j1.json harrier 2000 141 91 checkmate 1"},
-  {"name": "j1_spec", "args": "--trainer=probe --script=policy/probes/speciation.js 600 71 --net=policy/weights/harrier_target_j1.json --arch=harrier"}
+  {
+   "name": "j1_131",
+   "args": "--trainer=probe --script=policy/probes/eval_target_cli.js policy/weights/harrier_target_j1.json harrier 2000 131 91 checkmate 1 --base=none"
+  },
+  {
+   "name": "j1_141",
+   "args": "--trainer=probe --script=policy/probes/eval_target_cli.js policy/weights/harrier_target_j1.json harrier 2000 141 91 checkmate 1 --base=none"
+  }
  ]
 }

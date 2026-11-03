@@ -357,3 +357,6 @@ each species develop its own realistic fighting style. This note is the plan; th
   students +0.006 / -0.001 / +0.005 / +0.047 (± .03) vs live: none accepted. Ship checks for j1: sc34.
 - Cats whom + how with the pounce gate (ei31): held-out test -0.035 ± 0.035 (round 5's +0.120 validation didn't hold). Your
   cats whom + how (ei27): best +0.030 (round 0) through round 4; finishing.
+- sc34 (j1 ship checks) INVALID: eval_target.js's default base is zero target weights with the candidate's margin; j1's margin
+  is 0, so the base arm picked 'none' and the wolves idled 96% (style .545, goal +0.24 meaningless). Always pass BASE=none for
+  a class with no live target net. Rerun: sc35.
