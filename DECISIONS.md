@@ -71,6 +71,11 @@ Each item has a recommendation; reply with a number and "yes", or your own call.
   boards. GCP for training; the launcher must fail gracefully.
 
 ## Decided
+- Nov 3: **the bar for shipping learned behaviour** (owner: "Strong with speciation good yes. Improvements of all kind good i
+  suppose"). A net ships if, on a fresh confirmation draw decided on before it is run: (a) the goal gain is ≥ 2 SE on one fresh
+  6,000-fight draw (this resolves small real gains, about +0.04), style ≥ .99, no gate failures; or (b) it is not weaker (goal
+  lower bound ≥ −0.02 at 2 SE on fresh draws, style ≥ .99, no gates) and more speciated (`policy/probes/speciation_score.js`, the
+  spread between species' target-choice profiles, higher at 2 SE). No pooling of draws after a failed confirmation.
 - Oct 31: **what is in the game's spirit** (owner: "I dont care about predator vs lion. I just am opining it doesnt violate game spirit the way disengaging does."): animals know their team and the objective. Choices that serve the objective are fine even when unrealistic (kickers hunting you, buffalo ignoring lions). Disengaging is not: idling, stalling, avoiding the fight, giving up. So training checks on engagement matter; buffalo-vs-lion is report-only, and the live charger net (`charger_target_m1`) stays as it is. Species realism stays in the engine's physics and signature moves.
 - Oct 31: **every animal on attack takes part in killing the human; it is the only assumption above realism** (owner). Kickers, lumbering herbivores and the walrus get a prototype (training session, behind a flag), then a reprice.
 - Oct 31: **terrain features (maps2) are the default** (owner: "I like maps2 … feels better"); the old open maps stay behind `?maps2=0`. Tree-hiding stalls fixed the same day.
