@@ -1,0 +1,8 @@
+{
+ "note": "The cats' winning recipe (ei40: single-class expert iteration, 20 s CRN teacher, realism cost --real 0.5 inside the labels) for wolves/hyenas and bears, on main's default. 3 helpers each.",
+ "helpers": 3,
+ "runs": [
+  {"name": "ei_harr_real", "args": "--trainer=expert --feat=rich --loss=adv --rounds=6 --fights=900 --max=3 --rolls=3 --nh=32 --epochs=8 --lr=.002 --val=800 --test=1200 --dagger=true --arch=harrier --H=20 --crn=true --real=0.5 --seed=5701"},
+  {"name": "ei_brw_real", "args": "--trainer=expert --feat=rich --loss=adv --rounds=6 --fights=900 --max=3 --rolls=3 --nh=32 --epochs=8 --lr=.002 --val=800 --test=1200 --dagger=true --arch=brawler --H=20 --crn=true --real=0.5 --seed=5702"}
+ ]
+}
