@@ -115,6 +115,7 @@ async function validate(k, W, r){ // the student for class k vs its incumbent, e
         // warm start: a rich-feature incumbent (an earlier winner) widened to traits v2 + the species one-hot (new inputs at 0)
         if (!s.stu[k] && s.inc[k] && s.inc[k].kind === 'target-mlp' && s.inc[k].feat === 'rich' && !s.inc[k].spIds && c.warm){ const TRm = require('./traits.js'), Wd = TM.widen(s.inc[k], (TRm.DIM2 - TRm.DIM) + spIds.length);
           s.stu[k] = Object.assign({}, Wd, {traitsV: 2, spIds}); log(`[round ${r} train ${k}] warm start from the incumbent (${s.incFrom[k]}), widened to ${Wd.nin} inputs`); }
+        else if (!s.stu[k] && s.inc[k] && s.inc[k].spIds && c.warm && JSON.stringify(s.inc[k].spIds) === JSON.stringify(spIds)){ s.stu[k] = Object.assign({}, s.inc[k]); log(`[round ${r} train ${k}] warm start from the incumbent (${s.incFrom[k]}), same shape`); } // an earlier joint student
         const st = s.stu[k], res = BC.trainAdv(Dx, {nh: c.nh, epochs: c.epochs, lr: c.lr, seed: c.seed + r, feat: 'rich', wide: k === 'guard'}, () => {}, st ? {theta: st.theta} : null);
         const P = Object.assign({}, res.P, {traitsV: 2, spIds, targetsOnly: true, feat: 'rich'}, k === 'guard' ? {wide: true} : {});
         s.stu[k] = P; log(`[round ${r} train ${k}] ${Dk.length} decisions: held-out gain ${res.best.gain.toFixed(4)} of ${res.oracle.toFixed(4)}, threshold ${res.P.margin}`);
