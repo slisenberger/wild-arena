@@ -1,0 +1,7 @@
+{
+ "note": "Joint v3 (Nov 3): jn29 accepted nothing (cat / brawler students +0.02-0.04 over live, harrier +0.06-0.08 over e2 but holding off, guards -0.16 to -0.22). Now: guards stay on their live net (unilateral labels can't train a team), a disengagement cost inside each branch's score (--real 0.5), warm starts from the winners, H 20, 1,500 validation fights.",
+ "helpers": 3,
+ "runs": [
+  {"name": "joint3", "args": "--trainer=joint --classes=cat,harrier,brawler --inc=harrier:harrier_target_e2.json --warm=true --real=0.5 --rounds=4 --fights=1500 --H=20 --rolls=3 --max=3 --every=3 --nh=32 --epochs=8 --lr=.002 --val=1500 --seed=6301"}
+ ]
+}

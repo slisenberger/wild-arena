@@ -345,3 +345,6 @@ each species develop its own realistic fighting style. This note is the plan; th
   gain +0.03 to +0.11 over e2 but by darting less and holding off (style .63-.84): the lookahead pays for waiting. New:
   expert_joint --real (a disengagement cost inside each branch's score). Cats whom + how with the pounce gate (ei31) round 0:
   style .647 (longIdle, stillLong, pounceKept): the 20-s teacher's intent picks idle the cats.
+- **Joint v2 (jn29) finished, Nov 3:** no student accepted in 4 rounds. Rounds 2-3: cat +0.036 / +0.035 ± 0.039, brawler
+  +0.021 / +0.029 (style .99), harrier +0.078 / +0.056 ± 0.043 vs e2 (style .91 / .70: holding off), guard -0.22 / -0.16.
+  v3 (jn32): cats, wolves, bears only, --real 0.5, 1,500 validation fights.
