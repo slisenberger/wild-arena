@@ -401,3 +401,8 @@ each species develop its own realistic fighting style. This note is the plan; th
   move_reward.specScore matches probes/speciation_score.js; expert_iter gains --specTol (a round is rejected if its speciation
   score falls more than tol below the base arm's on the validation fights), --speciesCode (traits + per-species one-hot) and
   --balance (species-balanced data, capped 4x). Recipe sweep ei44: wolves, cats, bears.
+- **Speciation-aware training, first results (ei44, Nov 4).** Bears: validation vs today's targets +0.088 / +0.117 (rounds 1-2) with
+  speciation 1.22 -> 1.46 / 1.18 -> 1.21; held-out +0.082 ± 0.033 -> brawler_target_s1 / s2, checked vs the live brawler_target_e1
+  (sc45). Cats: round 1 +0.099 ± 0.035, speciation 0.86 -> 0.91 (run finishing). Wolves: every round lost speciation (0.62-0.69 ->
+  0.32-0.50) and was rejected by --specTol: the species one-hot and balancing don't stop the harrier net collapsing the
+  loner / pack difference; it needs a stronger lever (per-species priors in the labels).
