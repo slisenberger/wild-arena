@@ -1,0 +1,29 @@
+{
+ "note": "Bar (b) checks for the speciation-aware bear students (ei44 sp_brw rounds 1 and 2) vs the live brawler_target_e1: 2 strength draws each + speciation score (live arm = live e1).",
+ "runs": [
+  {
+   "name": "s1_live_221",
+   "args": "--trainer=probe --script=policy/probes/eval_target_cli.js policy/weights/brawler_target_s1.json brawler 2000 221 91 checkmate 1 --base=policy/weights/brawler_target_e1.json"
+  },
+  {
+   "name": "s1_live_231",
+   "args": "--trainer=probe --script=policy/probes/eval_target_cli.js policy/weights/brawler_target_s1.json brawler 2000 231 91 checkmate 1 --base=policy/weights/brawler_target_e1.json"
+  },
+  {
+   "name": "s1_spec",
+   "args": "--trainer=probe --script=policy/probes/speciation_score.js --arch=brawler --net=policy/weights/brawler_target_s1.json --N=600 --index=211"
+  },
+  {
+   "name": "s2_live_221",
+   "args": "--trainer=probe --script=policy/probes/eval_target_cli.js policy/weights/brawler_target_s2.json brawler 2000 221 91 checkmate 1 --base=policy/weights/brawler_target_e1.json"
+  },
+  {
+   "name": "s2_live_231",
+   "args": "--trainer=probe --script=policy/probes/eval_target_cli.js policy/weights/brawler_target_s2.json brawler 2000 231 91 checkmate 1 --base=policy/weights/brawler_target_e1.json"
+  },
+  {
+   "name": "s2_spec",
+   "args": "--trainer=probe --script=policy/probes/speciation_score.js --arch=brawler --net=policy/weights/brawler_target_s2.json --N=600 --index=211"
+  }
+ ]
+}
