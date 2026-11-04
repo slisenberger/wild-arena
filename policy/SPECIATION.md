@@ -411,3 +411,9 @@ each species develop its own realistic fighting style. This note is the plan; th
   -0.092 ± 0.065. Neither passes (b) (non-inferiority: diff - 2 SE ≥ -0.02). Note: on 2,000-fight draws (SE .025) even an exactly
   equal net fails that test; non-inferiority needs ~6,000-fight draws. Speciation vs strength is a real trade-off here.
   Wolves (sp_harr): every round rejected for losing speciation. Cats (sp_cat): held-out +0.088 ± 0.032 -> cat_target_s1, sc46.
+- **cat_target_s1 (sc46, vs live cat_target_e1):** strength -0.020 ± 0.025 / +0.032 ± 0.025 (≈ live), speciation 0.893 vs 0.826
+  (+0.067 ± 0.078, not significant). Doesn't meet (b). Summary of the speciation-aware round: the gate stops nets from erasing
+  species differences, and the species one-hot + balancing can produce more distinct species (bears s1 +0.135 ± 0.054) but at a
+  strength cost (~0.05) in that case; nothing yet is both at least as strong as live and clearly more speciated. Open owner
+  question: is a small strength cost acceptable for clearly more distinct species? Next lever: per-species priors in the labels
+  (research §2.2), especially for wolves (loner vs pack), and 6,000-fight non-inferiority draws.
