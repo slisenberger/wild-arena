@@ -406,3 +406,8 @@ each species develop its own realistic fighting style. This note is the plan; th
   (sc45). Cats: round 1 +0.099 ± 0.035, speciation 0.86 -> 0.91 (run finishing). Wolves: every round lost speciation (0.62-0.69 ->
   0.32-0.50) and was rejected by --specTol: the species one-hot and balancing don't stop the harrier net collapsing the
   loner / pack difference; it needs a stronger lever (per-species priors in the labels).
+- **Bar (b) on the speciation-aware bears (sc45, vs live brawler_target_e1):** s1 strength -0.042 ± 0.026 / -0.055 ± 0.025, speciation
+  1.474 vs 1.339 (+0.135 ± 0.054, 2.5 SE): clearly more distinct species, ~0.05 weaker. s2 -0.018 / +0.011 (≈ equal), speciation
+  -0.092 ± 0.065. Neither passes (b) (non-inferiority: diff - 2 SE ≥ -0.02). Note: on 2,000-fight draws (SE .025) even an exactly
+  equal net fails that test; non-inferiority needs ~6,000-fight draws. Speciation vs strength is a real trade-off here.
+  Wolves (sp_harr): every round rejected for losing speciation. Cats (sp_cat): held-out +0.088 ± 0.032 -> cat_target_s1, sc46.

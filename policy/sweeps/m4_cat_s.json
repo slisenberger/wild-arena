@@ -1,0 +1,8 @@
+{
+ "note": "Bar (b) checks for the speciation-aware cat student (ei44 sp_cat best, held-out +0.088 ± 0.032 vs today's cat targets) vs live cat_target_e1: 2 strength draws + speciation score.",
+ "runs": [
+  {"name": "cs1_live_241", "args": "--trainer=probe --script=policy/probes/eval_target_cli.js policy/weights/cat_target_s1.json cat 2000 241 91 checkmate 1 --base=policy/weights/cat_target_e1.json"},
+  {"name": "cs1_live_251", "args": "--trainer=probe --script=policy/probes/eval_target_cli.js policy/weights/cat_target_s1.json cat 2000 251 91 checkmate 1 --base=policy/weights/cat_target_e1.json"},
+  {"name": "cs1_spec", "args": "--trainer=probe --script=policy/probes/speciation_score.js --arch=cat --net=policy/weights/cat_target_s1.json --N=600 --index=211"}
+ ]
+}
