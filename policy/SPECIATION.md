@@ -475,3 +475,9 @@ each species develop its own realistic fighting style. This note is the plan; th
   -0.11 ± 0.036; damage per fight 835 -> ~500, your survival +2 to +5 pts), speciation ~unchanged (1.15-1.20). Kickers: every
   round fails the farHunt gate (0.15 -> 0.19-0.30), fruitless 0.51 -> 0.65, goal -0.05 to +0.01. Kept today's targets. Control
   ei50: prior 0 and .2 for both classes (is it the lookahead teacher on herbivores, or the prior?).
+- **ei50 control (herbivores, prior 0 / .2):** bulldozers are weaker than today even with prior 0 (val -0.03 to -0.14; best round
+  4 +0.007 val but -0.084 ± 0.032 held-out), so the lookahead teacher is the problem for bulldozers, not the prior (likely
+  horizon: H 20 is short for 6 t lumberers; elephant damage per fight 878 -> 527). Kickers: prior 0 gives clean rounds with
+  big speciation gains (val 0.89-1.14 -> 1.28-1.39), round 5 +0.075 val / -0.010 ± 0.029 held-out, style 1.000; prior .2
+  round 5 +0.035 val / +0.010 ± 0.032 held-out, style .991, speciation 0.94 -> 1.20; prior .2 and .5 trip farHunt in earlier
+  rounds. Exported kicker_target_k0, kicker_target_k2; screens m4_kick (probes 431, 441, 451).

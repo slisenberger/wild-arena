@@ -1,0 +1,29 @@
+{
+ "note": "Screen the first kicker target nets (ei50 rp_kick0 r5 prior 0, rp_kick2 r5 prior .2) vs today: strength probes 431/441, speciation N=1,500 probe 451.",
+ "runs": [
+  {
+   "name": "k0_431",
+   "args": "--trainer=probe --script=policy/probes/eval_target_cli.js policy/weights/kicker_target_k0.json kicker 2000 431 91 checkmate 1 --base=none"
+  },
+  {
+   "name": "k0_441",
+   "args": "--trainer=probe --script=policy/probes/eval_target_cli.js policy/weights/kicker_target_k0.json kicker 2000 441 91 checkmate 1 --base=none"
+  },
+  {
+   "name": "k0_spec",
+   "args": "--trainer=probe --script=policy/probes/speciation_score.js --arch=kicker --net=policy/weights/kicker_target_k0.json --N=1500 --index=451"
+  },
+  {
+   "name": "k2_431",
+   "args": "--trainer=probe --script=policy/probes/eval_target_cli.js policy/weights/kicker_target_k2.json kicker 2000 431 91 checkmate 1 --base=none"
+  },
+  {
+   "name": "k2_441",
+   "args": "--trainer=probe --script=policy/probes/eval_target_cli.js policy/weights/kicker_target_k2.json kicker 2000 441 91 checkmate 1 --base=none"
+  },
+  {
+   "name": "k2_spec",
+   "args": "--trainer=probe --script=policy/probes/speciation_score.js --arch=kicker --net=policy/weights/kicker_target_k2.json --N=1500 --index=451"
+  }
+ ]
+}
