@@ -1,0 +1,14 @@
+{
+ "note": "ei51: bulldozer teacher diagnosis (prior 0 was weaker than today at H 20 s): horizon 8 s and 40 s.",
+ "helpers": 2,
+ "runs": [
+  {
+   "name": "bull_H8",
+   "args": "--trainer=expert --feat=rich --loss=adv --rounds=6 --fights=900 --max=3 --rolls=3 --nh=32 --epochs=8 --lr=.002 --val=1000 --test=1200 --dagger=true --H=8 --crn=true --real=0.5 --traitsV=2 --speciesCode=true --balance=true --specTol=0.05 --arch=bulldozer --prior=0 --seed=9921"
+  },
+  {
+   "name": "bull_H40",
+   "args": "--trainer=expert --feat=rich --loss=adv --rounds=6 --fights=900 --max=3 --rolls=3 --nh=32 --epochs=8 --lr=.002 --val=1000 --test=1200 --dagger=true --H=40 --crn=true --real=0.5 --traitsV=2 --speciesCode=true --balance=true --specTol=0.05 --arch=bulldozer --prior=0 --seed=9922"
+  }
+ ]
+}
