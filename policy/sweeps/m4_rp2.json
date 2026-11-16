@@ -1,0 +1,8 @@
+{
+ "note": "Screen harrier_target_rp2 (ei47 rp_harr50 round 5, realism prior λ .5) like rp1: 2 strength draws vs today's wolves (probes 291, 301) + speciation N=1,500 (probe 311).",
+ "runs": [
+  {"name": "harr2_291", "args": "--trainer=probe --script=policy/probes/eval_target_cli.js policy/weights/harrier_target_rp2.json harrier 2000 291 91 checkmate 1 --base=none"},
+  {"name": "harr2_301", "args": "--trainer=probe --script=policy/probes/eval_target_cli.js policy/weights/harrier_target_rp2.json harrier 2000 301 91 checkmate 1 --base=none"},
+  {"name": "harr2_spec", "args": "--trainer=probe --script=policy/probes/speciation_score.js --arch=harrier --net=policy/weights/harrier_target_rp2.json --N=1500 --index=311"}
+ ]
+}

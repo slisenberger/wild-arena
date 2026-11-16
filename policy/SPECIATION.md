@@ -441,3 +441,13 @@ each species develop its own realistic fighting style. This note is the plan; th
     rp_harr50 (λ .5): every round more speciated (+0.10 to +0.24) but -0.01 to -0.04 on goal; still running.
   - Bears (rp_brw35): no speciation gain (1.2 -> 1.2); the best round (+0.087 val, +0.047 held-out) is ≈ live e1. Not screened.
   - Screens (sweep m4_rp1, fresh probes 291 / 301 strength, 311 speciation at N = 1,500): pending.
+- **Screens (m4_rp1; fresh probes 291 / 301 strength 2,000 each, 311 speciation N = 1,500):**
+  - cat_target_rp1 vs live e1: goal -0.012 ± 0.025, -0.028 ± 0.025 (mean ≈ -0.020), style 1.000, no gates; speciation 0.831 -> 0.954
+    (+0.123 ± 0.044, 2.8 SE). Passes (b′) in my screen (held-out +0.106 vs today did not carry over: again optimistic). Leopard,
+    cougar, jaguar, smilodon go for you more and give up predators (leopard predator picks 10.7 -> 1.0%); lions take smaller prey.
+  - harrier_target_rp1 vs today's wolves: goal -0.017 ± 0.024, -0.030 ± 0.025 (≈ -0.024), style .988 / .978 (just under .99, no
+    gates; drift: dart rate 6.1 -> 4.1, onto you 7 -> 21%), speciation 0.552 -> 0.825 (+0.273 ± 0.039, 7 SE). Hyena clans mob
+    predators more (12.8 -> 28.8%) and lone wolves / packs of 4 go for you more (61 -> 79%, 45 -> 67%) while packs of 6 still take big
+    prey: matches the registry's loner vs pack, clan-mobbing tendencies. Passes the speciation and cost parts of (b′); style is .01 short.
+  - Both sent to the main session for pre-registered checks. harrier_target_rp2 (rp_harr50 round 5: val +0.041, 0.64 -> 0.95,
+    held-out -0.049) screening as m4_rp2.
