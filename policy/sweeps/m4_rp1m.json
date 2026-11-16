@@ -1,0 +1,29 @@
+{
+ "note": "harrier_target_rp1 with margin .05/.1/.2 toward the heuristic pick: does style reach .99 (main session bar) while keeping speciation? strength probe 331, speciation probe 341.",
+ "runs": [
+  {
+   "name": "m0.05_331",
+   "args": "--trainer=probe --script=policy/probes/eval_target_cli.js policy/weights/harrier_target_rp1m0.05.json harrier 2000 331 91 checkmate 1 --base=none"
+  },
+  {
+   "name": "m0.05_spec",
+   "args": "--trainer=probe --script=policy/probes/speciation_score.js --arch=harrier --net=policy/weights/harrier_target_rp1m0.05.json --N=1500 --index=341"
+  },
+  {
+   "name": "m0.1_331",
+   "args": "--trainer=probe --script=policy/probes/eval_target_cli.js policy/weights/harrier_target_rp1m0.1.json harrier 2000 331 91 checkmate 1 --base=none"
+  },
+  {
+   "name": "m0.1_spec",
+   "args": "--trainer=probe --script=policy/probes/speciation_score.js --arch=harrier --net=policy/weights/harrier_target_rp1m0.1.json --N=1500 --index=341"
+  },
+  {
+   "name": "m0.2_331",
+   "args": "--trainer=probe --script=policy/probes/eval_target_cli.js policy/weights/harrier_target_rp1m0.2.json harrier 2000 331 91 checkmate 1 --base=none"
+  },
+  {
+   "name": "m0.2_spec",
+   "args": "--trainer=probe --script=policy/probes/speciation_score.js --arch=harrier --net=policy/weights/harrier_target_rp1m0.2.json --N=1500 --index=341"
+  }
+ ]
+}
