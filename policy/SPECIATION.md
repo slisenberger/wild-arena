@@ -465,3 +465,9 @@ each species develop its own realistic fighting style. This note is the plan; th
   -0.009 ± 0.013 (6,000 fights, probe 170, base none), style .996, no gates. Every enemy archetype except bulldozer and kicker now has
   a target net. Next: realism-prior registry entries for bulldozers (elephant, mammoth, gorilla, walrus) and kickers (giraffe,
   ostrich, giant kangaroo), then ei49 on them.
+- **Bears with prior .8 (ei48 rp_brw80 round 4 -> brawler_target_rp1):** held-out +0.116 ± 0.034 vs today (e1 ≈ +0.065), but on fresh
+  draws vs live e1: goal +0.016 ± 0.026 (probe 371), +0.008 ± 0.027 (381), style 1.000; speciation (391, N = 1,500) 1.276 -> 1.295
+  (+0.019 ± 0.042). About as strong as live and no more speciated: not sent. Bears' live net is already the most speciated class
+  (1.28); grizzlies and polars shift toward predators (18 -> 32%, 17 -> 22%) and black bears onto you (55 -> 71%), but the score
+  doesn't move. Wolves with style floor .995 (rp_harr25s): val speciation .78-.84 vs today, about what the live rp1m0.05 already
+  has (0.81 on probe 341): not screened.
