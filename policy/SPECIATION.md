@@ -428,3 +428,8 @@ each species develop its own realistic fighting style. This note is the plan; th
   own-size, cougar large for its size, polar seal-sized, black bear neonates); hyena clans mob predators while lone hyenas / wolves /
   leopards / cougars / jaguars avoid larger ones; scavengers / kill-stealers favour prey already in a fight. Nothing weights the human;
   no distance terms. Prior spread across a decision's options: median .34 (bears) to .93 (harriers). Training: ei47.
+- **brawler_target_s1 did not ship (Nov 16, main session's pre-registered checks):** strength vs e1 -0.024 ± 0.015 (6,000 fights;
+  passes the ≤ 0.05 cost), speciation 1.464 vs 1.308 (+0.156 ± 0.085, 1.8 SE on 600 fights; fails). Direction matches (grizzly onto
+  you 49 -> 79%, short-face 64 -> 94%, black bear 54 -> 71%). Size speciation checks for a 2-SE margin: N ≥ 1,500. eval_target.js now
+  reads 'spec' / 'true' / 'on' as spec on (the word ran with spec off). Main #57 has traits v2, spIds and speciation_score, so a
+  speciated net now ships as a weights file only.
