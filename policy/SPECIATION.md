@@ -417,3 +417,7 @@ each species develop its own realistic fighting style. This note is the plan; th
   strength cost (~0.05) in that case; nothing yet is both at least as strong as live and clearly more speciated. Open owner
   question: is a small strength cost acceptable for clearly more distinct species? Next lever: per-species priors in the labels
   (research §2.2), especially for wolves (loner vs pack), and 6,000-fight non-inferiority draws.
+- **Owner (Nov 16): "Its fine if strength decreases a bit for realism yes."** Proposed bar (b′) to the main session: speciation
+  higher than live at 2 SE, strength cost ≤ ~0.05 (pre-registered 6,000-fight draw: goal ≥ -0.05, lower bound ≥ -0.08), style ≥ .99,
+  no gates. First candidate: brawler_target_s1 (more speciated +0.135 ± 0.054, ~0.05 weaker). Per-species realism priors in the
+  labels (policy/realism_prior.js, registry drafted from sources) are the next training lever.
