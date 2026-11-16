@@ -1,0 +1,8 @@
+{
+ "note": "Screen brawler_target_rp1 (ei48 rp_brw80 round 4, prior .8) vs live brawler_target_e1: 2 strength draws (probes 371, 381) + speciation N=1,500 (probe 391).",
+ "runs": [
+  {"name": "brw_371", "args": "--trainer=probe --script=policy/probes/eval_target_cli.js policy/weights/brawler_target_rp1.json brawler 2000 371 91 checkmate 1 --base=policy/weights/brawler_target_e1.json"},
+  {"name": "brw_381", "args": "--trainer=probe --script=policy/probes/eval_target_cli.js policy/weights/brawler_target_rp1.json brawler 2000 381 91 checkmate 1 --base=policy/weights/brawler_target_e1.json"},
+  {"name": "brw_spec", "args": "--trainer=probe --script=policy/probes/speciation_score.js --arch=brawler --net=policy/weights/brawler_target_rp1.json --N=1500 --index=391"}
+ ]
+}
