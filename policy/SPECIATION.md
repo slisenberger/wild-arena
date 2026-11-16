@@ -459,3 +459,5 @@ each species develop its own realistic fighting style. This note is the plan; th
 - **cat_target_rp1 shipped (Nov 16, main PR #58):** main session's pre-registered checks: speciation +0.179 ± 0.043 (4.2 SE, probe
   321), strength vs e1 +0.009 ± 0.014 (6,000 fights, probe 160), style 1.000, no gates. First net shipped on bar (b′), and the first
   from sourced realism priors. Probes 160 and 321 burned. Merged main into m4/speciation-2.
+- **Second draw (probe 351):** margin .05: goal +0.012 ± 0.023, style 1.000 (drift humanShare 7 -> 18%); margin .1: +0.024 ± 0.021, style
+  1.000. harrier_target_rp1m0.05 (style .994 / 1.000, goal -0.026 / +0.012, speciation +0.181 ± 0.037) sent to the main session.
