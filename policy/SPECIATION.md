@@ -487,3 +487,7 @@ each species develop its own realistic fighting style. This note is the plan; th
   predators, matching its registry entry; flagged under the objective rule). Sent to the main session. kicker_target_k2 (prior .2):
   style .985 / .962 with farHunt on 441: fails. Speciation here came from the goal + species code alone; the herbivore priors at
   .2-.5 pushed kickers into far hunts.
+- **kicker_target_k0 shipped (Nov 16, main PR #61):** probe 190 (6,000 fights, base none, corrected farHunt gate): goal +0.030 ±
+  0.013, style 1.000, no gates or drift; idle share fell for all three species; speciation (probe 461) +0.236 ± 0.049. The first
+  probe-180 draw failed on a mismeasured gate (main's move_run.js still counted closing on the human); fixed before the re-draw
+  (DECISIONS "Decided"). Only bulldozers now lack a target net.

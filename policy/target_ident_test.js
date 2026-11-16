@@ -1,11 +1,11 @@
 // Milestone 4 target hooks: zero 'target-lin' weights must reproduce the shipped game exactly (every live policy on), for a
-// predator archetype (cat, brawler, harrier), a herbivore one (bulldozer) and guards (the base arm: the arch's shipped movement, no target scorer of its own); nonzero weights must change fights; sampling must log a trace.
+// predator archetype (cat, brawler, harrier), herbivore ones (bulldozer, kicker) and guards (the base arm: the arch's shipped movement, no target scorer of its own); nonzero weights must change fights; sampling must log a trace.
 //   node policy/target_ident_test.js [fights per archetype]
 const TM = require('./target_model.js'), FR = require('./features_rich.js'), R = require('./move_run.js'), F = require('./features.js'), G = require('./guard_features.js');
 require('./live.js');
 const L = R.A._internals.LIVE, n = +process.argv[2] || 24;
 let bad = 0;
-for (const arch of ['cat', 'brawler', 'harrier', 'bulldozer', 'guard']){
+for (const arch of ['cat', 'brawler', 'harrier', 'bulldozer', 'kicker', 'guard']){
   const D = arch === 'guard' ? G.DIM : F.DIM, Z = {kind: 'target-lin', v: 1, nin: D, margin: .25, wt: new Array(D).fill(0)};
   const N = Object.assign({}, Z, {wt: Z.wt.map((_, i) => Math.sin(i * 3.1) * .6)}), fs = R.fightSet('probe', 5, n, {arch, seed: 7, withLive: true});
   const Zm = TM.mlp(D + TM.TRAITS, 8, .25, 11, true); // a fresh MLP scorer: hidden weights random, output zero

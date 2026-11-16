@@ -95,6 +95,31 @@ the shipped policies and reprice after:
     more (45 → 63%, 59 → 78%), hyena clans more onto predators. Prices kept (`abs_r22`), MEASURED refreshed. Safari constants kept:
     bot round 1 85%, 14.6% complete (was 20.4%; main's MEASURED on this engine 17.4%): below the band, owner's call (DECISIONS.md).
     Daily salt re-run from Nov 17 (9 days re-dealt).
+  - [x] (superseded by `kicker-k0b` below) **Nov 16 (branch `kicker-k0`): `kicker_target_k0` (first target net for enemy giraffe / ostrich / giant kangaroo) did not
+    ship under bar (b′).** From `m4/speciation-2` (ei50 rp_kick0 round 5, herbivore prior 0; 'target-mlp' 32 hidden, rich inputs,
+    traits v2 + `spIds`, targets-only, margin .02). Pre-registered fresh checks, one draw each, base = no kicker target net:
+    (1) speciation (`probes/speciation_score.js --arch=kicker`, 1,500 fights, probe 461) live 0.966 → 1.203, **+0.236 ± 0.049
+    (4.8 SE): pass**. Onto you, live → net: giraffe 33 → 47%, ostrich 50 → 56%, giant kangaroo 24 → 12% (onto predators 22 → 25%).
+    (2) strength (`BASE=none eval_target.js …kicker_target_k0.json kicker 6000 180 2027 checkmate 1`) goal −0.009 ± 0.013 (passes
+    ≥ −.05 and −2 SE ≥ −.08), but **style 0.909 and gate [farHunt] (drift farHunt 0.398 → 0.458): fail**; your survival 41.7 →
+    42.2% (+0.5 ± 0.6 pts), time alive +0.3 ± 1.5 s, kicker deaths +0.015 ± 0.006 per fight, deviates on 25.2% of decisions.
+    (3) objective (same 6,000 fights re-simulated: a throwaway script copying `eval_target`'s fight set and arms, tallying each
+    enemy kicker's active time by `u.target`: the human / one of your animals / none, roaming, fleeing or feeding; paired bootstrap
+    over fights, 300 reps; it reproduced (2)'s survival and farHunt exactly) **pass**, no species idles more. Share of active time,
+    base → net (a) you / (b) your animals / (c) none: giraffe 22.3 → 31.4 / 44.1 → 36.2 / 33.6 → 32.4% (c −1.2 ± 0.4); ostrich 34.7 →
+    40.2 / 33.6 → 31.1 / 31.7 → 28.7% (c −3.0 ± 0.5); giant kangaroo 14.5 → 7.2 / 51.2 → 58.5 / 34.3 → 34.2% (c −0.1 ± 1.1).
+    **The farHunt fail is probably the harness, not the net:** main's `move_run.js` counts closing on *you* from > 20 m as farHunt,
+    which the owner's objective rule (CLAUDE.md: realism checks never count closing on the human) excludes; `m4/speciation-2`
+    already has the fix (`t !== H`, "you excepted"). Diagnostic on the same fights (does not count toward the bar): farHunt with
+    you excepted 0.153 → 0.163 (+0.010, inside the gate's .02 tolerance), so the net's farHunt rise is the giraffes and ostriches
+    going for you. Nothing shipped; no re-run of k0 on this draw. Next (needs a decision): port the `t !== H` telemetry fix to
+    main, then pre-register a fresh draw (new probe indices) for k0 under the fixed gate.
+  - [x] **Nov 16 (branch `kicker-k0b`): `kicker_target_k0` shipped under bar (b′)** after the farHunt gate fix (PR #60, `t !== H`).
+    One fresh pre-registered strength draw (`BASE=none eval_target.js …kicker_target_k0.json kicker 6000 190 2027 checkmate 1`):
+    goal +0.030 ± 0.013, style 1.000, no gates, no drift; your survival 42.2 → 41.0% (−1.2 ± 0.6 pts). Speciation stands from probe 461
+    (+0.236 ± 0.049). Objective check on the same fights passes (none / idle share: giraffe −1.2 ± 0.4, ostrich −2.8 ± 0.5, giant
+    kangaroo −0.3 ± 1.3 pts; giraffes and ostriches go for you more, kangaroos more onto your animals). Idents pass; prices kept
+    (`abs_r22`), MEASURED refreshed; Safari bot 88% round 1, 18.8% complete (constants kept); daily salt re-run from Nov 18.
   **Owner design direction (Oct 27): speciation from broad archetypes + species tuning + open control + a general
   reward.** (1) Move decisions out of engine rules into the policy (target, approach, attack, bluff, retreat, movement),
   keeping physics in the engine (speed, reach, stamina, armor, morale): bodies are what make species differ. (2) One
