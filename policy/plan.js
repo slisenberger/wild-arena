@@ -8,7 +8,7 @@
 // that is under 2 s old (same gain, half the CPU: +0.241 ± 0.061, ~0.5 s per fight on a desktop thread).
 const path = require('path');
 const A = require(process.env.SIM ? path.resolve(process.env.SIM) : path.join(__dirname, '..', 'sim.js'));
-const L = require('./lookahead.js');
+const L = require('./lookahead.js'), RP = require('./realism_prior.js');
 const SM = require('./set_model.js'), FP = require('./features_plus.js'), FR = require('./features_rich.js'), G = require('./guard_features.js'), TR = require('./traits.js'), TM = require('./target_model.js');
 function score(w){
   let pl = 0, pm = 0, el = 0, em = 0;
@@ -16,7 +16,8 @@ function score(w){
   const H = w.human; return 2 * (H.maxhp - Math.max(0, H.state === 'dead' ? 0 : H.hp)) / H.maxhp + pl / pm - el / em + (H.state === 'dead' ? 2 : 0);
 }
 function makePlanner(o){
-  o = Object.assign({H: 8, max: 3, cool: 2, rolls: 1, data: null, learner: null, real: 0, feat: null, set: false, arch: 'cat', side: 'E', only: null, wide: false, traitsV: 1, crn: false, keepRolls: false, intents: 0}, o || {});
+  o = Object.assign({H: 8, max: 3, cool: 2, rolls: 1, data: null, learner: null, real: 0, feat: null, set: false, arch: 'cat', side: 'E', only: null, wide: false, traitsV: 1, crn: false, keepRolls: false, intents: 0, prior: 0}, o || {});
+  // prior: lambda for the per-species realism prior added to each target option's score (owner: engage as the species would)
   // intents (probes/joint_lookahead.js): also branch each movement intent 0..intents-1 for the best target, held for H s
   // (policy/force_intent.js); if one beats the target-only best, the unit holds that intent for `cool` s in the real fight
   if (o.intents) require('./force_intent.js');
@@ -56,6 +57,7 @@ function makePlanner(o){
           if ((sp < 1 && d > 10) || (sp > .7 * cu.s.spd && d > 8)) bad += .1; } }
         const x = (o.side === 'P' ? -score(c) : score(c)) - o.real * bad / o.H; v += x / o.rolls; rr.push(x); // your side: the other side's loss is your gain
       }
+      if (o.prior && opts[i].kind === 'target') v += o.prior * RP.prior(w, u, opts[i].t); // per-species realism prior (policy/realism_prior.js)
       sc.push(v); rs.push(rr); if (v > bs + 1e-9){ bs = v; best = i; }
     }
     const herb = ['bulldozer', 'charger', 'kicker'].includes(o.arch); // herbivores' options come from herbCandidates (chooseHerb)
