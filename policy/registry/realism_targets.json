@@ -1,0 +1,980 @@
+{
+ "tiger": [
+  {
+   "id": "tiger.preyNiche1to1",
+   "claim": "Tigers prefer prey of 60-250 kg (predator:prey about 1:1, as in other solitary felids); preference falls off for prey more than ~2x their mass unless it is vulnerable.",
+   "source": [
+    "https://doi.org/10.1111/j.1469-7998.2011.00871.x"
+   ],
+   "confidence": 0.8,
+   "when": {
+    "logMass": ">0.5"
+   },
+   "prefer": {
+    "logMass": -0.5
+   },
+   "except": [
+    "hurt"
+   ],
+   "kind": "prior"
+  },
+  {
+   "id": "tiger.bigPreyVulnerable",
+   "claim": "Among large prey (gaur) tigers select young individuals; with very large prey, vulnerable animals are favoured.",
+   "source": [
+    "https://repository.ias.ac.in/89486"
+   ],
+   "confidence": 0.6,
+   "when": {
+    "logMass": ">0.5"
+   },
+   "prefer": {
+    "hurt": 0.5
+   },
+   "kind": "prior"
+  },
+  {
+   "id": "tiger.killsSmallerCarnivores",
+   "claim": "Solitary large carnivores kill competitors smaller than themselves (killer typically 2-5x the victim); a tiger picks on smaller predators, not larger ones.",
+   "source": [
+    "https://doi.org/10.1086/303189",
+    "https://www.journals.uchicago.edu/doi/10.1086/501033"
+   ],
+   "confidence": 0.6,
+   "when": {
+    "isPred": "true"
+   },
+   "prefer": {
+    "logMass": -0.5
+   },
+   "kind": "prior"
+  },
+  {
+   "id": "tiger.ambushNotCourse",
+   "claim": "Stalk-and-ambush cats rely on closing in unseen and a short final rush; prey that detects them and runs is mostly given up rather than coursed.",
+   "source": [
+    "https://open.library.ubc.ca/cIRcle/collections/ubctheses/831/items/1.0100037",
+    "https://www.esf.edu/biology/faculty/documents/laundreandhernandez2003huntinghabitatpumas.pdf"
+   ],
+   "confidence": 0.4,
+   "prefer": {
+    "fleeing": -0.3
+   },
+   "kind": "prior"
+  }
+ ],
+ "lion": [
+  {
+   "id": "lion.loneUpperNiche",
+   "claim": "Lions prefer 190-550 kg prey; the right-skewed tail toward bigger prey comes from collective hunting, so a lone lion avoids prey much beyond ~3x its mass unless it is hurt.",
+   "source": [
+    "https://doi.org/10.1017/S0952836905007508",
+    "https://doi.org/10.1086/303189"
+   ],
+   "confidence": 0.7,
+   "when": {
+    "packSupport": "0",
+    "logMass": ">0.75"
+   },
+   "prefer": {
+    "logMass": -0.5
+   },
+   "except": [
+    "hurt"
+   ],
+   "kind": "prior"
+  },
+  {
+   "id": "lion.belowNiche",
+   "claim": "Prey well below 190 kg sits under the lion's preferred range (warthog only in line with availability); among small options a lion leans to the larger one.",
+   "source": [
+    "https://doi.org/10.1017/S0952836905007508"
+   ],
+   "confidence": 0.6,
+   "when": {
+    "logMass": "<-0.5"
+   },
+   "prefer": {
+    "logMass": 0.4
+   },
+   "kind": "prior"
+  },
+  {
+   "id": "lion.killsHyenasAndSmallerPredators",
+   "claim": "Lions are the main killers of spotted hyenas and routinely kill smaller carnivores; they go for predators smaller than themselves.",
+   "source": [
+    "https://the-eis.com/elibrary/search/25421",
+    "https://doi.org/10.1086/303189"
+   ],
+   "confidence": 0.7,
+   "when": {
+    "isPred": "true"
+   },
+   "prefer": {
+    "logMass": -0.6
+   },
+   "kind": "prior"
+  },
+  {
+   "id": "lion.stalkNotCourse",
+   "claim": "Stalk-and-ambush cats rely on closing in unseen and a short final rush; prey that detects them and runs is mostly given up rather than coursed.",
+   "source": [
+    "https://open.library.ubc.ca/cIRcle/collections/ubctheses/831/items/1.0100037"
+   ],
+   "confidence": 0.4,
+   "prefer": {
+    "fleeing": -0.3
+   },
+   "kind": "prior"
+  }
+ ],
+ "lionpack": [
+  {
+   "id": "lionpack.coalitionTakesBig",
+   "claim": "Group hunting skews lion prey toward larger species (buffalo, giraffe); grouping carnivores kill larger victims than solitary ones, and male lions are capable buffalo hunters.",
+   "source": [
+    "https://doi.org/10.1017/S0952836905007508",
+    "https://doi.org/10.1086/303189",
+    "https://www.cambridge.org/core/journals/journal-of-zoology/article/factors-affecting-the-hunting-success-of-male-and-female-lions-in-the-kruger-national-park/AAAF9B3CB2FE853D7AC3769F5F71BF53"
+   ],
+   "confidence": 0.7,
+   "when": {
+    "packSupport": ">=1",
+    "logMass": "<1.4"
+   },
+   "prefer": {
+    "logMass": 0.4
+   },
+   "kind": "prior"
+  },
+  {
+   "id": "lionpack.capAtGiants",
+   "claim": "Lion preference peaks at 190-550 kg; beyond ~8x a lion's mass (megaherbivores) a pair of lions leans back to smaller prey unless it is hurt.",
+   "source": [
+    "https://doi.org/10.1017/S0952836905007508"
+   ],
+   "confidence": 0.5,
+   "when": {
+    "logMass": ">1.4"
+   },
+   "prefer": {
+    "logMass": -0.4
+   },
+   "except": [
+    "hurt"
+   ],
+   "kind": "prior"
+  },
+  {
+   "id": "lionpack.killsCompetitors",
+   "claim": "Male lions kill hyenas (adults and cubs) and steal their kills; a coalition goes for smaller predators.",
+   "source": [
+    "https://the-eis.com/elibrary/search/25421",
+    "https://doi.org/10.1086/303189"
+   ],
+   "confidence": 0.7,
+   "when": {
+    "isPred": "true"
+   },
+   "prefer": {
+    "logMass": -0.4
+   },
+   "kind": "prior"
+  },
+  {
+   "id": "lionpack.stalkNotCourse",
+   "claim": "Stalk-and-ambush cats rely on closing in unseen and a short final rush; prey that detects them and runs is mostly given up rather than coursed.",
+   "source": [
+    "https://open.library.ubc.ca/cIRcle/collections/ubctheses/831/items/1.0100037"
+   ],
+   "confidence": 0.4,
+   "prefer": {
+    "fleeing": -0.25
+   },
+   "kind": "prior"
+  }
+ ],
+ "jaguar": [
+  {
+   "id": "jaguar.preyNiche",
+   "claim": "Jaguars prefer 45-85 kg prey (capybara, giant anteater) and avoid tapirs; selection follows abundance and herd size more than body size, so the size tilt is mild.",
+   "source": [
+    "https://doi.org/10.3389/fevo.2015.00148"
+   ],
+   "confidence": 0.7,
+   "when": {
+    "logMass": ">0.4"
+   },
+   "prefer": {
+    "logMass": -0.4
+   },
+   "except": [
+    "hurt"
+   ],
+   "kind": "prior"
+  },
+  {
+   "id": "jaguar.avoidsLargerCarnivorans",
+   "claim": "Jaguars significantly avoid carnivorans as prey; combined with the size rule for interspecific killing, a jaguar does not pick predators larger than itself.",
+   "source": [
+    "https://doi.org/10.3389/fevo.2015.00148",
+    "https://www.journals.uchicago.edu/doi/10.1086/501033"
+   ],
+   "confidence": 0.5,
+   "when": {
+    "isPred": "true",
+    "logMass": ">0"
+   },
+   "prefer": {
+    "isPred": -0.3
+   },
+   "kind": "prior"
+  },
+  {
+   "id": "jaguar.ambushNotCourse",
+   "claim": "Stalk-and-ambush cats rely on closing in unseen and a short final rush; prey that detects them and runs is mostly given up rather than coursed.",
+   "source": [
+    "https://open.library.ubc.ca/cIRcle/collections/ubctheses/831/items/1.0100037",
+    "https://www.esf.edu/biology/faculty/documents/laundreandhernandez2003huntinghabitatpumas.pdf"
+   ],
+   "confidence": 0.4,
+   "prefer": {
+    "fleeing": -0.3
+   },
+   "kind": "prior"
+  }
+ ],
+ "cougar": [
+  {
+   "id": "cougar.bigForItsSize",
+   "claim": "Cougars live on deer and (males especially) elk and moose, prey 1-4x their own mass; temperate pumas specialise on larger prey.",
+   "source": [
+    "https://doi.org/10.2193/2009-314",
+    "https://link.springer.com/doi/10.1007/BF00319400"
+   ],
+   "confidence": 0.6,
+   "when": {
+    "logMass": "<0.9"
+   },
+   "prefer": {
+    "logMass": 0.3
+   },
+   "kind": "prior"
+  },
+  {
+   "id": "cougar.capAtGiants",
+   "claim": "Prey far beyond elk size (over ~6x the cat) is outside the cougar's recorded diet unless it is weakened.",
+   "source": [
+    "https://doi.org/10.2193/2009-314",
+    "https://link.springer.com/doi/10.1007/BF00319400"
+   ],
+   "confidence": 0.5,
+   "when": {
+    "logMass": ">1.2"
+   },
+   "prefer": {
+    "logMass": -0.5
+   },
+   "except": [
+    "hurt"
+   ],
+   "kind": "prior"
+  },
+  {
+   "id": "cougar.subordinate",
+   "claim": "Cougars are subordinate: wolves kill cougars and take their kills, black bears drive them off 72% of their kills; a cougar avoids larger predators.",
+   "source": [
+    "https://doi.org/10.2980/1195-6860(2007)14[214:IBCPCA]2.0.CO;2",
+    "https://www.originalwisdom.com/wp-content/uploads/bsk-pdf-manager/2019/03/Elbroch-et-al_2015_Pumas-black-bears-and-competition-refuges_CT.pdf",
+    "https://maxallen.inhs.illinois.edu/files/2021/02/Allen-2021-Cant-Bear-The-Competition.pdf"
+   ],
+   "confidence": 0.7,
+   "when": {
+    "isPred": "true",
+    "logMass": ">0"
+   },
+   "prefer": {
+    "isPred": -0.6
+   },
+   "kind": "prior"
+  },
+  {
+   "id": "cougar.edgeAmbusher",
+   "claim": "73% of puma deer kills were at forest edges where the cat ambushes prey moving past; it does not course prey that has bolted.",
+   "source": [
+    "https://www.esf.edu/biology/faculty/documents/laundreandhernandez2003huntinghabitatpumas.pdf",
+    "https://open.library.ubc.ca/cIRcle/collections/ubctheses/831/items/1.0100037"
+   ],
+   "confidence": 0.5,
+   "prefer": {
+    "fleeing": -0.4
+   },
+   "kind": "prior"
+  }
+ ],
+ "leopard": [
+  {
+   "id": "leopard.smallPrey",
+   "claim": "Leopards prefer 10-40 kg prey (optimum ~25 kg, about a third of their mass); preference drops for prey above ~40 kg unless it is hurt.",
+   "source": [
+    "https://doi.org/10.1111/j.1469-7998.2006.00139.x"
+   ],
+   "confidence": 0.8,
+   "when": {
+    "logMass": ">-0.4"
+   },
+   "prefer": {
+    "logMass": -0.6
+   },
+   "except": [
+    "hurt"
+   ],
+   "kind": "prior"
+  },
+  {
+   "id": "leopard.avoidsCompetitors",
+   "claim": "Leopards lose at least 21% of kills to hyenas and hoist kills to avoid them, and yield to lions and tigers; a leopard avoids other predators, the larger the more so.",
+   "source": [
+    "https://doi.org/10.1111/1365-2656.12654",
+    "https://doi.org/10.1086/303189"
+   ],
+   "confidence": 0.7,
+   "when": {
+    "isPred": "true"
+   },
+   "prefer": {
+    "isPred": -0.4,
+    "logMass": -0.4
+   },
+   "kind": "prior"
+  },
+  {
+   "id": "leopard.ambushNotCourse",
+   "claim": "Stalk-and-ambush cats rely on closing in unseen and a short final rush; prey that detects them and runs is mostly given up rather than coursed.",
+   "source": [
+    "https://open.library.ubc.ca/cIRcle/collections/ubctheses/831/items/1.0100037"
+   ],
+   "confidence": 0.4,
+   "prefer": {
+    "fleeing": -0.3
+   },
+   "kind": "prior"
+  }
+ ],
+ "smilodon": [
+  {
+   "id": "smilodon.bigGame",
+   "claim": "Smilodon's uniquely reinforced forelimbs held down large prey for the canine bite; its diet was horses, camels, bison and other mid-sized to large herbivores.",
+   "source": [
+    "https://doaj.org/article/f8704881da854a7e970372481ad102a3",
+    "https://doaj.org/article/3f45e7b762fa4cba9b28cc185aba6ccc"
+   ],
+   "confidence": 0.55,
+   "when": {
+    "logMass": "<1.0"
+   },
+   "prefer": {
+    "logMass": 0.4
+   },
+   "kind": "prior"
+  },
+  {
+   "id": "smilodon.notMegafauna",
+   "claim": "Dental microwear suggests Smilodon took slightly smaller prey than the American lion (open-habitat baby mammoths are attributed to Homotherium), so it leans away from giants.",
+   "source": [
+    "https://doaj.org/article/3f45e7b762fa4cba9b28cc185aba6ccc"
+   ],
+   "confidence": 0.4,
+   "when": {
+    "logMass": ">1.3"
+   },
+   "prefer": {
+    "logMass": -0.3
+   },
+   "except": [
+    "hurt"
+   ],
+   "kind": "prior"
+  },
+  {
+   "id": "smilodon.ambushNotCourse",
+   "claim": "A robust, short-limbed pin-and-stab killer; built to grapple, not to run prey down.",
+   "source": [
+    "https://doaj.org/article/f8704881da854a7e970372481ad102a3"
+   ],
+   "confidence": 0.4,
+   "prefer": {
+    "fleeing": -0.4
+   },
+   "kind": "prior"
+  }
+ ],
+ "utahraptor": [
+  {
+   "id": "utahraptor.largeHerbivores",
+   "claim": "Kirkland et al. proposed Utahraptor preyed on the iguanodonts of its fauna (much heavier than itself); the Stikes Quarry block holds iguanodonts with several raptors.",
+   "source": [
+    "https://www.smithsonianmag.com/science-nature/what-do-we-really-know-about-utahraptor-95334335/",
+    "https://geology.utah.gov/popular/dinosaurs-fossils/megablock"
+   ],
+   "confidence": 0.3,
+   "when": {
+    "logMass": "<1.2"
+   },
+   "prefer": {
+    "logMass": 0.3
+   },
+   "kind": "prior"
+  },
+  {
+   "id": "utahraptor.joinsTheScramble",
+   "claim": "Dromaeosaur group finds read best as Komodo-dragon-like feeding scrambles: individuals converge on prey already under attack (an iguanodont stuck in quicksand drew several Utahraptors).",
+   "source": [
+    "https://doi.org/10.3374/0079-032X(2007)48[103:AROCPH]2.0.CO;2",
+    "https://geology.utah.gov/popular/dinosaurs-fossils/megablock"
+   ],
+   "confidence": 0.3,
+   "prefer": {
+    "busy": 0.4,
+    "hurt": 0.3
+   },
+   "kind": "prior"
+  }
+ ],
+ "wolf": [
+  {
+   "id": "wolf.loneAvoidsBig",
+   "claim": "Elk-hunting success needs 2-6 wolves and bison 9-13, and moose-hunting packs are larger than deer-hunting packs; a lone wolf avoids prey over ~4x its mass unless it is hurt or running.",
+   "source": [
+    "https://doi.org/10.1093/beheco/arr159",
+    "https://doi.org/10.1371/journal.pone.0112884",
+    "https://www.wolf.org/wp-content/uploads/2013/08/355.Differential-wolf-pack-size-persistence-and-the-role-of-risk-when-hunting-dangerous-prey.pdf"
+   ],
+   "confidence": 0.7,
+   "when": {
+    "packSupport": "0",
+    "logMass": ">1.0"
+   },
+   "prefer": {
+    "logMass": -0.6
+   },
+   "except": [
+    "hurt",
+    "fleeing"
+   ],
+   "kind": "prior"
+  },
+  {
+   "id": "wolf.cullsVulnerable",
+   "claim": "Wolves select vulnerable prey (calves, old, weak individuals).",
+   "source": [
+    "https://www.doi.org/10.2193/0022-541X(2006)70[1070:SONYEB]2.0.CO;2",
+    "https://en.wikipedia.org/wiki/Hunting_behavior_of_gray_wolves"
+   ],
+   "confidence": 0.75,
+   "prefer": {
+    "hurt": 0.6
+   },
+   "kind": "prior"
+  },
+  {
+   "id": "wolf.coursesFleeing",
+   "claim": "Coursing hunters: wolves test prey, attack individuals that run and usually leave prey that stands its ground.",
+   "source": [
+    "https://www.wolf.org/wp-content/uploads/2013/09/287apropsedethogram.pdf",
+    "https://en.wikipedia.org/wiki/Hunting_behavior_of_gray_wolves"
+   ],
+   "confidence": 0.7,
+   "prefer": {
+    "fleeing": 0.5
+   },
+   "kind": "prior"
+  },
+  {
+   "id": "wolf.loneYieldsToBears",
+   "claim": "Wolves generally relinquish kills to grizzly bears; a lone wolf does not take on predators larger than itself.",
+   "source": [
+    "https://webarchive.library.unt.edu/eot2008/20080916031905/http://nrmsc.usgs.gov/files/norock/products/Ursus-15-02-Gunther_Smith.pdf",
+    "https://www.journals.uchicago.edu/doi/10.1086/501033"
+   ],
+   "confidence": 0.5,
+   "when": {
+    "packSupport": "0",
+    "isPred": "true"
+   },
+   "prefer": {
+    "logMass": -0.5
+   },
+   "kind": "prior"
+  }
+ ],
+ "wolfpack": [
+  {
+   "id": "wolfpack.commitsToElkSize",
+   "claim": "Packs of ~4 are at the plateau of elk-hunting success (2-6 wolves); a pack commits to large prey up to ~10x a wolf's mass.",
+   "source": [
+    "https://doi.org/10.1093/beheco/arr159",
+    "https://www.wolf.org/wp-content/uploads/2013/08/355.Differential-wolf-pack-size-persistence-and-the-role-of-risk-when-hunting-dangerous-prey.pdf"
+   ],
+   "confidence": 0.7,
+   "when": {
+    "packSupport": ">=3",
+    "logMass": "<1.5"
+   },
+   "prefer": {
+    "logMass": 0.4
+   },
+   "kind": "prior"
+  },
+  {
+   "id": "wolfpack.notBisonYet",
+   "claim": "Bison are ~3x harder than elk and success only levels off at 9-13 wolves; a pack of four leans away from bison-sized and bigger prey unless it is hurt or running.",
+   "source": [
+    "https://doi.org/10.1371/journal.pone.0112884"
+   ],
+   "confidence": 0.7,
+   "when": {
+    "logMass": ">1.5"
+   },
+   "prefer": {
+    "logMass": -0.4
+   },
+   "except": [
+    "hurt",
+    "fleeing"
+   ],
+   "kind": "prior"
+  },
+  {
+   "id": "wolfpack.cullsVulnerable",
+   "claim": "Wolves select vulnerable prey (calves, old, weak individuals).",
+   "source": [
+    "https://www.doi.org/10.2193/0022-541X(2006)70[1070:SONYEB]2.0.CO;2",
+    "https://en.wikipedia.org/wiki/Hunting_behavior_of_gray_wolves"
+   ],
+   "confidence": 0.75,
+   "prefer": {
+    "hurt": 0.6
+   },
+   "kind": "prior"
+  },
+  {
+   "id": "wolfpack.coursesFleeing",
+   "claim": "Wolves test prey, attack the individual that runs, and usually leave prey that stands its ground.",
+   "source": [
+    "https://www.wolf.org/wp-content/uploads/2013/09/287apropsedethogram.pdf",
+    "https://en.wikipedia.org/wiki/Hunting_behavior_of_gray_wolves"
+   ],
+   "confidence": 0.7,
+   "prefer": {
+    "fleeing": 0.5
+   },
+   "kind": "prior"
+  },
+  {
+   "id": "wolfpack.killsSmallerPredators",
+   "claim": "Wolf packs kill cougars and take their kills, and kill grizzly cubs at carcasses; a pack goes for predators up to ~4x a wolf's mass, not adult bears.",
+   "source": [
+    "https://doi.org/10.2980/1195-6860(2007)14[214:IBCPCA]2.0.CO;2",
+    "https://webarchive.library.unt.edu/eot2008/20080916031905/http://nrmsc.usgs.gov/files/norock/products/Ursus-15-02-Gunther_Smith.pdf"
+   ],
+   "confidence": 0.55,
+   "when": {
+    "isPred": "true",
+    "logMass": "<1.0"
+   },
+   "prefer": {
+    "isPred": 0.3
+   },
+   "kind": "prior"
+  }
+ ],
+ "wolfpack6": [
+  {
+   "id": "wolfpack6.commitsToFormidable",
+   "claim": "Bison-hunting success keeps rising up to 9-13 wolves, and packs that hunt moose are larger than packs that hunt deer; a big pack commits to formidable prey.",
+   "source": [
+    "https://doi.org/10.1371/journal.pone.0112884",
+    "https://www.wolf.org/wp-content/uploads/2013/08/355.Differential-wolf-pack-size-persistence-and-the-role-of-risk-when-hunting-dangerous-prey.pdf"
+   ],
+   "confidence": 0.7,
+   "when": {
+    "packSupport": ">=5",
+    "logMass": "<=2.2"
+   },
+   "prefer": {
+    "logMass": 0.5
+   },
+   "kind": "prior"
+  },
+  {
+   "id": "wolfpack6.cullsVulnerable",
+   "claim": "Wolves select vulnerable prey (calves, old, weak individuals).",
+   "source": [
+    "https://www.doi.org/10.2193/0022-541X(2006)70[1070:SONYEB]2.0.CO;2",
+    "https://en.wikipedia.org/wiki/Hunting_behavior_of_gray_wolves"
+   ],
+   "confidence": 0.75,
+   "prefer": {
+    "hurt": 0.6
+   },
+   "kind": "prior"
+  },
+  {
+   "id": "wolfpack6.coursesFleeing",
+   "claim": "Wolves test prey, attack the individual that runs, and usually leave prey that stands its ground.",
+   "source": [
+    "https://www.wolf.org/wp-content/uploads/2013/09/287apropsedethogram.pdf",
+    "https://en.wikipedia.org/wiki/Hunting_behavior_of_gray_wolves"
+   ],
+   "confidence": 0.7,
+   "prefer": {
+    "fleeing": 0.5
+   },
+   "kind": "prior"
+  },
+  {
+   "id": "wolfpack6.takesOnPredators",
+   "claim": "Grouping carnivores kill larger victims than solitary ones; wolf packs kill cougars and contest bears at carcasses.",
+   "source": [
+    "https://doi.org/10.1086/303189",
+    "https://doi.org/10.2980/1195-6860(2007)14[214:IBCPCA]2.0.CO;2",
+    "https://webarchive.library.unt.edu/eot2008/20080916031905/http://nrmsc.usgs.gov/files/norock/products/Ursus-15-02-Gunther_Smith.pdf"
+   ],
+   "confidence": 0.5,
+   "when": {
+    "isPred": "true",
+    "logMass": "<1.6"
+   },
+   "prefer": {
+    "isPred": 0.4
+   },
+   "kind": "prior"
+  }
+ ],
+ "hyena": [
+  {
+   "id": "hyena.loneUpTo3x",
+   "claim": "Over 75% of hyena hunts are by lone animals, even on wildebeest and topi ~3x their mass; only zebra are usually hunted in groups. A lone hyena avoids prey beyond ~3x its mass unless it is hurt.",
+   "source": [
+    "https://link.springer.com/10.1007/978-3-031-29803-5_5"
+   ],
+   "confidence": 0.7,
+   "when": {
+    "packSupport": "0",
+    "logMass": ">0.8"
+   },
+   "prefer": {
+    "logMass": -0.5
+   },
+   "except": [
+    "hurt"
+   ],
+   "kind": "prior"
+  },
+  {
+   "id": "hyena.loneAvoidsLions",
+   "claim": "Lions are the main killers of hyenas, and hyenas need to outnumber lions ~4:1 to take a kill; a lone hyena avoids larger predators.",
+   "source": [
+    "https://the-eis.com/elibrary/search/25421",
+    "https://www.scilit.net/publications/f8217c570f58fe18c47c4c1e3fad4cb6"
+   ],
+   "confidence": 0.7,
+   "when": {
+    "packSupport": "0",
+    "isPred": "true"
+   },
+   "prefer": {
+    "logMass": -0.6
+   },
+   "kind": "prior"
+  },
+  {
+   "id": "hyena.scavengerKlepto",
+   "claim": "Spotted hyenas scavenge and steal kills and favour easy, already-caught or weakened prey; they converge on prey others are fighting.",
+   "source": [
+    "https://doi.org/10.1111/brv.12152",
+    "https://www.scilit.net/publications/f8217c570f58fe18c47c4c1e3fad4cb6"
+   ],
+   "confidence": 0.6,
+   "prefer": {
+    "hurt": 0.5,
+    "busy": 0.4
+   },
+   "kind": "prior"
+  },
+  {
+   "id": "hyena.coursesFleeing",
+   "claim": "Hyenas are coursing hunters that run prey down; success rises with each added hunter up to three.",
+   "source": [
+    "https://link.springer.com/10.1007/978-3-031-29803-5_5"
+   ],
+   "confidence": 0.6,
+   "prefer": {
+    "fleeing": 0.4
+   },
+   "kind": "prior"
+  }
+ ],
+ "hyenapack": [
+  {
+   "id": "hyenapack.clanTakesZebra",
+   "claim": "Zebra (~4-5x a hyena's mass) are hunted in groups and success rises from one to three hunters; a clan commits to large prey.",
+   "source": [
+    "https://link.springer.com/10.1007/978-3-031-29803-5_5",
+    "https://ibs.bialowieza.pl/publications/1598.pdf"
+   ],
+   "confidence": 0.65,
+   "when": {
+    "packSupport": ">=3",
+    "logMass": "<1.3"
+   },
+   "prefer": {
+    "logMass": 0.4
+   },
+   "kind": "prior"
+  },
+  {
+   "id": "hyenapack.mobsLions",
+   "claim": "Hyenas outnumbering lions ~4:1 drive female and subadult lions off kills and mob lions near their dens; a clan of four takes on predators.",
+   "source": [
+    "https://www.scilit.net/publications/f8217c570f58fe18c47c4c1e3fad4cb6",
+    "https://the-eis.com/elibrary/search/25421"
+   ],
+   "confidence": 0.6,
+   "when": {
+    "packSupport": ">=3",
+    "isPred": "true"
+   },
+   "prefer": {
+    "isPred": 0.5
+   },
+   "kind": "prior"
+  },
+  {
+   "id": "hyenapack.scavengerKlepto",
+   "claim": "Spotted hyenas steal kills and favour weakened or already-engaged prey.",
+   "source": [
+    "https://doi.org/10.1111/brv.12152",
+    "https://www.scilit.net/publications/f8217c570f58fe18c47c4c1e3fad4cb6"
+   ],
+   "confidence": 0.6,
+   "prefer": {
+    "hurt": 0.5,
+    "busy": 0.5
+   },
+   "kind": "prior"
+  },
+  {
+   "id": "hyenapack.coursesFleeing",
+   "claim": "Hyenas course prey over long chases; a running animal draws the clan.",
+   "source": [
+    "https://link.springer.com/10.1007/978-3-031-29803-5_5"
+   ],
+   "confidence": 0.6,
+   "prefer": {
+    "fleeing": 0.4
+   },
+   "kind": "prior"
+  }
+ ],
+ "grizzly": [
+  {
+   "id": "grizzly.vulnerablePrey",
+   "claim": "Brown bears are major predators of newborn ungulates but kill adults much less often; a grizzly leans to smaller or weakened prey.",
+   "source": [
+    "https://www.bearbiology.org/download/the-role-of-american-black-bears-and-brown-bears-as-predators-on-ungulates-in-north-america/"
+   ],
+   "confidence": 0.7,
+   "when": {
+    "logMass": ">0"
+   },
+   "prefer": {
+    "logMass": -0.4,
+    "hurt": 0.4
+   },
+   "kind": "prior"
+  },
+  {
+   "id": "grizzly.usurpsKills",
+   "claim": "Bears contest wolves for carcasses and wolves usually relinquish kills to them; a grizzly goes for prey others are already fighting.",
+   "source": [
+    "https://webarchive.library.unt.edu/eot2008/20080916031905/http://nrmsc.usgs.gov/files/norock/products/Ursus-15-02-Gunther_Smith.pdf"
+   ],
+   "confidence": 0.6,
+   "prefer": {
+    "busy": 0.5
+   },
+   "kind": "prior"
+  },
+  {
+   "id": "grizzly.dominantOverPredators",
+   "claim": "Grizzlies dominate wolves (and cougars) at carcasses; a grizzly does not shy from other predators.",
+   "source": [
+    "https://webarchive.library.unt.edu/eot2008/20080916031905/http://nrmsc.usgs.gov/files/norock/products/Ursus-15-02-Gunther_Smith.pdf",
+    "https://doi.org/10.1086/303189"
+   ],
+   "confidence": 0.5,
+   "when": {
+    "isPred": "true"
+   },
+   "prefer": {
+    "isPred": 0.3
+   },
+   "kind": "prior"
+  }
+ ],
+ "polar": [
+  {
+   "id": "polar.sealSizedPrey",
+   "claim": "Polar bears live mainly on ringed seals (~0.1-0.2x their mass), and pups made up at least half the seals killed in spring; preference falls off for prey above ~half the bear's mass unless it is hurt.",
+   "source": [
+    "https://doi.org/10.1139/f77-169"
+   ],
+   "confidence": 0.7,
+   "when": {
+    "logMass": ">-0.5"
+   },
+   "prefer": {
+    "logMass": -0.5
+   },
+   "except": [
+    "hurt"
+   ],
+   "kind": "prior"
+  },
+  {
+   "id": "polar.walrusIfVulnerable",
+   "claim": "Polar bears kill walruses, but adults with tusks are much less vulnerable than subadults or animals trapped at holes; large prey is taken when vulnerable.",
+   "source": [
+    "https://www.bearbiology.org/download/interactions-between-polar-bears-and-overwintering-walruses-in-the-central-canadian-high-arctic/",
+    "https://www.canada.ca/en/environment-climate-change/services/species-risk-public-registry/cosewic-assessments-status-reports/atlantic-walrus/chapter-9.html"
+   ],
+   "confidence": 0.55,
+   "when": {
+    "logMass": ">0.5"
+   },
+   "prefer": {
+    "hurt": 0.6
+   },
+   "kind": "prior"
+  },
+  {
+   "id": "polar.stillHunter",
+   "claim": "Polar bears hunt seals by still-hunting at breathing holes and stalking, not long chases.",
+   "source": [
+    "https://doi.org/10.1139/z74-157",
+    "https://doi.org/10.1139/f77-169"
+   ],
+   "confidence": 0.4,
+   "prefer": {
+    "fleeing": -0.3
+   },
+   "kind": "prior"
+  }
+ ],
+ "blackbear": [
+  {
+   "id": "blackbear.neonates",
+   "claim": "Black bears are major predators of newborn ungulates (fawns, calves) and rarely kill adults; preference falls off for prey near or above its mass unless it is hurt.",
+   "source": [
+    "https://www.bearbiology.org/download/the-role-of-american-black-bears-and-brown-bears-as-predators-on-ungulates-in-north-america/"
+   ],
+   "confidence": 0.7,
+   "when": {
+    "logMass": ">-0.3"
+   },
+   "prefer": {
+    "logMass": -0.6
+   },
+   "except": [
+    "hurt"
+   ],
+   "kind": "prior"
+  },
+  {
+   "id": "blackbear.usurpsCats",
+   "claim": "Black bears are the commonest scavenger of puma kills and pumas abandon 72% of kills once a bear finds them; a black bear goes for prey others are fighting.",
+   "source": [
+    "https://www.originalwisdom.com/wp-content/uploads/bsk-pdf-manager/2019/03/Elbroch-et-al_2015_Pumas-black-bears-and-competition-refuges_CT.pdf",
+    "https://maxallen.inhs.illinois.edu/files/2021/02/Allen-2021-Cant-Bear-The-Competition.pdf"
+   ],
+   "confidence": 0.65,
+   "prefer": {
+    "busy": 0.5
+   },
+   "kind": "prior"
+  },
+  {
+   "id": "blackbear.picksSmallerPredators",
+   "claim": "Interspecific killing runs from larger to smaller carnivores; a black bear pushes around smaller predators (pumas) but not larger ones.",
+   "source": [
+    "https://www.originalwisdom.com/wp-content/uploads/bsk-pdf-manager/2019/03/Elbroch-et-al_2015_Pumas-black-bears-and-competition-refuges_CT.pdf",
+    "https://www.journals.uchicago.edu/doi/10.1086/501033"
+   ],
+   "confidence": 0.5,
+   "when": {
+    "isPred": "true"
+   },
+   "prefer": {
+    "logMass": -0.5
+   },
+   "kind": "prior"
+  },
+  {
+   "id": "blackbear.weakenedPrey",
+   "claim": "As an opportunistic predator it takes the easiest animals available.",
+   "source": [
+    "https://www.bearbiology.org/download/the-role-of-american-black-bears-and-brown-bears-as-predators-on-ungulates-in-north-america/"
+   ],
+   "confidence": 0.5,
+   "prefer": {
+    "hurt": 0.4
+   },
+   "kind": "prior"
+  }
+ ],
+ "honeybadger": [
+  {
+   "id": "honeybadger.chargesThreats",
+   "claim": "Startled honey badgers charge the attacker, raise hackles and release scent, which usually drives predators off; they also eat venomous snakes.",
+   "source": [
+    "https://www.discoverwildlife.com/animal-facts/mammals/why-are-honey-badgers-so-aggressive",
+    "https://doi.org/10.1017/S0952836903003789"
+   ],
+   "confidence": 0.4,
+   "prefer": {
+    "isPred": 0.4
+   },
+   "kind": "prior"
+  }
+ ],
+ "shortface": [
+  {
+   "id": "shortface.kleptoparasite",
+   "claim": "Arctodus has been argued (Matheus 1995, a hypothesis) to use its size to take kills from wolves and sabre-toothed cats.",
+   "source": [
+    "https://doi.org/10.1006/qres.1995.1090"
+   ],
+   "confidence": 0.3,
+   "prefer": {
+    "busy": 0.5,
+    "isPred": 0.3
+   },
+   "kind": "prior"
+  },
+  {
+   "id": "shortface.opportunistNotPursuer",
+   "claim": "Craniodental morphometrics make Arctodus a colossal omnivore, not a fast-running super-predator; it takes weakened animals rather than coursing.",
+   "source": [
+    "https://doi.org/10.1080/02724630903416027"
+   ],
+   "confidence": 0.4,
+   "prefer": {
+    "hurt": 0.4,
+    "fleeing": -0.3
+   },
+   "kind": "prior"
+  }
+ ]
+}

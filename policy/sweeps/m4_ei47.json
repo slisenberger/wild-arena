@@ -1,0 +1,22 @@
+{
+ "note": "Sourced per-species realism priors in the labels (policy/registry/realism_targets.json, 61 tendencies, 18 species; policy/realism_prior.js): each target option's lookahead score + lambda x prior. Plus the speciation recipe (--speciesCode, --balance, --specTol .05) and the disengagement cost (--real .5). Bar (b'): more speciated at 2 SE, strength cost <= ~0.05.",
+ "helpers": 3,
+ "runs": [
+  {
+   "name": "rp_harr25",
+   "args": "--trainer=expert --feat=rich --loss=adv --rounds=6 --fights=900 --max=3 --rolls=3 --nh=32 --epochs=8 --lr=.002 --val=1000 --test=1200 --dagger=true --H=20 --crn=true --real=0.5 --traitsV=2 --speciesCode=true --balance=true --specTol=0.05 --arch=harrier --prior=0.25 --seed=5901"
+  },
+  {
+   "name": "rp_harr50",
+   "args": "--trainer=expert --feat=rich --loss=adv --rounds=6 --fights=900 --max=3 --rolls=3 --nh=32 --epochs=8 --lr=.002 --val=1000 --test=1200 --dagger=true --H=20 --crn=true --real=0.5 --traitsV=2 --speciesCode=true --balance=true --specTol=0.05 --arch=harrier --prior=0.5 --seed=5902"
+  },
+  {
+   "name": "rp_cat35",
+   "args": "--trainer=expert --feat=rich --loss=adv --rounds=6 --fights=900 --max=3 --rolls=3 --nh=32 --epochs=8 --lr=.002 --val=1000 --test=1200 --dagger=true --H=20 --crn=true --real=0.5 --traitsV=2 --speciesCode=true --balance=true --specTol=0.05 --arch=cat --prior=0.35 --seed=5903"
+  },
+  {
+   "name": "rp_brw35",
+   "args": "--trainer=expert --feat=rich --loss=adv --rounds=6 --fights=900 --max=3 --rolls=3 --nh=32 --epochs=8 --lr=.002 --val=1000 --test=1200 --dagger=true --H=20 --crn=true --real=0.5 --traitsV=2 --speciesCode=true --balance=true --specTol=0.05 --arch=brawler --prior=0.35 --seed=5904"
+  }
+ ]
+}

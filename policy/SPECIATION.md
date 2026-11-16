@@ -421,3 +421,10 @@ each species develop its own realistic fighting style. This note is the plan; th
   higher than live at 2 SE, strength cost ≤ ~0.05 (pre-registered 6,000-fight draw: goal ≥ -0.05, lower bound ≥ -0.08), style ≥ .99,
   no gates. First candidate: brawler_target_s1 (more speciated +0.135 ± 0.054, ~0.05 weaker). Per-species realism priors in the
   labels (policy/realism_prior.js, registry drafted from sources) are the next training lever.
+- **Sourced realism registry (Nov 16, research subagent):** policy/registry/realism_targets.json (+ .md with sources and gaps): 61
+  target-choice tendencies for 18 species (cats, harriers, brawlers); the main species differences: coursers (wolves, hyenas) favour
+  fleeing prey while ambush cats / polar / short-faced bears give it up; loner vs pack prey-size caps (lone wolf > 4.5x avoided, pack
+  of 4 to ~10x, of 6 to ~27x; lone hyena ~3x vs clan; lone lion ~3x vs coalition ~8x); solitary size niches (leopard small, tiger
+  own-size, cougar large for its size, polar seal-sized, black bear neonates); hyena clans mob predators while lone hyenas / wolves /
+  leopards / cougars / jaguars avoid larger ones; scavengers / kill-stealers favour prey already in a fight. Nothing weights the human;
+  no distance terms. Prior spread across a decision's options: median .34 (bears) to .93 (harriers). Training: ei47.
