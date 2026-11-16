@@ -82,6 +82,12 @@ the shipped policies and reprice after:
     parses as spec off) goal −0.024 ± 0.015 (passes), style 1.00, no gates. The direction holds (grizzly / short-faced bear go for
     you more), so a stronger speciated bear net may pass; no re-test of s1 on new draws (no pooling after a failed check).
     The inference port (traits v2, `P.spIds`, `cfg.pickLog`) and `speciation_score.js` are kept (branch `brawler-s1`), byte-identical for live nets.
+  - [x] **Nov 16 (branch `cat-rp1`): `cat_target_rp1` shipped under bar (b′)** in place of `cat_target_e1` (realism-prior expert
+    iteration, `m4/speciation-2`). Pre-registered fresh checks: speciation (probe 321, 1,500 fights) +0.179 ± 0.043 (4.2 SE);
+    strength (`eval_target.js … 6000 160 2027 checkmate 1`, vs e1) goal +0.009 ± 0.014, style 1.000, no gates or drift. Every cat
+    species goes for you more; strength unchanged. Repriced (`abs_r22`: black rhino $300, woolly rhino $500); Safari constants kept
+    (bot 93% round 1 from the refreshed MEASURED table; 20.4% complete). Open: Safari round 1 looks easier than the 75–82% band
+    once the bot buys giraffe / boar / wolf pack (DECISIONS.md).
   **Owner design direction (Oct 27): speciation from broad archetypes + species tuning + open control + a general
   reward.** (1) Move decisions out of engine rules into the policy (target, approach, attack, bluff, retreat, movement),
   keeping physics in the engine (speed, reach, stamina, armor, morale): bodies are what make species differ. (2) One
