@@ -3,6 +3,9 @@
 Each item has a recommendation; reply with a number and "yes", or your own call. Decided items move to the bottom.
 
 ## Open
+20. **Safari got harder with the new wolf / hyena targeting (Nov 16).** The test bot now finishes 14.6% of runs (was 20.4%; target
+   ~16–23%); round 1 85% first try. About half is the smarter wolves / hyenas, half the bot buying by the refreshed values (with the
+   old values: 17.4%). Recommendation: +$50 on the round 5–6 top-ups (450/550 → 500/600) and re-run the bot; it's your difficulty knob, so ask first.
 19. **Safari round 1 may be too easy (Nov 16).** With the measured values refreshed for the new cat net, the test bot buys giraffe /
    boar / wolf pack in round 1 instead of the $100 cats and wins it 93% first try (the target band is 75–82%; with the old values
    it was 83%); the whole run still completes 20% (in band). Round 1 has no top-up, so fixing it means its board: 10 → 11 animals
