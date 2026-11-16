@@ -1,0 +1,22 @@
+{
+ "note": "ei50: herbivore target nets, control for ei49 (both classes weaker than today at prior .5: bulldozers -0.03..-0.11 with damage per fight 835 -> 480; kickers fail farHunt every round). Prior 0 (is it the teacher or the prior?) and prior .2.",
+ "helpers": 2,
+ "runs": [
+  {
+   "name": "rp_bull0",
+   "args": "--trainer=expert --feat=rich --loss=adv --rounds=6 --fights=900 --max=3 --rolls=3 --nh=32 --epochs=8 --lr=.002 --val=1000 --test=1200 --dagger=true --H=20 --crn=true --real=0.5 --traitsV=2 --speciesCode=true --balance=true --specTol=0.05 --arch=bulldozer --prior=0 --seed=9901"
+  },
+  {
+   "name": "rp_bull2",
+   "args": "--trainer=expert --feat=rich --loss=adv --rounds=6 --fights=900 --max=3 --rolls=3 --nh=32 --epochs=8 --lr=.002 --val=1000 --test=1200 --dagger=true --H=20 --crn=true --real=0.5 --traitsV=2 --speciesCode=true --balance=true --specTol=0.05 --arch=bulldozer --prior=0.2 --seed=9902"
+  },
+  {
+   "name": "rp_kick0",
+   "args": "--trainer=expert --feat=rich --loss=adv --rounds=6 --fights=900 --max=3 --rolls=3 --nh=32 --epochs=8 --lr=.002 --val=1000 --test=1200 --dagger=true --H=20 --crn=true --real=0.5 --traitsV=2 --speciesCode=true --balance=true --specTol=0.05 --arch=kicker --prior=0 --seed=9911"
+  },
+  {
+   "name": "rp_kick2",
+   "args": "--trainer=expert --feat=rich --loss=adv --rounds=6 --fights=900 --max=3 --rolls=3 --nh=32 --epochs=8 --lr=.002 --val=1000 --test=1200 --dagger=true --H=20 --crn=true --real=0.5 --traitsV=2 --speciesCode=true --balance=true --specTol=0.05 --arch=kicker --prior=0.2 --seed=9912"
+  }
+ ]
+}

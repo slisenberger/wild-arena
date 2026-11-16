@@ -471,3 +471,7 @@ each species develop its own realistic fighting style. This note is the plan; th
   (1.28); grizzlies and polars shift toward predators (18 -> 32%, 17 -> 22%) and black bears onto you (55 -> 71%), but the score
   doesn't move. Wolves with style floor .995 (rp_harr25s): val speciation .78-.84 vs today, about what the live rp1m0.05 already
   has (0.81 on probe 341): not screened.
+- **ei49, first herbivore target nets with sourced priors (λ .5): nothing.** Bulldozers: every round weaker than today (-0.03 to
+  -0.11 ± 0.036; damage per fight 835 -> ~500, your survival +2 to +5 pts), speciation ~unchanged (1.15-1.20). Kickers: every
+  round fails the farHunt gate (0.15 -> 0.19-0.30), fruitless 0.51 -> 0.65, goal -0.05 to +0.01. Kept today's targets. Control
+  ei50: prior 0 and .2 for both classes (is it the lookahead teacher on herbivores, or the prior?).
