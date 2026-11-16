@@ -433,3 +433,11 @@ each species develop its own realistic fighting style. This note is the plan; th
   you 49 -> 79%, short-face 64 -> 94%, black bear 54 -> 71%). Size speciation checks for a 2-SE margin: N ≥ 1,500. eval_target.js now
   reads 'spec' / 'true' / 'on' as spec on (the word ran with spec off). Main #57 has traits v2, spIds and speciation_score, so a
   speciated net now ships as a weights file only.
+- **ei47, realism priors in the labels (Nov 16; λ·prior added to each target option's lookahead score, + speciation recipe):**
+  - Cats (rp_cat35, λ .35): round 4 val +0.117 ± 0.034 vs today's cats, held-out +0.106 ± 0.032 (live e1 is ≈ +0.03 over today),
+    style 1.000, speciation 0.89 -> 1.01 on val. Exported as cat_target_rp1. The strongest cat student so far.
+  - Wolves/hyenas (rp_harr25, λ .25): every round more speciated on val (0.54-0.65 -> 0.64-0.94); round 3 (0.62 -> 0.94) goal
+    +0.016 ± 0.033 val / -0.042 ± 0.030 held-out, style .975 (dart rate 6.1 -> 3.9, onto you 7 -> 22%). Exported as harrier_target_rp1.
+    rp_harr50 (λ .5): every round more speciated (+0.10 to +0.24) but -0.01 to -0.04 on goal; still running.
+  - Bears (rp_brw35): no speciation gain (1.2 -> 1.2); the best round (+0.087 val, +0.047 held-out) is ≈ live e1. Not screened.
+  - Screens (sweep m4_rp1, fresh probes 291 / 301 strength, 311 speciation at N = 1,500): pending.
