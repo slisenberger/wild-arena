@@ -1,0 +1,14 @@
+{
+ "note": "ei48: wolves with the realism prior \u03bb .25 and a style floor .995 in round acceptance (main session holds style \u2265 .99); bears with a stronger prior \u03bb .8 (their prior spread is the smallest, .34, and \u03bb .35 gave no speciation gain).",
+ "helpers": 3,
+ "runs": [
+  {
+   "name": "rp_harr25s",
+   "args": "--trainer=expert --feat=rich --loss=adv --rounds=6 --fights=900 --max=3 --rolls=3 --nh=32 --epochs=8 --lr=.002 --val=1000 --test=1200 --dagger=true --H=20 --crn=true --real=0.5 --traitsV=2 --speciesCode=true --balance=true --specTol=0.05 --arch=harrier --prior=0.25 --styleThr=0.995 --seed=15901"
+  },
+  {
+   "name": "rp_brw80",
+   "args": "--trainer=expert --feat=rich --loss=adv --rounds=6 --fights=900 --max=3 --rolls=3 --nh=32 --epochs=8 --lr=.002 --val=1000 --test=1200 --dagger=true --H=20 --crn=true --real=0.5 --traitsV=2 --speciesCode=true --balance=true --specTol=0.05 --arch=brawler --prior=0.8 --seed=6904"
+  }
+ ]
+}
