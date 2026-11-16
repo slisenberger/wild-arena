@@ -58,7 +58,7 @@ function choose(w, u, policy){
   if (policy.commit && a !== teach && opts[a] && opts[a].kind === 'target'){ u.forceT = opts[a].t; u.forceUntil = w.t + policy.commit; } // P.commit s: hold a learned departure that long
   if (stats){ stats.n = (stats.n || 0) + 1; if (a === teach) stats.agree = (stats.agree || 0) + 1; }
   if (log && opts.length > 1) log.push({X, y: teach, a, sp: u.s.id});
-  if (cfg.pickLog && opts.length > 1) cfg.pickLog.push({u, h: opts[teach] && opts[teach].t || null, a: opts[a] && opts[a].t || null, n: opts.length}); // stat only (probes/speciation.js)
+  if (cfg.pickLog && opts.length > 1) cfg.pickLog.push({u, h: opts[teach] && opts[teach].t || null, a: opts[a] && opts[a].t || null, n: opts.length}); // stat only (probes/speciation_score.js)
   apply(u, opts[a]);
 }
 // herbivores (bulldozer, charger, kicker): same scorer; the heuristic's pick is herbivoreTarget's, and if that isn't one

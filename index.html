@@ -3082,7 +3082,10 @@ const npar = P => P.kind === 'target-mlp' ? P.nin * (P.nh + 1) + 2 * P.nh : P.ni
 const thetaOf = P => P.kind === 'target-mlp' ? P.theta : P.wt;
 function withTheta(P, th){ return P.kind === 'target-mlp' ? Object.assign({}, P, {theta: th.slice()}) : Object.assign({}, P, {wt: th.slice(0, P.nin)}); }
 // the option features the scorer sees (adds the unit's traits for a 'self' MLP)
-function inputs(P, X, u){ if (P.kind !== 'target-mlp' || !P.self) return X; const t = TR.traitsV(u.s, P.traitsV); return X.map(x => x.concat(t)); }
+// P.traitsV 2: traits v2 (policy/traits.js); P.spIds: + a one-hot of the unit's species over that list (all zeros for a species not
+// in it), a per-species residual the traits don't capture. Shipped v1 nets without spIds read exactly as before.
+const spCode = (P, id) => { if (!P.spIds) return []; const v = new Array(P.spIds.length).fill(0), i = P.spIds.indexOf(id); if (i >= 0) v[i] = 1; return v; };
+function inputs(P, X, u){ if (P.kind !== 'target-mlp' || !P.self) return X; const t = P.spIds ? TR.traitsV(u.s, P.traitsV).concat(spCode(P, u.s.id)) : TR.traitsV(u.s, P.traitsV); return X.map(x => x.concat(t)); }
 function hidden(th, P, x){
   const {nin, nh} = P, h = new Array(nh), o = nin + 2 * nh;
   for (let j = 0; j < nh; j++){ let a = th[nin + nh + j]; const r = o + j * nin; for (let k = 0; k < nin; k++) a += th[r + k] * x[k]; h[j] = Math.tanh(a); }
@@ -3121,7 +3124,7 @@ function widen(P, add){
   const out = th.slice(0, nin).concat(z, th.slice(nin, o)); for (let j = 0; j < nh; j++) out.push(...th.slice(o + j * nin, o + (j + 1) * nin), ...z);
   return Object.assign({}, P, {nin: nin + add, theta: out});
 }
-module.exports = { npar, thetaOf, withTheta, inputs, scores, addGrad, mlp, widen, TRAITS: TR.DIM };
+module.exports = { spCode, npar, thetaOf, withTheta, inputs, scores, addGrad, mlp, widen, TRAITS: TR.DIM };
 
   };
   M['guard_features.js'] = function(module, exports){ var require = req, __dirname = ''; // Milestone 4: options and features for a GUARD's learned target choice (your side's animals; sim.js guardCandidates).
@@ -3320,7 +3323,7 @@ function choose(w, u, policy){
   if (policy.commit && a !== teach && opts[a] && opts[a].kind === 'target'){ u.forceT = opts[a].t; u.forceUntil = w.t + policy.commit; } // P.commit s: hold a learned departure that long
   if (stats){ stats.n = (stats.n || 0) + 1; if (a === teach) stats.agree = (stats.agree || 0) + 1; }
   if (log && opts.length > 1) log.push({X, y: teach, a, sp: u.s.id});
-  if (cfg.pickLog && opts.length > 1) cfg.pickLog.push({u, h: opts[teach] && opts[teach].t || null, a: opts[a] && opts[a].t || null, n: opts.length}); // stat only (probes/speciation.js)
+  if (cfg.pickLog && opts.length > 1) cfg.pickLog.push({u, h: opts[teach] && opts[teach].t || null, a: opts[a] && opts[a].t || null, n: opts.length}); // stat only (probes/speciation_score.js)
   apply(u, opts[a]);
 }
 // herbivores (bulldozer, charger, kicker): same scorer; the heuristic's pick is herbivoreTarget's, and if that isn't one
@@ -3384,8 +3387,13 @@ function logits(P, x){
   }
   return out;
 }
+// 'move-adv' (milestone 4, lookahead-trained intents): {kind: 'move-adv', set: base.set (the engine reads the intent set from it), base: <move-mlp weights>, nin, nout, kappa, D: [nout*(nin+1)]}:
+// the base network picks a0; a linear gain predictor g_k = D_k . [x, 1] switches to the best k only when g_k - g_a0 > kappa.
+// D = 0 plays exactly as the base. Trained by bc_target.js trainIntentAdv on the lookahead's per-intent branch scores.
+function gainsAdv(P, x){ const n = P.nin + 1, g = new Array(P.nout); for (let k = 0; k < P.nout; k++){ let s = P.D[k * n + P.nin]; for (let i = 0; i < P.nin; i++) s += P.D[k * n + i] * x[i]; g[k] = s; } return g; }
 function act(P, x){
   if (P.fixed !== undefined) return P.fixed;
+  if (P.kind === 'move-adv'){ const a0 = act(P.base, x), g = gainsAdv(P, x); let b = a0, bv = P.kappa || 0; for (let k = 0; k < P.nout; k++) if (k !== a0 && g[k] - g[a0] > bv){ bv = g[k] - g[a0]; b = k; } return b; }
   const l = logits(P, x); let b = 0; for (let k = 1; k < l.length; k++) if (l[k] > l[b]) b = k; return b;
 }
 // the trainable vector: mode 'linear' = [bl, Wl]; mode 'full' = [bl, Wl, W2] (W1/b1 stay fixed random features);
@@ -3401,7 +3409,7 @@ function unflat(P, v, mode){
   return Q;
 }
 function isZero(P){ if (P.kind === 'target-lin') return P.wt.every(v => v === 0); return P.fixed === undefined && [...P.bl, ...P.Wl, ...P.W2].every(v => v === 0); }
-module.exports = { NOUT, zeros, zerosTarget, withHidden, logits, act, flat, unflat, isZero };
+module.exports = { gainsAdv, NOUT, zeros, zerosTarget, withHidden, logits, act, flat, unflat, isZero };
 
   };
   M['move_features.js'] = function(module, exports){ var require = req, __dirname = ''; // Milestone 3: observation for a movement-intent decision (one engaged unit, its current target).
@@ -3628,6 +3636,7 @@ const A = require(process.env.SIM ? path.resolve(process.env.SIM) : path.join(__
 const M = require('./move_model.js');
 const archOf = n => require('./move_arch.js').arch(n); // lazy: move_arch -> sim.js -> live.js -> here is a require cycle
 function moveChoose(w, u, t, d, P, arch){
+  if (P.kind === 'move-adv' && P.only === 'cat' && !(u.s.pred && u.s.latch)) P = P.base; // a correction learned only for your cats leaves your other guards on the base net
   const a = P.fixed !== undefined ? P.fixed : P.rule ? RULES[P.rule](w, u, t, d) : M.act(P, archOf(arch).F.extract(w, u, t, d));
   const st = w.cfg.moveStats; if (st){ const c = st[arch] || (st[arch] = new Array(archOf(arch).nout).fill(0)); c[a]++; }
   return a;

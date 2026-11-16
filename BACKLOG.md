@@ -76,6 +76,12 @@ the shipped policies and reprice after:
     `guard_target_m3` tied m2 head to head (−0.003 / −0.008 ± 0.018), so m2 stays. Repriced (`abs_r20`, 16 s/$100) and Safari
     retuned. Still open: bulldozers (lookahead headroom +0.19, but every learned net played worse so far), kickers (fails
     farHunt), your cats (no network-learnable target signal found so far).
+  - [ ] **Nov 16: `brawler_target_s1` (more species-distinct bear / badger targets) did not ship under bar (b′).** Pre-registered
+    fresh checks vs live `brawler_target_e1`: speciation score (`probes/speciation_score.js`, probe 251, 600 fights) 1.308 → 1.464,
+    **+0.156 ± 0.085 (1.8 SE, short of 2)**; strength (`eval_target.js … 6000 150 2027 checkmate spec`; note the literal `spec`
+    parses as spec off) goal −0.024 ± 0.015 (passes), style 1.00, no gates. The direction holds (grizzly / short-faced bear go for
+    you more), so a stronger speciated bear net may pass; no re-test of s1 on new draws (no pooling after a failed check).
+    The inference port (traits v2, `P.spIds`, `cfg.pickLog`) and `speciation_score.js` are kept (branch `brawler-s1`), byte-identical for live nets.
   **Owner design direction (Oct 27): speciation from broad archetypes + species tuning + open control + a general
   reward.** (1) Move decisions out of engine rules into the policy (target, approach, attack, bluff, retreat, movement),
   keeping physics in the engine (speed, reach, stamina, armor, morale): bodies are what make species differ. (2) One
