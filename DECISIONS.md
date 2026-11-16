@@ -6,6 +6,9 @@ Each item has a recommendation; reply with a number and "yes", or your own call.
 20. **Safari got harder with the new wolf / hyena targeting (Nov 16).** The test bot now finishes 14.6% of runs (was 20.4%; target
    ~16–23%); round 1 85% first try. About half is the smarter wolves / hyenas, half the bot buying by the refreshed values (with the
    old values: 17.4%). Recommendation: +$50 on the round 5–6 top-ups (450/550 → 500/600) and re-run the bot; it's your difficulty knob, so ask first.
+   *Update (Nov 16, branch `kicker-k0b`, giraffe / ostrich / kangaroo target net + refreshed values):* the bot is back to 18.8%
+   complete (in the band) with round 1 at 88% (above its 75–82% band, see 19). If that branch merges, the recommendation becomes:
+   leave the top-ups alone and decide 19 only.
 19. **Safari round 1 may be too easy (Nov 16).** With the measured values refreshed for the new cat net, the test bot buys giraffe /
    boar / wolf pack in round 1 instead of the $100 cats and wins it 93% first try (the target band is 75–82%; with the old values
    it was 83%); the whole run still completes 20% (in band). Round 1 has no top-up, so fixing it means its board: 10 → 11 animals
@@ -78,6 +81,7 @@ Each item has a recommendation; reply with a number and "yes", or your own call.
   boards. GCP for training; the launcher must fail gracefully.
 
 ## Decided
+- **Re-draw after a mismeasured gate (Nov 16, kicker_target_k0):** probe 180 failed on farHunt because main's `policy/move_run.js` still counted closing on the human (against the owner's Oct 31 rule; the training branch already had `t !== H`). That is a measurement bug, not a fail of the net: the gate was fixed on main first (PR #60), then ONE fresh draw was pre-registered (probe 190, same bar b′ + the idle check) and passed. Rule: a fresh draw is allowed only when the failing measurement itself is shown to contradict a rule that predates the draw, and the fix lands before the new draw; the old draw is never pooled.
 - Nov 16: **realism may cost a little strength** (owner: "Its fine if strength decreases a bit for realism yes. We would expect it to,
   right."). Bar (b′), replacing (b): a speciated or realistic net ships if its speciation score is higher than live at 2 SE on fresh
   fights, its strength cost on a fresh, pre-registered 6,000-fight draw vs live is small (goal ≥ −0.05 and goal − 2 SE ≥ −0.08),
