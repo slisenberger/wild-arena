@@ -10,7 +10,10 @@ const npar = P => P.kind === 'target-mlp' ? P.nin * (P.nh + 1) + 2 * P.nh : P.ni
 const thetaOf = P => P.kind === 'target-mlp' ? P.theta : P.wt;
 function withTheta(P, th){ return P.kind === 'target-mlp' ? Object.assign({}, P, {theta: th.slice()}) : Object.assign({}, P, {wt: th.slice(0, P.nin)}); }
 // the option features the scorer sees (adds the unit's traits for a 'self' MLP)
-function inputs(P, X, u){ if (P.kind !== 'target-mlp' || !P.self) return X; const t = TR.traits(u.s); return X.map(x => x.concat(t)); }
+// P.traitsV 2: traits v2 (policy/traits.js); P.spIds: + a one-hot of the unit's species over that list (all zeros for a species not
+// in it), a per-species residual the traits don't capture. Shipped v1 nets without spIds read exactly as before.
+const spCode = (P, id) => { if (!P.spIds) return []; const v = new Array(P.spIds.length).fill(0), i = P.spIds.indexOf(id); if (i >= 0) v[i] = 1; return v; };
+function inputs(P, X, u){ if (P.kind !== 'target-mlp' || !P.self) return X; const t = P.spIds ? TR.traitsV(u.s, P.traitsV).concat(spCode(P, u.s.id)) : TR.traitsV(u.s, P.traitsV); return X.map(x => x.concat(t)); }
 function hidden(th, P, x){
   const {nin, nh} = P, h = new Array(nh), o = nin + 2 * nh;
   for (let j = 0; j < nh; j++){ let a = th[nin + nh + j]; const r = o + j * nin; for (let k = 0; k < nin; k++) a += th[r + k] * x[k]; h[j] = Math.tanh(a); }
@@ -41,4 +44,4 @@ function mlp(nin, nh, margin, seed, self){
   for (let i = nin + 2 * nh; i < th.length; i++) th[i] = (r() * 2 - 1) * sc;
   return {kind: 'target-mlp', v: 1, nin, nh, margin, self: !!self, theta: th};
 }
-module.exports = { npar, thetaOf, withTheta, inputs, scores, addGrad, mlp, TRAITS: TR.DIM };
+module.exports = { spCode, npar, thetaOf, withTheta, inputs, scores, addGrad, mlp, TRAITS: TR.DIM };
