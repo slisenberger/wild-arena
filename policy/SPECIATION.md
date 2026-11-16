@@ -461,3 +461,7 @@ each species develop its own realistic fighting style. This note is the plan; th
   from sourced realism priors. Probes 160 and 321 burned. Merged main into m4/speciation-2.
 - **Second draw (probe 351):** margin .05: goal +0.012 ± 0.023, style 1.000 (drift humanShare 7 -> 18%); margin .1: +0.024 ± 0.021, style
   1.000. harrier_target_rp1m0.05 (style .994 / 1.000, goal -0.026 / +0.012, speciation +0.181 ± 0.037) sent to the main session.
+- **harrier_target_rp1m0.05 shipped (Nov 16, main PR #59):** main session's checks: speciation +0.231 ± 0.037 (probe 361), strength
+  -0.009 ± 0.013 (6,000 fights, probe 170, base none), style .996, no gates. Every enemy archetype except bulldozer and kicker now has
+  a target net. Next: realism-prior registry entries for bulldozers (elephant, mammoth, gorilla, walrus) and kickers (giraffe,
+  ostrich, giant kangaroo), then ei49 on them.
