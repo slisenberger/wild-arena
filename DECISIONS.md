@@ -71,6 +71,10 @@ Each item has a recommendation; reply with a number and "yes", or your own call.
   boards. GCP for training; the launcher must fail gracefully.
 
 ## Decided
+- Nov 16: **realism may cost a little strength** (owner: "Its fine if strength decreases a bit for realism yes. We would expect it to,
+  right."). Bar (b′), replacing (b): a speciated or realistic net ships if its speciation score is higher than live at 2 SE on fresh
+  fights, its strength cost on a fresh, pre-registered 6,000-fight draw vs live is small (goal ≥ −0.05 and goal − 2 SE ≥ −0.08),
+  style ≥ .99 and no gate failures. The reprice absorbs any difficulty change.
 - Oct 31: **what is in the game's spirit** (owner: "I dont care about predator vs lion. I just am opining it doesnt violate game spirit the way disengaging does."): animals know their team and the objective. Choices that serve the objective are fine even when unrealistic (kickers hunting you, buffalo ignoring lions). Disengaging is not: idling, stalling, avoiding the fight, giving up. So training checks on engagement matter; buffalo-vs-lion is report-only, and the live charger net (`charger_target_m1`) stays as it is. Species realism stays in the engine's physics and signature moves.
 - Oct 31: **every animal on attack takes part in killing the human; it is the only assumption above realism** (owner). Kickers, lumbering herbivores and the walrus get a prototype (training session, behind a flag), then a reprice.
 - Oct 31: **terrain features (maps2) are the default** (owner: "I like maps2 … feels better"); the old open maps stay behind `?maps2=0`. Tree-hiding stalls fixed the same day.
