@@ -3,6 +3,10 @@
 Each item has a recommendation; reply with a number and "yes", or your own call. Decided items move to the bottom.
 
 ## Open
+19. **Safari round 1 may be too easy (Nov 16).** With the measured values refreshed for the new cat net, the test bot buys giraffe /
+   boar / wolf pack in round 1 instead of the $100 cats and wins it 93% first try (the target band is 75–82%; with the old values
+   it was 83%); the whole run still completes 20% (in band). Round 1 has no top-up, so fixing it means its board: 10 → 11 animals
+   (11 gave 70% on the Oct 31 engine). Recommendation: try 11 animals and re-run the bot; it's your difficulty knob, so ask first.
 18. **Retrain the enemy chargers for the buffalo tendency?** Under your latest framing ("engage the way they'd realistically would as
    part of a hunting team"), the training session re-checked the live `charger_target_m1`: with one of your lions within 15 m and the
    buffalo not going for you, it targets the lion 26% of that time vs 83% under the hand-written rules. Recommendation: yes, retrain:

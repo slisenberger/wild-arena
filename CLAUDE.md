@@ -63,7 +63,7 @@ count as 5:00). Live site: GitHub Pages serves `index.html` from `main`.
   Mobile UX pass (Oct 27, `research/ux_audit/`): a sticky bottom action bar (`renderActBar`) carries each step's next action
   (Fight straight from the draft with auto formation, Skip to result, Play again / New board); `audit.js` re-measures taps
   and scroll on phone/360/desktop, `modes_check.js` checks the hidden modes, daily and share links through the bar.
-  Daily Safari check (Oct 31, `research/daily_check.js <first date> <days> [K] [MIN]`): the bot plays each day's daily run K times; a day whose completion is under MIN gets the next salt (`daily_salt.json`, bundled by build.js as `DAILY_SALT`, read by `progDailySeed`). First run (abs_r20 engine, 45 days from Oct 31, K 30, MIN .08): median completion 17% (min 0, max 47%), 6 days re-dealt (each now ≥ 10%). Re-run Oct 31 after the 'unknown' fixes (from Nov 1, 45 days): see daily_salt.json. Re-run (Oct 31, terrain features default + `abs_r21` + the top-up retune, 45 days from Nov 1, K 30, MIN .08; Oct 31 had no salt and is untouched): median completion 17% (min 0, max 50%), 5 days re-dealt (Nov 9 needed salt 2; each now ≥ 13%). **Re-run it after any engine, price or Safari change, and before the covered dates run out (Dec 15); never change a date that has already started.**
+  Daily Safari check (Oct 31, `research/daily_check.js <first date> <days> [K] [MIN]`): the bot plays each day's daily run K times; a day whose completion is under MIN gets the next salt (`daily_salt.json`, bundled by build.js as `DAILY_SALT`, read by `progDailySeed`). First run (abs_r20 engine, 45 days from Oct 31, K 30, MIN .08): median completion 17% (min 0, max 47%), 6 days re-dealt (each now ≥ 10%). Re-run Oct 31 after the 'unknown' fixes (from Nov 1, 45 days): see daily_salt.json. Re-run (Oct 31, terrain features default + `abs_r21` + the top-up retune, 45 days from Nov 1, K 30, MIN .08; Oct 31 had no salt and is untouched): median completion 17% (min 0, max 50%), 5 days re-dealt (Nov 9 needed salt 2; each now ≥ 13%). Re-run (Nov 16, `cat_target_rp1` + `abs_r22`, 40 days from Nov 17, K 30, MIN .08; dates up to Nov 16 kept): median completion 17% (min 0, max 53%), 10 days re-dealt (each now ≥ 10% with salt 1). **Re-run it after any engine, price or Safari change, and before the covered dates run out (Dec 26); never change a date that has already started.**
   "Killed by the unknown" (Oct 31, owner: "in very safe situations you just die to unknown without even a threat"): (1) your own animals shoved you through the border into the closing fire (collisions moved the 75 kg human; maps2 walls/escorts made it common) → own animals now make way for you in collisions, and after collisions every unit (not routing) is clamped inside the playable box (`w.pb`); (2) caught outside the safe box on maps2 you make for its middle, routed round walls (`m2Route`); (3) a hazard's last tick no longer steals the kill from an animal that hit you in the last 5 s (`lastHitT`); (4) the UI names hazards (`killerHTML`: 🔥 the fire, 🌊 the flood water, ❄️ the blizzard) instead of "the unknown". 800 strong-team fights with random start spots: deaths to the hazard with nothing hitting you 8 → 0 (plain maps 0 → 0). Paired 1,200 fights: +2.9 ± 3.7 s (prices kept); Safari bot unchanged (round 1 82%, 18.8% complete).
   Safari playtest fixes (Oct 31): the post-fight recap (`recapHTML`) and the run summary are key/value tables (`table.kv`), the end screen's "Your animals" is a table (`table.runsum`: rounds, kills, damage, fate; "★ Made it" only on a complete run, "Alive" otherwise) without refunded animals; the loss banner states the retry rule and shows retries left as hearts; formation shows Ride above the team list; animal names in recaps, banners, the run summary, stats and the after-action fate column carry a small portrait (`fn(id, px)`; the fate column shows ✕ + the killer's portrait); the short-faced bear and woolly rhino cards no longer hedge ("hypothesis" / "speculative"; the sources stay in sim.js comments).
   Pre-friends polish (Oct 31): link previews (`<meta>` description / Open Graph / Twitter card in template.html, `preview.png` = a real fight at 1200×630, lion favicon), field notes fold the same line within 15 s into one entry with ×n, the river-only formation tip shows only on the river, and a Safari retry keeps the round's map (`M.mapSeedOf(run)` → `cfg.mapSeed`; first attempts are unchanged since their fight seed equals it).
@@ -442,6 +442,16 @@ round. Report ± standard errors.
       `policy/target_ident_test.js` (now cat, brawler, bulldozer, guard; zero weights incl. a fresh rich targets-only MLP =
       the game; its base arm is now `{kind:'target-none'}` = the arch's shipped movement without a target scorer, which also
       fixes its stale guard FAIL since m2 went live) passes. `eval_target.js` takes `BASE=none` (no target scorer for the arch).
+  - **Milestone 4, round 4 (Nov 16, branch `cat-rp1`, bar (b′)): enemy big cats' target choice is `cat_target_rp1`** (replaces
+    `cat_target_e1`): expert iteration with sourced per-species realism priors (`m4/speciation-2` ei47, rp_cat35 round 4;
+    'target-mlp' 32 hidden, rich inputs, traits v2 + `spIds`, targets-only). Weights only, no code port (main has traits v2 since
+    PR #57). Pre-registered fresh checks: speciation (`probes/speciation_score.js --arch=cat`, 1,500 fights, probe 321) live
+    0.807 → 0.986, **+0.179 ± 0.043 (4.2 SE)**; strength (`BASE=…e1.json eval_target.js …rp1.json cat 6000 160 2027 checkmate 1`)
+    **goal +0.009 ± 0.014**, style 1.000, no gates or drift; your survival 42.4 → 41.9% (−0.5 ± 0.6 pts), time alive −1.1 ± 1.6 s;
+    cats deviate from the heuristic on 26.7% of decisions. Per species: every cat goes for you more (leopard 75 → 98%, cougar
+    83 → 94, jaguar 80 → 90, tiger 72 → 84, lion 73 → 85, Smilodon 60 → 77%) and turns on other predators less; lion
+    coalitions change least. Determinism (`policy/ship_ident.js <git archive of origin/main 0a3225a> 400 cat`, BUNDLE=40):
+    livePolicy:false 400/400, live fights without an enemy cat 147/147 (before the reprice), bundle = Node 40/40 (again after it); `target_ident_test.js` passes.
   - Training runs on GitHub Actions (`.github/workflows/train.yml`, sweeps in `policy/sweeps/`); `collect.yml` copies
     results to the `training-results` branch (artifact storage isn't reachable from the dev container).
   - GCP spot training: `policy/gcp/gcp.js` (launch/status/resume/stop/collect, failure handling in `policy/gcp/README.md`);
@@ -491,7 +501,17 @@ round. Report ± standard errors.
   median board's best team 88% (min 33, p25 75), typical full-spend team 160 s, 16 distinct best teams over 16 boards, no
   elephant in any; best teams spread over rhino 6, hippo 6, tiger 4, giraffe 4, croc 4 (was elephant 5, rhino 4). For
   comparison, total $2,500 gave 96% / 181 s (not adopted: it would make the other side weaker).
-- **Current prices (`abs_r21`, Oct 31, terrain features (maps2) as the default game + the human's tree-stall fix and
+- **Current prices (`abs_r22`, Nov 16, `cat_target_rp1` live):** `abs_r21` with two changes: **black rhino $300, woolly rhino
+  $500** (16 s of swing per $100, giants/herds capped at $700, triceratops $800, board total $2,600, budget $1,200, rares 30%).
+  `price_abs.js 240` (all items) merged with `price_abs.js 960` for the six map-limited items; mean base-team score 47 s (same).
+  Off by ≥ $100 beyond 1.5 SE at `abs_r21`: black rhino 53 ± 7 s at $200, woolly rhino 84 ± 8 at $400 (giraffe 33 ± 6 at $100
+  and great wolf pack 49 ± 7 at $200 only just). Validation (`RAREP=.3 board.js 16 2 24 12 1200 2600`): **`abs_r22` median
+  board's best team 88%** (min 50, p25 71), typical full-spend team **163 s**, 62% of teams win a screen run, 16 distinct best
+  teams; `abs_r21` on this engine 88% (p25 75) / 164 s; the full 16 s/$100 scheme (9 items +$100) 83% / 164 s; 17 s/$100 (=
+  the two + giraffe $200, great wolf pack $300) 75% / 162 s. Swings: triceratops 220, elephant 169, bison herd 146, buffalo herd
+  143, mammoth 120, woolly rhino 84 ± 8, musk ox herd 78 ± 7, hippo 73, rhino 60, black rhino 53, short-faced bear 51 ± 5, gaur
+  51, walrus 26 ± 6, Utahraptor 25 ± 4; $100 cats on your side measure low now (lion 4, jaguar 7, cougar 5, leopard 5 ± 5).
+- *Previous* prices (`abs_r21`, Oct 31, terrain features (maps2) as the default game + the human's tree-stall fix and
   `TREE_MAX`):** **16 s of swing per $100**, giants/herds capped at $700 (triceratops $800), **board total $2,600** (kept;
   `price_scheme` itself landed on it), budget $1,200, rares 30%. `price_abs.js 240` (all items) merged with `price_abs.js 960`
   for muskox, musk ox herd, walrus, woolly rhino, short-faced bear, Utahraptor. Mean base-team score 43 → 47 s. Why not keep
@@ -621,6 +641,11 @@ round. Report ± standard errors.
   price × .55 × health missing ($5 steps up, min $10), sell = price × .5 × health ($5 steps down), not under 25% health
   (was a flat 25% heal / half-price sale; .55 kept the bot's completion rate: 1,000 runs 17.3% → 15.9%, round 1 81.5%),
   scars, XP and levels (level 3 ≈ +8% of swing, `level_abs.js`), two retries (a loss restores the round's shop).
+- Bot with `cat_target_rp1` live (`abs_r22` prices, MEASURED refreshed; `progressive_bot.js 500 4 1`): round 1 first-try **93%**,
+  median run ends in round 6, **20.4% complete**; round 6 is the wall (first-try 36%; buffalo herd premium won 37%, bison herd 33%).
+  Constants unchanged. Main (e1) gives 82% / 18.2%; rp1 with main's MEASURED table 83% / 21.8%: the round-1 jump is the bot's
+  buying (it buys by MEASURED, which now ranks giraffe / boar / wolf pack above the $100 cats), not the net. Round 1 has no top-up
+  to tune (DECISIONS.md).
 - Bot on terrain features (maps2 default, tree-stall fix + `TREE_MAX`, `abs_r21` prices; `progressive_bot.js 500 4 1`): round 1
   first-try **82%**, median run ends in round 6, **18.8% complete**; round 6 is the wall (first-try 38%; buffalo herd premium won
   35%, bison herd 40%). At the previous constants the new game gave round 1 82% and **12.4% complete**. Retune (300-run probes):
