@@ -491,3 +491,6 @@ each species develop its own realistic fighting style. This note is the plan; th
   0.013, style 1.000, no gates or drift; idle share fell for all three species; speciation (probe 461) +0.236 ± 0.049. The first
   probe-180 draw failed on a mismeasured gate (main's move_run.js still counted closing on the human); fixed before the re-draw
   (DECISIONS "Decided"). Only bulldozers now lack a target net.
+- **ei51 bulldozer horizon test (prior 0):** H 8 s: every round weaker (-0.02 to -0.11); H 40 s: best +0.020 ± 0.032 but lost
+  speciation (1.18 -> 1.12), no clean round beat today. Expert iteration on bulldozers: none found so far at H 8 / 20 / 40 and
+  prior 0 / .2 / .5. Next: ES (es52, the route that produced the live charger net), zero start at today's targets.

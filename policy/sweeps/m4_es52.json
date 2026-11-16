@@ -1,0 +1,17 @@
+{
+ "note": "es52: bulldozer target nets by ES (the route that gave the live charger net) after expert iteration lost to today at horizons 8 / 20 / 40 s (ei49-ei51, prior 0 / .2 / .5). Zero start with margin .25 = today's targets.",
+ "runs": [
+  {
+   "name": "bes_s1",
+   "args": "--arch=bulldozer --goal=checkmate --spec=true --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --target=true --thetaClip=1 --margin=.25 --traitsV=2 --refZero=true --gatePenalty=1 --lambda0=3 --nh=8 --pairs=24 --seed=5201"
+  },
+  {
+   "name": "bes_s2",
+   "args": "--arch=bulldozer --goal=checkmate --spec=true --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --target=true --thetaClip=1 --margin=.25 --traitsV=2 --refZero=true --gatePenalty=1 --lambda0=3 --nh=8 --pairs=24 --seed=5202"
+  },
+  {
+   "name": "bes_rich",
+   "args": "--arch=bulldozer --goal=checkmate --spec=true --gens=60 --valEvery=4 --valFights=1000 --valMax=1200 --testFights=1200 --testMax=1200 --withLive=true --target=true --thetaClip=1 --margin=.25 --traitsV=2 --refZero=true --gatePenalty=1 --lambda0=3 --nh=16 --feat=rich --pairs=32 --sigma=.05 --seed=5203"
+  }
+ ]
+}
