@@ -456,3 +456,6 @@ each species develop its own realistic fighting style. This note is the plan; th
   margin .05: goal -0.026 ± 0.023, style .994, speciation +0.181 ± 0.037 | .1: -0.036 ± 0.020, style 1.000, +0.119 ± 0.032 |
   .2: +0.001 ± 0.014, style 1.000, +0.052 ± 0.025. The margin trades speciation for style smoothly; .05 and .1 qualify on one draw;
   second draw on probe 351 (sweep rp1m2).
+- **cat_target_rp1 shipped (Nov 16, main PR #58):** main session's pre-registered checks: speciation +0.179 ± 0.043 (4.2 SE, probe
+  321), strength vs e1 +0.009 ± 0.014 (6,000 fights, probe 160), style 1.000, no gates. First net shipped on bar (b′), and the first
+  from sourced realism priors. Probes 160 and 321 burned. Merged main into m4/speciation-2.
