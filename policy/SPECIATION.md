@@ -481,3 +481,9 @@ each species develop its own realistic fighting style. This note is the plan; th
   big speciation gains (val 0.89-1.14 -> 1.28-1.39), round 5 +0.075 val / -0.010 ± 0.029 held-out, style 1.000; prior .2
   round 5 +0.035 val / +0.010 ± 0.032 held-out, style .991, speciation 0.94 -> 1.20; prior .2 and .5 trip farHunt in earlier
   rounds. Exported kicker_target_k0, kicker_target_k2; screens m4_kick (probes 431, 441, 451).
+- **Kicker screens (m4_kick; probes 431 / 441 strength, 451 speciation N = 1,500; base none):** kicker_target_k0 (prior 0): goal
+  +0.031 ± 0.023, -0.013 ± 0.022, style 1.000 / 1.000, no gates; speciation 0.927 -> 1.252 (+0.325 ± 0.064, 5.1 SE). Giraffe onto
+  you 31 -> 44%, predators 21 -> 13%; ostrich 52 -> 59%, 21 -> 14%; giant kangaroo onto you 26 -> 9%, predators 28 -> 37% (boxes
+  predators, matching its registry entry; flagged under the objective rule). Sent to the main session. kicker_target_k2 (prior .2):
+  style .985 / .962 with farHunt on 441: fails. Speciation here came from the goal + species code alone; the herbivore priors at
+  .2-.5 pushed kickers into far hunts.
