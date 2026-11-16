@@ -1,0 +1,11 @@
+{
+ "note": "Bar checks for ei47 realism-prior students: cat_target_rp1 (rp_cat35 round 4) vs live cat_target_e1 and harrier_target_rp1 (rp_harr25 round 3) vs today's wolves (no live net): 2 strength draws each (fresh probes 291, 301) + speciation score N=1,500 (probe 311).",
+ "runs": [
+  {"name": "cat_291", "args": "--trainer=probe --script=policy/probes/eval_target_cli.js policy/weights/cat_target_rp1.json cat 2000 291 91 checkmate 1 --base=policy/weights/cat_target_e1.json"},
+  {"name": "cat_301", "args": "--trainer=probe --script=policy/probes/eval_target_cli.js policy/weights/cat_target_rp1.json cat 2000 301 91 checkmate 1 --base=policy/weights/cat_target_e1.json"},
+  {"name": "cat_spec", "args": "--trainer=probe --script=policy/probes/speciation_score.js --arch=cat --net=policy/weights/cat_target_rp1.json --N=1500 --index=311"},
+  {"name": "harr_291", "args": "--trainer=probe --script=policy/probes/eval_target_cli.js policy/weights/harrier_target_rp1.json harrier 2000 291 91 checkmate 1 --base=none"},
+  {"name": "harr_301", "args": "--trainer=probe --script=policy/probes/eval_target_cli.js policy/weights/harrier_target_rp1.json harrier 2000 301 91 checkmate 1 --base=none"},
+  {"name": "harr_spec", "args": "--trainer=probe --script=policy/probes/speciation_score.js --arch=harrier --net=policy/weights/harrier_target_rp1.json --N=1500 --index=311"}
+ ]
+}
