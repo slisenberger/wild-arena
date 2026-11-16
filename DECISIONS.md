@@ -81,6 +81,7 @@ Each item has a recommendation; reply with a number and "yes", or your own call.
   boards. GCP for training; the launcher must fail gracefully.
 
 ## Decided
+- **Re-draw after a mismeasured gate (Nov 16, kicker_target_k0):** probe 180 failed on farHunt because main's `policy/move_run.js` still counted closing on the human (against the owner's Oct 31 rule; the training branch already had `t !== H`). That is a measurement bug, not a fail of the net: the gate was fixed on main first (PR #60), then ONE fresh draw was pre-registered (probe 190, same bar b′ + the idle check) and passed. Rule: a fresh draw is allowed only when the failing measurement itself is shown to contradict a rule that predates the draw, and the fix lands before the new draw; the old draw is never pooled.
 - Nov 16: **realism may cost a little strength** (owner: "Its fine if strength decreases a bit for realism yes. We would expect it to,
   right."). Bar (b′), replacing (b): a speciated or realistic net ships if its speciation score is higher than live at 2 SE on fresh
   fights, its strength cost on a fresh, pre-registered 6,000-fight draw vs live is small (goal ≥ −0.05 and goal − 2 SE ≥ −0.08),
