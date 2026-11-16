@@ -1,0 +1,7 @@
+{
+ "note": "Second strength/style draw (probe 351) for harrier_target_rp1m0.05 (style .994, speciation +0.181 ± 0.037) and rp1m0.1 (style 1.000, +0.119 ± 0.032) from rp1m.",
+ "runs": [
+  {"name": "m0.05_351", "args": "--trainer=probe --script=policy/probes/eval_target_cli.js policy/weights/harrier_target_rp1m0.05.json harrier 2000 351 91 checkmate 1 --base=none"},
+  {"name": "m0.1_351", "args": "--trainer=probe --script=policy/probes/eval_target_cli.js policy/weights/harrier_target_rp1m0.1.json harrier 2000 351 91 checkmate 1 --base=none"}
+ ]
+}

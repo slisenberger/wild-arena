@@ -451,3 +451,8 @@ each species develop its own realistic fighting style. This note is the plan; th
     prey: matches the registry's loner vs pack, clan-mobbing tendencies. Passes the speciation and cost parts of (b′); style is .01 short.
   - Both sent to the main session for pre-registered checks. harrier_target_rp2 (rp_harr50 round 5: val +0.041, 0.64 -> 0.95,
     held-out -0.049) screening as m4_rp2.
+- **Style bar for wolves (main session: b′'s style ≥ .99 is strict).** harrier_target_rp2 (λ .5): speciation +0.309 ± 0.040 but style
+  .991 / .969, goal -0.055 / -0.018: fails. Margin toward the heuristic pick on rp1 (probe 331 strength, 341 speciation N = 1,500):
+  margin .05: goal -0.026 ± 0.023, style .994, speciation +0.181 ± 0.037 | .1: -0.036 ± 0.020, style 1.000, +0.119 ± 0.032 |
+  .2: +0.001 ± 0.014, style 1.000, +0.052 ± 0.025. The margin trades speciation for style smoothly; .05 and .1 qualify on one draw;
+  second draw on probe 351 (sweep rp1m2).
