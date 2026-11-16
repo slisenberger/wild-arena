@@ -88,6 +88,13 @@ the shipped policies and reprice after:
     species goes for you more; strength unchanged. Repriced (`abs_r22`: black rhino $300, woolly rhino $500); Safari constants kept
     (bot 93% round 1 from the refreshed MEASURED table; 20.4% complete). Open: Safari round 1 looks easier than the 75–82% band
     once the bot buys giraffe / boar / wolf pack (DECISIONS.md).
+  - [x] **Nov 16 (branch `harrier-rp1m`): `harrier_target_rp1m0.05` shipped under bar (b′)**, the first target net for enemy wolves /
+    hyenas (realism-prior expert iteration, `m4/speciation-2`; margin .05 toward the heuristic). Pre-registered fresh checks:
+    speciation (probe 361, 1,500 fights) +0.231 ± 0.037 (6.2 SE); strength (`BASE=none eval_target.js … harrier 6000 170 2027
+    checkmate 1`) goal −0.009 ± 0.013, style 0.996, no gates (drift dartRate 6.31 → 4.53). Wolf packs and lone wolves go for you
+    more (45 → 63%, 59 → 78%), hyena clans more onto predators. Prices kept (`abs_r22`), MEASURED refreshed. Safari constants kept:
+    bot round 1 85%, 14.6% complete (was 20.4%; main's MEASURED on this engine 17.4%): below the band, owner's call (DECISIONS.md).
+    Daily salt re-run from Nov 17 (9 days re-dealt).
   **Owner design direction (Oct 27): speciation from broad archetypes + species tuning + open control + a general
   reward.** (1) Move decisions out of engine rules into the policy (target, approach, attack, bluff, retreat, movement),
   keeping physics in the engine (speed, reach, stamina, armor, morale): bodies are what make species differ. (2) One

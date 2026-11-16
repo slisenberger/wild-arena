@@ -63,7 +63,7 @@ count as 5:00). Live site: GitHub Pages serves `index.html` from `main`.
   Mobile UX pass (Oct 27, `research/ux_audit/`): a sticky bottom action bar (`renderActBar`) carries each step's next action
   (Fight straight from the draft with auto formation, Skip to result, Play again / New board); `audit.js` re-measures taps
   and scroll on phone/360/desktop, `modes_check.js` checks the hidden modes, daily and share links through the bar.
-  Daily Safari check (Oct 31, `research/daily_check.js <first date> <days> [K] [MIN]`): the bot plays each day's daily run K times; a day whose completion is under MIN gets the next salt (`daily_salt.json`, bundled by build.js as `DAILY_SALT`, read by `progDailySeed`). First run (abs_r20 engine, 45 days from Oct 31, K 30, MIN .08): median completion 17% (min 0, max 47%), 6 days re-dealt (each now ≥ 10%). Re-run Oct 31 after the 'unknown' fixes (from Nov 1, 45 days): see daily_salt.json. Re-run (Oct 31, terrain features default + `abs_r21` + the top-up retune, 45 days from Nov 1, K 30, MIN .08; Oct 31 had no salt and is untouched): median completion 17% (min 0, max 50%), 5 days re-dealt (Nov 9 needed salt 2; each now ≥ 13%). Re-run (Nov 16, `cat_target_rp1` + `abs_r22`, 40 days from Nov 17, K 30, MIN .08; dates up to Nov 16 kept): median completion 17% (min 0, max 53%), 10 days re-dealt (each now ≥ 10% with salt 1). **Re-run it after any engine, price or Safari change, and before the covered dates run out (Dec 26); never change a date that has already started.**
+  Daily Safari check (Oct 31, `research/daily_check.js <first date> <days> [K] [MIN]`): the bot plays each day's daily run K times; a day whose completion is under MIN gets the next salt (`daily_salt.json`, bundled by build.js as `DAILY_SALT`, read by `progDailySeed`). First run (abs_r20 engine, 45 days from Oct 31, K 30, MIN .08): median completion 17% (min 0, max 47%), 6 days re-dealt (each now ≥ 10%). Re-run Oct 31 after the 'unknown' fixes (from Nov 1, 45 days): see daily_salt.json. Re-run (Oct 31, terrain features default + `abs_r21` + the top-up retune, 45 days from Nov 1, K 30, MIN .08; Oct 31 had no salt and is untouched): median completion 17% (min 0, max 50%), 5 days re-dealt (Nov 9 needed salt 2; each now ≥ 13%). Re-run (Nov 16, `cat_target_rp1` + `abs_r22`, 40 days from Nov 17, K 30, MIN .08; dates up to Nov 16 kept): median completion 17% (min 0, max 53%), 10 days re-dealt (each now ≥ 10% with salt 1). Re-run (Nov 16, `harrier_target_rp1m0.05` live, MEASURED refreshed, prices `abs_r22`, 40 days from Nov 17, K 30, MIN .08; dates up to Nov 16 kept): median completion 13% (min 0, max 43%), 9 days re-dealt (each now ≥ 10% with salt 1; Nov 19, Dec 2, Dec 6 and Dec 16 pass unsalted now). **Re-run it after any engine, price or Safari change, and before the covered dates run out (Dec 26); never change a date that has already started.**
   "Killed by the unknown" (Oct 31, owner: "in very safe situations you just die to unknown without even a threat"): (1) your own animals shoved you through the border into the closing fire (collisions moved the 75 kg human; maps2 walls/escorts made it common) → own animals now make way for you in collisions, and after collisions every unit (not routing) is clamped inside the playable box (`w.pb`); (2) caught outside the safe box on maps2 you make for its middle, routed round walls (`m2Route`); (3) a hazard's last tick no longer steals the kill from an animal that hit you in the last 5 s (`lastHitT`); (4) the UI names hazards (`killerHTML`: 🔥 the fire, 🌊 the flood water, ❄️ the blizzard) instead of "the unknown". 800 strong-team fights with random start spots: deaths to the hazard with nothing hitting you 8 → 0 (plain maps 0 → 0). Paired 1,200 fights: +2.9 ± 3.7 s (prices kept); Safari bot unchanged (round 1 82%, 18.8% complete).
   Safari playtest fixes (Oct 31): the post-fight recap (`recapHTML`) and the run summary are key/value tables (`table.kv`), the end screen's "Your animals" is a table (`table.runsum`: rounds, kills, damage, fate; "★ Made it" only on a complete run, "Alive" otherwise) without refunded animals; the loss banner states the retry rule and shows retries left as hearts; formation shows Ride above the team list; animal names in recaps, banners, the run summary, stats and the after-action fate column carry a small portrait (`fn(id, px)`; the fate column shows ✕ + the killer's portrait); the short-faced bear and woolly rhino cards no longer hedge ("hypothesis" / "speculative"; the sources stay in sim.js comments).
   Pre-friends polish (Oct 31): link previews (`<meta>` description / Open Graph / Twitter card in template.html, `preview.png` = a real fight at 1200×630, lion favicon), field notes fold the same line within 15 s into one entry with ×n, the river-only formation tip shows only on the river, and a Safari retry keeps the round's map (`M.mapSeedOf(run)` → `cfg.mapSeed`; first attempts are unchanged since their fight seed equals it).
@@ -452,6 +452,19 @@ round. Report ± standard errors.
     83 → 94, jaguar 80 → 90, tiger 72 → 84, lion 73 → 85, Smilodon 60 → 77%) and turns on other predators less; lion
     coalitions change least. Determinism (`policy/ship_ident.js <git archive of origin/main 0a3225a> 400 cat`, BUNDLE=40):
     livePolicy:false 400/400, live fights without an enemy cat 147/147 (before the reprice), bundle = Node 40/40 (again after it); `target_ident_test.js` passes.
+  - **Milestone 4, round 5 (Nov 16, branch `harrier-rp1m`, bar (b′)): enemy wolves / hyenas (harriers) get a target net,
+    `harrier_target_rp1m0.05`** (none before: they used the heuristic's targets under `harrier_v1` movement): realism-prior expert
+    iteration (`m4/speciation-2` ei47 rp_harr25 round 3; 'target-mlp' 32 hidden, rich inputs, traits v2 + `spIds`, targets-only,
+    margin .05 toward the heuristic pick). Weights + live.json `"harrier"` only: the predator hook in `chooseTarget` already takes
+    any `byArch` key; `target_ident_test.js` now checks harrier too (passes). Pre-registered fresh checks: speciation
+    (`probes/speciation_score.js --arch=harrier`, 1,500 fights, probe 361) live 0.594 → 0.826, **+0.231 ± 0.037 (6.2 SE)**; strength
+    (`BASE=none eval_target.js …rp1m0.05.json harrier 6000 170 2027 checkmate 1`) **goal −0.009 ± 0.013** (bar: ≥ −.05, −2 SE ≥ −.08),
+    style 0.996, no gates, drift dartRate 6.31 → 4.53; your survival 45.6 → 46.0% (+0.5 ± 0.5 pts), time alive +1.4 ± 1.4 s, harrier
+    deaths +0.025 ± 0.016 per fight; deviates from the heuristic on 24.7% of decisions. Per species (onto you, live → net): wolf pack
+    45 → 63%, lone wolf 59 → 78, lone hyena 78 → 85, hyena clan 47 → 51 (and more onto predators, 14 → 28%), great wolf pack 45 → 47;
+    picked targets are lighter (log mass 1.66 → 0.93 for wolf packs). Determinism (`policy/ship_ident.js <git archive of origin/main
+    2e6e646> 400 harrier`, BUNDLE=40): livePolicy:false 400/400, live fights without enemy wolves / hyenas 258/258, bundle = Node
+    40/40 (before and after the MEASURED refresh).
   - Training runs on GitHub Actions (`.github/workflows/train.yml`, sweeps in `policy/sweeps/`); `collect.yml` copies
     results to the `training-results` branch (artifact storage isn't reachable from the dev container).
   - GCP spot training: `policy/gcp/gcp.js` (launch/status/resume/stop/collect, failure handling in `policy/gcp/README.md`);
@@ -501,7 +514,14 @@ round. Report ± standard errors.
   median board's best team 88% (min 33, p25 75), typical full-spend team 160 s, 16 distinct best teams over 16 boards, no
   elephant in any; best teams spread over rhino 6, hippo 6, tiger 4, giraffe 4, croc 4 (was elephant 5, rhino 4). For
   comparison, total $2,500 gave 96% / 181 s (not adopted: it would make the other side weaker).
-- **Current prices (`abs_r22`, Nov 16, `cat_target_rp1` live):** `abs_r21` with two changes: **black rhino $300, woolly rhino
+- **Prices re-checked Nov 16 with `harrier_target_rp1m0.05` live: `abs_r22` kept** (no item off by ≥ $100 at ≥ 2.5 SE; closest:
+  black rhino 35 ± 6 s at $300 (−2.2 SE from its price), hippo 81 ± 8 at $400 (+2.1), lion 0 ± 5 at the $100 floor). `price_abs.js 240`
+  merged with 960 for the six map-limited items; mean base-team score 47 → 41 s; MEASURED refreshed (`apply_values.js`). Validation
+  (`RAREP=.3 board.js 16 2 24 12 1200 2600`): median board's best team 92% (min 42, p25 75, SE ±6), typical full-spend team 162 s, 62%
+  of teams win a screen run, 16 distinct best teams. Swings: triceratops 221, elephant 171, buffalo herd 149, bison herd 145, mammoth
+  119, woolly rhino 90 ± 8, hippo 81, musk ox herd 75 ± 7, rhino 65, gaur 60, buffalo 53, short-faced bear 50 ± 5, black rhino 35,
+  walrus 32 ± 6, wolf pack 26, Utahraptor 21 ± 4; the $100 cats and the ostrich measure ~0–12.
+- *Previous check:* **Current prices (`abs_r22`, Nov 16, `cat_target_rp1` live):** `abs_r21` with two changes: **black rhino $300, woolly rhino
   $500** (16 s of swing per $100, giants/herds capped at $700, triceratops $800, board total $2,600, budget $1,200, rares 30%).
   `price_abs.js 240` (all items) merged with `price_abs.js 960` for the six map-limited items; mean base-team score 47 s (same).
   Off by ≥ $100 beyond 1.5 SE at `abs_r21`: black rhino 53 ± 7 s at $200, woolly rhino 84 ± 8 at $400 (giraffe 33 ± 6 at $100
@@ -641,6 +661,10 @@ round. Report ± standard errors.
   price × .55 × health missing ($5 steps up, min $10), sell = price × .5 × health ($5 steps down), not under 25% health
   (was a flat 25% heal / half-price sale; .55 kept the bot's completion rate: 1,000 runs 17.3% → 15.9%, round 1 81.5%),
   scars, XP and levels (level 3 ≈ +8% of swing, `level_abs.js`), two retries (a loss restores the round's shop).
+- Bot with `harrier_target_rp1m0.05` live (`abs_r22` prices, MEASURED refreshed; `progressive_bot.js 500 4 1`): round 1 first-try
+  **85%**, median run ends in round 6, **14.6% complete** (was 20.4%, SE ~1.7 pts); round 6 is the wall (first-try 32%; buffalo herd
+  premium won 30%, bison herd 29%). Constants unchanged (difficulty knob: DECISIONS.md). With main's MEASURED table on the same engine:
+  93% / 17.4%, so about half the drop is the net (smarter wolves / hyenas) and half the bot buying by the refreshed values.
 - Bot with `cat_target_rp1` live (`abs_r22` prices, MEASURED refreshed; `progressive_bot.js 500 4 1`): round 1 first-try **93%**,
   median run ends in round 6, **20.4% complete**; round 6 is the wall (first-try 36%; buffalo herd premium won 37%, bison herd 33%).
   Constants unchanged. Main (e1) gives 82% / 18.2%; rp1 with main's MEASURED table 83% / 21.8%: the round-1 jump is the bot's
