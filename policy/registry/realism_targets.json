@@ -976,5 +976,271 @@
    },
    "kind": "prior"
   }
+ ],
+ "elephant": [
+  {
+   "id": "elephant.mobsPredators",
+   "claim": "Family groups respond to lion roars by bunching and mobbing toward the threat; older matriarchs lead the defensive approach.",
+   "source": [
+    "https://doi.org/10.1098/rspb.2011.0168"
+   ],
+   "confidence": 0.7,
+   "prefer": {
+    "isPred": 0.5
+   },
+   "kind": "prior"
+  },
+  {
+   "id": "elephant.defendsAttacked",
+   "claim": "Elephants form coalitions and protect group members that are being harassed or attacked (35 years of Amboseli field records).",
+   "source": [
+    "https://dspace.stir.ac.uk/handle/1893/946"
+   ],
+   "confidence": 0.5,
+   "prefer": {
+    "busy": 0.4
+   },
+   "kind": "prior"
+  }
+ ],
+ "mammoth": [
+  {
+   "id": "mammoth.mobsPredators",
+   "claim": "Analogue (extinct; living proboscideans): elephant family groups bunch and mob predators; assumed for woolly mammoth herds, whose calves were taken by Homotherium (Friesenhahn Cave).",
+   "source": [
+    "https://doi.org/10.1098/rspb.2011.0168",
+    "https://doi.org/10.1016/j.cub.2021.03.061"
+   ],
+   "confidence": 0.45,
+   "prefer": {
+    "isPred": 0.45
+   },
+   "kind": "prior"
+  },
+  {
+   "id": "mammoth.defendsAttacked",
+   "claim": "Analogue: elephants protect herd members under attack; assumed for mammoths.",
+   "source": [
+    "https://dspace.stir.ac.uk/handle/1893/946"
+   ],
+   "confidence": 0.35,
+   "prefer": {
+    "busy": 0.35
+   },
+   "kind": "prior"
+  }
+ ],
+ "gorilla": [
+  {
+   "id": "gorilla.chargesThreats",
+   "claim": "A leading silverback charges perceived threats (human observers as predator surrogates; 106 and 33 charges) to protect infants, females and even unrelated immigrants; the leopard is the gorilla's only natural predator and males put themselves between attacker and group.",
+   "source": [
+    "https://doi.org/10.1163/14219980-bja10026",
+    "https://www.berggorilla.org/en/gorillas/general/everyday-life/do-gorillas-have-enemies/"
+   ],
+   "confidence": 0.55,
+   "prefer": {
+    "isPred": 0.4
+   },
+   "kind": "prior"
+  },
+  {
+   "id": "gorilla.defendsAttacked",
+   "claim": "Silverbacks defend group members under attack (Tamura 2024); at Loango a silverback tried to defend his group against attacking chimpanzees.",
+   "source": [
+    "https://doi.org/10.1163/14219980-bja10026",
+    "https://doi.org/10.1038/s41598-021-93829-x"
+   ],
+   "confidence": 0.5,
+   "prefer": {
+    "busy": 0.5
+   },
+   "kind": "prior"
+  },
+  {
+   "id": "gorilla.leopardSizedFoes",
+   "claim": "The predators silverbacks face are leopard-sized; at Loango an outnumbered silverback was surrounded and chased off. Among predators it confronts ones up to about its own size rather than much larger ones.",
+   "source": [
+    "https://www.berggorilla.org/en/gorillas/general/everyday-life/do-gorillas-have-enemies/",
+    "https://doi.org/10.1038/s41598-021-93829-x"
+   ],
+   "confidence": 0.4,
+   "when": {
+    "isPred": "true",
+    "logMass": ">0.3"
+   },
+   "prefer": {
+    "logMass": -0.5
+   },
+   "kind": "prior"
+  },
+  {
+   "id": "gorilla.bluffNotPursuit",
+   "claim": "Silverback threat displays are chest beats, roars and bluff charges that stop short: the aim is to drive the intruder off, not run it down.",
+   "source": [
+    "https://ielc.libguides.com/sdzg/factsheets/westernlowlandgorilla/behavior",
+    "https://doi.org/10.1163/14219980-bja10026"
+   ],
+   "confidence": 0.4,
+   "prefer": {
+    "fleeing": -0.4
+   },
+   "kind": "prior"
+  }
+ ],
+ "walrus": [
+  {
+   "id": "walrus.tusksVsBears",
+   "claim": "Adult walruses are aggressive and carry large tusks used in defence against polar bears; bears mostly take calves and sub-adults, rarely adults.",
+   "source": [
+    "https://www.usgs.gov/publications/ecology-and-biology-pacific-walrus-odobenus-rosmarus-divergens-illiger",
+    "https://www.canada.ca/en/environment-climate-change/services/species-risk-public-registry/cosewic-assessments-status-reports/atlantic-walrus/chapter-9.html",
+    "https://www.nwf.org/Magazines/National-Wildlife/2000/In-Search-of-the-Tooth-Walker"
+   ],
+   "confidence": 0.5,
+   "when": {
+    "isPred": "true"
+   },
+   "prefer": {
+    "isPred": 0.4
+   },
+   "kind": "prior"
+  },
+  {
+   "id": "walrus.defendsHerdmate",
+   "claim": "Adults defend vulnerable herd members (calves, sub-adults) a bear is attacking.",
+   "source": [
+    "https://www.canada.ca/en/environment-climate-change/services/species-risk-public-registry/cosewic-assessments-status-reports/atlantic-walrus/chapter-9.html",
+    "https://www.nwf.org/Magazines/National-Wildlife/2000/In-Search-of-the-Tooth-Walker"
+   ],
+   "confidence": 0.4,
+   "prefer": {
+    "busy": 0.4
+   },
+   "kind": "prior"
+  },
+  {
+   "id": "walrus.noPursuitOnLand",
+   "claim": "Walruses respond to bears on land by stampeding to the water (the main cause of stampedes on Wrangel Island); they don't run down a retreating animal.",
+   "source": [
+    "https://www.arlis.org/docs/vol1/E/Walrus/Russian/Kochnev.2002.CausesWalrusMortalityWrangel.MarMamRep.ENG&RUSS.pdf",
+    "https://www.usgs.gov/publications/ecology-and-biology-pacific-walrus-odobenus-rosmarus-divergens-illiger"
+   ],
+   "confidence": 0.5,
+   "prefer": {
+    "fleeing": -0.5
+   },
+   "kind": "prior"
+  }
+ ],
+ "giraffe": [
+  {
+   "id": "giraffe.kicksPredators",
+   "claim": "Adult giraffes routinely survive lion attacks (claw marks on 13% of adults, mostly on hindquarters and flanks) and can injure or kill a lion with a kick; their weapon is aimed at predators.",
+   "source": [
+    "https://doi.org/10.1111/j.1469-7998.2012.00972.x",
+    "https://doi.org/10.1111/jzo.12930"
+   ],
+   "confidence": 0.5,
+   "when": {
+    "isPred": "true"
+   },
+   "prefer": {
+    "isPred": 0.3
+   },
+   "kind": "prior"
+  },
+  {
+   "id": "giraffe.kicksCalfAttacker",
+   "claim": "A mother giraffe standing nearby drove off a lion attacking her calf by kicking at it.",
+   "source": [
+    "https://news.tufts.edu/magazine/summer2013/features/mother.html"
+   ],
+   "confidence": 0.4,
+   "prefer": {
+    "busy": 0.5
+   },
+   "kind": "prior"
+  }
+ ],
+ "ostrich": [
+  {
+   "id": "ostrich.nestPredatorsSmall",
+   "claim": "The male guards the nest with his feet; eggs and chicks are lost to hyenas and jackals: the predators an ostrich stands and kicks are its size or smaller.",
+   "source": [
+    "https://animals.sandiegozoo.org/node/118",
+    "https://www.torontozoo.com/animals/Ostrich"
+   ],
+   "confidence": 0.45,
+   "when": {
+    "isPred": "true"
+   },
+   "prefer": {
+    "logMass": -0.5
+   },
+   "kind": "prior"
+  },
+  {
+   "id": "ostrich.defendsChicks",
+   "claim": "Its first defence is running; it stops predators with a kick when chicks need protecting or it can't flee.",
+   "source": [
+    "https://www.nationalzoo.si.edu/node/16512"
+   ],
+   "confidence": 0.4,
+   "prefer": {
+    "busy": 0.4
+   },
+   "kind": "prior"
+  },
+  {
+   "id": "ostrich.avoidsLarge",
+   "claim": "Running is the first line of defence; the kick is a last resort, so it doesn't take on animals much bigger than itself unless they are hurt.",
+   "source": [
+    "https://www.nationalzoo.si.edu/node/16512",
+    "https://animals.sandiegozoo.org/node/118"
+   ],
+   "confidence": 0.4,
+   "when": {
+    "logMass": ">0.5"
+   },
+   "prefer": {
+    "logMass": -0.5
+   },
+   "except": [
+    "hurt"
+   ],
+   "kind": "prior"
+  }
+ ],
+ "giantkangaroo": [
+  {
+   "id": "giantkangaroo.boxesCanids",
+   "claim": "Analogue (Procoptodon extinct; eastern grey kangaroo): large adult males are the only class that wards off dingo attacks (kicking, tail thumps, hopping toward and watching the dingo, a fight of over an hour); a dingo is ~0.2x a big male, so it squares up to smaller predators.",
+   "source": [
+    "https://doi.org/10.1071/WR9930833",
+    "https://doi.org/10.1071/WR9930845"
+   ],
+   "confidence": 0.5,
+   "when": {
+    "isPred": "true"
+   },
+   "prefer": {
+    "logMass": -0.5
+   },
+   "kind": "prior"
+  },
+  {
+   "id": "giantkangaroo.defensiveNotPursuit",
+   "claim": "Large males flee shorter distances and ward off or take to water; defence is reactive, not pursuit.",
+   "source": [
+    "https://doi.org/10.1071/WR9930833",
+    "https://doi.org/10.1071/WR9930845"
+   ],
+   "confidence": 0.35,
+   "prefer": {
+    "fleeing": -0.3
+   },
+   "kind": "prior"
+  }
  ]
 }

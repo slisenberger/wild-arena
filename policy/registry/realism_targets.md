@@ -139,3 +139,106 @@ grizzly 320, polar 500, black bear 120, honey badger 11, short-faced bear 650, h
 
 Caveat: most figures were checked against abstracts and secondary summaries, not full texts. DOIs for Palomares & Caro, Matheus,
 Stirling 1974 and Meachen-Samuels (DOAJ record) were not opened in this pass.
+
+## Herbivore archetypes: bulldozers and kickers (added Nov 16 2026, research subagent)
+Elephant, mammoth, gorilla, walrus (bulldozers) and giraffe, ostrich, giant kangaroo (kickers) have no target net yet; these priors are
+for when they get one. Their targets are your guards and the human. As above: no `isHuman` weights, no `dist` weights, and entries only
+re-rank. Masses: elephant 6,000, mammoth 6,000, gorilla 180, walrus 1,200, giraffe 1,200, ostrich 120, giant kangaroo 230 kg.
+
+**Two things the features can't express (so they aren't encoded):** for a 6 t proboscidean every predator (and the human) sits at the
+`logMass` clip (−2), so "the biggest predator is the biggest threat" (McComb 2011: stronger response to male lions) can't separate a lion
+from a wolf or a grizzly. And a `logMass` weight on a negative-`logMass` window shifts the whole window *down* relative to the human
+(which sits at 0 after the clamp), so a "takes on rhino-sized herbivores" entry would have penalised rhinos; it was dropped.
+
+### The species differences these encode
+| axis | one side | other side |
+|---|---|---|
+| goes for predators (`isPred`) | elephant +0.5 (0.7), gorilla +0.4, mammoth +0.45 (0.45), walrus +0.4, giraffe +0.3 | ostrich, giant kangaroo: no blanket preference, only by size |
+| size of predator it takes on | ostrich and giant kangaroo prefer smaller predators (−0.5 `logMass`: jackal/hyena/dingo-sized); gorilla avoids predators > ~1.6× itself | elephant, mammoth, walrus, giraffe: no size cap (every predator is smaller) |
+| big herbivores | ostrich avoids anything > ~2× unless hurt | others: no entry |
+| defends an attacked ally (`busy`) | gorilla +0.5, giraffe +0.5 (mother/calf), elephant, walrus, ostrich +0.4, mammoth +0.35 | giant kangaroo: none (males defend themselves, not others) |
+| chases a fleeing target | walrus −0.5 (slow on land), gorilla −0.4 (bluff charges stop short), giant kangaroo −0.3 | elephant, mammoth, giraffe, ostrich: no entry |
+
+### Entries
+| species | id | when | prefer | except | conf |
+|---|---|---|---|---|---|
+| elephant | `mobsPredators` | always | isPred +0.5 |  | 0.7 |
+| elephant | `defendsAttacked` | always | busy +0.4 |  | 0.5 |
+| mammoth | `mobsPredators` (analogue) | always | isPred +0.45 |  | 0.45 |
+| mammoth | `defendsAttacked` (analogue) | always | busy +0.35 |  | 0.35 |
+| gorilla | `chargesThreats` | always | isPred +0.4 |  | 0.55 |
+| gorilla | `defendsAttacked` | always | busy +0.5 |  | 0.5 |
+| gorilla | `leopardSizedFoes` | isPred true, logMass >0.3 | logMass -0.5 |  | 0.4 |
+| gorilla | `bluffNotPursuit` | always | fleeing -0.4 |  | 0.4 |
+| walrus | `tusksVsBears` | isPred true | isPred +0.4 |  | 0.5 |
+| walrus | `defendsHerdmate` | always | busy +0.4 |  | 0.4 |
+| walrus | `noPursuitOnLand` | always | fleeing -0.5 |  | 0.5 |
+| giraffe | `kicksPredators` | isPred true | isPred +0.3 |  | 0.5 |
+| giraffe | `kicksCalfAttacker` | always | busy +0.5 |  | 0.4 |
+| ostrich | `nestPredatorsSmall` | isPred true | logMass -0.5 |  | 0.45 |
+| ostrich | `defendsChicks` | always | busy +0.4 |  | 0.4 |
+| ostrich | `avoidsLarge` | logMass >0.5 | logMass -0.5 | hurt | 0.4 |
+| giantkangaroo | `boxesCanids` (analogue) | isPred true | logMass -0.5 |  | 0.5 |
+| giantkangaroo | `defensiveNotPursuit` (analogue) | always | fleeing -0.3 |  | 0.35 |
+
+### Claims
+- **Elephant.** `mobsPredators`: family groups bunch and mob toward lion roars, led by older matriarchs (McComb et al. 2011).
+  `defendsAttacked`: coalitions and protection of harassed or attacked group members in ~35 years of field records (Bates et al. 2008).
+- **Mammoth** (extinct; living-proboscidean analogues, lower confidence): the same two tendencies; Homotherium took ~2-year-old
+  juvenile mammoths at Friesenhahn Cave (DeSantis et al. 2021), so herds had big cats to defend calves against.
+- **Gorilla.** `chargesThreats`: a leading silverback charged predator surrogates (human observers) 106 and 33 times to protect infants,
+  females and unrelated immigrants (Tamura et al. 2024); the leopard is the only natural predator and males put themselves between
+  attacker and group (Berggorilla). `defendsAttacked`: same, plus a silverback defending his group against chimpanzees at Loango
+  (Southern et al. 2021). `leopardSizedFoes`: the predators it faces are leopard-sized, and an outnumbered silverback was chased off
+  (Berggorilla; Southern 2021). `bluffNotPursuit`: displays are chest beats, roars and bluff charges (SDZ factsheet; Tamura 2024).
+- **Walrus.** `tusksVsBears`: tusks used in defence against polar bears (Fay 1982 via NAMMCO summary); adults are aggressive with large
+  tusks, bears take sub-adults and calves (COSEWIC; NWF). `defendsHerdmate`: adults guard calves/sub-adults (COSEWIC; NWF).
+  `noPursuitOnLand`: bear approach is the main cause of stampedes into the water on Wrangel Island (Kochnev 2002).
+- **Giraffe.** `kicksPredators`: 13% of adults carry lion claw marks, mostly on hindquarters/flanks, i.e. they survive and fight off
+  attacks (Strauss & Packer 2013); kicks can injure lions (Muneza et al. 2022 background). `kicksCalfAttacker`: a mother drove off a
+  lion attacking her calf by kicking it (Tufts Magazine 2013, reporting field researchers).
+- **Ostrich.** `nestPredatorsSmall`: the male guards the nest with his feet (Toronto Zoo); eggs are lost to hyenas and jackals (SDZWA).
+  `defendsChicks`: first defence is running; it kicks when chicks need protecting or it can't flee (Smithsonian National Zoo).
+  `avoidsLarge`: from the same "run first, kick as a last resort" (National Zoo; SDZWA).
+- **Giant kangaroo** (Procoptodon extinct; eastern grey kangaroo analogue, ~70 kg males vs ~15 kg dingoes): `boxesCanids`: large males are
+  the only class that wards off dingo attacks (kicking, tail-thumping, one fight > 1 h) (Jarman & Wright 1993; Wright 1993).
+  `defensiveNotPursuit`: large males flee shorter distances, ward off, or take to water (same).
+
+### Gaps (none found so far)
+- **Elephant vs rhino:** young musth bulls without older bulls killed 40+ rhinos (Slotow et al. 2000, https://doi.org/10.1038/35044191;
+  Pachyderm, Hluhluwe-Umfolozi: https://pachydermjournal.org/index.php/pachyderm/article/view/1058). Abnormal context and not expressible
+  with the current features (see above); left out.
+- **Elephant/mammoth: bigger predator first** (McComb 2011, male vs female roars): not separable at the `logMass` clip. Would need an
+  unclipped mass feature or a `threat` feature (target damage × mass).
+- **Chasing fleeing targets** for elephant, mammoth, giraffe, ostrich: no source found on whether they pursue a retreating predator.
+- **Giraffe vs big herbivores, giraffe size limits; elephant/walrus size limits:** no source found.
+- **Gorilla vs leopard directly:** Schaller's 1964 account of an adult attacking a leopard is only second-hand (forums); Fay 1995 (Folia
+  Primatol.) on leopard predation was not found. Gorilla vs large herbivores: nothing found.
+- **Walrus actively attacking bears:** popular accounts (BBC footage summaries) only; Fay 1982 full text not read.
+- **Ostrich:** no peer-reviewed study of anti-predator kicks; only zoo/institution pages (the "kick kills a lion" claim is unmeasured).
+- **Giant kangaroo vs larger predators** (Thylacoleo, the real Pleistocene threat): nothing on behaviour; drowning dogs is from news.
+- **Hurt targets:** no herbivore source on preferring wounded enemies; none encoded.
+
+### Sources
+- McComb et al. 2011, Leadership in elephants: the adaptive value of age, Proc. R. Soc. B 278: https://doi.org/10.1098/rspb.2011.0168
+- Bates et al. 2008, Do elephants show empathy?, J. Consciousness Studies 15: https://dspace.stir.ac.uk/handle/1893/946
+- DeSantis et al. 2021, Dietary ecology of the scimitar-toothed cat Homotherium serum, Curr. Biol. 31: https://doi.org/10.1016/j.cub.2021.03.061
+- Tamura et al. 2024, Protection service of a leading silverback male from external threats in wild western gorillas, Folia Primatol. 95: https://doi.org/10.1163/14219980-bja10026
+- Southern et al. 2021, Lethal coalitionary attacks of chimpanzees on gorillas in Loango, Sci. Rep. 11: https://doi.org/10.1038/s41598-021-93829-x
+- Berggorilla & Regenwald Direkthilfe, Do gorillas have enemies?: https://www.berggorilla.org/en/gorillas/general/everyday-life/do-gorillas-have-enemies/
+- San Diego Zoo Global Library, Western lowland gorilla fact sheet, behavior: https://ielc.libguides.com/sdzg/factsheets/westernlowlandgorilla/behavior
+- Fay 1982, Ecology and biology of the Pacific walrus, North American Fauna 74 (USGS): https://www.usgs.gov/publications/ecology-and-biology-pacific-walrus-odobenus-rosmarus-divergens-illiger
+- COSEWIC Atlantic walrus report, ch. 9: https://www.canada.ca/en/environment-climate-change/services/species-risk-public-registry/cosewic-assessments-status-reports/atlantic-walrus/chapter-9.html
+- National Wildlife Federation 2000, In search of the tooth walker: https://www.nwf.org/Magazines/National-Wildlife/2000/In-Search-of-the-Tooth-Walker
+- Kochnev 2002, Causes of walrus mortality on Wrangel Island: https://www.arlis.org/docs/vol1/E/Walrus/Russian/Kochnev.2002.CausesWalrusMortalityWrangel.MarMamRep.ENG&RUSS.pdf
+- Strauss & Packer 2013, Using claw marks to study lion predation on giraffes of the Serengeti, J. Zool. 289: https://doi.org/10.1111/j.1469-7998.2012.00972.x
+- Muneza et al. 2022, Giraffe skin disease and lion predation, J. Zool. 316: https://doi.org/10.1111/jzo.12930
+- Tufts Magazine, Summer 2013, The Good Mother: https://news.tufts.edu/magazine/summer2013/features/mother.html
+- San Diego Zoo Wildlife Alliance, Ostrich: https://animals.sandiegozoo.org/node/118
+- Smithsonian National Zoo, How fast is an ostrich? And more fun facts: https://www.nationalzoo.si.edu/node/16512
+- Toronto Zoo, Ostrich: https://www.torontozoo.com/animals/Ostrich
+- Jarman & Wright 1993, Macropod studies at Wallaby Creek IX: exposure and responses of eastern grey kangaroos to dingoes, Wildl. Res. 20: https://doi.org/10.1071/WR9930833
+- Wright 1993, Observations of the behaviour of male eastern grey kangaroos when attacked by dingoes, Wildl. Res. 20: https://doi.org/10.1071/WR9930845
+
+Caveat: page fetches were blocked in this session (CSIRO, PMC and others not reachable), so every claim here was checked against search
+abstracts and summaries, not full texts. The CSIRO DOIs were built from the journal's article codes (WR9930833, WR9930845), not opened.

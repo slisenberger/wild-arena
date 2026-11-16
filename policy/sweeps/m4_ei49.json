@@ -1,0 +1,14 @@
+{
+ "note": "ei49: first target nets for bulldozers (elephant, mammoth, gorilla, walrus) and kickers (giraffe, ostrich, giant kangaroo), with the new sourced herbivore realism priors (18 entries, \u03bb .5) + the speciation recipe. Bar (b\u2032) vs today (no live net).",
+ "helpers": 2,
+ "runs": [
+  {
+   "name": "rp_bull50",
+   "args": "--trainer=expert --feat=rich --loss=adv --rounds=6 --fights=900 --max=3 --rolls=3 --nh=32 --epochs=8 --lr=.002 --val=1000 --test=1200 --dagger=true --H=20 --crn=true --real=0.5 --traitsV=2 --speciesCode=true --balance=true --specTol=0.05 --arch=bulldozer --prior=0.5 --seed=7904"
+  },
+  {
+   "name": "rp_kick50",
+   "args": "--trainer=expert --feat=rich --loss=adv --rounds=6 --fights=900 --max=3 --rolls=3 --nh=32 --epochs=8 --lr=.002 --val=1000 --test=1200 --dagger=true --H=20 --crn=true --real=0.5 --traitsV=2 --speciesCode=true --balance=true --specTol=0.05 --arch=kicker --prior=0.5 --seed=8904"
+  }
+ ]
+}
