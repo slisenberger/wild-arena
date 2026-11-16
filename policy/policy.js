@@ -52,6 +52,7 @@ function choose(w, u, policy){
   const a = policy.teacher ? teach : lin ? pickLin(w, policy, X, teach, u, targetMask(opts)) : M.argmax(policy, X);
   if (stats){ stats.n = (stats.n || 0) + 1; if (a === teach) stats.agree = (stats.agree || 0) + 1; }
   if (log && opts.length > 1) log.push({X, y: teach, a, sp: u.s.id});
+  if (cfg.pickLog && opts.length > 1) cfg.pickLog.push({u, h: opts[teach] && opts[teach].t || null, a: opts[a] && opts[a].t || null, n: opts.length}); // stat only (probes/speciation_score.js)
   apply(u, opts[a]);
 }
 // herbivores (bulldozer, charger, kicker): same scorer; the heuristic's pick is herbivoreTarget's, and if that isn't one
@@ -61,6 +62,7 @@ function chooseHerb(w, u, policy){
   const {opts, X} = extractE(w, u, P, true), h = F.herbHeuristic(w, u, opts);
   const a = h.i < 0 ? -1 : pickLin(w, P, X, h.i, u, targetMask(opts));
   if (stats){ stats.n = (stats.n || 0) + 1; if (a === h.i) stats.agree = (stats.agree || 0) + 1; }
+  if (w.cfg.pickLog && opts.length > 1 && a >= 0) w.cfg.pickLog.push({u, h: h.t || null, a: opts[a].t || null, n: opts.length});
   u.target = a < 0 ? h.t : (opts[a].kind === 'target' ? opts[a].t : null); u.state = u.target ? 'engage' : 'roam';
 }
 // guards (your side, not carrying you): the heuristic's pick (allyTarget's, or a guard intent's intercept / help target) is
@@ -71,6 +73,7 @@ function chooseGuard(w, u, policy, h){ // returns the target to take (h = the he
   const {opts, X} = P.feat === 'rich' ? FR().extract(w, u, {wide: P.wide}) : G.extract(w, u, P.wide), i = G.heuristic(opts, h); // P.wide: any enemy your side can see (no leash)
   const a = i < 0 ? -1 : pickLin(w, P, X, i, u, targetMask(opts));
   if (stats){ stats.n = (stats.n || 0) + 1; if (a === i) stats.agree = (stats.agree || 0) + 1; }
+  if (w.cfg.pickLog && opts.length > 1 && a >= 0) w.cfg.pickLog.push({u, h: h || null, a: opts[a].t || null, n: opts.length});
   return a < 0 ? h : opts[a].kind === 'target' ? opts[a].t : null;
 }
 A._internals.choose = choose;
