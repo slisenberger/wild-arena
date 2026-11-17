@@ -494,3 +494,6 @@ each species develop its own realistic fighting style. This note is the plan; th
 - **ei51 bulldozer horizon test (prior 0):** H 8 s: every round weaker (-0.02 to -0.11); H 40 s: best +0.020 ± 0.032 but lost
   speciation (1.18 -> 1.12), no clean round beat today. Expert iteration on bulldozers: none found so far at H 8 / 20 / 40 and
   prior 0 / .2 / .5. Next: ES (es52, the route that produced the live charger net), zero start at today's targets.
+- **es52, bulldozer ES (zero start, margin .25):** bes_s1 held-out +0.026 ± 0.034 (best after 36 updates); bes_s2 never beat
+  today; bes_rich +0.101 on one val, -0.054 ± 0.031 held-out. No strength gain found so far. Screening bes_s1 (exported
+  bulldozer_target_es1) for speciation at ≈ today's strength (m4_bes1: probes 491, 501, 511).

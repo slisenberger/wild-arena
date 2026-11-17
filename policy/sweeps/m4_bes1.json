@@ -1,0 +1,8 @@
+{
+ "note": "Screen bulldozer_target_es1 (es52 bes_s1, held-out +0.026 ± 0.034 vs today): is it ≈ today with more speciation (b′)? Strength probes 491/501 base none, speciation N=1,500 probe 511.",
+ "runs": [
+  {"name": "bes1_491", "args": "--trainer=probe --script=policy/probes/eval_target_cli.js policy/weights/bulldozer_target_es1.json bulldozer 2000 491 91 checkmate 1 --base=none"},
+  {"name": "bes1_501", "args": "--trainer=probe --script=policy/probes/eval_target_cli.js policy/weights/bulldozer_target_es1.json bulldozer 2000 501 91 checkmate 1 --base=none"},
+  {"name": "bes1_spec", "args": "--trainer=probe --script=policy/probes/speciation_score.js --arch=bulldozer --net=policy/weights/bulldozer_target_es1.json --N=1500 --index=511"}
+ ]
+}
