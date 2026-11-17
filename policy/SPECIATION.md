@@ -497,3 +497,11 @@ each species develop its own realistic fighting style. This note is the plan; th
 - **es52, bulldozer ES (zero start, margin .25):** bes_s1 held-out +0.026 ± 0.034 (best after 36 updates); bes_s2 never beat
   today; bes_rich +0.101 on one val, -0.054 ± 0.031 held-out. No strength gain found so far. Screening bes_s1 (exported
   bulldozer_target_es1) for speciation at ≈ today's strength (m4_bes1: probes 491, 501, 511).
+- **bulldozer_target_es1 screens (probes 491 / 501 / 511):** goal +0.016 ± 0.026, +0.034 ± 0.025 (≈ +0.025 ± 0.018), style 1.000,
+  no gates; speciation 1.160 -> 1.079 (-0.081 ± 0.022: less speciated). Every bulldozer goes for you more (elephant 10 -> 31%,
+  gorilla 8 -> 23%, mammoth 7 -> 28%, walrus 16 -> 28%) and mobs predators less (elephant 47 -> 30%, mammoth 53 -> 37%): more
+  objective, less species character. Fails (b′) (needs more speciation); not strong enough for (a) on these draws. Not sent.
+  Bulldozers: none found so far (expert iteration H 8/20/40 × prior 0/.2/.5, ES ×3). Ideas for later: ES with a speciation
+  term in the objective, or the herbivore prior inside ES.
+- **Day summary (Nov 16):** shipped cat_target_rp1 (sourced priors), harrier_target_rp1m0.05 (priors + margin for style),
+  kicker_target_k0 (speciation recipe, no prior); bears (prior .8) ≈ live with no speciation gain; bulldozers none so far.
